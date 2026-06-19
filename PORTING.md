@@ -113,6 +113,14 @@ a file the instant it is ported, rebuild to verify. Delete the whole block when 
   `explode(...,Level.ExplosionInteraction.BLOCK)`; `world.provider.dimensionId!=-1`→
   `dimension()!=Level.NETHER`; `Transducerable.getMessages(Level,BlockPos,Direction)`.
 
+- `base/TileEntityInventoriedReactorBase.java` — `ISidedInventory` → `Container, HasItemHandler`
+  backed by `ManagedItemHandler` (RC `InventoriedRCBlockEntity` pattern). Full `Container` contract
+  implemented via the handler; NBT via `ValueOutput/Input` + `itemHandler.serialize/deserialize`.
+  **Contract for subclasses (cores/waste):** implement `getContainerSize()` (was `getSizeInventory`),
+  `isItemValidForSlot(int,ItemStack)`, and the sided hooks `canItemEnterFromSide(Direction)` /
+  `canItemExitToSide(Direction)` / `canRemoveItem(int,ItemStack)` (was `ForgeDirection`). Sided I/O
+  must be wired via the block's item-capability wrapper using those hooks (follow-up).
+
 **Contract this base now imposes on downstream cluster files (make them conform when porting):**
 - `ReactorTiles` (enum impl `TileEnum`): `static getTE(Level,BlockPos)`, `allowTickAcceleration()`,
   `isReactorCore()`, constants `CONTROL/CPU/EXCHANGER/REFLECTOR`. `getBlockState()` from TileEnum.

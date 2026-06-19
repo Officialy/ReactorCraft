@@ -1,146 +1,128 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
  * Distribution of the software in any form is only allowed with
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.base;
 
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.init.Blocks;
-import net.minecraft.inventory.ISidedInventory;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 
-import reika.dragonapi.interfaces.blockentity.InertIInv;
+import reika.dragonapi.instantiable.storage.ManagedItemHandler;
+import reika.dragonapi.interfaces.blockentity.HasItemHandler;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
-import reika.dragonapi.libraries.reikanbthelper.NBTTypes;
-import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
 
-public abstract class TileEntityInventoriedReactorBase extends TileEntityReactorBase implements ISidedInventory {
+public abstract class TileEntityInventoriedReactorBase extends TileEntityReactorBase implements Container, HasItemHandler {
 
-	protected ItemStack[] inv = new ItemStack[this.getSizeInventory()];
+	protected ManagedItemHandler itemHandler = new ManagedItemHandler(getContainerSize()) {
+		@Override
+		protected void onContentsChanged(int slot) {
+			setChanged();
+		}
+	};
 
-	@Override
-	public final ItemStack getStackInSlot(int i) {
-		return inv[i];
+	public TileEntityInventoriedReactorBase(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+		super(type, pos, state);
 	}
 
 	@Override
-	public final void setInventorySlotContents(int i, ItemStack itemstack) {
-		inv[i] = itemstack;
+	public final ManagedItemHandler getItemHandler() {
+		return itemHandler;
 	}
 
 	@Override
-	public ItemStack decrStackSize(int i, int j) {
-		return ReikaInventoryHelper.decrStackSize(this, i, j);
-	}
+	public abstract int getContainerSize();
 
 	@Override
-	public ItemStack getStackInSlotOnClosing(int i) {
-		return ReikaInventoryHelper.getStackInSlotOnClosing(this, i);
-	}
-
-	@Override
-	public int getInventoryStackLimit() {
-		return 64;
-	}
-
-	@Override
-	public boolean isUseableByPlayer(Player ep) {
-		return ReikaMathLibrary.py3d(ep.posX-xCoord-0.5, ep.posY-yCoord-0.5, ep.posZ-zCoord-0.5) <= 8;
-	}
-
-	public void openInventory() {}
-
-	public void closeInventory() {}
-
-	@Override
-	public final boolean hasCustomInventoryName() {
+	public final boolean isEmpty() {
+		for (int i = 0; i < itemHandler.getSlots(); i++) {
+			if (!itemHandler.getStackInSlot(i).isEmpty())
+				return false;
+		}
 		return true;
 	}
 
-	public final String getInventoryName() {
-		return this.getTEName();
+	@Override
+	public final ItemStack getItem(int slot) {
+		return itemHandler.getStackInSlot(slot);
 	}
 
 	@Override
-	public final void markDirty() {
-		blockMetadata = worldObj.getBlockMetadata(xCoord, yCoord, zCoord);
-		worldObj.markTileEntityChunkModified(xCoord, yCoord, zCoord, this);
-
-		if (this.getBlockType() != Blocks.air)
-		{
-			worldObj.func_147453_f(xCoord, yCoord, zCoord, this.getBlockType());
-		}
+	public final ItemStack removeItem(int slot, int amount) {
+		return ReikaInventoryHelper.decrStackSize(itemHandler, slot, amount);
 	}
 
 	@Override
-	public final boolean canExtractItem(int slot, ItemStack is, int j) {
-		return this.canRemoveItem(slot, is) && this.canItemExitToSide(dirs[j]);
+	public final ItemStack removeItemNoUpdate(int slot) {
+		ItemStack is = itemHandler.getStackInSlot(slot);
+		itemHandler.setStackInSlot(slot, ItemStack.EMPTY);
+		return is;
 	}
 
-	public abstract boolean canItemEnterFromSide(ForgeDirection dir);
+	@Override
+	public final void setItem(int slot, ItemStack is) {
+		itemHandler.setStackInSlot(slot, is);
+	}
 
-	public abstract boolean canItemExitToSide(ForgeDirection dir);
+	@Override
+	public final boolean stillValid(Player ep) {
+		return this.isPlayerAccessible(ep);
+	}
+
+	@Override
+	public final void clearContent() {
+		for (int i = 0; i < itemHandler.getSlots(); i++)
+			itemHandler.setStackInSlot(i, ItemStack.EMPTY);
+	}
+
+	@Override
+	public final boolean canPlaceItem(int slot, ItemStack is) {
+		return this.isItemValidForSlot(slot, is);
+	}
+
+	public abstract boolean isItemValidForSlot(int slot, ItemStack is);
+
+	/** Sided I/O rules, enforced by the block's item capability wrapper. */
+	public abstract boolean canItemEnterFromSide(Direction dir);
+
+	public abstract boolean canItemExitToSide(Direction dir);
 
 	public abstract boolean canRemoveItem(int slot, ItemStack is);
 
+	// 1.21.5: inventory contents bridged via ManagedItemHandler.serialize, like RC's
+	// InventoriedRCBlockEntity. Sync/save of temperature etc. is handled by the superclass.
 	@Override
-	public final int[] getAccessibleSlotsFromSide(int var1) {
-		if (this instanceof InertIInv)
-			return new int[0];
-		return ReikaInventoryHelper.getWholeInventoryForISided(this);
+	protected void saveAdditional(net.minecraft.world.level.storage.ValueOutput output) {
+		super.saveAdditional(output);
+		net.minecraft.world.level.storage.TagValueOutput nested = net.minecraft.world.level.storage.TagValueOutput.createWithContext(net.minecraft.util.ProblemReporter.DISCARDING, this.level == null ? net.minecraft.core.RegistryAccess.EMPTY : this.level.registryAccess());
+		itemHandler.serialize(nested);
+		output.store("ItemsRaw", CompoundTag.CODEC, nested.buildResult());
 	}
 
 	@Override
-	public final boolean canInsertItem(int i, ItemStack is, int j) {
-		if (this instanceof InertIInv)
-			return false;
-		return this.isItemValidForSlot(i, is) && this.canItemEnterFromSide(dirs[j]);
-	}
-
-	@Override
-	public void readFromNBT(CompoundTag NBT) {
-		super.readFromNBT(NBT);
-		ListTag nbttaglist = NBT.getTagList("Items", NBTTypes.COMPOUND.ID);
-		inv = new ItemStack[this.getSizeInventory()];
-
-		for (int i = 0; i < nbttaglist.tagCount(); i++)
-		{
-			CompoundTag nbttagcompound = nbttaglist.getCompoundTagAt(i);
-			byte byte0 = nbttagcompound.getByte("Slot");
-
-			if (byte0 >= 0 && byte0 < inv.length)
-			{
-				inv[byte0] = ItemStack.loadItemStackFromNBT(nbttagcompound);
+	protected void loadAdditional(net.minecraft.world.level.storage.ValueInput input) {
+		super.loadAdditional(input);
+		itemHandler = new ManagedItemHandler(getContainerSize()) {
+			@Override
+			protected void onContentsChanged(int slot) {
+				setChanged();
 			}
+		};
+		java.util.Optional<CompoundTag> raw = input.read("ItemsRaw", CompoundTag.CODEC);
+		if (raw.isPresent()) {
+			net.minecraft.world.level.storage.ValueInput nested = net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, this.level == null ? net.minecraft.core.RegistryAccess.EMPTY : this.level.registryAccess(), raw.get());
+			itemHandler.deserialize(nested);
 		}
-	}
-
-	@Override
-	public void writeToNBT(CompoundTag NBT) {
-		super.writeToNBT(NBT);
-
-		ListTag nbttaglist = new ListTag();
-
-		for (int i = 0; i < inv.length; i++)
-		{
-			if (inv[i] != null)
-			{
-				CompoundTag nbttagcompound = new CompoundTag();
-				nbttagcompound.setByte("Slot", (byte)i);
-				inv[i].writeToNBT(nbttagcompound);
-				nbttaglist.appendTag(nbttagcompound);
-			}
-		}
-
-		NBT.setTag("Items", nbttaglist);
 	}
 
 }
