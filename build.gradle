@@ -20,4 +20,5 @@ sourceSets.main.java {
     include 'reika/reactorcraft/auxiliary/SteamTile.java'
     include 'reika/reactorcraft/auxiliary/MultiBlockTile.java'
     include 'reika/reactorcraft/auxiliary/ReactorPowerReceiver.java'
+    include 'reika/reactorcraft/auxiliary/Feedable.java'
 }
