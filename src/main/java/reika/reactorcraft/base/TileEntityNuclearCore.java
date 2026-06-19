@@ -10,25 +10,28 @@
 package reika.reactorcraft.base;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.common.NeoForge;
 
 import reika.dragonapi.DragonAPICore;
-import reika.dragonapi.auxiliary.ChunkManager;
-import reika.dragonapi.instantiable.data.immutable.Coordinate;
-import reika.dragonapi.interfaces.blockentity.ChunkLoadingTile;
+import reika.dragonapi.instantiable.data.immutable.WorldLocation;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.dragonapi.libraries.registry.ReikaParticleHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.Feedable;
 import reika.reactorcraft.auxiliary.HydrogenExplosion;
@@ -59,29 +62,33 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	public static final int HYDROGEN = 1400;
 	public static final int MELTDOWN = 1800;
 
-	private Coordinate CPU;
+	private WorldLocation CPU;
+
+	public TileEntityNuclearCore(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+		super(type, pos, state);
+	}
 
 	public void link(TileEntityCPU te) {
-		CPU = new Coordinate(te);
+		CPU = new WorldLocation(te);
 	}
 
 	@Override
-	protected void onFirstTick(Level world, int x, int y, int z) {
+	protected void onFirstTick(Level world, BlockPos pos) {
 
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
-		if (!world.isRemote && this.isFissile() && rand.nextInt(this.getDecayNeutronChance()) == 0)
-			world.spawnEntityInWorld(new EntityNeutron(world, x, y, z, this.getRandomDirection(false), NeutronType.DECAY));
+	public void updateEntity(Level world, BlockPos pos) {
+		if (!world.isClientSide() && this.isFissile() && rand.nextInt(this.getDecayNeutronChance()) == 0)
+			world.addFreshEntity(new EntityNeutron(world, pos, this.getRandomDirection(false), NeutronType.DECAY));
 
 		if (DragonAPICore.debugtest) {
 			ReikaInventoryHelper.clearInventory(this);
 			ReikaInventoryHelper.addToIInv(ReactorItems.FUEL.getStackOf(), this);
 		}
 
-		if (!world.isRemote) {
-			this.feedWaste(world, x, y, z);
+		if (!world.isClientSide()) {
+			this.feedWaste(world, pos);
 			this.feed();
 		}
 
@@ -93,18 +100,17 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 
 		thermalTicker.update();
 		if (thermalTicker.checkCap()) {
-			this.updateTemperature(world, x, y, z);
+			this.updateTemperature(world, pos);
 		}
-		//ReikaJavaLibrary.pConsole(temperature);
 		if (temperature > CLADDING) {
 			if (rand.nextInt(20) == 0)
-				ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.fizz");
-			ReikaParticleHelper.SMOKE.spawnAroundBlockWithOutset(world, x, y, z, 9, 0.0625);
+				ReikaSoundHelper.playSoundAtBlock(world, pos, SoundEvents.FIRE_EXTINGUISH);
+			ReikaParticleHelper.SMOKE.spawnAroundBlockWithOutset(world, pos, 9, 0.0625);
 		}
 		else if (temperature > this.getWarningTemperature() && ReikaRandomHelper.doWithChance(20)) {
 			if (rand.nextInt(20) == 0)
-				ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.fizz");
-			ReikaParticleHelper.SMOKE.spawnAroundBlockWithOutset(world, x, y, z, 4, 0.0625);
+				ReikaSoundHelper.playSoundAtBlock(world, pos, SoundEvents.FIRE_EXTINGUISH);
+			ReikaParticleHelper.SMOKE.spawnAroundBlockWithOutset(world, pos, 4, 0.0625);
 		}
 	}
 
@@ -117,34 +123,43 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	}
 
 	private void onActivityChange(boolean active) {
-		if (!worldObj.isRemote && ReactorOptions.CHUNKLOADING.getState()) {
+		if (!level.isClientSide() && ReactorOptions.CHUNKLOADING.getState()) {
 			if (active) {
-				ChunkManager.instance.loadChunks(this);
+				// CHUNKLOAD-PORT: ChunkManager.instance.loadChunks(this); — DragonAPI chunkloading
+				// manager is not ported yet (RC has it commented out too); re-enable when it lands.
 			}
 			else {
 				this.unload();
 			}
 		}
-		worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
+		level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
 	}
 
 	private void unload() {
-		ChunkManager.instance.unloadChunks(this);
+		// CHUNKLOAD-PORT: ChunkManager.instance.unloadChunks(this); — see onActivityChange.
 	}
 
-	public Collection<ChunkCoordIntPair> getChunksToLoad() {
-		return ChunkManager.getChunkSquare(xCoord, zCoord, 1);
+	@Override
+	public Collection<ChunkPos> getChunksToLoad() {
+		Set<ChunkPos> set = new HashSet();
+		ChunkPos c = new ChunkPos(getBlockPos());
+		for (int i = -1; i <= 1; i++) {
+			for (int k = -1; k <= 1; k++) {
+				set.add(new ChunkPos(c.x+i, c.z+k));
+			}
+		}
+		return set;
 	}
 
-	private void feedWaste(Level world, int x, int y, int z) {
-		BlockEntity te = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+	private void feedWaste(Level world, BlockPos pos) {
+		BlockEntity te = this.getAdjacentBlockEntity(Direction.DOWN);
 		if (te instanceof TileEntityNuclearCore) {
 			for (int i = 4; i < 12; i++) {
-				if (inv[i] != null) {
+				if (!this.getItem(i).isEmpty()) {
 					for (int k = 4; k < 12; k++) {
-						if (((TileEntityNuclearCore) te).inv[k] == null) {
-							((TileEntityNuclearCore) te).inv[k] = inv[i];
-							inv[i] = null;
+						if (((TileEntityNuclearCore) te).getItem(k).isEmpty()) {
+							((TileEntityNuclearCore) te).setItem(k, this.getItem(i));
+							this.setItem(i, ItemStack.EMPTY);
 						}
 					}
 				}
@@ -153,11 +168,12 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	}
 
 	@Override
-	public final int getInventoryStackLimit() {
+	public int getMaxStackSize() {
 		return 1;
 	}
 
-	public final int getSizeInventory() {
+	@Override
+	public final int getContainerSize() {
 		return 12;
 	}
 
@@ -172,27 +188,19 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	}
 
 	public boolean feed() {
-		Level world = worldObj;
-		int x = xCoord;
-		int y = yCoord;
-		int z = zCoord;
-		Block id = world.getBlock(x, y-1, z);
-		int meta = world.getBlockMetadata(x, y-1, z);
-		BlockEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity tile = this.getAdjacentBlockEntity(Direction.DOWN);
 		if (tile instanceof Feedable) {
-			if (((Feedable)tile).feedIn(inv[3])) {
-				inv[3] = inv[2];
-				inv[2] = inv[1];
-				inv[1] = inv[0];
+			if (((Feedable)tile).feedIn(this.getItem(3))) {
+				this.setItem(3, this.getItem(2));
+				this.setItem(2, this.getItem(1));
+				this.setItem(1, this.getItem(0));
 
-				id = world.getBlock(x, y+1, z);
-				meta = world.getBlockMetadata(x, y+1, z);
-				tile = this.getAdjacentTileEntity(ForgeDirection.UP);
+				tile = this.getAdjacentBlockEntity(Direction.UP);
 				if (tile instanceof Feedable) {
-					inv[0] = ((Feedable) tile).feedOut();
+					this.setItem(0, ((Feedable) tile).feedOut());
 				}
 				else
-					inv[0] = null;
+					this.setItem(0, ItemStack.EMPTY);
 			}
 		}
 		this.collapseInventory();
@@ -202,9 +210,9 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	private void collapseInventory() {
 		for (int i = 0; i < 4; i++) {
 			for (int k = 3; k > 0; k--) {
-				if (inv[k] == null && inv[k-1] != null) {
-					inv[k] = inv[k-1];
-					inv[k-1] = null;
+				if (this.getItem(k).isEmpty() && !this.getItem(k-1).isEmpty()) {
+					this.setItem(k, this.getItem(k-1));
+					this.setItem(k-1, ItemStack.EMPTY);
 					return;
 				}
 			}
@@ -213,12 +221,12 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 
 	@Override
 	public boolean feedIn(ItemStack is) {
-		if (is == null)
+		if (is.isEmpty())
 			return true;
 		if (!this.isItemValidForSlot(0, is))
 			return false;
-		if (inv[0] == null) {
-			inv[0] = is.copy();
+		if (this.getItem(0).isEmpty()) {
+			this.setItem(0, is.copy());
 			return true;
 		}
 		return false;
@@ -226,20 +234,20 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 
 	@Override
 	public ItemStack feedOut() {
-		if (inv[3] == null)
-			return null;
+		if (this.getItem(3).isEmpty())
+			return ItemStack.EMPTY;
 		else {
-			ItemStack is = inv[3].copy();
-			inv[3] = null;
+			ItemStack is = this.getItem(3).copy();
+			this.setItem(3, ItemStack.EMPTY);
 			return is;
 		}
 	}
 
 	protected final void tryPushSpentFuel(int slot) {
 		for (int i = 4; i < 12; i++) {
-			if (inv[i] == null) {
-				inv[i] = inv[slot];
-				inv[slot] = null;
+			if (this.getItem(i).isEmpty()) {
+				this.setItem(i, this.getItem(slot));
+				this.setItem(slot, ItemStack.EMPTY);
 				return;
 			}
 		}
@@ -248,20 +256,20 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	public abstract boolean isFissile();
 
 	@Override
-	public final boolean canItemEnterFromSide(ForgeDirection dir) {
-		return dir == ForgeDirection.UP;
+	public final boolean canItemEnterFromSide(Direction dir) {
+		return dir == Direction.UP;
 	}
 
 	@Override
-	public final boolean canItemExitToSide(ForgeDirection dir) {
-		return dir == ForgeDirection.DOWN;
+	public final boolean canItemExitToSide(Direction dir) {
+		return dir == Direction.DOWN;
 	}
 
 	protected boolean checkPoisonedChance() {
 		int count = 0;
 		for (int i = 4; i < 12; i++) {
-			ItemStack is = inv[i];
-			if (is != null && is.getItem() == ReactorItems.WASTE.getItemInstance())
+			ItemStack is = this.getItem(i);
+			if (!is.isEmpty() && is.getItem() == ReactorItems.WASTE.getItemInstance())
 				count++;
 		}
 		return rand.nextInt(9-count) == 0;
@@ -271,19 +279,20 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		boolean flag = false;
 		ItemStack waste = WasteManager.getRandomWasteItem();
 		for (int i = 4; i < 12 && !flag; i++) {
-			ItemStack inslot = inv[i];
-			if (inslot == null) {
-				inv[i] = waste;
+			ItemStack inslot = this.getItem(i);
+			if (inslot.isEmpty()) {
+				this.setItem(i, waste);
 				flag = true;
 			}
-			else if (ItemStack.areItemStackTagsEqual(waste, inslot) && waste.isItemEqual(inslot) && inv[i].stackSize+waste.stackSize <= waste.getMaxStackSize()) {
-				inv[i].stackSize += waste.stackSize;
+			else if (ItemStack.isSameItemSameComponents(waste, inslot) && inslot.getCount()+waste.getCount() <= waste.getMaxStackSize()) {
+				inslot.grow(waste.getCount());
 				flag = true;
 			}
 		}
 	}
 
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
+	@Override
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		boolean inactive = activeTimer <= 0;
 		activeTimer = 2400; //2 min
 		if (inactive)
@@ -295,16 +304,16 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		return activeTimer > 0;
 	}
 
-	protected final void spawnNeutronBurst(Level world, int x, int y, int z) {
-		if (world.isRemote)
+	protected final void spawnNeutronBurst(Level world, BlockPos pos) {
+		if (world.isClientSide())
 			return;
 		NeutronType n = this.getNeutronType();
 		if (n == null) {
-			ReactorCraft.logger.logError("Reactor core "+this+" has no neutron type and thus a null or invalid reactor type, but is still spawning neutrons!");
+			ReactorCraft.LOGGER.error("Reactor core "+this+" has no neutron type and thus a null or invalid reactor type, but is still spawning neutrons!");
 			return;
 		}
 		for (int i = 0; i < 3; i++) {
-			world.spawnEntityInWorld(new EntityNeutron(world, x, y, z, this.getRandomDirection(ReactorOptions.VERTNEUTRONS.getState()), n));
+			world.addFreshEntity(new EntityNeutron(world, pos, this.getRandomDirection(ReactorOptions.VERTNEUTRONS.getState()), n));
 		}
 	}
 
@@ -318,60 +327,58 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		return MELTDOWN;
 	}
 
-	protected void onMeltdown(Level world, int x, int y, int z) {
-		MinecraftForge.EVENT_BUS.post(new ReactorMeltdownEvent(world, x, y, z));
-		if (world.isRemote)
+	protected void onMeltdown(Level world, BlockPos pos) {
+		NeoForge.EVENT_BUS.post(new ReactorMeltdownEvent(world, pos));
+		if (world.isClientSide())
 			return;
+		int x = pos.getX(), y = pos.getY(), z = pos.getZ();
 		int r = 2;
 		for (int i = x-r; i <= x+r; i++) {
 			for (int j = y-r; j <= y+r; j++) {
 				for (int k = z-r; k <= z+r; k++) {
-					ReactorTiles src = ReactorTiles.TEList[this.getIndex()];
-					ReactorTiles other = ReactorTiles.getTE(world, i, j, k);
+					BlockPos ipos = new BlockPos(i, j, k);
+					ReactorTiles src = this.getTile();
+					ReactorTiles other = ReactorTiles.getTE(world, ipos);
 					if (src == other)
-						world.setBlock(i, j, k, ReactorBlocks.CORIUMFLOWING.getBlockInstance());
+						world.setBlockAndUpdate(ipos, ReactorBlocks.CORIUMFLOWING.getBlockInstance().defaultBlockState());
 				}
 			}
 		}
-		world.createExplosion(null, x+0.5, y+0.5, z+0.5, 8, false);
+		world.explode(null, x+0.5, y+0.5, z+0.5, 8, Level.ExplosionInteraction.BLOCK);
 
 		double scatter = RadiationEffects.instance.contaminateArea(world, x, y, z, 32, 8, 2, true, RadiationIntensity.LETHAL);
-		this.testAndDoHydrogenExplosion(world, x, y, z, scatter);
+		this.testAndDoHydrogenExplosion(world, pos, scatter);
 	}
 
-	private void testAndDoHydrogenExplosion(Level world, int x, int y, int z, double scatter) {
-		if (true || ReikaRandomHelper.doWithChance((double)hydrogen/MAX_HYDROGEN)) {
-			HydrogenExplosion ex = new HydrogenExplosion(world, null, x+0.5, y+0.5, z+0.5, 7/*, scatter*/);
-			ex.doExplosionA();
-			ex.doExplosionB(false);
-		}
+	private void testAndDoHydrogenExplosion(Level world, BlockPos pos, double scatter) {
+		HydrogenExplosion ex = new HydrogenExplosion(world, null, pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5, 7);
+		ex.doExplosionA();
+		ex.doExplosionB(false);
 	}
 
-	protected int getRestingTemperature(Level world, int x, int y, int z) {
-		return ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
+	protected int getRestingTemperature(Level world, BlockPos pos) {
+		return ReikaWorldHelper.getAmbientTemperatureAt(world, pos);
 	}
 
 	@Override
-	protected void updateTemperature(Level world, int x, int y, int z) {
-		super.updateTemperature(world, x, y, z);
-		int Tamb = this.getRestingTemperature(world, x, y, z);
+	protected void updateTemperature(Level world, BlockPos pos) {
+		super.updateTemperature(world, pos);
+		int Tamb = this.getRestingTemperature(world, pos);
 		int dT = temperature-Tamb;
 
 		if (dT != 0) {
-			int d = ReikaWorldHelper.isExposedToAir(world, x, y, z) ? 32 : 64;
-			d = this.getAmbientHeatLossFactor(world, x, y, z, d, Tamb);
+			int d = ReikaWorldHelper.isExposedToAir(world, pos.getX(), pos.getY(), pos.getZ()) ? 32 : 64;
+			d = this.getAmbientHeatLossFactor(world, pos, d, Tamb);
 			temperature -= (1+dT/d);
 		}
 
 		if (dT > 0) {
 			for (int i = 2; i < 6; i++) {
-				ForgeDirection dir = dirs[i];
-				int dx = x+dir.offsetX;
-				int dy = y+dir.offsetY;
-				int dz = z+dir.offsetZ;
-				ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
+				Direction dir = dirs[i];
+				BlockPos dpos = pos.relative(dir);
+				ReactorTiles r = ReactorTiles.getTE(world, dpos);
 				if (r == this.getTile()) {
-					TileEntityNuclearCore te = (TileEntityNuclearCore)world.getTileEntity(dx, dy, dz);
+					TileEntityNuclearCore te = (TileEntityNuclearCore)world.getBlockEntity(dpos);
 					int dTemp = temperature-te.temperature;
 					if (dTemp > 0) {
 						int d = this.getSameCoreHeatConductionFraction();
@@ -387,14 +394,14 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		}
 
 		if (temperature > MELTDOWN) {
-			this.onMeltdown(world, x, y, z);
+			this.onMeltdown(world, pos);
 			ReactorAchievements.MELTDOWN.triggerAchievement(this.getPlacer());
 		}
 
 		if (temperature > HYDROGEN) {
 			hydrogen += 1;
 			if (hydrogen > MAX_HYDROGEN) {
-				this.testAndDoHydrogenExplosion(world, x, y, z, 1);
+				this.testAndDoHydrogenExplosion(world, pos, 1);
 			}
 		}
 		else if (hydrogen > 0) {
@@ -406,49 +413,38 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		return 16;
 	}
 
-	protected int getAmbientHeatLossFactor(Level world, int x, int y, int z, int base, int Tamb) {
+	protected int getAmbientHeatLossFactor(Level world, BlockPos pos, int base, int Tamb) {
 		return base;
-	}
-
-	@Override
-	public void readFromNBT(CompoundTag NBT) {
-		super.readFromNBT(NBT);
-
-		activeTimer = NBT.getInteger("activetick");
-	}
-
-	@Override
-	public void writeToNBT(CompoundTag NBT) {
-		super.writeToNBT(NBT);
-
-		NBT.setInteger("activetick", activeTimer);
-
 	}
 
 	@Override
 	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
-		hydrogen = NBT.getInteger("h2");
+		activeTimer = NBT.getIntOr("activetick", 0);
+		hydrogen = NBT.getIntOr("h2", 0);
 
-		CPU = Coordinate.readFromNBT("cpu", NBT);
+		if (NBT.contains("cpu"))
+			CPU = WorldLocation.readTag(NBT.getCompoundOrEmpty("cpu"));
 	}
 
 	@Override
 	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("h2", hydrogen);
+		NBT.putInt("activetick", activeTimer);
+		NBT.putInt("h2", hydrogen);
 
 		if (CPU != null)
-			CPU.writeToNBT("cpu", NBT);
+			NBT.put("cpu", CPU.writeToTag());
 	}
 
+	@Override
 	public final void breakBlock() {
-		if (!worldObj.isRemote)
+		if (!level.isClientSide())
 			this.unload();
 		if (CPU != null) {
-			BlockEntity te = CPU.getTileEntity(worldObj);
+			BlockEntity te = CPU.getBlockEntity();
 			if (te instanceof TileEntityCPU) {
 				((TileEntityCPU)te).removeTemperatureCheck(this);
 			}
@@ -456,25 +452,12 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	}
 
 	@Override
-	protected final void onInvalidateOrUnload(Level world, int x, int y, int z, boolean invalid) {
-		if (!world.isRemote) {
-			if (invalid) {
-				this.unload();
-			}
-		}
-	}
-
-	@Override
-	public final int getTextureState(ForgeDirection side) {
-		if (side.offsetY != 0)
+	public final int getTextureState(Direction side) {
+		if (side.getStepY() != 0)
 			return 4;
-		Level world = worldObj;
-		int x = xCoord;
-		int y = yCoord;
-		int z = zCoord;
 		ReactorTiles src = this.getTile();
-		ReactorTiles r = ReactorTiles.getTE(world, x, y-1, z);
-		ReactorTiles r2 = ReactorTiles.getTE(world, x, y+1, z);
+		ReactorTiles r = ReactorTiles.getTE(level, getBlockPos().below());
+		ReactorTiles r2 = ReactorTiles.getTE(level, getBlockPos().above());
 		if (r2 == src && r == src)
 			return 2;
 		else if (r2 == src)
