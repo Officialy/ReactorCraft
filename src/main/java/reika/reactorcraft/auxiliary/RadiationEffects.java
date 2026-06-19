@@ -10,147 +10,81 @@
 package reika.reactorcraft.auxiliary;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Random;
 import java.util.function.Function;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.entity.monster.EntityCreeper;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.init.Blocks;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.potion.PotionEffect;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.oredict.OreDictionary;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 
-import reika.dragonapi.ModList;
-import reika.dragonapi.auxiliary.trackers.ReflectiveFailureTracker;
-import reika.dragonapi.instantiable.BasicModEntry;
 import reika.dragonapi.instantiable.RayTracer;
 import reika.dragonapi.instantiable.data.immutable.BlockKey;
-import reika.dragonapi.instantiable.data.immutable.WorldLocation;
-import reika.dragonapi.instantiable.event.CreeperExplodeEvent;
 import reika.dragonapi.libraries.ReikaEntityHelper;
-import reika.dragonapi.libraries.java.ReikaJavaLibrary;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
-import reika.dragonapi.libraries.registry.ReikaItemHelper;
-import reika.dragonapi.libraries.world.ReikaBlockHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
-import reika.dragonapi.modinteract.deepinteract.mesystemreader.ItemInSystemEffect;
-import reika.dragonapi.modinteract.deepinteract.mesystemreader.MESystemEffect;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.dragonapi.modregistry.ModWoodList;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.api.RadiationHandler.RadiationLevel;
-import reika.reactorcraft.entities.EntityNeutron;
-import reika.reactorcraft.entities.EntityNeutron.NeutronType;
 import reika.reactorcraft.entities.EntityRadiation;
 import reika.reactorcraft.registry.RadiationShield;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorItems;
 import reika.rotarycraft.items.tools.bedrock.ItemBedrockArmor;
 
-import appeng.api.networking.IGrid;
-import appeng.api.networking.IGridBlock;
-import appeng.api.networking.IGridNode;
-import appeng.api.util.DimensionalCoord;
-import appeng.api.util.IReadOnlyCollection;
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import thaumcraft.api.aspects.Aspect;
-import thaumcraft.api.nodes.INode;
-import thaumcraft.api.nodes.NodeModifier;
-import thaumcraft.api.nodes.NodeType;
-
 public class RadiationEffects {
 
 	private static final Random rand = new Random();
 
-	private static Class electricalAgeBlock;
-
 	public static final RadiationEffects instance = new RadiationEffects();
 
-	static {
-		String modid = "Eln";
-		if (Loader.isModLoaded(modid)) {
-			try {
-				electricalAgeBlock = Class.forName("mods.eln.node.six.SixNode");
-			}
-			catch (Exception e) {
-				ReflectiveFailureTracker.instance.logModReflectiveFailure(new BasicModEntry(modid), e);
-				e.printStackTrace();
-			}
-		}
-	}
-
-	private final RayTracer tracer = new RayTracer(0, 0, 0, 0, 0, 0);
-
 	private RadiationEffects() {
-		MinecraftForge.EVENT_BUS.register(this);
+
 	}
 
-	@SubscribeEvent
-	public void dirtyBombs(CreeperExplodeEvent evt) {
-		if (evt.creeper.getEntityData().getBoolean("radioactive")) {
-			Level world = evt.creeper.worldObj;
-			int x = Mth.floor_double(evt.creeper.posX);
-			int y = Mth.floor_double(evt.creeper.posY);
-			int z = Mth.floor_double(evt.creeper.posZ);
-			this.contaminateArea(world, x, y, z, 4, 3, 1.5, true, RadiationIntensity.MODERATE);
-		}
-	}
+	// DRAGONAPI-PORT: dirtyBombs(CreeperExplodeEvent) — DragonAPI's CreeperExplodeEvent is not ported,
+	// so radioactive creepers don't contaminate on explode yet. applyEffects still tags the creeper
+	// (below) so this re-enables cleanly once the event lands.
 
 	public boolean applyEffects(LivingEntity e, RadiationIntensity ri) {
 		if (ri.causesHarm()) {
-			if (!e.isPotionActive(ReactorCraft.radiation)) {
+			if (!e.hasEffect(ReactorCraft.radiation)) {
 				if (!this.isEntityImmuneToAll(e) && !ri.hasSufficientShielding(e)) {
-					e.addPotionEffect(this.getRadiationEffect(ri));
+					e.addEffect(this.getRadiationEffect(ri));
 					return true;
 				}
 			}
-			if (ReikaEntityHelper.isEntityWearingPoweredArmor(e)) {
-				for (int i = 1; i <= 4; i++) {
-					ReikaItemHelper.dechargeItem(e.getEquipmentInSlot(i));
-				}
-			}
-			if (e instanceof EntityCreeper) {
-				EntityCreeper ec = (EntityCreeper)e;
-				ec.getEntityData().setBoolean("radioactive", true);
+			// DRAGONAPI-PORT: powered-armor decharge (ReikaEntityHelper.isEntityWearingPoweredArmor +
+			// ReikaItemHelper.dechargeItem) not ported — radiation no longer drains powered armor yet.
+			if (e instanceof Creeper) {
+				((Creeper)e).getPersistentData().putBoolean("radioactive", true);
 			}
 		}
 		return false;
 	}
 
 	public void applyPulseEffects(LivingEntity e, RadiationIntensity ri) {
-		if (!e.isPotionActive(ReactorCraft.radiation) && !this.isEntityImmuneToAll(e) && !ri.hasSufficientShielding(e))
-			e.addPotionEffect(this.getRadiationEffect(20, ri));
+		if (!e.hasEffect(ReactorCraft.radiation) && !this.isEntityImmuneToAll(e) && !ri.hasSufficientShielding(e))
+			e.addEffect(this.getRadiationEffect(20, ri));
 	}
 
 	public boolean isEntityImmuneToAll(LivingEntity e) {
-		return e instanceof Player && ((Player)e).capabilities.isCreativeMode;
+		return e instanceof Player && ((Player)e).isCreative();
 	}
 
 	public boolean hasHazmatSuit(LivingEntity e) {
-		/*
-		for (int i = 1; i < 5; i++) {
-			ItemStack is = e.getEquipmentInSlot(i);
-			if (is == null)
-				return false;
-			ReactorItems ri = ReactorItems.getEntry(is);
-			if (ri == null)
-				return false;
-			if (!ri.isHazmat())
-				return false;
-		}
-		return true;
-		 */
 		return ReikaEntityHelper.isEntityWearingFullSuitOf(e, (ItemStack is) -> this.isValidHazmatItem(is));
 	}
 
@@ -162,7 +96,6 @@ public class RadiationEffects {
 	public double contaminateArea(Level world, int x, int y, int z, int range, float density, double force, boolean los, RadiationIntensity ri) {
 		double frac = 1;
 		int num = Math.max(1, (int)(Math.sqrt(range)*density));
-		AABB box = AABB.getBoundingBox(x, y, z, x, y, z).expand(range, range, range);
 		for (int i = 0; i < num; i++) {
 			int dx = ReikaRandomHelper.getRandomPlusMinus(x, range);
 			int dy = ReikaRandomHelper.getRandomPlusMinus(y, range);
@@ -176,9 +109,9 @@ public class RadiationEffects {
 				frac -= 1D/num;
 			}
 			EntityRadiation rad = new EntityRadiation(world, range, ri);
-			rad.setLocationAndAngles(dx+0.5, dy+0.5, dz+0.5, 0, 0);
-			if (!world.isRemote)
-				world.spawnEntityInWorld(rad);
+			rad.snapTo(dx+0.5, dy+0.5, dz+0.5, 0, 0);
+			if (!world.isClientSide())
+				world.addFreshEntity(rad);
 		}
 		return frac;
 	}
@@ -189,157 +122,74 @@ public class RadiationEffects {
 		ArrayList<BlockKey> li = ReikaWorldHelper.getBlocksAlongVector(world, x+0.5, y+0.5, z+0.5, dx+0.5, dy+0.5, dz+0.5);
 		double chance = 1;
 		for (BlockKey bk : li) {
-			RadiationShield rs = RadiationShield.getFrom(bk.blockID, bk.metadata);
+			RadiationShield rs = RadiationShield.getFrom(bk);
 			if (rs != null) {
 				chance *= 1-rs.radiationDeflectChance/100D;
 			}
 		}
-		boolean flag = chance > 0 && ReikaRandomHelper.doWithChance(chance);
-		//if (flag) {
-		//String vec = String.format("%d->%d,%d->%d,%d-%d", x, dx, y, dy, z, dz);
-		//ReikaJavaLibrary.pConsole(String.format("Got %.10f%s chance for %s from %s", chance, "%", vec, li.toString()));
-		//ReikaJavaLibrary.pConsole("Success");
-		//}
-		return flag;
+		return chance > 0 && ReikaRandomHelper.doWithChance(chance);
 	}
 
 	public void transformBlock(Level world, int x, int y, int z, RadiationIntensity ri) {
-		if (world.isRemote)
+		if (world.isClientSide())
 			return;
-		Block id = world.getBlock(x, y, z);
-		int meta = world.getBlockMetadata(x, y, z);
-		if (id == Blocks.air)
-			return;
-		if (id == Blocks.deadbush)
-			return;
-		if (electricalAgeBlock == id.getClass())
+		BlockPos pos = new BlockPos(x, y, z);
+		BlockState state = world.getBlockState(pos);
+		Block id = state.getBlock();
+		if (id == Blocks.AIR || id == Blocks.DEAD_BUSH)
 			return;
 
 		if (ri.isAtLeast(RadiationIntensity.HIGHLEVEL)) {
-			if (id == Blocks.leaves || id == Blocks.leaves2 || id.getMaterial() == Material.leaves || ModWoodList.isModLeaf(id, meta))
-				world.setBlockToAir(x, y, z);
-			if (id == Blocks.reeds) {
-				id.dropBlockAsItem(world, x, y, z, meta, 0);
-				world.setBlockToAir(x, y, z);
+			if (state.is(BlockTags.LEAVES) || ModWoodList.isModLeaf(id)) {
+				world.removeBlock(pos, false);
 			}
-			if (id == Blocks.tallgrass)
-				world.setBlock(x, y, z, Blocks.deadbush);
-			if (id == Blocks.vine) {
-				id.dropBlockAsItem(world, x, y, z, meta, 0);
-				world.setBlockToAir(x, y, z);
+			else if (state.is(BlockTags.SAPLINGS)) {
+				world.setBlockAndUpdate(pos, Blocks.DEAD_BUSH.defaultBlockState());
 			}
-			if (id == Blocks.waterlily) {
-				id.dropBlockAsItem(world, x, y, z, meta, 0);
-				world.setBlockToAir(x, y, z);
+			else if (id == Blocks.SHORT_GRASS || id == Blocks.FERN || id == Blocks.TALL_GRASS) {
+				world.setBlockAndUpdate(pos, Blocks.DEAD_BUSH.defaultBlockState());
 			}
-			if (id == Blocks.red_flower) {
-				id.dropBlockAsItem(world, x, y, z, meta, 0);
-				world.setBlockToAir(x, y, z);
+			else if (id == Blocks.GRASS_BLOCK) {
+				world.setBlockAndUpdate(pos, Blocks.DIRT.defaultBlockState());
 			}
-			if (id == Blocks.yellow_flower) {
-				id.dropBlockAsItem(world, x, y, z, meta, 0);
-				world.setBlockToAir(x, y, z);
+			else if (id == Blocks.MOSSY_COBBLESTONE) {
+				world.setBlockAndUpdate(pos, Blocks.COBBLESTONE.defaultBlockState());
 			}
-			if (id == Blocks.wheat) {
-				id.dropBlockAsItem(world, x, y, z, meta, 0);
-				world.setBlockToAir(x, y, z);
+			else if (state.is(BlockTags.SMALL_FLOWERS) || state.is(BlockTags.CROPS) || id == Blocks.SUGAR_CANE || id == Blocks.VINE
+					|| id == Blocks.LILY_PAD || id == Blocks.CACTUS || id == Blocks.PUMPKIN || id == Blocks.PUMPKIN_STEM
+					|| id == Blocks.MELON || id == Blocks.MELON_STEM || id == Blocks.COCOA) {
+				world.destroyBlock(pos, true);
 			}
-			if (id == Blocks.carrots) {
-				id.dropBlockAsItem(world, x, y, z, meta, 0);
-				world.setBlockToAir(x, y, z);
-			}
-			if (id == Blocks.potatoes) {
-				id.dropBlockAsItem(world, x, y, z, meta, 0);
-				world.setBlockToAir(x, y, z);
-			}
-			if (id == Blocks.cactus || id.getMaterial() == Material.cactus) {
-				id.dropBlockAsItem(world, x, y, z, meta, 0);
-				world.setBlockToAir(x, y, z);
-			}
-			if (id == Blocks.pumpkin) {
-				id.dropBlockAsItem(world, x, y, z, meta, 0);
-				world.setBlockToAir(x, y, z);
-			}
-			if (id == Blocks.pumpkin_stem) {
-				id.dropBlockAsItem(world, x, y, z, meta, 0);
-				world.setBlockToAir(x, y, z);
-			}
-			if (id == Blocks.melon_block) {
-				id.dropBlockAsItem(world, x, y, z, meta, 0);
-				world.setBlockToAir(x, y, z);
-			}
-			if (id == Blocks.melon_stem) {
-				id.dropBlockAsItem(world, x, y, z, meta, 0);
-				world.setBlockToAir(x, y, z);
-			}
-			if (id == Blocks.sapling || id.getMaterial() == Material.plants)
-				world.setBlock(x, y, z, Blocks.deadbush);
-			if (id == Blocks.cocoa) {
-				id.dropBlockAsItem(world, x, y, z, meta, 0);
-				world.setBlockToAir(x, y, z);
-			}
-			if (id == Blocks.mossy_cobblestone)
-				world.setBlock(x, y, z, Blocks.cobblestone);
-			if (id == Blocks.grass || id.getMaterial() == Material.grass)
-				world.setBlock(x, y, z, Blocks.dirt);
-			if (id == Blocks.monster_egg)
-				world.setBlock(x, y, z, ReikaBlockHelper.getSilverfishImitatedBlock(meta), 0, 3);
 		}
 
 		if (id == ReactorBlocks.FLUORITE.getBlockInstance() || id == ReactorBlocks.FLUORITEORE.getBlockInstance()) {
-			world.setBlock(x, y, z, id, meta+8, 3);
-			world.func_147479_m(x, y, z);
+			// BLOCK-PORT: fluorite irradiation (legacy meta+8 glowing variant) — wire to the fluorite
+			// block's irradiated blockstate once ReactorBlocks/FluoriteTypes is ported.
 		}
 
-		BlockEntity te = world.getTileEntity(x, y, z);
-
-		if (ri.isAtLeast(RadiationIntensity.MODERATE) && ModList.THAUMCRAFT.isLoaded()) {
-			if (te instanceof INode) {
-				INode n = (INode)te;
-				n.addToContainer(Aspect.POISON, 10);
-				n.addToContainer(Aspect.DEATH, 5);
-				n.addToContainer(Aspect.ENTROPY, 10);
-				n.addToContainer(Aspect.AURA, 5);
-				n.addToContainer(Aspect.TAINT, 5);
-				n.addToContainer(Aspect.ENERGY, 2);
-				if (rand.nextInt(4) == 0) {
-					if (n.getNodeType() == NodeType.NORMAL) {
-						n.setNodeType(NodeType.UNSTABLE);
-					}
-					else if (n.getNodeType() == NodeType.UNSTABLE) {
-						n.setNodeType(NodeType.TAINTED);
-					}
-				}
-				if (rand.nextInt(8) == 0) {
-					n.setNodeModifier(NodeModifier.BRIGHT);
-				}
-			}
-		}
+		// DRAGONAPI-PORT: Thaumcraft node tainting (INode/Aspect) gated out — Thaumcraft not in build.
 	}
 
-	public PotionEffect getRadiationEffect(RadiationIntensity ri) {
+	public MobEffectInstance getRadiationEffect(RadiationIntensity ri) {
 		return this.getRadiationEffect(ri.potionDuration, ri);
 	}
 
-	private PotionEffect getRadiationEffect(int duration, RadiationIntensity ri) {
-		PotionEffect pot = new PotionEffect(ReactorCraft.radiation.id, duration, ri.ordinal());
-		pot.setCurativeItems(new ArrayList());
-		return pot;
+	private MobEffectInstance getRadiationEffect(int duration, RadiationIntensity ri) {
+		return new MobEffectInstance(ReactorCraft.radiation, duration, ri.ordinal());
 	}
 
 	public void doOreIrradiation(Level world, int x, int y, int z, Player ep) {
 		int r = 9;
-		double dd = ep.getDistanceSq(x+0.5, y+0.5, z+0.5);
+		double dd = ep.distanceToSqr(x+0.5, y+0.5, z+0.5);
 		if (dd <= r*r) {
 			for (double dx = 0; dx <= 1; dx += 1) {
 				for (double dy = 0; dy <= 1; dy += 1) {
 					for (double dz = 0; dz <= 1; dz += 1) {
-						for (double dh = 0; dh <= ep.height; dh += ep.height/2) {
-							tracer.setOrigins(x+dx, y+dy, z+dz, ep.posX, ep.posY+dh, ep.posZ);
+						for (double dh = 0; dh <= ep.getBbHeight(); dh += ep.getBbHeight()/2) {
+							RayTracer tracer = new RayTracer(x+dx, y+dy, z+dz, ep.getX(), ep.getY()+dh, ep.getZ());
 							if (tracer.isClearLineOfSight(world)) {
 								int dur = (int)(200/Math.max(1, Math.sqrt(dd)));
-								PotionEffect e = this.getRadiationEffect(dur, RadiationIntensity.LOWLEVEL);
-								ep.addPotionEffect(e);
+								ep.addEffect(this.getRadiationEffect(dur, RadiationIntensity.LOWLEVEL));
 								return;
 							}
 						}
@@ -385,7 +235,9 @@ public class RadiationEffects {
 					return ReikaEntityHelper.isEntityWearingFullSuitOf(e, func);
 				}
 				case LOWLEVEL: {
-					Function<ItemStack, Boolean> func = (ItemStack is) -> instance.isValidHazmatItem(is) || ItemBedrockArmor.isValidBedrockArmorItem(is) || ReikaItemHelper.isDenseArmor(is);
+					// DRAGONAPI-PORT: ReikaItemHelper.isDenseArmor not ported — dense armor no longer
+					// shields low-level radiation; hazmat/bedrock still do.
+					Function<ItemStack, Boolean> func = (ItemStack is) -> instance.isValidHazmatItem(is) || ItemBedrockArmor.isValidBedrockArmorItem(is);
 					return ReikaEntityHelper.isEntityWearingFullSuitOf(e, func);
 				}
 			}
@@ -393,34 +245,7 @@ public class RadiationEffects {
 		}
 	}
 
-	public MESystemEffect createMESystemEffect() {
-		return new ItemInSystemEffect(ReactorItems.WASTE.getStackOfMetadata(OreDictionary.WILDCARD_VALUE)) {
-
-			@Override
-			public int getTickFrequency() {
-				return 2400;
-			}
-
-			@Override
-			protected void doEffect(IGrid grid, long amt) {
-				IReadOnlyCollection<IGridNode> c = grid.getNodes();
-				HashSet<WorldLocation> locations = new HashSet();
-				for (IGridNode ign : c) {
-					IGridBlock igb = ign.getGridBlock();
-					if (igb != null && igb.isWorldAccessible()) {
-						DimensionalCoord loc = igb.getLocation();
-						locations.add(new WorldLocation(loc.getWorld(), loc.x, loc.y, loc.z));
-					}
-				}
-				WorldLocation loc = ReikaJavaLibrary.getRandomCollectionEntry(rand, locations);
-				this.leakRadiation(loc.getWorld(), loc.xCoord, loc.yCoord, loc.zCoord);
-			}
-
-			protected void leakRadiation(Level world, int x, int y, int z) {
-				ForgeDirection dir = ForgeDirection.VALID_DIRECTIONS[rand.nextInt(6)];
-				if (!world.isRemote)
-					world.spawnEntityInWorld(new EntityNeutron(world, x, y, z, dir, NeutronType.WASTE));
-			}};
-	}
+	// DRAGONAPI-PORT: createMESystemEffect (Applied Energistics ME-system waste leak) gated out —
+	// AE2 (appeng.api.*) + DragonAPI's MESystemEffect are not in this build.
 
 }
