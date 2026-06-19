@@ -11,64 +11,51 @@ package reika.reactorcraft.entities;
 
 import java.util.List;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.init.Blocks;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.WorldServer;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.AABB;
 
-// CHROMA-PORT: import reika.chromaticraft.api.interfaces.WorldRift;
-import reika.dragonapi.ModList;
 import reika.dragonapi.base.ParticleEntity;
-import reika.dragonapi.instantiable.BasicTeleporter;
-import reika.dragonapi.instantiable.data.immutable.WorldLocation;
-import reika.dragonapi.libraries.ReikaAABBHelper;
-import reika.dragonapi.libraries.ReikaEntityHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.reactorcraft.api.NeutronShield;
 import reika.reactorcraft.auxiliary.NeutronBlock;
 import reika.reactorcraft.auxiliary.NeutronTile;
 import reika.reactorcraft.auxiliary.RadiationEffects;
 import reika.reactorcraft.auxiliary.RadiationEffects.RadiationIntensity;
-import reika.reactorcraft.registry.FluoriteTypes;
 import reika.reactorcraft.registry.RadiationShield;
-import reika.reactorcraft.registry.ReactorBlocks;
+import reika.reactorcraft.registry.ReactorEntities;
 import reika.reactorcraft.registry.ReactorOptions;
 
-import cpw.mods.fml.common.registry.GameRegistry;
-import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
-import io.netty.buffer.ByteBuf;
-
-public class EntityNeutron extends ParticleEntity implements IEntityAdditionalSpawnData {
+public class EntityNeutron extends ParticleEntity {
 
 	private NeutronType type;
 	private NeutronSpeed speed;
 
-	private static Block botaniaPlatform;
-	private static Block ttPlatform;
+	// MOD-PORT: Botania/ThaumicTinkerer "platform" transparency blocks — those mods are not in the
+	// 26.2 build, so neutrons treat them as opaque. Re-resolve via the block registry if they ship.
+	private static final Block botaniaPlatform = null;
+	private static final Block ttPlatform = null;
 
-	public static void initTransparencyBlocks() {
-		botaniaPlatform = ModList.BOTANIA.isLoaded() ? GameRegistry.findBlock(ModList.BOTANIA.modLabel, "platform") : null;
-		ttPlatform = ModList.THAUMICTINKER.isLoaded() ? GameRegistry.findBlock(ModList.THAUMICTINKER.modLabel, "platform") : null;
+	public EntityNeutron(EntityType<? extends Entity> type, Level world) {
+		super(type, world);
 	}
 
-	public EntityNeutron(Level world, int x, int y, int z, ForgeDirection f, NeutronType type) {
-		super(world, x, y, z, f);
-		height = 1;
+	public EntityNeutron(Level world, BlockPos pos, Direction f, NeutronType type) {
+		super(ReactorEntities.NEUTRON.get(), world, pos, f);
 		this.type = type;
 		speed = type.getCreationSpeed();
-		if (speed == null)
-			Thread.dumpStack();
-	}
-
-	public EntityNeutron(Level world) {
-		super(world);
 	}
 
 	@Override
@@ -76,90 +63,78 @@ public class EntityNeutron extends ParticleEntity implements IEntityAdditionalSp
 		if (ReikaRandomHelper.doWithChance(12.5)) {
 			if (e instanceof LivingEntity) {
 				RadiationEffects.instance.applyPulseEffects((LivingEntity)e, RadiationIntensity.MODERATE);
-				this.setDead();
+				this.discard();
 			}
 		}
 	}
 
 	@Override
-	protected boolean onEnterBlock(Level world, int x, int y, int z) {
-		Block id = world.getBlock(x, y, z);
-		int meta = world.getBlockMetadata(x, y, z);
+	protected boolean onEnterBlock(Level world, BlockPos pos) {
+		BlockState bs = world.getBlockState(pos);
+		Block id = bs.getBlock();
 
 		if (!this.isNeutronTransparent(id)) {
-			if (id.hasTileEntity(meta)) {
-				BlockEntity te = world.getTileEntity(x, y, z);
+			if (bs.hasBlockEntity()) {
+				BlockEntity te = world.getBlockEntity(pos);
 				if (te instanceof NeutronTile) {
-					return ((NeutronTile)te).onNeutron(this, world, x, y, z);
+					return ((NeutronTile)te).onNeutron(this, world, pos);
 				}
-				else if (te instanceof WorldRift) {
-					WorldLocation tgt = ((WorldRift)te).getLinkTarget();
-					if (tgt != null) {
-						//this.setPosition(tgt.xCoord+0.5, tgt.yCoord+0.5, tgt.zCoord+0.5);
-						if (rand.nextInt(2) == 0) {
-							//this.setDead(); //negates need for shielding
-						}
-						else {
-							this.setLocationAndAngles(tgt.xCoord+0.5, tgt.yCoord+0.5, tgt.zCoord+0.5, 0, 0);
-							if (tgt.dimensionID != worldObj.provider.dimensionId && !worldObj.isRemote)
-								ReikaEntityHelper.transferEntityToDimension(this, tgt.dimensionID, new BasicTeleporter((WorldServer)tgt.getWorld()));
-						}
-					}
-				}
+				// CHROMA-PORT: WorldRift neutron teleport gated out (ChromatiCraft not in build).
 			}
 
 			if (id instanceof NeutronBlock) {
-				if (((NeutronBlock)id).onNeutron(this, world, x, y, z))
+				if (((NeutronBlock)id).onNeutron(this, world, pos))
 					return true;
 			}
 			else if (id instanceof NeutronShield) {
 				NeutronShield ns = (NeutronShield)id;
 				String type = this.getType().name();
 				double c = Math.min(ns.getAbsorptionChance(type), RadiationShield.BEDINGOT.neutronAbsorbChance);
-				boolean flag = ReikaRandomHelper.doWithChance(c);
-				if (flag) {
-					double c2 = Mth.clamp_double(ns.getRadiationSpawnMultiplier(world, x, y, z, type), 0, 1);
+				if (ReikaRandomHelper.doWithChance(c)) {
+					double c2 = Mth.clamp(ns.getRadiationSpawnMultiplier(world, pos, type), 0, 1);
 					if (ReikaRandomHelper.doWithChance(c2)) {
-						this.spawnRadiationChance(world, x, y, z);
+						this.spawnRadiationChance(world, pos);
 					}
 					return true;
 				}
 			}
 
-			if ((id == ReactorBlocks.FLUORITE.getBlockInstance() || id == ReactorBlocks.FLUORITEORE.getBlockInstance()) && meta < FluoriteTypes.colorList.length) {
-				world.setBlock(x, y, z, id, meta+8, 3);
-				world.func_147479_m(x, y, z);
-			}
+			// BLOCK-PORT: fluorite irradiation (legacy meta+8 glow on FLUORITE/FLUORITEORE) — wire to
+			// the fluorite blockstate when ReactorBlocks/FluoriteTypes is ported.
 
-			RadiationShield rs = RadiationShield.getFrom(id, meta);
+			RadiationShield rs = RadiationShield.getFrom(bs);
 			if (rs != null && ReikaRandomHelper.doWithChance(rs.neutronAbsorbChance))
 				return true;
 
 			if (ReikaRandomHelper.doWithChance(speed.getIrradiatedAbsorptionChance())) {
-				boolean flag = id.isOpaqueCube() ? (rand.nextBoolean() && id.getExplosionResistance(null, world, x, y, z, x, y, z) >= 12) || ReikaRandomHelper.getSafeRandomInt((int)(24 - id.getExplosionResistance(null, world, x, y, z, x, y, z))) == 0 : 255-id.getLightOpacity(world, x, y, z) == 0 ? ReikaRandomHelper.getSafeRandomInt(id.getLightOpacity(world, x, y, z)) > 0 : rand.nextInt(1000) == 0;
+				float res = bs.getBlock().getExplosionResistance();
+				int lightOpacity = bs.getLightBlock();
+				boolean flag = bs.canOcclude()
+						? (this.random.nextBoolean() && res >= 12) || ReikaRandomHelper.getSafeRandomInt((int)(24 - res)) == 0
+						: (15 - lightOpacity == 0 ? ReikaRandomHelper.getSafeRandomInt(lightOpacity) > 0 : this.random.nextInt(1000) == 0);
 				if (flag) {
-					this.spawnRadiationChance(world, x, y, z);
+					this.spawnRadiationChance(world, pos);
 					if (ReikaRandomHelper.doWithChance(20))
-						RadiationEffects.instance.transformBlock(world, x, y, z, RadiationIntensity.MODERATE);
+						RadiationEffects.instance.transformBlock(world, pos.getX(), pos.getY(), pos.getZ(), RadiationIntensity.MODERATE);
 					return true;
 				}
 			}
 			return false;
 		}
 
-		return rand.nextInt(1000) == 0;
+		return this.random.nextInt(1000) == 0;
 	}
 
 	private boolean isNeutronTransparent(Block id) {
-		return id == Blocks.air || id == botaniaPlatform || id == ttPlatform;
+		return id == Blocks.AIR || id == botaniaPlatform || id == ttPlatform;
 	}
 
-	private void spawnRadiationChance(Level world, int x, int y, int z) {
+	private void spawnRadiationChance(Level world, BlockPos pos) {
 		if (ReikaRandomHelper.doWithChance(2)) {
-			AABB box = ReikaAABBHelper.getBlockAABB(x, y, z).expand(8, 8, 8);
-			List inbox = world.getEntitiesWithinAABB(EntityRadiation.class, box);
+			AABB box = new AABB(pos).inflate(8, 8, 8);
+			List<EntityRadiation> inbox = world.getEntitiesOfClass(EntityRadiation.class, box);
 			if (inbox.size() < 3)
-				RadiationEffects.instance.contaminateArea(world, x, y, z, 1, 1, 0, false, RadiationIntensity.LOWLEVEL);
+				RadiationEffects.instance.contaminateArea(world, pos.getX(), pos.getY(), pos.getZ(), 1, 1, 0, false, RadiationIntensity.LOWLEVEL);
 		}
 	}
 
@@ -188,12 +163,12 @@ public class EntityNeutron extends ParticleEntity implements IEntityAdditionalSp
 	}
 
 	@Override
-	public void writeSpawnData(ByteBuf data) {
+	public void writeSpawnData(RegistryFriendlyByteBuf data) {
 		data.writeInt(type.ordinal());
 	}
 
 	@Override
-	public void readSpawnData(ByteBuf data) {
+	public void readSpawnData(RegistryFriendlyByteBuf data) {
 		type = NeutronType.neutronList[data.readInt()];
 		speed = type.getCreationSpeed();
 	}
@@ -253,16 +228,12 @@ public class EntityNeutron extends ParticleEntity implements IEntityAdditionalSp
 			if (!ReactorOptions.FASTNEUTRONS.getState())
 				return NeutronSpeed.THERMAL;
 			switch(this) {
-				case DECAY:
-				case FUSION:
-				case NULL:
-				case WASTE:
-				default:
-					return NeutronSpeed.THERMAL;
 				case BREEDER:
 				case FISSION:
 				case THORIUM:
 					return NeutronSpeed.FAST;
+				default:
+					return NeutronSpeed.THERMAL;
 			}
 		}
 	}
@@ -299,15 +270,15 @@ public class EntityNeutron extends ParticleEntity implements IEntityAdditionalSp
 	}
 
 	@Override
-	protected void readEntityFromNBT(CompoundTag NBT) {
-		type = NeutronType.neutronList[NBT.getInteger("ntype")];
-		speed = NeutronSpeed.speedList[NBT.getInteger("nspeed")];
+	protected void readAdditionalSaveData(ValueInput input) {
+		type = NeutronType.neutronList[input.getIntOr("ntype", 0)];
+		speed = NeutronSpeed.speedList[input.getIntOr("nspeed", 0)];
 	}
 
 	@Override
-	protected void writeEntityToNBT(CompoundTag NBT) {
-		NBT.setInteger("ntype", this.getType().ordinal());
-		NBT.setInteger("nspeed", this.getNeutronSpeed().ordinal());
+	protected void addAdditionalSaveData(ValueOutput output) {
+		output.putInt("ntype", this.getType().ordinal());
+		output.putInt("nspeed", this.getNeutronSpeed().ordinal());
 	}
 
 	@Override
