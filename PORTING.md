@@ -223,6 +223,29 @@ ctor — not ported); (3) port `EntityNeutron`/`EntityPlasma`/`EntityRadiation`/
 (`ReactorItemBase`, `ItemReactorTool`, `items/**`), `registry/ReactorItems`/`ReactorBlocks` for
 non-TE blocks, and auxiliary support that only touches `InertEntity`-based `EntityRadiation`.
 
+## Content layer (the remaining bulk) + the item-variant decision
+The entity/radiation subsystem + TE base hierarchy are done. What remains is the
+content/registration layer, all rooted at the **`ReactorCraft` main class** (everything
+references `MODID`/`radiation`/`fusionDamage`/`instance`), so the cluster can't enter the
+allowlist until a large connected chunk lands together:
+- `ReactorCraft` main (35 KB @Mod) — bus-register the DeferredRegisters (incl. `ReactorEntities.ENTITIES`),
+  define the `radiation` MobEffect (Holder) + `fusionDamage` DamageSource + `MODID`/`instance`.
+- registries: `ReactorItems`, `ReactorBlocks`, `ReactorTiles` (TE registry → BlockEntityType), plus
+  `ReactorOptions` (config), `ReactorSounds`, `ReactorAchievements`, `ReactorFuel`, `RadiationShield`,
+  `FluoriteTypes`, `WorkingFluid` — all are the 1.7.10 DragonAPI enum-registry style and must be
+  **rewritten to DeferredRegister** (like `ReactorEntities` was).
+- the 47 concrete TEs under `tileentities/**` (now have a ported base hierarchy to extend).
+- blocks/, items/, container/→Menu, guis/→Screen, renders/ (submit), recipes → **datagen**.
+
+### DECISION — item metadata variants → `getDamageValue()` carrier
+The RC port registers ONE `DeferredItem` per item; there is no `getStackOfMetadata`. ReactorCraft's
+metadata-variant items (FUEL burnup, PLUTONIUM stages, **WASTE ≈1000 isotopes**, fluorite colours)
+**carry the variant in `ItemStack.getDamageValue()/setDamageValue()`** (single registered item +
+int variant). Already used this way in `TileEntityWasteUnit` + `EntityNeutron` (committed). Rationale:
+~1000 isotopes can't be separate items; a data-component is cleaner but a larger refactor — revisit
+if the damage/durability overload bites. `getStackOfMetadata(m)` → `stack.setDamageValue(m)`;
+`getItemDamage()` → `getDamageValue()`; `getNumberMetadatas()` → a constant per item in `ReactorItems`.
+
 ## ChromatiCraft (optional integration, 10 files)
 Imports neutralized now. Usage sites (mostly `WorldRift`, `ChromatiAPI`, adjacency-upgrade,
 `CrystalElement`) are gated/removed when each owning file is ported. ChromatiCraft is not in
