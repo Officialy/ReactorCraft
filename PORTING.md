@@ -182,7 +182,16 @@ TE-cluster can compile. `Transducerable` is fine at `reika.rotarycraft.api.inter
   method signatures (and the hardcoded `"Reika.ReactorCraft..."` class-name strings) only settle
   once `RadiationEffects` is ported. Do it with that file.
 
-## BLOCKER: DragonAPI `ParticleEntity` not ported (gates entity→registry→TE chain)
+## ~~BLOCKER~~ RESOLVED: DragonAPI `ParticleEntity` ported (DragonAPI commit, green)
+DragonAPI now has `ParticleEntity` (+ an `InertEntity(EntityType<?>,Level)` ctor). The entity layer
+is unblocked. Next: port `EntityNeutron` (ctor `(EntityType<? extends Entity>,Level)` for registration
++ `(Level,BlockPos,Direction,NeutronType)` gameplay; block-interaction API `isOpaqueCube`→
+`isSolidRender`/`getExplosionResistance`/`getLightOpacity`→`getLightBlock`/`hasTileEntity`→
+`getBlockEntity!=null`; gate WorldRift; FML `GameRegistry.findBlock`→registry lookup), register it in
+`ReactorEntities` (RotaryEntities pattern), then `EntityPlasma`/`EntityRadiation`/`EntityFusion`.
+Original blocker analysis (kept for reference):
+
+### (was) DragonAPI `ParticleEntity` not ported
 `entities/EntityNeutron` and `entities/EntityPlasma` extend `reika.dragonapi.base.ParticleEntity`,
 which **does not exist in the ported DragonAPI** (only `InertEntity` was ported, and it's minimal —
 TODO stubs, uses `EntityTypes.ARROW`, doesn't implement `Entity`'s `defineSynchedData`/
@@ -195,6 +204,20 @@ concrete TEs. So the TE cluster cannot compile until DragonAPI gets `ParticleEnt
 port: 1.7.10 Entity API → modern — `motionX/Y/Z`→`setDeltaMovement`, `onUpdate`→`tick`,
 `setDead`→`discard`, `IEntityAdditionalSpawnData`→`IEntityWithComplexSpawn`, NBT→ValueInput/Output,
 `Coordinate`→`WorldLocation`). `InertEntity` likely needs hardening too.
+
+**Template + plan (this is tractable):** RotaryCraft `entities/EntityDischarge` is the proven
+ported pattern — `extends Entity implements IEntityWithComplexSpawn`; `defineSynchedData(Builder)`,
+`read/addAdditionalSaveData(ValueInput/Output)`, `writeSpawnData/readSpawnData(RegistryFriendlyByteBuf)`;
+registered via `RotaryEntities` `DeferredRegister<EntityType<?>>` + `EntityType.Builder.of(Ctor,
+MobCategory.MISC).build(ResourceKey)` with ctor `(EntityType<? extends Entity>, Level)`. Entity-layer
+sub-project order: (1) harden DragonAPI `InertEntity` — add `InertEntity(EntityType<?>, Level)` ctor
+(it currently hardcodes `EntityTypes.ARROW`, so every subclass mis-registers); (2) port
+`ParticleEntity` onto it (motion→`setDeltaMovement`, `onUpdate`→`tick`, `onEnterBlock(Level,BlockPos)`,
+spawnLocation via `WorldLocation` for NBT + raw ints for the spawn buffer; drop the `CubeDirections`
+ctor — not ported); (3) port `EntityNeutron`/`EntityPlasma`/`EntityRadiation`/`EntityFusion`
+(block-interaction API: `isOpaqueCube`→`isSolidRender`, `getExplosionResistance`,
+`getLightOpacity`→`getLightBlock`, `hasTileEntity`→`getBlockEntity != null`); (4) register them in
+`ReactorEntities`; (5) renders later. Then `ReactorType`→`ReactorTiles`→TEs unblock.
 
 **Unblocked alternative work in ReactorCraft** (no ParticleEntity dependency): the item layer
 (`ReactorItemBase`, `ItemReactorTool`, `items/**`), `registry/ReactorItems`/`ReactorBlocks` for
