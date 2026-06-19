@@ -121,6 +121,17 @@ a file the instant it is ported, rebuild to verify. Delete the whole block when 
   `canItemExitToSide(Direction)` / `canRemoveItem(int,ItemStack)` (was `ForgeDirection`). Sided I/O
   must be wired via the block's item-capability wrapper using those hooks (follow-up).
 
+- `base/` subclasses ported (B5–B9): `TileEntityInventoriedReactorBase` (Container),
+  `TileEntityTankedReactorMachine` (NeoForge IFluidHandler+PipeConnector), `TankedReactorPowerReceiver`,
+  `TileEntityNuclearBoiler`, `TileEntityIntermediateBoiler` (2-tank), `TileEntityWasteUnit`,
+  `TileEntityLine`. **Remaining base/: `TileEntityNuclearCore` (492 lines), `TileEntityReactorPiping`
+  (461)** — the two big multiblock/pipe bases, next.
+- More contracts established: `ReactorTiles.getMachineFromBlock(Block)` (no metadata); `ReactorItems`
+  registry getter `getItemInstance()`; `ReactorItems.WASTE` carries the isotope index via
+  `ItemStack.getDamageValue()` (faithful to the 1.7.10 metadata scheme — revisit as a data component
+  if needed); `TileEntityLine.getTexture()` returns `ResourceLocation`; `EntityNeutron(Level,BlockPos,
+  Direction,NeutronType)` ctor; `Proportionality` has no NBT methods (serialize manually).
+
 **Contract this base now imposes on downstream cluster files (make them conform when porting):**
 - `ReactorTiles` (enum impl `TileEnum`): `static getTE(Level,BlockPos)`, `allowTickAcceleration()`,
   `isReactorCore()`, constants `CONTROL/CPU/EXCHANGER/REFLECTOR`. `getBlockState()` from TileEnum.
