@@ -1,0 +1,48 @@
+/*******************************************************************************
+ * @author Reika Kalseki
+ *
+ * Copyright 2017
+ *
+ * All rights reserved.
+ * Distribution of the software in any form is only allowed with
+ * explicit, prior permission from the owner.
+ ******************************************************************************/
+package reika.reactorcraft;
+
+import net.minecraft.world.World;
+
+import reika.dragonapi.instantiable.io.SoundLoader;
+import reika.reactorcraft.registry.ReactorSounds;
+
+public class CommonProxy {
+
+	public static int lineRender;
+	public static int lampRender;
+	public static int hazmat;
+
+	protected static final SoundLoader sounds = new SoundLoader(ReactorSounds.class);
+
+	public void registerRenderers()
+	{
+
+	}
+
+	public void addArmorRenders() {}
+
+	public World getClientWorld() {
+		return null;
+	}
+
+	public void registerRenderInformation() {
+
+	}
+
+	public void registerSounds() {
+
+	}
+
+	public void loadDonatorRender() {
+
+	}
+
+}

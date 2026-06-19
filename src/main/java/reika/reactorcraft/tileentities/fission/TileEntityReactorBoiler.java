@@ -1,0 +1,231 @@
+/*******************************************************************************
+ * @author Reika Kalseki
+ *
+ * Copyright 2017
+ *
+ * All rights reserved.
+ * Distribution of the software in any form is only allowed with
+ * explicit, prior permission from the owner.
+ ******************************************************************************/
+package reika.reactorcraft.tileentities.fission;
+
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
+
+import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
+import reika.dragonapi.instantiable.data.immutable.Coordinate;
+import reika.dragonapi.libraries.io.ReikaSoundHelper;
+import reika.dragonapi.libraries.java.ReikaRandomHelper;
+import reika.dragonapi.libraries.registry.ReikaItemHelper;
+import reika.dragonapi.libraries.registry.ReikaParticleHelper;
+import reika.dragonapi.libraries.rendering.ReikaRenderHelper;
+import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.reactorcraft.auxiliary.SteamTile;
+import reika.reactorcraft.base.TileEntityNuclearBoiler;
+import reika.reactorcraft.entities.EntityNeutron;
+import reika.reactorcraft.entities.EntityNeutron.NeutronSpeed;
+import reika.reactorcraft.entities.EntityNeutron.NeutronType;
+import reika.reactorcraft.registry.ReactorAchievements;
+import reika.reactorcraft.registry.ReactorTiles;
+import reika.reactorcraft.registry.ReactorType;
+import reika.reactorcraft.registry.WorkingFluid;
+import reika.rotarycraft.auxiliary.ItemStacks;
+import reika.rotarycraft.registry.MachineRegistry;
+
+import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.relauncher.Side;
+
+public class TileEntityReactorBoiler extends TileEntityNuclearBoiler implements SteamTile {
+
+	public static final int WATER_PER_STEAM = 200;
+	public static final int DETTEMP = 650;
+
+	private WorkingFluid fluid = WorkingFluid.EMPTY;
+
+	@Override
+	public ReactorTiles getTile() {
+		return ReactorTiles.BOILER;
+	}
+
+	@Override
+	public void updateEntity(World world, int x, int y, int z, int meta) {
+		super.updateEntity(world, x, y, z, meta);
+		if (temperature >= DETTEMP && fluid == WorkingFluid.AMMONIA)
+			this.detonateAmmonia(world, x, y, z);
+
+		if (tank.getLevel() >= WATER_PER_STEAM && temperature > 100 && this.canBoilTankLiquid()) {
+			steam++;
+			fluid = WorkingFluid.getWorkingFluid(tank.getActualFluid());
+			if (fluid == WorkingFluid.AMMONIA) {
+				ReactorAchievements.AMMONIA.triggerAchievement(this.getPlacer());
+			}
+			tank.removeLiquid(WATER_PER_STEAM);
+			temperature -= 5;
+		}
+
+		if (DragonAPICore.debugtest) {
+			tank.addLiquid(2500, FluidRegistry.WATER);
+			temperature = 120;
+		}
+
+		if (steam <= 0) {
+			fluid = WorkingFluid.EMPTY;
+		}
+
+		//ReikaJavaLibrary.pConsole(y+":"+steam+":"+temperature+":"+fluid.name()+":"+tank, Side.SERVER);
+
+		//ReikaJavaLibrary.pConsole("T: "+temperature+"    W: "+tank.getLevel()+"    S: "+steam, Side.SERVER);
+
+		this.transferSteam(world, x, y, z);
+	}
+
+	private void detonateAmmonia(World world, int x, int y, int z) {
+		ReactorAchievements.NH3EXPLODE.triggerAchievement(this.getPlacer());
+		BlockArray pipes = new BlockArray();
+		Block id = ReactorTiles.STEAMLINE.getBlock();
+		int meta = ReactorTiles.STEAMLINE.getBlockMetadata();
+		pipes.recursiveAddWithMetadata(world, x, y+1, z, id, meta);
+		for (int i = 0; i < pipes.getSize(); i++) {
+			Coordinate c = pipes.getNthBlock(i);
+			c.setBlock(world, Blocks.air);
+			ReikaParticleHelper.EXPLODE.spawnAt(world, c.xCoord, c.yCoord, c.zCoord);
+			ReikaItemHelper.dropItem(world, c.xCoord, c.yCoord, c.zCoord, new ItemStack(Items.netherbrick));
+		}
+		world.setBlockToAir(x, y, z);
+		ReikaItemHelper.dropItem(world, x, y, z, ReikaItemHelper.getSizedItemStack(ItemStacks.scrap, 8+rand.nextInt(18)));
+		ReikaParticleHelper.EXPLODE.spawnAt(world, x, y, z);
+		ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.explode", 1.2F, 1);
+		boolean flag = false;
+		int r = 8;
+		for (int i = -r; i <= r; i++) {
+			for (int j = -r; j <= r; j++) {
+				for (int k = -r; k <= r; k++) {
+					Block id2 = world.getBlock(x+i, y+j, z+k);
+					int meta2 = world.getBlockMetadata(x+i, y+j, z+k);
+					if (id2 != Blocks.air && id2.getMaterial() == Material.glass) {
+						id2.dropBlockAsItem(world, x+i, y+j, z+k, meta2, 0);
+						world.setBlockToAir(x+i, y+j, z+k);
+						if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT)
+							ReikaRenderHelper.spawnDropParticles(world, x, y, z, id2, meta2);
+						flag = true;
+					}
+				}
+			}
+		}
+		if (flag)
+			ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.glass");
+	}
+
+	protected void transferSteam(World world, int x, int y, int z) {
+		ReactorTiles r = ReactorTiles.getTE(world, x, y+1, z);
+		if (r == ReactorTiles.BOILER) {
+			TileEntityReactorBoiler te = (TileEntityReactorBoiler)world.getTileEntity(x, y+1, z);
+			if (steam > 0 && fluid != WorkingFluid.EMPTY) {
+				if (te.fluid == WorkingFluid.EMPTY || te.fluid == fluid) {
+					te.fluid = fluid;
+					te.steam += steam;
+					steam = 0;
+				}
+			}
+		}
+	}
+
+	private boolean canBoilTankLiquid() {
+		if (WorkingFluid.getWorkingFluid(tank.getActualFluid()) == null)
+			return false;
+		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(worldObj, xCoord, yCoord, zCoord);
+		if (temperature < Tamb+50)
+			return false;
+		return fluid == WorkingFluid.EMPTY || tank.getActualFluid().equals(fluid.getFluid());
+	}
+
+	@Override
+	protected void animateWithTick(World world, int x, int y, int z) {
+
+	}
+
+	@Override
+	public boolean canConnectToPipe(MachineRegistry m) {
+		return m.isStandardPipe();
+	}
+
+	@Override
+	public int getCapacity() {
+		return 12000;
+	}
+
+	@Override
+	public boolean isValidFluid(Fluid f) {
+		return WorkingFluid.getWorkingFluid(f) != null;
+	}
+
+	@Override
+	public int getMaxTemperature() {
+		return 2000;
+	}
+
+	@Override
+	protected void readSyncTag(NBTTagCompound NBT) {
+		super.readSyncTag(NBT);
+
+		fluid = WorkingFluid.getFromNBT(NBT);
+	}
+
+	@Override
+	protected void writeSyncTag(NBTTagCompound NBT) {
+		super.writeSyncTag(NBT);
+
+		fluid.saveToNBT(NBT);
+	}
+
+	public WorkingFluid getWorkingFluid() {
+		return fluid;
+	}
+
+	@Override
+	public Fluid getInputFluid() {
+		return null;
+	}
+
+	@Override
+	protected void overheat(World world, int x, int y, int z) {
+		world.createExplosion(null, x+0.5, y+0.5, z+0.5, 8, true);
+		for (int i = 0; i < 4; i++)
+			ReikaItemHelper.dropItem(world, x+rand.nextDouble(), y+rand.nextDouble(), z+rand.nextDouble(), ItemStacks.scrap);
+	}
+
+	@Override
+	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+		NeutronType type = e.getType();
+		if (!tank.isEmpty()) {
+			if (tank.getActualFluid() == FluidRegistry.getFluid("rc heavy water")) {
+				e.moderate();
+			}
+			else {
+				if (e.getNeutronSpeed() == NeutronSpeed.FAST && rand.nextInt(10) == 0)
+					return true;
+			}
+			return ReikaRandomHelper.doWithChance(type.getBoilerAbsorptionChance());
+		}
+		return false;
+	}
+
+	@Override
+	public int getSteam() {
+		return steam;
+	}
+
+	@Override
+	public ReactorType getDefaultReactorType() {
+		return ReactorType.FISSION;
+	}
+
+}

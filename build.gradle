@@ -1,0 +1,23 @@
+ext {
+    mod_id          = "reactorcraft"
+    mod_name        = "ReactorCraft"
+    mod_group_id    = "reika.reactorcraft"
+    mod_description = "ReactorCraft adds realistic nuclear fission, fusion and breeder reactors powered by RotaryCraft."
+}
+
+dependencies {
+    implementation project(":DragonAPI")
+    implementation project(":RotaryCraft")
+}
+
+// PORT-IN-PROGRESS allowlist (see PORTING.md). The sources are still mostly original 1.7.10 and
+// will not compile, so we compile ONLY files that have been fully ported to 26.2. This list IS the
+// done-tracker: add a file here the moment it is ported, and the build verifies it. Remove this
+// whole block once the entire mod is ported.
+sourceSets.main.java {
+    include 'reika/reactorcraft/api/NeutronShield.java'
+    include 'reika/reactorcraft/auxiliary/ReactorBlock.java'
+    include 'reika/reactorcraft/auxiliary/SteamTile.java'
+    include 'reika/reactorcraft/auxiliary/MultiBlockTile.java'
+    include 'reika/reactorcraft/auxiliary/ReactorPowerReceiver.java'
+}

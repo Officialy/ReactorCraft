@@ -1,0 +1,61 @@
+/*******************************************************************************
+ * @author Reika Kalseki
+ * 
+ * Copyright 2017
+ * 
+ * All rights reserved.
+ * Distribution of the software in any form is only allowed with
+ * explicit, prior permission from the owner.
+ ******************************************************************************/
+package reika.reactorcraft.container;
+
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.ICrafting;
+import net.minecraft.inventory.Slot;
+
+import reika.dragonapi.base.CoreContainer;
+import reika.dragonapi.libraries.io.ReikaPacketHelper;
+import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.tileentities.processing.TileEntityElectrolyzer;
+
+public class ContainerElectrolyzer extends CoreContainer {
+
+	private TileEntityElectrolyzer synth;
+
+	public ContainerElectrolyzer(EntityPlayer player, TileEntityElectrolyzer te) {
+		super(player, te);
+
+		this.addSlotToContainer(new Slot(te, 0, 44, 41));
+
+		this.addPlayerInventoryWithOffset(player, 0, 9);
+
+		synth = te;
+	}
+
+	/**
+	 * Updates crafting matrix; called from onCraftMatrixChanged. Args: none
+	 */
+	@Override
+	public void detectAndSendChanges()
+	{
+		super.detectAndSendChanges();
+
+		for (int i = 0; i < crafters.size(); i++)
+		{
+			ICrafting icrafting = (ICrafting)crafters.get(i);
+
+			icrafting.sendProgressBarUpdate(this, 0, synth.time);
+		}
+		ReikaPacketHelper.sendTankSyncPacket(ReactorCraft.packetChannel, synth, "tankL");
+		ReikaPacketHelper.sendTankSyncPacket(ReactorCraft.packetChannel, synth, "tankH");
+		ReikaPacketHelper.sendTankSyncPacket(ReactorCraft.packetChannel, synth, "input");
+	}
+
+	@Override
+	public void updateProgressBar(int par1, int par2)
+	{
+		switch(par1) {
+		case 0: synth.time = par2; break;
+		}
+	}
+}

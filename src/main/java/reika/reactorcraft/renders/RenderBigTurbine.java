@@ -1,0 +1,27 @@
+/*******************************************************************************
+ * @author Reika Kalseki
+ * 
+ * Copyright 2017
+ * 
+ * All rights reserved.
+ * Distribution of the software in any form is only allowed with
+ * explicit, prior permission from the owner.
+ ******************************************************************************/
+package reika.reactorcraft.renders;
+
+import reika.reactorcraft.models.ModelBigTurbine;
+import reika.reactorcraft.models.ModelTurbine;
+
+public class RenderBigTurbine extends RenderTurbine
+{
+
+	@Override
+	protected Class<? extends ModelTurbine> getModelClass() {
+		return ModelBigTurbine.class;
+	}
+
+	@Override
+	protected String getTextureName() {
+		return "bigturbine";
+	}
+}
