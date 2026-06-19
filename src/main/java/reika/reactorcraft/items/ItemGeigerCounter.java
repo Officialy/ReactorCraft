@@ -9,73 +9,66 @@
  ******************************************************************************/
 package reika.reactorcraft.items;
 
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.world.World;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.phys.AABB;
 
-import reika.dragonapi.libraries.reikaentityhelper.EntityDistanceComparator;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.base.ItemReactorTool;
 import reika.reactorcraft.entities.EntityRadiation;
-import reika.reactorcraft.registry.ReactorItems;
 import reika.rotarycraft.api.interfaces.ChargeableTool;
 
 public class ItemGeigerCounter extends ItemReactorTool implements ChargeableTool {
 
-	public ItemGeigerCounter(int tex) {
-		super(tex);
+	public ItemGeigerCounter(Properties properties) {
+		super(properties);
 	}
 
 	@Override
-	public void onUpdate(ItemStack is, World world, Entity e, int slot, boolean currentHeld) {
-		if (currentHeld && is.getItemDamage() > 0) {
+	public void inventoryTick(ItemStack is, ServerLevel world, Entity e, EquipmentSlot slot) {
+		if (slot == EquipmentSlot.MAINHAND && is.getDamageValue() > 0) {
 			int r = 20;
-			if (e instanceof EntityLivingBase && ((EntityLivingBase)e).isPotionActive(ReactorCraft.radiation))
+			if (e instanceof LivingEntity le && le.hasEffect(ReactorCraft.radiation))
 				r = -1;
-			AxisAlignedBB box = r >= 0 ? AxisAlignedBB.getBoundingBox(e.posX, e.posY, e.posZ, e.posX, e.posY, e.posZ).expand(r, r, r) : null;
-			List<EntityRadiation> li = box == null ? null : world.getEntitiesWithinAABB(EntityRadiation.class, box);
+			AABB box = r >= 0 ? new AABB(e.getX(), e.getY(), e.getZ(), e.getX(), e.getY(), e.getZ()).inflate(r, r, r) : null;
+			List<EntityRadiation> li = box == null ? null : world.getEntitiesOfClass(EntityRadiation.class, box);
 			if (li == null) {
-				e.playSound("random.click", 2, 2F);
+				e.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 2, 2F);
 			}
 			else if (!li.isEmpty()) {
-				Collections.sort(li, new EntityDistanceComparator(e.posX, e.posY, e.posZ));
+				li.sort(Comparator.comparingDouble(er -> er.distanceToSqr(e)));
 				EntityRadiation er = li.get(0);
-				double dist = ReikaMathLibrary.py3d(e.posX-er.posX, e.posY-er.posY, e.posZ-er.posZ);
-				if (itemRand.nextDouble()*r*16 > dist*dist) {
-					//float vol = dist > 1 ? 1 : 2-(float)dist;
-					e.playSound("random.click", 1, 2F);
+				double dist = ReikaMathLibrary.py3d(e.getX()-er.getX(), e.getY()-er.getY(), e.getZ()-er.getZ());
+				if (e.getRandom().nextDouble()*r*16 > dist*dist) {
+					e.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 1, 2F);
 				}
 			}
-			if (itemRand.nextInt(8) == 0)
-				is.setItemDamage(is.getItemDamage()-1);
+			if (e.getRandom().nextInt(8) == 0)
+				is.setDamageValue(is.getDamageValue()-1);
 		}
 	}
 
 	@Override
 	public int setCharged(ItemStack is, int charge, boolean strongcoil) {
-		int ret = is.getItemDamage();
-		is.setItemDamage(charge);
+		int ret = is.getDamageValue();
+		is.setDamageValue(charge);
 		return ret;
 	}
 
 	@Override
-	public void getSubItems(Item id, CreativeTabs tab, List li) {
-		li.add(ReactorItems.GEIGER.getStackOfMetadata(0));
-		li.add(ReactorItems.GEIGER.getStackOfMetadata(32000));
-	}
-
-	@Override
-	public void addInformation(ItemStack is, EntityPlayer ep, List li, boolean par4) {
-		li.add("Charge: "+is.getItemDamage()+" kJ");
+	public void appendHoverText(ItemStack is, Item.TooltipContext ctx, List<Component> li, TooltipFlag flag) {
+		li.add(Component.literal("Charge: "+is.getDamageValue()+" kJ"));
 	}
 
 }
