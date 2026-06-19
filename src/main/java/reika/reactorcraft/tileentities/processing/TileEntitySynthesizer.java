@@ -14,9 +14,9 @@ import java.util.HashMap;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
@@ -148,7 +148,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		this.getWaterBuckets();
 		recipe = this.getRecipe();
 		if (recipe != null)
@@ -181,7 +181,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 		return fr;
 	}
 
-	public void updateTemperature(World world, int x, int y, int z, int meta) {
+	public void updateTemperature(Level world, int x, int y, int z, int meta) {
 		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
 
 		ForgeDirection waterside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
@@ -251,7 +251,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
@@ -319,7 +319,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -330,7 +330,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 
@@ -361,7 +361,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	@Override
-	public void onOverheat(World world, int x, int y, int z) {
+	public void onOverheat(Level world, int x, int y, int z) {
 
 	}
 

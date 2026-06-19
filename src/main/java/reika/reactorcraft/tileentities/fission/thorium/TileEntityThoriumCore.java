@@ -9,10 +9,10 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission.thorium;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -67,7 +67,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	private StepTimer timer2 = new StepTimer(5);
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		super.updateEntity(world, x, y, z, meta);
 
 		//ReikaJavaLibrary.pConsole(temperature+":"+this, temperature > 700);
@@ -114,7 +114,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	}
 
 	@Override
-	protected int getRestingTemperature(World world, int x, int y, int z) {
+	protected int getRestingTemperature(Level world, int x, int y, int z) {
 		return fuelTank.getActualFluid() == ReactorCraft.LIFBe_fuel_preheat ? 250 : super.getRestingTemperature(world, x, y, z);
 	}
 
@@ -148,7 +148,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	}
 
 	@Override
-	protected int getAmbientHeatLossFactor(World world, int x, int y, int z, int base, int Tamb) {
+	protected int getAmbientHeatLossFactor(Level world, int x, int y, int z, int base, int Tamb) {
 		return Tamb < temperature ? base*4 : base/2;
 	}
 
@@ -184,11 +184,11 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	}
 
 	private void feedFluid() {
-		World world = worldObj;
+		Level world = worldObj;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
-		TileEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
 		if (tile instanceof TileEntityThoriumCore) {
 			int amt = ((TileEntityThoriumCore)tile).feedFluidIn(fuelTank.getFluid(), 0);
 			if (amt > 0) {
@@ -236,7 +236,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 
 	int dumpFuel(TileEntityFuelDump te, int max) {
 		/*
-		int n = MathHelper.ceiling_double_int(fuelTank.getLevel()/1000D);
+		int n = Mth.ceiling_double_int(fuelTank.getLevel()/1000D);
 		for (int i = 0; i < n; i++) {
 			world.setBlock(x, y-1-i, z, ReactorBlocks.THORIUM.getBlockInstance());
 		}
@@ -261,7 +261,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		super.onNeutron(e, world, x, y, z);
 		if (!world.isRemote) {
 			if (e.getType().canTriggerFission() && ReikaRandomHelper.doWithChance(e.getNeutronSpeed().getInteractionMultiplier()) && e.getType() != NeutronType.BREEDER && ReikaRandomHelper.doWithChance(this.getNeutronInteractionChance())) {
@@ -333,7 +333,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
@@ -399,7 +399,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -409,7 +409,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 

@@ -11,12 +11,12 @@ package reika.reactorcraft.entities;
 
 import java.util.List;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.potion.Potion;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.world.World;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.base.ParticleEntity;
 import reika.dragonapi.libraries.ReikaAABBHelper;
@@ -37,11 +37,11 @@ public class EntityPlasma extends ParticleEntity implements CustomFanEntity {
 
 	private String placerOfInjector;
 
-	public EntityPlasma(World world) {
+	public EntityPlasma(Level world) {
 		super(world);
 	}
 
-	public EntityPlasma(World world, int x, int y, int z, String placer) {
+	public EntityPlasma(Level world, int x, int y, int z, String placer) {
 		super(world, x, y, z);
 
 		placerOfInjector = placer;
@@ -53,7 +53,7 @@ public class EntityPlasma extends ParticleEntity implements CustomFanEntity {
 	}
 
 	@Override
-	public boolean onEnterBlock(World world, int x, int y, int z) {
+	public boolean onEnterBlock(Level world, int x, int y, int z) {
 		if (!world.isRemote) {
 			if (ReikaWorldHelper.flammable(world, x, y, z))
 				ReikaWorldHelper.ignite(world, x, y, z);
@@ -75,7 +75,7 @@ public class EntityPlasma extends ParticleEntity implements CustomFanEntity {
 	}
 
 	private void checkFusion() {
-		AxisAlignedBB box = ReikaAABBHelper.getEntityCenteredAABB(this, 1);
+		AABB box = ReikaAABBHelper.getEntityCenteredAABB(this, 1);
 		List<EntityPlasma> li = worldObj.getEntitiesWithinAABB(EntityPlasma.class, box);
 		if (li.size() >= this.getFusionThreshold() && !li.get(0).hasEscaped() && !li.get(li.size()-1).hasEscaped()) {
 			EntityFusion fus = new EntityFusion(worldObj, posX, posY, posZ, placerOfInjector);
@@ -90,11 +90,11 @@ public class EntityPlasma extends ParticleEntity implements CustomFanEntity {
 
 	@Override
 	public void applyEntityCollision(Entity e) {
-		int dmg = e instanceof EntityLivingBase && ((EntityLivingBase)e).isPotionActive(Potion.fireResistance) ? 4 : Integer.MAX_VALUE;
+		int dmg = e instanceof LivingEntity && ((LivingEntity)e).isPotionActive(Potion.fireResistance) ? 4 : Integer.MAX_VALUE;
 		e.attackEntityFrom(ReactorCraft.fusionDamage, dmg);
-		if (e instanceof EntityPlayer) {
-			if (e.isDead || ((EntityLivingBase)e).getHealth() <= 0) {
-				ReactorAchievements.PLASMADIE.triggerAchievement((EntityPlayer)e);
+		if (e instanceof Player) {
+			if (e.isDead || ((LivingEntity)e).getHealth() <= 0) {
+				ReactorAchievements.PLASMADIE.triggerAchievement((Player)e);
 			}
 		}
 	}

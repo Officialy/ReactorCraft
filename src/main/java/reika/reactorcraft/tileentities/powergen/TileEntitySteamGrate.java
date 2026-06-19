@@ -9,8 +9,8 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.DragonAPICore;
@@ -31,12 +31,12 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 	private WorkingFluid fluid = WorkingFluid.EMPTY;
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		this.getSteam(world, x, y, z);
 
 		if (!world.isRemote && this.canMakeSteam(world, x, y, z)) {
@@ -54,7 +54,7 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 		//ReikaJavaLibrary.pConsole(steam, Side.SERVER);
 	}
 
-	private boolean canMakeSteam(World world, int x, int y, int z) {
+	private boolean canMakeSteam(Level world, int x, int y, int z) {
 		if (steam <= 0)
 			return false;
 		if (this.hasRedstoneSignal() != requireRedstone)
@@ -95,7 +95,7 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 		return false;
 	}
 
-	private void getSteam(World world, int x, int y, int z) {
+	private void getSteam(Level world, int x, int y, int z) {
 		for (int i = 0; i < 6; i++) {
 			ForgeDirection dir = dirs[i];
 			int dx = x+dir.offsetX;
@@ -123,7 +123,7 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -135,7 +135,7 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 
@@ -147,12 +147,12 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 	}
 
 	@Override
-	public boolean onShiftRightClick(World world, int x, int y, int z, ForgeDirection side) {
+	public boolean onShiftRightClick(Level world, int x, int y, int z, ForgeDirection side) {
 		return requireRedstone = !requireRedstone;
 	}
 
 	@Override
-	public boolean onRightClick(World world, int x, int y, int z, ForgeDirection side) {
+	public boolean onRightClick(Level world, int x, int y, int z, ForgeDirection side) {
 		return false;
 	}
 

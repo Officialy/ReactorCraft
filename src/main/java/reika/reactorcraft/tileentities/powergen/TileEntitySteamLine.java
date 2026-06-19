@@ -11,12 +11,12 @@ package reika.reactorcraft.tileentities.powergen;
 
 import java.util.ArrayList;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 // CHROMA-PORT: import reika.chromaticraft.api.interfaces.WorldRift;
@@ -50,7 +50,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		super.updateEntity(world, x, y, z, meta);
 
 		this.drawFromBoiler(world, x, y, z);
@@ -67,7 +67,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	}
 
 	@Override
-	protected boolean canConnectToMachine(Block id, int meta, ForgeDirection dir, TileEntity te) {
+	protected boolean canConnectToMachine(Block id, int meta, ForgeDirection dir, BlockEntity te) {
 		if (id == ReactorTiles.BOILER.getBlock() && meta == ReactorTiles.BOILER.getBlockMetadata() && dir == ForgeDirection.DOWN)
 			return true;
 		if (id == ReactorTiles.GRATE.getBlock() && meta == ReactorTiles.GRATE.getBlockMetadata())
@@ -83,7 +83,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 		return false;
 	}
 
-	private void drawFromBoiler(World world, int x, int y, int z) {
+	private void drawFromBoiler(Level world, int x, int y, int z) {
 		ReactorTiles r = ReactorTiles.getTE(world, x, y-1, z);
 		if (r == ReactorTiles.BOILER) {
 			TileEntityReactorBoiler te = (TileEntityReactorBoiler)world.getTileEntity(x, y-1, z);
@@ -113,9 +113,9 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 		return false;
 	}
 
-	private void getPipeSteam(World world, int x, int y, int z) {
+	private void getPipeSteam(Level world, int x, int y, int z) {
 		for (int i = 0; i < 6; i++) {
-			TileEntity te = this.getAdjacentTileEntity(dirs[i]);
+			BlockEntity te = this.getAdjacentTileEntity(dirs[i]);
 			if (te instanceof TileEntitySteamLine) {
 				TileEntitySteamLine tile = (TileEntitySteamLine)te;
 				if (this.canTakeInWorkingFluid(tile.fluid))
@@ -123,7 +123,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 			}
 			else if (te instanceof WorldRift && !world.isRemote) {
 				WorldRift wr = (WorldRift)te;
-				TileEntity tile = wr.getTileEntityFrom(dirs[i]);
+				BlockEntity tile = wr.getTileEntityFrom(dirs[i]);
 				if (tile instanceof TileEntitySteamLine) {
 					TileEntitySteamLine ts = (TileEntitySteamLine)tile;
 					if (this.canTakeInWorkingFluid(ts.fluid))
@@ -156,7 +156,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		steam = NBT.getInteger("energy");
@@ -165,7 +165,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		NBT.setInteger("energy", steam);
@@ -174,7 +174,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	}
 
 	@Override
-	public void readFromNBT(NBTTagCompound NBT) {
+	public void readFromNBT(CompoundTag NBT) {
 		super.readFromNBT(NBT);
 
 		source.readFromNBT(NBT.getCompoundTag("sources"), (NBTIO<ReactorType>)ReikaNBTHelper.getEnumConverter(ReactorType.class));
@@ -184,10 +184,10 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	}
 
 	@Override
-	public void writeToNBT(NBTTagCompound NBT) {
+	public void writeToNBT(CompoundTag NBT) {
 		super.writeToNBT(NBT);
 
-		NBTTagCompound tag = new NBTTagCompound();
+		CompoundTag tag = new CompoundTag();
 		source.writeToNBT(tag, (NBTIO<ReactorType>)ReikaNBTHelper.getEnumConverter(ReactorType.class));
 		NBT.setTag("sources", tag);
 	}

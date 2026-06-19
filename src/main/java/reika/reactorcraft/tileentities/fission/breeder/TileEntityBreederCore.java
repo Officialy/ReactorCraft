@@ -9,8 +9,8 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission.breeder;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.DragonAPICore;
@@ -30,7 +30,7 @@ public class TileEntityBreederCore extends TileEntityNuclearCore {
 	private StepTimer timer2 = new StepTimer(10);
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		super.updateEntity(world, x, y, z, meta);
 
 		//ReikaJavaLibrary.pConsole(temperature+":"+this, temperature > 700);
@@ -95,7 +95,7 @@ public class TileEntityBreederCore extends TileEntityNuclearCore {
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		super.onNeutron(e, world, x, y, z);
 		if (!world.isRemote) {
 			if (this.checkPoisonedChance())
@@ -146,7 +146,7 @@ public class TileEntityBreederCore extends TileEntityNuclearCore {
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 

@@ -10,8 +10,8 @@
 package reika.reactorcraft.tileentities;
 
 import net.minecraft.init.Blocks;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.instantiable.StepTimer;
@@ -41,7 +41,7 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		if (this.isActive()) {
 			//tempTimer.update();
 			if (!world.isRemote && this.getTicksExisted()%8 == 0) {
@@ -59,7 +59,7 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
@@ -67,7 +67,7 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 	public int getTemperature() {
 		if (this.isActive())
 			return temperature;
-		TileEntity te = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity te = this.getAdjacentTileEntity(ForgeDirection.DOWN);
 		if (te instanceof TileEntitySolarTop)
 			return ((TileEntitySolarTop)te).getTemperature();
 		else
@@ -85,7 +85,7 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 	}
 
 	@Override
-	public void updateTemperature(World world, int x, int y, int z, int meta) {
+	public void updateTemperature(Level world, int x, int y, int z, int meta) {
 
 	}
 
@@ -100,7 +100,7 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 	}
 
 	@Override
-	public void overheat(World world, int x, int y, int z) {
+	public void overheat(Level world, int x, int y, int z) {
 		ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.fizz");
 		world.setBlock(x, y, z, Blocks.lava);
 	}

@@ -9,8 +9,8 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.reactorcraft.base.TileEntityNuclearCore;
@@ -25,7 +25,7 @@ import reika.reactorcraft.tileentities.fission.TileEntityWaterCell.LiquidStates;
 public class TileEntityFuelRod extends TileEntityNuclearCore {
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 	/*
@@ -74,7 +74,7 @@ public class TileEntityFuelRod extends TileEntityNuclearCore {
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		super.onNeutron(e, world, x, y, z);
 		if (!world.isRemote) {
 			if (e.getType().canTriggerFission() && ReikaRandomHelper.doWithChance(e.getNeutronSpeed().getInteractionMultiplier())) {

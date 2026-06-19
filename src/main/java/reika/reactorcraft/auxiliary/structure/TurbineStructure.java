@@ -1,6 +1,6 @@
 package reika.reactorcraft.auxiliary.structure;
 
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.instantiable.data.blockstruct.FilledBlockArray;
@@ -14,7 +14,7 @@ import reika.reactorcraft.registry.ReactorTiles;
 public class TurbineStructure extends ReactorStructureBase {
 
 	@Override
-	public FilledBlockArray getArray(World world, int x, int y, int z) {
+	public FilledBlockArray getArray(Level world, int x, int y, int z) {
 		FilledBlockArray array = new FilledBlockArray(world);
 
 		ForgeDirection left = ReikaDirectionHelper.getLeftBy90(dir);

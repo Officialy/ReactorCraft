@@ -9,13 +9,13 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -71,7 +71,7 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 	}
 
 	@Override
-	protected void onIntake(TileEntity te) {
+	protected void onIntake(BlockEntity te) {
 
 	}
 
@@ -81,7 +81,7 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		super.updateEntity(world, x, y, z, meta);
 
 		this.distributeCharge(world, x, y, z);
@@ -99,13 +99,13 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 		}
 	}
 
-	private void distributeCharge(World world, int x, int y, int z) {
+	private void distributeCharge(Level world, int x, int y, int z) {
 		for (int i = 0; i < 6; i++) {
 			ForgeDirection dir = dirs[i];
 			int dx = x+dir.offsetX;
 			int dy = y+dir.offsetY;
 			int dz = z+dir.offsetZ;
-			TileEntity te = world.getTileEntity(dx, dy, dz);
+			BlockEntity te = world.getTileEntity(dx, dy, dz);
 
 			if (te instanceof WorldRift) {
 				WorldLocation loc = ((WorldRift)te).getLinkTarget();
@@ -132,7 +132,7 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 		}
 	}
 
-	private void updateCharge(World world, int x, int y, int z) {
+	private void updateCharge(Level world, int x, int y, int z) {
 		ForgeDirection dir = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
 		if (dir != null) {
 			EntityDischarge e = new EntityDischarge(world, x+0.5, y+0.5, z+0.5, charge, x+0.5+dir.offsetX, y+0.5+dir.offsetY, z+0.5+dir.offsetZ);
@@ -149,7 +149,7 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 
@@ -157,7 +157,7 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -198,12 +198,12 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 		return charge;
 	}
 
-	private boolean isPlasmaAcceptingBlock(TileEntity te) {
+	private boolean isPlasmaAcceptingBlock(BlockEntity te) {
 		return te instanceof TileEntityMagneticPipe || te instanceof TileEntityFusionHeater || te instanceof TileEntityFusionInjector;
 	}
 
 	@Override
-	protected boolean isInteractableTile(TileEntity te) {
+	protected boolean isInteractableTile(BlockEntity te) {
 		return (te instanceof WorldRift || this.isPlasmaAcceptingBlock(te)) && super.isInteractableTile(te);
 	}
 
@@ -213,7 +213,7 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		return false;
 	}
 

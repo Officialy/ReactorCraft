@@ -9,9 +9,9 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.init.Blocks;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.libraries.world.ReikaWorldHelper;
@@ -31,7 +31,7 @@ public class TileEntityTurbineMeter extends TileEntityReactorBase {
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		if (this.getTicksExisted() == 0 || world.getTotalWorldTime()%32 == 0) {
 			this.remapTurbine(world, x, y, z);
 		}
@@ -46,7 +46,7 @@ public class TileEntityTurbineMeter extends TileEntityReactorBase {
 		oldlvl = lvl;
 	}
 
-	private void remapTurbine(World world, int x, int y, int z) {
+	private void remapTurbine(Level world, int x, int y, int z) {
 		for (int i = y+1; i < world.provider.getHeight(); i++) {
 			ReactorTiles r = ReactorTiles.getTE(world, x, i, z);
 			if (r != null && r.isTurbine()) {
@@ -64,7 +64,7 @@ public class TileEntityTurbineMeter extends TileEntityReactorBase {
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 

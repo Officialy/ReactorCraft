@@ -13,9 +13,9 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 import net.minecraft.block.material.Material;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.StatCollector;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.base.BlockMultiBlock;
 import reika.reactorcraft.ReactorCraft;
@@ -35,8 +35,8 @@ public abstract class BlockReCMultiBlock extends BlockMultiBlock<Boolean> {
 	}
 
 	@Override
-	public final ArrayList<String> getMessages(World world, int x, int y, int z, int side) {
-		TileEntity te = this.getTileEntityForPosition(world, x, y, z);
+	public final ArrayList<String> getMessages(Level world, int x, int y, int z, int side) {
+		BlockEntity te = this.getTileEntityForPosition(world, x, y, z);
 		return te instanceof TileEntityReactorBase ? ((TileEntityReactorBase)te).getMessages(world, x, y, z, side) : new ArrayList();
 	}
 

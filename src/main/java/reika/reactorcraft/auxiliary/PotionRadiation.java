@@ -11,8 +11,8 @@ package reika.reactorcraft.auxiliary;
 
 import java.util.EnumSet;
 
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.world.EnumDifficulty;
@@ -37,7 +37,7 @@ public class PotionRadiation extends Potion implements PermaPotion {
 	}
 
 	@Override
-	public void performEffect(EntityLivingBase e, int level) {
+	public void performEffect(LivingEntity e, int level) {
 		boolean p = e.worldObj.difficultySetting == EnumDifficulty.PEACEFUL;
 		int c = p ? 75 : 50;
 		if (level >= RadiationIntensity.HIGHLEVEL.ordinal()) {
@@ -51,8 +51,8 @@ public class PotionRadiation extends Potion implements PermaPotion {
 			e.attackEntityFrom(ReactorCraft.radiationDamage, amt);
 		}
 
-		if (e instanceof EntityPlayer) {
-			EntityPlayer ep = (EntityPlayer)e;
+		if (e instanceof Player) {
+			Player ep = (Player)e;
 
 			int food = ep.getFoodStats().getFoodLevel();
 			float sat = ep.getFoodStats().getSaturationLevel(); //0-5
@@ -69,8 +69,8 @@ public class PotionRadiation extends Potion implements PermaPotion {
 	}
 
 	@Override
-	public boolean canBeCleared(EntityLivingBase e, PotionEffect pot) {
-		return e instanceof EntityPlayer && ((EntityPlayer)e).capabilities.isCreativeMode;
+	public boolean canBeCleared(LivingEntity e, PotionEffect pot) {
+		return e instanceof Player && ((Player)e).capabilities.isCreativeMode;
 	}
 
 	public static class PotionMapCMEAvoidance implements TickHandler {
@@ -83,7 +83,7 @@ public class PotionRadiation extends Potion implements PermaPotion {
 
 		@Override
 		public void tick(TickType type, Object... tickData) {
-			EntityPlayer e = (EntityPlayer)tickData[0];
+			Player e = (Player)tickData[0];
 			if (e.isPotionActive(ReactorCraft.radiation)) {
 				e.removePotionEffect(Potion.regeneration.id);
 				e.removePotionEffect(Potion.field_76443_y.id);

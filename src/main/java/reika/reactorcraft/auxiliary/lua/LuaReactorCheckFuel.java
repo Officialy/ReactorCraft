@@ -9,8 +9,8 @@
  ******************************************************************************/
 package reika.reactorcraft.auxiliary.lua;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import reika.dragonapi.modinteract.lua.LuaMethod;
 import reika.reactorcraft.base.TileEntityNuclearCore;
@@ -24,7 +24,7 @@ public class LuaReactorCheckFuel extends LuaMethod {
 	}
 
 	@Override
-	protected Object[] invoke(TileEntity te, Object[] args) throws LuaMethodException, InterruptedException {
+	protected Object[] invoke(BlockEntity te, Object[] args) throws LuaMethodException, InterruptedException {
 		TileEntityNuclearCore tile = (TileEntityNuclearCore)te;
 		ReactorTiles r = tile.getTile();
 		int fuel = 0;

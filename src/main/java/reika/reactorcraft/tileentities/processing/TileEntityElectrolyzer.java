@@ -15,9 +15,9 @@ import java.util.Collection;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
@@ -104,7 +104,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {/*
+	public void updateEntity(Level world, int x, int y, int z, int meta) {/*
 		if (iotick > 0)
 			iotick -= 8;
 
@@ -143,7 +143,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 	/*
@@ -286,7 +286,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 		return false;
 	}
 
-	public void updateTemperature(World world, int x, int y, int z, int meta) {
+	public void updateTemperature(Level world, int x, int y, int z, int meta) {
 		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
 
 		ForgeDirection waterside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
@@ -343,7 +343,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	@Override
-	public void overheat(World world, int x, int y, int z) {
+	public void overheat(Level world, int x, int y, int z) {
 		world.setBlockToAir(x, y, z);
 		world.newExplosion(null, x+0.5, y+0.5, z+0.5, 3F, true, true);
 	}
@@ -376,7 +376,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	@Override
-	public void onOverheat(World world, int x, int y, int z) {
+	public void onOverheat(Level world, int x, int y, int z) {
 
 	}
 
@@ -386,7 +386,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		tankH.writeToNBT(NBT);
@@ -405,7 +405,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		tankH.readFromNBT(NBT);

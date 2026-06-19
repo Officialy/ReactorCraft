@@ -12,18 +12,18 @@ package reika.reactorcraft.tileentities.powergen;
 import java.util.Collection;
 import java.util.List;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.BlockLiquid;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.Explosion;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fluids.Fluid;
@@ -137,7 +137,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	@Override
-	public final void updateEntity(World world, int x, int y, int z, int meta) {
+	public final void updateEntity(Level world, int x, int y, int z, int meta) {
 		this.getIOSides(world, x, y, z, meta);
 
 		if (!hasMultiBlock) {
@@ -203,7 +203,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 			ReactorAchievements.GIGATURBINE.triggerAchievement(this.getPlacer());
 		}
 
-		TileEntity tg = this.getTileEntity(writex, writey, writez);
+		BlockEntity tg = this.getTileEntity(writex, writey, writez);
 		if (tg instanceof ShaftPowerReceiver) {
 			ShaftPowerReceiver rec = (ShaftPowerReceiver)tg;
 			rec.setOmega(this.getOmega());
@@ -212,7 +212,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		}
 	}
 
-	protected boolean checkForMultiblock(World world, int x, int y, int z, int meta) {
+	protected boolean checkForMultiblock(Level world, int x, int y, int z, int meta) {
 		return false;
 	}
 
@@ -220,7 +220,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		return 20;
 	}
 
-	private void distributeLubricant(World world, int x, int y, int z, int meta) {
+	private void distributeLubricant(Level world, int x, int y, int z, int meta) {
 		ForgeDirection dir = this.getSteamMovement().getOpposite();
 		int dx = x+dir.offsetX;
 		int dy = y+dir.offsetY;
@@ -238,11 +238,11 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		}
 	}
 
-	protected void intakeLubricant(World world, int x, int y, int z, int meta) {
+	protected void intakeLubricant(Level world, int x, int y, int z, int meta) {
 
 	}
 
-	protected void dumpSteam(World world, int x, int y, int z, int meta) {
+	protected void dumpSteam(Level world, int x, int y, int z, int meta) {
 
 	}
 
@@ -269,7 +269,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		}
 	}
 
-	private void getIOSides(World world, int x, int y, int z, int meta) {
+	private void getIOSides(Level world, int x, int y, int z, int meta) {
 		switch(meta) {
 			case 0:
 				readx = x+1;
@@ -417,8 +417,8 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		return 0;
 	}
 
-	protected AxisAlignedBB getBoundingBox(World world, int x, int y, int z, int meta) {
-		AxisAlignedBB box = AxisAlignedBB.getBoundingBox(x, y, z, x+1, y+1, z+1);
+	protected AABB getBoundingBox(Level world, int x, int y, int z, int meta) {
+		AABB box = AABB.getBoundingBox(x, y, z, x+1, y+1, z+1);
 		int r = 2+stage;
 		switch(meta) {
 			case 2:
@@ -434,7 +434,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	/** Return true if turbine is to accelerate */
-	protected boolean intakeSteam(World world, int x, int y, int z, int meta) {
+	protected boolean intakeSteam(Level world, int x, int y, int z, int meta) {
 		Block id = world.getBlock(x, y-1, z);
 		int meta2 = world.getBlockMetadata(x, y-1, z);
 		boolean canAccel = false;
@@ -455,7 +455,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		if (canAccel && world.isRemote && world.getClosestPlayer(x+0.5, y+0.5, z+0.5, 64) != null) {
 			ForgeDirection dir = this.getSteamMovement();
 			for (int i = 0; i < this.getNumberStagesTotal(); i++) {
-				TileEntity te = world.getTileEntity(x+dir.offsetX, y, z+dir.offsetZ);
+				BlockEntity te = world.getTileEntity(x+dir.offsetX, y, z+dir.offsetZ);
 				if (!(te instanceof TileEntityTurbineCore))
 					break;
 				double r = ((TileEntityTurbineCore)te).getRadius()*2.4-2;
@@ -482,7 +482,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		return ammonia;
 	}
 
-	private void readSurroundings(World world, int x, int y, int z, int meta) {
+	private void readSurroundings(Level world, int x, int y, int z, int meta) {
 		if (this.canCollideCheck()) {
 			contact.clear();
 			if (contact.isEmpty()) {
@@ -518,7 +518,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		return true;
 	}
 
-	protected boolean enabled(World world, int x, int y, int z) {
+	protected boolean enabled(Level world, int x, int y, int z) {
 		return enabled;
 	}
 
@@ -526,8 +526,8 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		return 1.5+stage/2;
 	}
 
-	private void fillSurroundings(World world, int x, int y, int z, int meta) {
-		AxisAlignedBB box = AxisAlignedBB.getBoundingBox(x, y, z, x+1, y+1, z+1);
+	private void fillSurroundings(Level world, int x, int y, int z, int meta) {
+		AABB box = AABB.getBoundingBox(x, y, z, x+1, y+1, z+1);
 		int r = 3;
 		switch(meta) {
 			case 2:
@@ -552,11 +552,11 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 
 	}
 
-	private void enviroTest(World world, int x, int y, int z, int meta) {
-		AxisAlignedBB box = this.getBoundingBox(world, x, y, z, meta);
+	private void enviroTest(Level world, int x, int y, int z, int meta) {
+		AABB box = this.getBoundingBox(world, x, y, z, meta);
 		int r = 2+stage/2;
-		List<EntityLivingBase> li = world.getEntitiesWithinAABB(EntityLivingBase.class, box);
-		for (EntityLivingBase e : li) {
+		List<LivingEntity> li = world.getEntitiesWithinAABB(LivingEntity.class, box);
+		for (LivingEntity e : li) {
 			if (this.getOmega() > 0 && ReikaMathLibrary.py3d(e.posX-x-0.5, e.posY-y-0.5, e.posZ-z-0.5) < r) {
 				if (this.canDamageTurbine(e)) {
 					if (!world.isRemote) {
@@ -579,8 +579,8 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	public static boolean canDamageTurbine(Entity e) {
-		if (e instanceof EntityPlayer) {
-			return !((EntityPlayer)e).capabilities.isCreativeMode;
+		if (e instanceof Player) {
+			return !((Player)e).capabilities.isCreativeMode;
 		}
 		return ReikaEntityHelper.isSolidEntity(e);
 	}
@@ -602,7 +602,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		return this.calcStage()+1;
 	}
 
-	private void followHead(World world, int x, int y, int z, int meta) {
+	private void followHead(Level world, int x, int y, int z, int meta) {
 		if (ReactorTiles.getTE(worldObj, readx, ready, readz) == this.getTile()) {
 			TileEntityTurbineCore tile = (TileEntityTurbineCore)world.getTileEntity(readx, ready, readz);
 			if (tile.writex == x && tile.writey == y && tile.writez == z) {
@@ -627,7 +627,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	@Override
-	protected final void animateWithTick(World world, int x, int y, int z) {
+	protected final void animateWithTick(Level world, int x, int y, int z) {
 		iotick -= 8;
 		if (!this.isInWorld()) {
 			phi = 0;
@@ -676,7 +676,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -700,7 +700,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 
@@ -726,8 +726,8 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	@Override
-	public AxisAlignedBB getRenderBoundingBox() {
-		return AxisAlignedBB.getBoundingBox(xCoord, yCoord, zCoord, xCoord+1, yCoord+1, zCoord+1).expand(6, 6, 6);
+	public AABB getRenderBoundingBox() {
+		return AABB.getBoundingBox(xCoord, yCoord, zCoord, xCoord+1, yCoord+1, zCoord+1).expand(6, 6, 6);
 	}
 
 	private static enum Interference {
@@ -776,12 +776,12 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	@Override
-	public final boolean onShiftRightClick(World world, int x, int y, int z, ForgeDirection side) {
+	public final boolean onShiftRightClick(Level world, int x, int y, int z, ForgeDirection side) {
 		return false;
 	}
 
 	@Override
-	public final boolean onRightClick(World world, int x, int y, int z, ForgeDirection side) {
+	public final boolean onRightClick(Level world, int x, int y, int z, ForgeDirection side) {
 		int meta = this.getBlockMetadata();
 		this.setBlockMetadata(meta < (this.canOrientVertically() ? 5 : 3) ? meta+1 : 0);
 		return true;
@@ -908,12 +908,12 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	@Override
-	public void getAllOutputs(Collection<TileEntity> c, ForgeDirection dir) {
+	public void getAllOutputs(Collection<BlockEntity> c, ForgeDirection dir) {
 		c.add(this.getAdjacentTileEntity(this.getSteamMovement()));
 	}
 
 	@Override
-	public World getWorld() {
+	public Level getWorld() {
 		return worldObj;
 	}
 

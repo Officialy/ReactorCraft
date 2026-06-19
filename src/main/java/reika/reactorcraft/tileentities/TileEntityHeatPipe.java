@@ -9,13 +9,13 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 // CHROMA-PORT: import reika.chromaticraft.api.interfaces.WorldRift;
@@ -57,7 +57,7 @@ public class TileEntityHeatPipe extends TileEntityLine {
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		super.updateEntity(world, x, y, z, meta);
 
 		if (!world.isRemote) {
@@ -69,7 +69,7 @@ public class TileEntityHeatPipe extends TileEntityLine {
 		}
 	}
 
-	private void ventHeat(World world, int x, int y, int z) {
+	private void ventHeat(Level world, int x, int y, int z) {
 		double temp = getTemperatureForPipe(this, false);
 		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
 		if (temp >= Tamb) {
@@ -100,20 +100,20 @@ public class TileEntityHeatPipe extends TileEntityLine {
 	}
 
 	@Override
-	protected void onFirstTick(World world, int x, int y, int z) {
+	protected void onFirstTick(Level world, int x, int y, int z) {
 		heatEnergy = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z)*HEAT_CAPACITY;
 	}
 
-	private void balanceHeat(World world, int x, int y, int z) {
+	private void balanceHeat(Level world, int x, int y, int z) {
 		for (int i = 0; i < 6; i++) {
-			TileEntity te = this.getAdjacentTileEntity(dirs[i]);
+			BlockEntity te = this.getAdjacentTileEntity(dirs[i]);
 			if (te instanceof TileEntityHeatPipe) {
 				TileEntityHeatPipe tile = (TileEntityHeatPipe)te;
 				this.balanceWith(tile);
 			}
 			else if (te instanceof WorldRift) {
 				WorldRift wr = (WorldRift)te;
-				TileEntity tile = wr.getTileEntityFrom(dirs[i]);
+				BlockEntity tile = wr.getTileEntityFrom(dirs[i]);
 				if (tile instanceof TileEntityHeatPipe) {
 					TileEntityHeatPipe ts = (TileEntityHeatPipe)tile;
 					this.balanceWith(ts);
@@ -175,7 +175,7 @@ public class TileEntityHeatPipe extends TileEntityLine {
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		heatEnergy = NBT.getDouble("heat");
@@ -183,7 +183,7 @@ public class TileEntityHeatPipe extends TileEntityLine {
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		NBT.setDouble("heat", heatEnergy);
@@ -201,7 +201,7 @@ public class TileEntityHeatPipe extends TileEntityLine {
 	}
 
 	@Override
-	protected boolean canConnectToMachine(Block id, int meta, ForgeDirection dir, TileEntity te) {
+	protected boolean canConnectToMachine(Block id, int meta, ForgeDirection dir, BlockEntity te) {
 		if (!(te instanceof HeatConduction))
 			return false;
 		HeatConduction h = (HeatConduction)te;

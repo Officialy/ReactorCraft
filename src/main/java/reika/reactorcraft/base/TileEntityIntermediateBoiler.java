@@ -11,8 +11,8 @@ package reika.reactorcraft.base;
 
 import java.util.Locale;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
@@ -46,7 +46,7 @@ public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoil
 	public abstract int getMinimumTemperature();
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		super.updateEntity(world, x, y, z, meta);
 
 		timer.update();
@@ -65,7 +65,7 @@ public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoil
 		this.transferFluid(world, x, y, z);
 	}
 
-	private void transferFluid(World world, int x, int y, int z) {
+	private void transferFluid(Level world, int x, int y, int z) {
 		ReactorTiles r = ReactorTiles.getTE(world, x, y+1, z);
 		if (r == this.getTile()) {
 			TileEntityIntermediateBoiler te = (TileEntityIntermediateBoiler)world.getTileEntity(x, y+1, z);
@@ -105,12 +105,12 @@ public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoil
 	}
 
 	@Override
-	public final void animateWithTick(World world, int x, int y, int z) {
+	public final void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -119,7 +119,7 @@ public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoil
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 

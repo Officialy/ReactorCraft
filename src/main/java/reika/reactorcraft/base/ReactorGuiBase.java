@@ -13,7 +13,7 @@ import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.util.StatCollector;
@@ -30,9 +30,9 @@ import reika.rotarycraft.RotaryCraft;
 public abstract class ReactorGuiBase extends GuiContainer {
 
 	private TileEntityReactorBase tile;
-	private EntityPlayer player;
+	private Player player;
 
-	public ReactorGuiBase(Container c, EntityPlayer ep, TileEntityReactorBase te) {
+	public ReactorGuiBase(Container c, Player ep, TileEntityReactorBase te) {
 		super(c);
 		player = ep;
 		tile = te;

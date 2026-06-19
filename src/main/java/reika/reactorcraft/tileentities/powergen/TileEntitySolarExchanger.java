@@ -9,7 +9,7 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
 
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
@@ -78,7 +78,7 @@ public class TileEntitySolarExchanger extends TankedReactorPowerReceiver impleme
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		super.updateEntity(world, x, y, z, meta);
 	}
 

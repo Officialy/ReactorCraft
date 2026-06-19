@@ -1,7 +1,7 @@
 package reika.reactorcraft.auxiliary.structure;
 
-import net.minecraft.block.Block;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.instantiable.data.blockstruct.FilledBlockArray;
 import reika.reactorcraft.base.ReactorStructureBase;
@@ -12,7 +12,7 @@ import reika.reactorcraft.registry.ReactorTiles;
 public class SolenoidStructure extends ReactorStructureBase {
 
 	@Override
-	public FilledBlockArray getArray(World world, int x, int y, int z) {
+	public FilledBlockArray getArray(Level world, int x, int y, int z) {
 		FilledBlockArray array = new FilledBlockArray(world);
 
 		Block b = ReactorBlocks.SOLENOIDMULTI.getBlockInstance();

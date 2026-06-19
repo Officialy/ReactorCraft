@@ -9,9 +9,9 @@
  ******************************************************************************/
 package reika.reactorcraft.base;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 // CHROMA-PORT: import reika.chromaticraft.api.ChromatiAPI;
@@ -115,7 +115,7 @@ public abstract class TileEntityWasteUnit extends TileEntityInventoriedReactorBa
 
 	}
 
-	protected void leakRadiation(World world, int x, int y, int z) {
+	protected void leakRadiation(Level world, int x, int y, int z) {
 		ForgeDirection dir = dirs[rand.nextInt(dirs.length)];
 		if (!world.isRemote)
 			world.spawnEntityInWorld(new EntityNeutron(world, x, y, z, dir, NeutronType.WASTE));
@@ -176,14 +176,14 @@ public abstract class TileEntityWasteUnit extends TileEntityInventoriedReactorBa
 	}
 
 	@Override
-	public void readFromNBT(NBTTagCompound NBT) {
+	public void readFromNBT(CompoundTag NBT) {
 		super.readFromNBT(NBT);
 
 		lastTickTime = NBT.getLong("lasttime");
 	}
 
 	@Override
-	public void writeToNBT(NBTTagCompound NBT) {
+	public void writeToNBT(CompoundTag NBT) {
 		super.writeToNBT(NBT);
 
 		NBT.setLong("lasttime", lastTickTime);

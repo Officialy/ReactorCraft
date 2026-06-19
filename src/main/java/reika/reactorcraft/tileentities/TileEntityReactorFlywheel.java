@@ -9,10 +9,10 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
-import net.minecraft.block.Block;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.reactorcraft.auxiliary.MultiBlockTile;
@@ -59,7 +59,7 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		facing = this.setFacing(meta);
 		int dx = x+this.getFacing().offsetX;
 		int dy = y+this.getFacing().offsetY;
@@ -87,7 +87,7 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 			omega = 0;
 		}
 		power = (long)omega*(long)torque;
-		TileEntity tg = this.getAdjacentTileEntity(this.getFacing().getOpposite());
+		BlockEntity tg = this.getAdjacentTileEntity(this.getFacing().getOpposite());
 		if (tg instanceof ShaftPowerReceiver) {
 			ShaftPowerReceiver rec = (ShaftPowerReceiver)tg;
 			rec.setOmega(this.getOmega());
@@ -116,7 +116,7 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 		int dx = x+this.getFacing().offsetX;
 		int dy = y+this.getFacing().offsetY;
 		int dz = z+this.getFacing().offsetZ;
@@ -190,12 +190,12 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 	}
 
 	@Override
-	public boolean onShiftRightClick(World world, int x, int y, int z, ForgeDirection side) {
+	public boolean onShiftRightClick(Level world, int x, int y, int z, ForgeDirection side) {
 		return false;
 	}
 
 	@Override
-	public boolean onRightClick(World world, int x, int y, int z, ForgeDirection side) {
+	public boolean onRightClick(Level world, int x, int y, int z, ForgeDirection side) {
 		int meta = this.getBlockMetadata();
 		if (this.hasMultiBlock()) {
 			this.setBlockMetadata((meta-meta%2)+(1-(meta%2)));
@@ -210,7 +210,7 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		facing = dirs[NBT.getInteger("face")];
@@ -220,7 +220,7 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		NBT.setInteger("face", this.getFacing().ordinal());

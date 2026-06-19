@@ -11,9 +11,9 @@ package reika.reactorcraft.tileentities.fission;
 
 import java.util.HashMap;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidContainerRegistry;
@@ -41,7 +41,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		thermalTicker.update();
 		if (ReactorTiles.getTE(world, x, y-1, z) == this.getTile()) {
 			TileEntityWaterCell te = (TileEntityWaterCell)world.getTileEntity(x, y-1, z);
@@ -68,7 +68,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 		}
 
 		if (this.getLiquidState() == LiquidStates.EMPTY) {
-			TileEntity te = world.getTileEntity(x, y+1, z);
+			BlockEntity te = world.getTileEntity(x, y+1, z);
 			if (te instanceof IFluidHandler) {
 				IFluidHandler ic = (IFluidHandler)te;
 				FluidStack liq = ic.drain(ForgeDirection.DOWN, FluidContainerRegistry.BUCKET_VOLUME, false);
@@ -90,7 +90,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	protected void updateTemperature(World world, int x, int y, int z) {
+	protected void updateTemperature(Level world, int x, int y, int z) {
 		super.updateTemperature(world, x, y, z);
 		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
 		int dT = temperature-Tamb;
@@ -99,7 +99,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 		}
 		for (int i = 0; i < 6; i++) {
 			ForgeDirection dir = dirs[i];
-			TileEntity te = this.getAdjacentTileEntity(dir);
+			BlockEntity te = this.getAdjacentTileEntity(dir);
 			if (te instanceof Temperatured) {
 				Temperatured tr = (Temperatured)te;
 				if (internalLiquid != LiquidStates.HEAVY && tr.canDumpHeatInto(internalLiquid)) {
@@ -117,7 +117,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
@@ -127,7 +127,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {/*
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {/*
 		if (ReikaMathLibrary.doWithChance(this.getChanceToStop())) {
 			temperature += ReikaThermoHelper.getTemperatureIncrease(ReikaThermoHelper.WATER_HEAT, 1000, ReikaNuclearHelper.getUraniumFissionNeutronE());
 			storedEnergy += ReikaNuclearHelper.getUraniumFissionNeutronE(); //3.8kJ per neutron (kinetic energy)
@@ -215,12 +215,12 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 		return 1000;
 	}
 
-	private void onMeltdown(World world, int x, int y, int z) {
+	private void onMeltdown(Level world, int x, int y, int z) {
 
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -228,7 +228,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 

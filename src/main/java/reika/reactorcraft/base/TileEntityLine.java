@@ -9,14 +9,14 @@
  ******************************************************************************/
 package reika.reactorcraft.base;
 
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -29,16 +29,16 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 	private boolean[] connections = new boolean[6];
 
 	@Override
-	protected final void animateWithTick(World world, int x, int y, int z) {
+	protected final void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 
 	}
 
-	public final boolean isConnectedOnSideAt(World world, int x, int y, int z, ForgeDirection dir) {
+	public final boolean isConnectedOnSideAt(Level world, int x, int y, int z, ForgeDirection dir) {
 		dir = dir.offsetX == 0 ? dir.getOpposite() : dir;
 		int dx = x+dir.offsetX;
 		int dy = y+dir.offsetY;
@@ -49,18 +49,18 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 			return false;
 		if (ReactorTiles.getMachineFromIDandMetadata(id, meta) == this.getTile())
 			return true;
-		TileEntity te = world.getTileEntity(dx, dy, dz);
+		BlockEntity te = world.getTileEntity(dx, dy, dz);
 		if (te instanceof WorldRift)
 			return true;
 		return this.canConnectToMachine(id, meta, dir, te);
 	}
 
-	protected boolean canConnectToMachine(Block id, int meta, ForgeDirection dir, TileEntity te) {
+	protected boolean canConnectToMachine(Block id, int meta, ForgeDirection dir, BlockEntity te) {
 		return false;
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		for (int i = 0; i < 6; i++) {
@@ -69,7 +69,7 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		for (int i = 0; i < 6; i++) {
@@ -85,11 +85,11 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 	}
 
 	@Override
-	public final AxisAlignedBB getRenderBoundingBox() {
-		return AxisAlignedBB.getBoundingBox(xCoord, yCoord, zCoord, xCoord+1, yCoord+1, zCoord+1);
+	public final AABB getRenderBoundingBox() {
+		return AABB.getBoundingBox(xCoord, yCoord, zCoord, xCoord+1, yCoord+1, zCoord+1);
 	}
 
-	public final void recomputeConnections(World world, int x, int y, int z) {
+	public final void recomputeConnections(Level world, int x, int y, int z) {
 		for (int i = 0; i < 6; i++) {
 			connections[i] = this.isConnected(dirs[i]);
 			world.func_147479_m(x+dirs[i].offsetX, y+dirs[i].offsetY, z+dirs[i].offsetZ);
@@ -98,7 +98,7 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 		//ReikaJavaLibrary.pConsole(Arrays.toString(connections), Side.SERVER);
 	}
 
-	public final void deleteFromAdjacentConnections(World world, int x, int y, int z) {
+	public final void deleteFromAdjacentConnections(Level world, int x, int y, int z) {
 		for (int i = 0; i < 6; i++) {
 			ForgeDirection dir = dirs[i];
 			int dx = x+dir.offsetX;
@@ -113,7 +113,7 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 		}
 	}
 
-	public final void addToAdjacentConnections(World world, int x, int y, int z) {
+	public final void addToAdjacentConnections(Level world, int x, int y, int z) {
 		for (int i = 0; i < 6; i++) {
 			ForgeDirection dir = dirs[i];
 			int dx = x+dir.offsetX;
@@ -136,7 +136,7 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 		ReactorTiles m2 = ReactorTiles.getTE(worldObj, x, y, z);
 		if (m == m2)
 			return true;
-		TileEntity te = worldObj.getTileEntity(x, y, z);
+		BlockEntity te = worldObj.getTileEntity(x, y, z);
 		if (te instanceof PipeRenderConnector)
 			return ((PipeRenderConnector)te).canConnectToPipeOnSide(dir);
 		else if (te instanceof WorldRift)

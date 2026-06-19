@@ -11,15 +11,15 @@ package reika.reactorcraft.entities;
 
 import java.util.List;
 
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -58,7 +58,7 @@ public class EntityNeutron extends ParticleEntity implements IEntityAdditionalSp
 		ttPlatform = ModList.THAUMICTINKER.isLoaded() ? GameRegistry.findBlock(ModList.THAUMICTINKER.modLabel, "platform") : null;
 	}
 
-	public EntityNeutron(World world, int x, int y, int z, ForgeDirection f, NeutronType type) {
+	public EntityNeutron(Level world, int x, int y, int z, ForgeDirection f, NeutronType type) {
 		super(world, x, y, z, f);
 		height = 1;
 		this.type = type;
@@ -67,28 +67,28 @@ public class EntityNeutron extends ParticleEntity implements IEntityAdditionalSp
 			Thread.dumpStack();
 	}
 
-	public EntityNeutron(World world) {
+	public EntityNeutron(Level world) {
 		super(world);
 	}
 
 	@Override
 	public void applyEntityCollision(Entity e) {
 		if (ReikaRandomHelper.doWithChance(12.5)) {
-			if (e instanceof EntityLivingBase) {
-				RadiationEffects.instance.applyPulseEffects((EntityLivingBase)e, RadiationIntensity.MODERATE);
+			if (e instanceof LivingEntity) {
+				RadiationEffects.instance.applyPulseEffects((LivingEntity)e, RadiationIntensity.MODERATE);
 				this.setDead();
 			}
 		}
 	}
 
 	@Override
-	protected boolean onEnterBlock(World world, int x, int y, int z) {
+	protected boolean onEnterBlock(Level world, int x, int y, int z) {
 		Block id = world.getBlock(x, y, z);
 		int meta = world.getBlockMetadata(x, y, z);
 
 		if (!this.isNeutronTransparent(id)) {
 			if (id.hasTileEntity(meta)) {
-				TileEntity te = world.getTileEntity(x, y, z);
+				BlockEntity te = world.getTileEntity(x, y, z);
 				if (te instanceof NeutronTile) {
 					return ((NeutronTile)te).onNeutron(this, world, x, y, z);
 				}
@@ -118,7 +118,7 @@ public class EntityNeutron extends ParticleEntity implements IEntityAdditionalSp
 				double c = Math.min(ns.getAbsorptionChance(type), RadiationShield.BEDINGOT.neutronAbsorbChance);
 				boolean flag = ReikaRandomHelper.doWithChance(c);
 				if (flag) {
-					double c2 = MathHelper.clamp_double(ns.getRadiationSpawnMultiplier(world, x, y, z, type), 0, 1);
+					double c2 = Mth.clamp_double(ns.getRadiationSpawnMultiplier(world, x, y, z, type), 0, 1);
 					if (ReikaRandomHelper.doWithChance(c2)) {
 						this.spawnRadiationChance(world, x, y, z);
 					}
@@ -154,9 +154,9 @@ public class EntityNeutron extends ParticleEntity implements IEntityAdditionalSp
 		return id == Blocks.air || id == botaniaPlatform || id == ttPlatform;
 	}
 
-	private void spawnRadiationChance(World world, int x, int y, int z) {
+	private void spawnRadiationChance(Level world, int x, int y, int z) {
 		if (ReikaRandomHelper.doWithChance(2)) {
-			AxisAlignedBB box = ReikaAABBHelper.getBlockAABB(x, y, z).expand(8, 8, 8);
+			AABB box = ReikaAABBHelper.getBlockAABB(x, y, z).expand(8, 8, 8);
 			List inbox = world.getEntitiesWithinAABB(EntityRadiation.class, box);
 			if (inbox.size() < 3)
 				RadiationEffects.instance.contaminateArea(world, x, y, z, 1, 1, 0, false, RadiationIntensity.LOWLEVEL);
@@ -299,13 +299,13 @@ public class EntityNeutron extends ParticleEntity implements IEntityAdditionalSp
 	}
 
 	@Override
-	protected void readEntityFromNBT(NBTTagCompound NBT) {
+	protected void readEntityFromNBT(CompoundTag NBT) {
 		type = NeutronType.neutronList[NBT.getInteger("ntype")];
 		speed = NeutronSpeed.speedList[NBT.getInteger("nspeed")];
 	}
 
 	@Override
-	protected void writeEntityToNBT(NBTTagCompound NBT) {
+	protected void writeEntityToNBT(CompoundTag NBT) {
 		NBT.setInteger("ntype", this.getType().ordinal());
 		NBT.setInteger("nspeed", this.getNeutronSpeed().ordinal());
 	}

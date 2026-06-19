@@ -11,7 +11,7 @@ package reika.reactorcraft.base;
 
 import java.util.Locale;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
@@ -87,7 +87,7 @@ public abstract class TileEntityTankedReactorMachine extends TileEntityReactorBa
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -95,7 +95,7 @@ public abstract class TileEntityTankedReactorMachine extends TileEntityReactorBa
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 

@@ -9,12 +9,12 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.htgr;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.DragonAPICore;
@@ -61,7 +61,7 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		if (!world.isRemote && this.isFissile() && ReikaRandomHelper.doWithChance(this.getFissionChance()/100D))
 			this.runDecayCycle();
 
@@ -89,11 +89,11 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	@Override
-	protected void onFirstTick(World world, int x, int y, int z) {
+	protected void onFirstTick(Level world, int x, int y, int z) {
 		this.checkAndJoinArrangement(world, x, y, z);
 	}
 
-	private void checkAndJoinArrangement(World world, int x, int y, int z) {
+	private void checkAndJoinArrangement(Level world, int x, int y, int z) {
 		reactor = new PebbleBedArrangement(this);
 		int r = 3;
 		for (int i = -r; i <= r; i++) {
@@ -102,7 +102,7 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 					int dx = x+i;
 					int dy = y+j;
 					int dz = z+k;
-					TileEntity te = this.getTileEntity(dx, dy, dz);
+					BlockEntity te = this.getTileEntity(dx, dy, dz);
 					if (te instanceof TileEntityPebbleBed) {
 						reactor.merge(((TileEntityPebbleBed)te).reactor);
 					}
@@ -171,7 +171,7 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	@Override
-	protected void updateTemperature(World world, int x, int y, int z) {
+	protected void updateTemperature(Level world, int x, int y, int z) {
 		super.updateTemperature(world, x, y, z);
 		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
 		int dT = temperature-Tamb;
@@ -216,7 +216,7 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 		}
 	}
 
-	private void melt(World world, int x, int y, int z) {
+	private void melt(Level world, int x, int y, int z) {
 		ReactorAchievements.PEBBLEFAIL.triggerAchievement(this.getPlacer());
 		this.delete();
 		world.setBlock(x, y, z, Blocks.flowing_lava);
@@ -257,7 +257,7 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
@@ -266,13 +266,13 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	public boolean feed() {
-		World world = worldObj;
+		Level world = worldObj;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
 		Block id = world.getBlock(x, y-1, z);
 		int meta = world.getBlockMetadata(x, y-1, z);
-		TileEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
 		if (tile instanceof TileEntityPebbleBed) {
 			if (((Feedable)tile).feedIn(inv[inv.length-1])) {
 				for (int i = inv.length-1; i > 0; i--)
@@ -352,7 +352,7 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	public final int getTextureState(ForgeDirection side) {
 		if (side.offsetY != 0)
 			return 4;
-		World world = worldObj;
+		Level world = worldObj;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
@@ -369,14 +369,14 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	@Override
-	public void readFromNBT(NBTTagCompound NBT) {
+	public void readFromNBT(CompoundTag NBT) {
 		super.readFromNBT(NBT);
 
 		damage = NBT.getInteger("dmg");
 	}
 
 	@Override
-	public void writeToNBT(NBTTagCompound NBT) {
+	public void writeToNBT(CompoundTag NBT) {
 		super.writeToNBT(NBT);
 
 		NBT.setInteger("dmg", damage);

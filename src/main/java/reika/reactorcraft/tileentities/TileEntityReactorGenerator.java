@@ -11,11 +11,11 @@ package reika.reactorcraft.tileentities;
 
 import java.util.Collection;
 
-import net.minecraft.block.Block;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -92,7 +92,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		if ((world.getWorldTime()&127) == 0)
 			ReikaWorldHelper.causeAdjacentUpdates(world, x, y, z);
 
@@ -117,7 +117,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 
 		if (power > 0) {
 			ForgeDirection write = this.getFacing().getOpposite();
-			TileEntity tile = this.getAdjacentTileEntity(write);
+			BlockEntity tile = this.getAdjacentTileEntity(write);
 			ReactorSounds rs = null;
 			int len = 1;
 			switch(mode) {
@@ -161,7 +161,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 		}
 	}
 
-	private void fail(World world, int x, int y, int z) {
+	private void fail(Level world, int x, int y, int z) {
 		int l = this.getGeneratorLength()/2;
 		world.setBlockToAir(x, y, z);
 		double dx = x+0.5+this.getFacing().offsetX*l;
@@ -173,7 +173,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 		return 10;
 	}
 
-	private void getPower(World world, int x, int y, int z, int meta) {
+	private void getPower(Level world, int x, int y, int z, int meta) {
 		TileEntityTurbineCore te = this.getTurbine(world, x, y, z);
 		if (te != null) {
 			if (te.getSteamMovement() == this.getFacing().getOpposite()) {
@@ -192,7 +192,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 		}
 	}
 
-	private TileEntityTurbineCore getTurbine(World world, int x, int y, int z) {
+	private TileEntityTurbineCore getTurbine(Level world, int x, int y, int z) {
 		int len = this.getGeneratorLength();
 		int dx = x+this.getFacing().offsetX*len;
 		int dy = y+this.getFacing().offsetY*len;
@@ -216,7 +216,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 		if (!this.isInWorld()) {
 			phi = 0;
 			return;
@@ -225,7 +225,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		facingDir = dirs[NBT.getInteger("face")];
@@ -238,7 +238,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		NBT.setInteger("face", this.getFacing().ordinal());
@@ -284,7 +284,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 
 	@Override
 	@SideOnly(Side.CLIENT)
-	public AxisAlignedBB getRenderBoundingBox()
+	public AABB getRenderBoundingBox()
 	{
 		int l = this.getGeneratorLength();
 		int x1 = xCoord+1+this.getFacing().offsetX*l;
@@ -293,7 +293,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 		int mz = Math.min(z1, zCoord);
 		int mx2 = Math.max(x1, xCoord);
 		int mz2 = Math.max(z1, zCoord);
-		return AxisAlignedBB.getBoundingBox(mx, yCoord-2, mz, mx2, yCoord+3, mz2).expand(6, 6, 6);
+		return AABB.getBoundingBox(mx, yCoord-2, mz, mx2, yCoord+3, mz2).expand(6, 6, 6);
 	}
 
 	public static enum Modes {
@@ -351,7 +351,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	public boolean emitsEnergyTo(TileEntity receiver, ForgeDirection dir) {
+	public boolean emitsEnergyTo(BlockEntity receiver, ForgeDirection dir) {
 		return mode == Modes.EU;// && dir == this.getFacing().getOpposite();
 	}
 
@@ -371,7 +371,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	public void onFirstTick(World world, int x, int y, int z) {
+	public void onFirstTick(Level world, int x, int y, int z) {
 		if (!world.isRemote && ModList.IC2.isLoaded())
 			this.addTileToNet();
 	}
@@ -382,7 +382,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	protected void onInvalidateOrUnload(World world, int x, int y, int z, boolean invalidate) {
+	protected void onInvalidateOrUnload(Level world, int x, int y, int z, boolean invalidate) {
 		if (!world.isRemote && ModList.IC2.isLoaded())
 			this.removeTileFromNet();
 	}
@@ -393,13 +393,13 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	public boolean onShiftRightClick(World world, int x, int y, int z, ForgeDirection side) {
+	public boolean onShiftRightClick(Level world, int x, int y, int z, ForgeDirection side) {
 		this.stepType();
 		return true;
 	}
 
 	@Override
-	public boolean onRightClick(World world, int x, int y, int z, ForgeDirection side) {
+	public boolean onRightClick(Level world, int x, int y, int z, ForgeDirection side) {
 		if (side.offsetY == 0) {
 			this.setFacing(side);
 			return true;
@@ -490,12 +490,12 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	public void getAllOutputs(Collection<TileEntity> c, ForgeDirection dir) {
+	public void getAllOutputs(Collection<BlockEntity> c, ForgeDirection dir) {
 		c.add(this.getAdjacentTileEntity(this.getFacing().getOpposite()));
 	}
 
 	@Override
-	public World getWorld() {
+	public Level getWorld() {
 		return worldObj;
 	}
 
@@ -530,7 +530,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	public void onHitWithEMP(TileEntity te) {
+	public void onHitWithEMP(BlockEntity te) {
 		this.fail(worldObj, xCoord, yCoord, zCoord);
 	}
 

@@ -9,8 +9,8 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -23,7 +23,7 @@ import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
 import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
-public class TileEntitySteamInjector extends TileEntity implements IFluidHandler, PipeConnector {
+public class TileEntitySteamInjector extends BlockEntity implements IFluidHandler, PipeConnector {
 
 	private final HybridTank tank = new HybridTank("injector", 1000);
 
@@ -83,14 +83,14 @@ public class TileEntitySteamInjector extends TileEntity implements IFluidHandler
 	}
 
 	@Override
-	public void readFromNBT(NBTTagCompound NBT) {
+	public void readFromNBT(CompoundTag NBT) {
 		super.readFromNBT(NBT);
 
 		tank.readFromNBT(NBT);
 	}
 
 	@Override
-	public void writeToNBT(NBTTagCompound NBT) {
+	public void writeToNBT(CompoundTag NBT) {
 		super.writeToNBT(NBT);
 
 		tank.writeToNBT(NBT);

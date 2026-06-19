@@ -9,7 +9,7 @@
  ******************************************************************************/
 package reika.reactorcraft.auxiliary;
 
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.world.entity.LivingEntity;
 
 import reika.reactorcraft.auxiliary.RadiationEffects.RadiationIntensity;
 import reika.rotarycraft.tileentities.storage.tileentityreservoir.FluidEffect;
@@ -18,7 +18,7 @@ import reika.rotarycraft.tileentities.storage.tileentityreservoir.FluidEffect;
 public class RadiationFluidEffect implements FluidEffect {
 
 	@Override
-	public void applyEffect(EntityLivingBase e) {
+	public void applyEffect(LivingEntity e) {
 		RadiationEffects.instance.applyEffects(e, RadiationIntensity.HIGHLEVEL);
 	}
 

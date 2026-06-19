@@ -9,11 +9,11 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.init.Blocks;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
@@ -41,7 +41,7 @@ public class TileEntityGasDuct extends TileEntityReactorPiping {
 		int dx = xCoord+dir.offsetX;
 		int dy = yCoord+dir.offsetY;
 		int dz = zCoord+dir.offsetZ;
-		World world = worldObj;
+		Level world = worldObj;
 		Block id = world.getBlock(dx, dy, dz);
 		int meta = world.getBlockMetadata(dx, dy, dz);
 		return id != this.getTile().getBlock() || meta != this.getTile().getBlockMetadata();
@@ -53,7 +53,7 @@ public class TileEntityGasDuct extends TileEntityReactorPiping {
 	}
 
 	@Override
-	protected void onIntake(TileEntity te) {
+	protected void onIntake(BlockEntity te) {
 
 	}
 

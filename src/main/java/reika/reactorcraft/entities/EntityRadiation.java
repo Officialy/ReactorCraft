@@ -11,12 +11,12 @@ package reika.reactorcraft.entities;
 
 import java.util.List;
 
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.base.InertEntity;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
@@ -34,11 +34,11 @@ public class EntityRadiation extends InertEntity implements IEntityAdditionalSpa
 
 	public boolean requireLOS = false;
 
-	public EntityRadiation(World par1World) {
+	public EntityRadiation(Level par1World) {
 		super(par1World);
 	}
 
-	public EntityRadiation(World world, int range, RadiationIntensity ri) {
+	public EntityRadiation(Level world, int range, RadiationIntensity ri) {
 		super(world);
 		effectRange = range;
 		intensity = ri;
@@ -50,7 +50,7 @@ public class EntityRadiation extends InertEntity implements IEntityAdditionalSpa
 	}
 
 	@Override
-	protected void readEntityFromNBT(NBTTagCompound NBT) {
+	protected void readEntityFromNBT(CompoundTag NBT) {
 		effectRange = NBT.getInteger("effrange");
 		intensity = RadiationIntensity.radiationList[NBT.getInteger("intensity")];
 
@@ -58,7 +58,7 @@ public class EntityRadiation extends InertEntity implements IEntityAdditionalSpa
 	}
 
 	@Override
-	protected void writeEntityToNBT(NBTTagCompound NBT) {
+	protected void writeEntityToNBT(CompoundTag NBT) {
 		NBT.setInteger("effrange", effectRange);
 		NBT.setInteger("intensity", intensity.ordinal());
 
@@ -110,13 +110,13 @@ public class EntityRadiation extends InertEntity implements IEntityAdditionalSpa
 	}
 
 	protected void applyRadiation() {
-		World world = worldObj;
+		Level world = worldObj;
 		double x = posX;
 		double y = posY;
 		double z = posZ;
-		AxisAlignedBB box = AxisAlignedBB.getBoundingBox(x, y, z, x, y, z).expand(effectRange, effectRange, effectRange);
-		List<EntityLivingBase> inbox = world.getEntitiesWithinAABB(EntityLivingBase.class, box);
-		for (EntityLivingBase e : inbox) {
+		AABB box = AABB.getBoundingBox(x, y, z, x, y, z).expand(effectRange, effectRange, effectRange);
+		List<LivingEntity> inbox = world.getEntitiesWithinAABB(LivingEntity.class, box);
+		for (LivingEntity e : inbox) {
 			double dd = ReikaMathLibrary.py3d(e.posX-x, e.posY-y, e.posZ-z);
 			if (dd <= effectRange) {
 				RadiationEffects.instance.applyEffects(e, intensity);
@@ -125,9 +125,9 @@ public class EntityRadiation extends InertEntity implements IEntityAdditionalSpa
 
 		int c = 1;//20
 		//if (r.nextInt(c) == 0) {
-		int dx = ReikaRandomHelper.getRandomPlusMinus(MathHelper.floor_double(x), effectRange);
-		int dy = ReikaRandomHelper.getRandomPlusMinus(MathHelper.floor_double(y), effectRange);
-		int dz = ReikaRandomHelper.getRandomPlusMinus(MathHelper.floor_double(z), effectRange);
+		int dx = ReikaRandomHelper.getRandomPlusMinus(Mth.floor_double(x), effectRange);
+		int dy = ReikaRandomHelper.getRandomPlusMinus(Mth.floor_double(y), effectRange);
+		int dz = ReikaRandomHelper.getRandomPlusMinus(Mth.floor_double(z), effectRange);
 		RadiationEffects.instance.transformBlock(world, dx, dy, dz, intensity);
 		//}
 	}

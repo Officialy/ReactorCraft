@@ -9,8 +9,8 @@
  ******************************************************************************/
 package reika.reactorcraft.base;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.reactorcraft.auxiliary.ReactorPowerReceiver;
@@ -26,14 +26,14 @@ public abstract class TankedReactorPowerReceiver extends TileEntityTankedReactor
 	private int iotick;
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		if (!PowerTransferHelper.checkPowerFrom(this, ForgeDirection.DOWN)) {
 			this.noInputMachine();
 		}
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 		if (iotick > 0)
 			iotick -= 8;
 	}
@@ -90,7 +90,7 @@ public abstract class TankedReactorPowerReceiver extends TileEntityTankedReactor
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -102,7 +102,7 @@ public abstract class TankedReactorPowerReceiver extends TileEntityTankedReactor
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 

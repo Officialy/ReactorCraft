@@ -9,10 +9,10 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fusion;
 
-import net.minecraft.block.Block;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.DragonAPICore;
@@ -68,13 +68,13 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 		}
 	}
 
-	private void fail(World world, int x, int y, int z) {
+	private void fail(Level world, int x, int y, int z) {
 		world.setBlockToAir(x, y, z);
 		new FlyingBlocksExplosion(this, 12).doExplosion();
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		if (!PowerTransferHelper.checkPowerFrom(this, ForgeDirection.DOWN)) {
 			this.noInputMachine();
 		}
@@ -118,13 +118,13 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 	}
 
 	@Override
-	protected void onFirstTick(World world, int x, int y, int z) {
+	protected void onFirstTick(Level world, int x, int y, int z) {
 		if (!hasMultiBlock) {
 			this.checkForMultiBlock(world, x, y, z);
 		}
 	}
 
-	private void checkForMultiBlock(World world, int x, int y, int z) {
+	private void checkForMultiBlock(Level world, int x, int y, int z) {
 		Block id = world.getBlock(x, y-1, z);
 		if (id == ReactorBlocks.SOLENOIDMULTI.getBlockInstance()) {
 			BlockSolenoidMulti b = (BlockSolenoidMulti)ReactorBlocks.SOLENOIDMULTI.getBlockInstance();
@@ -135,7 +135,7 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 		if (hasMultiBlock) {
 			phi += speed;
 		}
@@ -165,7 +165,7 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		NBT.setBoolean("multi", hasMultiBlock);
@@ -178,7 +178,7 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		hasMultiBlock = NBT.getBoolean("multi");
@@ -191,7 +191,7 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 	}
 
 	public void addToToroids() {
-		World world = worldObj;
+		Level world = worldObj;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
@@ -218,7 +218,7 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 	}
 
 	public void removeFromToroids() {
-		World world = worldObj;
+		Level world = worldObj;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
@@ -249,7 +249,7 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 	}
 
 	@Override
-	public AxisAlignedBB getRenderBoundingBox() {
+	public AABB getRenderBoundingBox() {
 		return ReikaAABBHelper.getBlockAABB(xCoord, yCoord, zCoord).expand(9, 2, 9);
 	}
 
@@ -351,7 +351,7 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		return false;
 	}
 

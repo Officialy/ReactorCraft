@@ -9,13 +9,13 @@
  ******************************************************************************/
 package reika.reactorcraft.auxiliary;
 
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
 import reika.reactorcraft.entities.EntityNeutron;
 
 
 public interface NeutronTile {
 
-	public abstract boolean onNeutron(EntityNeutron e, World world, int x, int y, int z);
+	public abstract boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z);
 
 }

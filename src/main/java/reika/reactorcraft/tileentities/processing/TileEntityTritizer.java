@@ -9,9 +9,9 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.processing;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
@@ -48,7 +48,7 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		if (DragonAPICore.debugtest) {
 			input.addLiquid(100, ReactorCraft.H2);
 			if (output.getLevel() > CAPACITY/2)
@@ -67,11 +67,11 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	}
 
 	private void feed() {
-		World world = worldObj;
+		Level world = worldObj;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
-		TileEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
 		if (tile instanceof TileEntityTritizer) {
 			int amt = ((TileEntityTritizer)tile).feedIn(input.getFluid(), false);
 			if (amt > 0) {
@@ -102,12 +102,12 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		input.writeToNBT(NBT);
@@ -115,7 +115,7 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		input.readFromNBT(NBT);
@@ -123,7 +123,7 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		if (input.isEmpty())
 			return false;
 		NeutronType type = e.getType();
@@ -254,7 +254,7 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	public final int getTextureState(ForgeDirection side) {
 		if (side.offsetY != 0)
 			return 4;
-		World world = worldObj;
+		Level world = worldObj;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;

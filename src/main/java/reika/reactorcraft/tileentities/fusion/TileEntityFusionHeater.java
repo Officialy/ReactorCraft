@@ -9,9 +9,9 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fusion;
 
-import net.minecraft.block.Block;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -57,17 +57,17 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 	}
 
 	@Override
-	public void whenInBeam(World world, int x, int y, int z, long power, int range) {
+	public void whenInBeam(Level world, int x, int y, int z, long power, int range) {
 		if (this.hasMultiBlock())
 			temperature += 640*ReikaMathLibrary.logbase(power, 2);
 	}
 
-	public boolean blockBeam(World world, int x, int y, int z, long power) {
+	public boolean blockBeam(Level world, int x, int y, int z, long power) {
 		return this.hasMultiBlock();
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		this.updateTemperature(world, x, y, z, meta);
 
 		if (DragonAPICore.debugtest) {
@@ -92,7 +92,7 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 		tank.addLiquid(100, FluidRegistry.getFluid("rc fusion plasma"));
 	}
 
-	public void updateTemperature(World world, int x, int y, int z, int meta) {
+	public void updateTemperature(Level world, int x, int y, int z, int meta) {
 		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
 		int dT = temperature-Tamb;
 		if (dT != 0)
@@ -105,7 +105,7 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
@@ -133,12 +133,12 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 	}
 
 	@Override
-	public void overheat(World world, int x, int y, int z) {
+	public void overheat(Level world, int x, int y, int z) {
 
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		NBT.setInteger("temp", temperature);
@@ -151,7 +151,7 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		temperature = NBT.getInteger("temp");

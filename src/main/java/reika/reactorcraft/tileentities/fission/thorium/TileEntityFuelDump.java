@@ -9,8 +9,8 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission.thorium;
 
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
@@ -29,9 +29,9 @@ public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
 	private int fullTicks = 0;
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		if (!world.isRemote) {
-			TileEntity te = this.getAdjacentTileEntity(ForgeDirection.UP);
+			BlockEntity te = this.getAdjacentTileEntity(ForgeDirection.UP);
 			if (te instanceof TileEntityThoriumCore) {
 				TileEntityThoriumCore tc = (TileEntityThoriumCore)te;
 				if (tc.getTemperature() >= tc.FUEL_DUMP_TEMPERATURE && tc.hasFuel()) {
@@ -57,7 +57,7 @@ public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
 		}
 	}
 
-	private void dumpFuel(World world, int x, int y, int z) {
+	private void dumpFuel(Level world, int x, int y, int z) {
 		int n1 = Math.min(8, tank.getLevel()/125);
 		int n2 = n1-1;
 		if (world.getBlock(x, y-1, z) == ReactorBlocks.THORIUM.getBlockInstance()) {
@@ -71,11 +71,11 @@ public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
 		ReikaSoundHelper.playSoundFromServerAtBlock(world, x, y, z, "random.fizz", 1, 1, true);
 	}
 
-	private boolean canDumpAt(World world, int x, int y, int z) {
+	private boolean canDumpAt(Level world, int x, int y, int z) {
 		return BlockThoriumFuel.canOverwrite(world, x, y, z) || (world.getBlock(x, y, z) == ReactorBlocks.THORIUM.getBlockInstance() && world.getBlockMetadata(x, y, z) < 7);
 	}
 
-	private void overload(World world, int x, int y, int z) {
+	private void overload(Level world, int x, int y, int z) {
 		this.delete();
 		world.newExplosion(null, x+0.5, y+0.5, z+0.5, 3, true, true);
 		world.setBlock(x, y, z, ReactorBlocks.CORIUMFLOWING.getBlockInstance());
@@ -130,7 +130,7 @@ public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 

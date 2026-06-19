@@ -9,7 +9,7 @@
  ******************************************************************************/
 package reika.reactorcraft.auxiliary.lua;
 
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import reika.dragonapi.modinteract.lua.LuaMethod;
 import reika.reactorcraft.base.TileEntityReactorBase;
@@ -21,7 +21,7 @@ public class LuaReactorGetName extends LuaMethod {
 	}
 
 	@Override
-	protected Object[] invoke(TileEntity te, Object[] args) throws LuaMethodException, InterruptedException {
+	protected Object[] invoke(BlockEntity te, Object[] args) throws LuaMethodException, InterruptedException {
 		return new Object[]{((TileEntityReactorBase)te).getName()};
 	}
 

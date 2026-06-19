@@ -9,8 +9,8 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -59,7 +59,7 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		this.getSteam(world, x, y, z);
 
 		this.convertSteam();
@@ -76,7 +76,7 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 		}
 	}
 
-	private void getSteam(World world, int x, int y, int z) {
+	private void getSteam(Level world, int x, int y, int z) {
 		//for (int i = 0; i < 6; i++) {
 		ForgeDirection dir = this.getFacing();//dirs[i];
 		int dx = x+dir.offsetX;
@@ -96,12 +96,12 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -109,7 +109,7 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 

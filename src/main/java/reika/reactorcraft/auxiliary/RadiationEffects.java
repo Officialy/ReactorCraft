@@ -14,18 +14,18 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.function.Function;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.entity.monster.EntityCreeper;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.potion.PotionEffect;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
@@ -99,15 +99,15 @@ public class RadiationEffects {
 	@SubscribeEvent
 	public void dirtyBombs(CreeperExplodeEvent evt) {
 		if (evt.creeper.getEntityData().getBoolean("radioactive")) {
-			World world = evt.creeper.worldObj;
-			int x = MathHelper.floor_double(evt.creeper.posX);
-			int y = MathHelper.floor_double(evt.creeper.posY);
-			int z = MathHelper.floor_double(evt.creeper.posZ);
+			Level world = evt.creeper.worldObj;
+			int x = Mth.floor_double(evt.creeper.posX);
+			int y = Mth.floor_double(evt.creeper.posY);
+			int z = Mth.floor_double(evt.creeper.posZ);
 			this.contaminateArea(world, x, y, z, 4, 3, 1.5, true, RadiationIntensity.MODERATE);
 		}
 	}
 
-	public boolean applyEffects(EntityLivingBase e, RadiationIntensity ri) {
+	public boolean applyEffects(LivingEntity e, RadiationIntensity ri) {
 		if (ri.causesHarm()) {
 			if (!e.isPotionActive(ReactorCraft.radiation)) {
 				if (!this.isEntityImmuneToAll(e) && !ri.hasSufficientShielding(e)) {
@@ -128,16 +128,16 @@ public class RadiationEffects {
 		return false;
 	}
 
-	public void applyPulseEffects(EntityLivingBase e, RadiationIntensity ri) {
+	public void applyPulseEffects(LivingEntity e, RadiationIntensity ri) {
 		if (!e.isPotionActive(ReactorCraft.radiation) && !this.isEntityImmuneToAll(e) && !ri.hasSufficientShielding(e))
 			e.addPotionEffect(this.getRadiationEffect(20, ri));
 	}
 
-	public boolean isEntityImmuneToAll(EntityLivingBase e) {
-		return e instanceof EntityPlayer && ((EntityPlayer)e).capabilities.isCreativeMode;
+	public boolean isEntityImmuneToAll(LivingEntity e) {
+		return e instanceof Player && ((Player)e).capabilities.isCreativeMode;
 	}
 
-	public boolean hasHazmatSuit(EntityLivingBase e) {
+	public boolean hasHazmatSuit(LivingEntity e) {
 		/*
 		for (int i = 1; i < 5; i++) {
 			ItemStack is = e.getEquipmentInSlot(i);
@@ -159,10 +159,10 @@ public class RadiationEffects {
 		return ri != null && ri.isHazmat();
 	}
 
-	public double contaminateArea(World world, int x, int y, int z, int range, float density, double force, boolean los, RadiationIntensity ri) {
+	public double contaminateArea(Level world, int x, int y, int z, int range, float density, double force, boolean los, RadiationIntensity ri) {
 		double frac = 1;
 		int num = Math.max(1, (int)(Math.sqrt(range)*density));
-		AxisAlignedBB box = AxisAlignedBB.getBoundingBox(x, y, z, x, y, z).expand(range, range, range);
+		AABB box = AABB.getBoundingBox(x, y, z, x, y, z).expand(range, range, range);
 		for (int i = 0; i < num; i++) {
 			int dx = ReikaRandomHelper.getRandomPlusMinus(x, range);
 			int dy = ReikaRandomHelper.getRandomPlusMinus(y, range);
@@ -183,7 +183,7 @@ public class RadiationEffects {
 		return frac;
 	}
 
-	private boolean isValidRadiationPosition(World world, int x, int y, int z, int dx, int dy, int dz, double forceDist) {
+	private boolean isValidRadiationPosition(Level world, int x, int y, int z, int dx, int dy, int dz, double forceDist) {
 		if (ReikaMathLibrary.py3d(dx-x, dy-y, dz-z) <= forceDist)
 			return true;
 		ArrayList<BlockKey> li = ReikaWorldHelper.getBlocksAlongVector(world, x+0.5, y+0.5, z+0.5, dx+0.5, dy+0.5, dz+0.5);
@@ -203,7 +203,7 @@ public class RadiationEffects {
 		return flag;
 	}
 
-	public void transformBlock(World world, int x, int y, int z, RadiationIntensity ri) {
+	public void transformBlock(Level world, int x, int y, int z, RadiationIntensity ri) {
 		if (world.isRemote)
 			return;
 		Block id = world.getBlock(x, y, z);
@@ -291,7 +291,7 @@ public class RadiationEffects {
 			world.func_147479_m(x, y, z);
 		}
 
-		TileEntity te = world.getTileEntity(x, y, z);
+		BlockEntity te = world.getTileEntity(x, y, z);
 
 		if (ri.isAtLeast(RadiationIntensity.MODERATE) && ModList.THAUMCRAFT.isLoaded()) {
 			if (te instanceof INode) {
@@ -327,7 +327,7 @@ public class RadiationEffects {
 		return pot;
 	}
 
-	public void doOreIrradiation(World world, int x, int y, int z, EntityPlayer ep) {
+	public void doOreIrradiation(Level world, int x, int y, int z, Player ep) {
 		int r = 9;
 		double dd = ep.getDistanceSq(x+0.5, y+0.5, z+0.5);
 		if (dd <= r*r) {
@@ -372,7 +372,7 @@ public class RadiationEffects {
 			return this.ordinal() >= ri.ordinal();
 		}
 
-		public boolean hasSufficientShielding(EntityLivingBase e) {
+		public boolean hasSufficientShielding(LivingEntity e) {
 			switch(this) {
 				case BACKGROUND:
 					return true;
@@ -416,7 +416,7 @@ public class RadiationEffects {
 				this.leakRadiation(loc.getWorld(), loc.xCoord, loc.yCoord, loc.zCoord);
 			}
 
-			protected void leakRadiation(World world, int x, int y, int z) {
+			protected void leakRadiation(Level world, int x, int y, int z) {
 				ForgeDirection dir = ForgeDirection.VALID_DIRECTIONS[rand.nextInt(6)];
 				if (!world.isRemote)
 					world.spawnEntityInWorld(new EntityNeutron(world, x, y, z, dir, NeutronType.WASTE));

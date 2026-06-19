@@ -11,12 +11,12 @@ package reika.reactorcraft.base;
 
 import java.util.Collection;
 
-import net.minecraft.block.Block;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.ChunkCoordIntPair;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -66,12 +66,12 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	}
 
 	@Override
-	protected void onFirstTick(World world, int x, int y, int z) {
+	protected void onFirstTick(Level world, int x, int y, int z) {
 
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		if (!world.isRemote && this.isFissile() && rand.nextInt(this.getDecayNeutronChance()) == 0)
 			world.spawnEntityInWorld(new EntityNeutron(world, x, y, z, this.getRandomDirection(false), NeutronType.DECAY));
 
@@ -136,8 +136,8 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		return ChunkManager.getChunkSquare(xCoord, zCoord, 1);
 	}
 
-	private void feedWaste(World world, int x, int y, int z) {
-		TileEntity te = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+	private void feedWaste(Level world, int x, int y, int z) {
+		BlockEntity te = this.getAdjacentTileEntity(ForgeDirection.DOWN);
 		if (te instanceof TileEntityNuclearCore) {
 			for (int i = 4; i < 12; i++) {
 				if (inv[i] != null) {
@@ -172,13 +172,13 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	}
 
 	public boolean feed() {
-		World world = worldObj;
+		Level world = worldObj;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
 		Block id = world.getBlock(x, y-1, z);
 		int meta = world.getBlockMetadata(x, y-1, z);
-		TileEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
 		if (tile instanceof Feedable) {
 			if (((Feedable)tile).feedIn(inv[3])) {
 				inv[3] = inv[2];
@@ -283,7 +283,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		}
 	}
 
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		boolean inactive = activeTimer <= 0;
 		activeTimer = 2400; //2 min
 		if (inactive)
@@ -295,7 +295,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		return activeTimer > 0;
 	}
 
-	protected final void spawnNeutronBurst(World world, int x, int y, int z) {
+	protected final void spawnNeutronBurst(Level world, int x, int y, int z) {
 		if (world.isRemote)
 			return;
 		NeutronType n = this.getNeutronType();
@@ -318,7 +318,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		return MELTDOWN;
 	}
 
-	protected void onMeltdown(World world, int x, int y, int z) {
+	protected void onMeltdown(Level world, int x, int y, int z) {
 		MinecraftForge.EVENT_BUS.post(new ReactorMeltdownEvent(world, x, y, z));
 		if (world.isRemote)
 			return;
@@ -339,7 +339,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		this.testAndDoHydrogenExplosion(world, x, y, z, scatter);
 	}
 
-	private void testAndDoHydrogenExplosion(World world, int x, int y, int z, double scatter) {
+	private void testAndDoHydrogenExplosion(Level world, int x, int y, int z, double scatter) {
 		if (true || ReikaRandomHelper.doWithChance((double)hydrogen/MAX_HYDROGEN)) {
 			HydrogenExplosion ex = new HydrogenExplosion(world, null, x+0.5, y+0.5, z+0.5, 7/*, scatter*/);
 			ex.doExplosionA();
@@ -347,12 +347,12 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		}
 	}
 
-	protected int getRestingTemperature(World world, int x, int y, int z) {
+	protected int getRestingTemperature(Level world, int x, int y, int z) {
 		return ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
 	}
 
 	@Override
-	protected void updateTemperature(World world, int x, int y, int z) {
+	protected void updateTemperature(Level world, int x, int y, int z) {
 		super.updateTemperature(world, x, y, z);
 		int Tamb = this.getRestingTemperature(world, x, y, z);
 		int dT = temperature-Tamb;
@@ -406,19 +406,19 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		return 16;
 	}
 
-	protected int getAmbientHeatLossFactor(World world, int x, int y, int z, int base, int Tamb) {
+	protected int getAmbientHeatLossFactor(Level world, int x, int y, int z, int base, int Tamb) {
 		return base;
 	}
 
 	@Override
-	public void readFromNBT(NBTTagCompound NBT) {
+	public void readFromNBT(CompoundTag NBT) {
 		super.readFromNBT(NBT);
 
 		activeTimer = NBT.getInteger("activetick");
 	}
 
 	@Override
-	public void writeToNBT(NBTTagCompound NBT) {
+	public void writeToNBT(CompoundTag NBT) {
 		super.writeToNBT(NBT);
 
 		NBT.setInteger("activetick", activeTimer);
@@ -426,7 +426,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		hydrogen = NBT.getInteger("h2");
@@ -435,7 +435,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		NBT.setInteger("h2", hydrogen);
@@ -448,7 +448,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		if (!worldObj.isRemote)
 			this.unload();
 		if (CPU != null) {
-			TileEntity te = CPU.getTileEntity(worldObj);
+			BlockEntity te = CPU.getTileEntity(worldObj);
 			if (te instanceof TileEntityCPU) {
 				((TileEntityCPU)te).removeTemperatureCheck(this);
 			}
@@ -456,7 +456,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	}
 
 	@Override
-	protected final void onInvalidateOrUnload(World world, int x, int y, int z, boolean invalid) {
+	protected final void onInvalidateOrUnload(Level world, int x, int y, int z, boolean invalid) {
 		if (!world.isRemote) {
 			if (invalid) {
 				this.unload();
@@ -468,7 +468,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	public final int getTextureState(ForgeDirection side) {
 		if (side.offsetY != 0)
 			return 4;
-		World world = worldObj;
+		Level world = worldObj;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
@@ -485,7 +485,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	}
 
 	@Override
-	public final void onHitWithEMP(TileEntity te) {
+	public final void onHitWithEMP(BlockEntity te) {
 		temperature += 500;
 	}
 

@@ -12,13 +12,13 @@ package reika.reactorcraft.base;
 import java.util.Arrays;
 import java.util.Locale;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
@@ -46,7 +46,7 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 	public abstract boolean isValidFluid(Fluid f);
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		Fluid f = this.getFluidType();
 		this.intakeFluid(world, x, y, z);
 		if (this.getLevel() <= 0) {
@@ -67,7 +67,7 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 		return connections[dir.ordinal()];
 	}
 
-	protected boolean isInteractableTile(TileEntity te) {
+	protected boolean isInteractableTile(BlockEntity te) {
 		if (te == null)
 			return false;
 		if (te.getClass() == this.getClass())
@@ -79,7 +79,7 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 		return false;
 	}
 
-	protected final boolean canInteractWith(World world, int x, int y, int z, ForgeDirection side) {
+	protected final boolean canInteractWith(Level world, int x, int y, int z, ForgeDirection side) {
 		if (!connections[side.ordinal()])
 			return false;
 		int dx = x+side.offsetX;
@@ -92,12 +92,12 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 		ReactorTiles m = ReactorTiles.getTE(world, dx, dy, dz);
 		if (m == this.getTile())
 			return true;
-		TileEntity te = this.getTileEntity(dx, dy, dz);
+		BlockEntity te = this.getTileEntity(dx, dy, dz);
 		return (te instanceof PipeConnector || te instanceof IFluidHandler) && this.isInteractableTile(te);
 	}
 
 	@Override
-	public final void animateWithTick(World world, int x, int y, int z) {
+	public final void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
@@ -122,7 +122,7 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 		return zCoord;
 	}
 
-	public final World getWorld() {
+	public final Level getWorld() {
 		return worldObj;
 	}
 
@@ -134,11 +134,11 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 	}
 
 	@Override
-	public final AxisAlignedBB getRenderBoundingBox() {
-		return AxisAlignedBB.getBoundingBox(xCoord, yCoord, zCoord, xCoord+1, yCoord+1, zCoord+1);
+	public final AABB getRenderBoundingBox() {
+		return AABB.getBoundingBox(xCoord, yCoord, zCoord, xCoord+1, yCoord+1, zCoord+1);
 	}
 
-	public final void recomputeConnections(World world, int x, int y, int z) {
+	public final void recomputeConnections(Level world, int x, int y, int z) {
 		for (int i = 0; i < 6; i++) {
 			connections[i] = this.isConnected(dirs[i]);
 			world.func_147479_m(x+dirs[i].offsetX, y+dirs[i].offsetY, z+dirs[i].offsetZ);
@@ -147,7 +147,7 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 		world.func_147479_m(x, y, z);
 	}
 
-	public final void deleteFromAdjacentConnections(World world, int x, int y, int z) {
+	public final void deleteFromAdjacentConnections(Level world, int x, int y, int z) {
 		for (int i = 0; i < 6; i++) {
 			ForgeDirection dir = dirs[i];
 			int dx = x+dir.offsetX;
@@ -162,7 +162,7 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 		}
 	}
 
-	public final void addToAdjacentConnections(World world, int x, int y, int z) {
+	public final void addToAdjacentConnections(Level world, int x, int y, int z) {
 		for (int i = 0; i < 6; i++) {
 			ForgeDirection dir = dirs[i];
 			int dx = x+dir.offsetX;
@@ -186,14 +186,14 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 		if (m == m2) {
 			return true;
 		}
-		TileEntity tile = worldObj.getTileEntity(x, y, z);
+		BlockEntity tile = worldObj.getTileEntity(x, y, z);
 		if (tile instanceof IFluidHandler && this.isInteractableTile(tile))
 			return true;
 		return false;
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 
@@ -206,7 +206,7 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -248,14 +248,14 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 		return true;
 	}
 
-	private final void intakeFluid(World world, int x, int y, int z) {
+	private final void intakeFluid(Level world, int x, int y, int z) {
 		for (int i = 0; i < 6; i++) {
 			ForgeDirection dir = dirs[i];
 			if (this.canInteractWith(world, x, y, z, dir)) {
 				int dx = x+dir.offsetX;
 				int dy = y+dir.offsetY;
 				int dz = z+dir.offsetZ;
-				TileEntity te = world.getTileEntity(dx, dy, dz);
+				BlockEntity te = world.getTileEntity(dx, dy, dz);
 
 				if (te instanceof WorldRift) {
 					WorldLocation loc = ((WorldRift)te).getLinkTarget();
@@ -328,7 +328,7 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 		}
 	}
 
-	private final void dumpContents(World world, int x, int y, int z) {
+	private final void dumpContents(Level world, int x, int y, int z) {
 		Fluid f = this.getFluidType();
 		if (this.getLevel() <= 0 || f == null)
 			return;
@@ -343,7 +343,7 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 				int dx = x+dir.offsetX;
 				int dy = y+dir.offsetY;
 				int dz = z+dir.offsetZ;
-				TileEntity te = world.getTileEntity(dx, dy, dz);
+				BlockEntity te = world.getTileEntity(dx, dy, dz);
 
 				if (te instanceof WorldRift) {
 					WorldLocation loc = ((WorldRift)te).getLinkTarget();
@@ -427,7 +427,7 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 		level = amt;
 	}
 
-	protected abstract void onIntake(TileEntity te);
+	protected abstract void onIntake(BlockEntity te);
 
 	@Override
 	public final boolean isFluidPipe() {

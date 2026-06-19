@@ -11,8 +11,8 @@ package reika.reactorcraft.tileentities.powergen;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -66,7 +66,7 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		super.updateEntity(world, x, y, z, meta);
 
 		currentRecipe = this.getExchange();
@@ -83,7 +83,7 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 		return currentRecipe;
 	}
 
-	private void distributeHeat(World world, int x, int y, int z) {
+	private void distributeHeat(Level world, int x, int y, int z) {
 		for (int i = 2; i < 6; i++) {
 			ForgeDirection dir = dirs[i];
 			int dx = x+dir.offsetX;
@@ -235,7 +235,7 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 		}
 	}
 
-	public void updateTemperature(World world, int x, int y, int z, int meta) {
+	public void updateTemperature(Level world, int x, int y, int z, int meta) {
 		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
 
 		ForgeDirection waterside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
@@ -306,7 +306,7 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 	}
 
 	@Override
-	public void overheat(World world, int x, int y, int z) {
+	public void overheat(Level world, int x, int y, int z) {
 
 	}
 
@@ -328,7 +328,7 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -336,7 +336,7 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 

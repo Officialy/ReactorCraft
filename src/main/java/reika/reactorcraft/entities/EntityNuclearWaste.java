@@ -11,31 +11,31 @@ package reika.reactorcraft.entities;
 
 import java.util.List;
 
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.libraries.ReikaAABBHelper;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
 import reika.reactorcraft.auxiliary.RadiationEffects;
 import reika.reactorcraft.auxiliary.RadiationEffects.RadiationIntensity;
 
-public final class EntityNuclearWaste extends EntityItem {
+public final class EntityNuclearWaste extends ItemEntity {
 
 	public static final int RANGE = 6;
 	public static final int RADIATION_INTERVAL = 10*60*20;
 	public static final int RADIATION_DELAY = 3*60*20;
 	private int timer = 0;
 
-	public EntityNuclearWaste(World par1World) {
+	public EntityNuclearWaste(Level par1World) {
 		super(par1World);
 	}
 
-	public EntityNuclearWaste(World world, double x, double y, double z, ItemStack is) {
+	public EntityNuclearWaste(Level world, double x, double y, double z, ItemStack is) {
 		super(world, x, y, z, is);
 	}
 
@@ -54,12 +54,12 @@ public final class EntityNuclearWaste extends EntityItem {
 			posY = Math.max(posY, 0);
 
 			if (timer%256 == 0) {
-				AxisAlignedBB box = ReikaAABBHelper.getEntityCenteredAABB(this, RANGE);
+				AABB box = ReikaAABBHelper.getEntityCenteredAABB(this, RANGE);
 				List<EntityRadiation> li = worldObj.getEntitiesWithinAABB(EntityRadiation.class, box);
 				if (li.size() < 100) {
-					int ix = MathHelper.floor_double(posX);
-					int iy = MathHelper.floor_double(posY);
-					int iz = MathHelper.floor_double(posZ);
+					int ix = Mth.floor_double(posX);
+					int iy = Mth.floor_double(posY);
+					int iz = Mth.floor_double(posZ);
 					RadiationEffects.instance.contaminateArea(worldObj, ix, iy, iz, RANGE*4, 2, 0, false, RadiationIntensity.HIGHLEVEL);
 				}
 			}
@@ -74,13 +74,13 @@ public final class EntityNuclearWaste extends EntityItem {
 	}
 
 	private void applyRadiation() {
-		World world = worldObj;
+		Level world = worldObj;
 		double x = posX;
 		double y = posY;
 		double z = posZ;
-		AxisAlignedBB box = AxisAlignedBB.getBoundingBox(x, y, z, x, y, z).expand(RANGE, RANGE, RANGE);
-		List<EntityLivingBase> inbox = world.getEntitiesWithinAABB(EntityLivingBase.class, box);
-		for (EntityLivingBase e : inbox) {
+		AABB box = AABB.getBoundingBox(x, y, z, x, y, z).expand(RANGE, RANGE, RANGE);
+		List<LivingEntity> inbox = world.getEntitiesWithinAABB(LivingEntity.class, box);
+		for (LivingEntity e : inbox) {
 			double dd = ReikaMathLibrary.py3d(e.posX-x, e.posY-y, e.posZ-z);
 			if (dd <= RANGE) {
 				//if (!RadiationEffects.instance.hasHazmatSuit(e))
@@ -88,13 +88,13 @@ public final class EntityNuclearWaste extends EntityItem {
 			}
 		}
 
-		int ix = MathHelper.floor_double(x);
-		int iy = MathHelper.floor_double(y);
-		int iz = MathHelper.floor_double(z);
+		int ix = Mth.floor_double(x);
+		int iy = Mth.floor_double(y);
+		int iz = Mth.floor_double(z);
 
 		//Contaminate the area slightly every 10 min left in the world, after the first 3 minutes
 		if ((timer-RADIATION_DELAY)%RADIATION_INTERVAL == 0 && timer >= RADIATION_DELAY) {
-			AxisAlignedBB.getBoundingBox(posX, posY, posZ, posX, posY, posZ).expand(12, 8, 12);
+			AABB.getBoundingBox(posX, posY, posZ, posX, posY, posZ).expand(12, 8, 12);
 			List<EntityRadiation> near = world.getEntitiesWithinAABB(EntityRadiation.class, box);
 			if (near.size() < 32) {
 				RadiationEffects.instance.contaminateArea(world, ix, iy, iz, RANGE*4, 2, 0, false, RadiationIntensity.HIGHLEVEL); //no LOS to simulate groundwater/air particulates

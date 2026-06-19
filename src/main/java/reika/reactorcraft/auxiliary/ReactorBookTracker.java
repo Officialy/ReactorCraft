@@ -9,7 +9,7 @@
  ******************************************************************************/
 package reika.reactorcraft.auxiliary;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 import reika.reactorcraft.registry.ReactorItems;
 import reika.rotarycraft.auxiliary.HandbookTracker;

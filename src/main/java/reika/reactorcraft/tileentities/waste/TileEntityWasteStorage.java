@@ -11,12 +11,12 @@ package reika.reactorcraft.tileentities.waste;
 
 import java.util.List;
 
-import net.minecraft.block.Block;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.libraries.ReikaAABBHelper;
@@ -43,7 +43,7 @@ public class TileEntityWasteStorage extends TileEntityWasteUnit implements Range
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		if (rand.nextInt(20) == 0)
 			this.sickenMobs(world, x, y, z);
 
@@ -77,11 +77,11 @@ public class TileEntityWasteStorage extends TileEntityWasteUnit implements Range
 			ReactorAchievements.DECAY.triggerAchievement(this.getPlacer());
 	}
 
-	private void sickenMobs(World world, int x, int y, int z) {
+	private void sickenMobs(Level world, int x, int y, int z) {
 		int r = this.getRange();
-		AxisAlignedBB box = ReikaAABBHelper.getBlockAABB(x, y, z).expand(r, r, r);
-		List<EntityLivingBase> li = world.getEntitiesWithinAABB(EntityLivingBase.class, box);
-		for (EntityLivingBase e : li) {
+		AABB box = ReikaAABBHelper.getBlockAABB(x, y, z).expand(r, r, r);
+		List<LivingEntity> li = world.getEntitiesWithinAABB(LivingEntity.class, box);
+		for (LivingEntity e : li) {
 			if (!RadiationIntensity.MODERATE.hasSufficientShielding(e)) {
 				double dd = ReikaMathLibrary.py3d(e.posX-x-0.5, e.posY-y-0.5, e.posZ-z-0.5);
 				if (ReikaWorldHelper.canBlockSee(world, x, y, z, e.posX, e.posY, e.posZ, dd)) {
@@ -114,7 +114,7 @@ public class TileEntityWasteStorage extends TileEntityWasteUnit implements Range
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
@@ -155,13 +155,13 @@ public class TileEntityWasteStorage extends TileEntityWasteUnit implements Range
 	}
 
 	public boolean feed() {
-		World world = worldObj;
+		Level world = worldObj;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
 		Block id = world.getBlock(x, y-1, z);
 		int meta = world.getBlockMetadata(x, y-1, z);
-		TileEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
 		if (tile instanceof TileEntityWasteStorage) {
 			if (((Feedable)tile).feedIn(inv[inv.length-1])) {
 				for (int i = inv.length-1; i > 0; i--)

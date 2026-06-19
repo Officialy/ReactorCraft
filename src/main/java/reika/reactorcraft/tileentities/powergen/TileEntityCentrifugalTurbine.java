@@ -9,7 +9,7 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
 
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
 import reika.reactorcraft.registry.ReactorTiles;
 
@@ -21,17 +21,17 @@ import reika.reactorcraft.registry.ReactorTiles;
 public class TileEntityCentrifugalTurbine extends TileEntityTurbineCore {
 
 	@Override
-	protected void intakeLubricant(World world, int x, int y, int z, int meta) {
+	protected void intakeLubricant(Level world, int x, int y, int z, int meta) {
 
 	}
 
 	@Override
-	protected boolean intakeSteam(World world, int x, int y, int z, int meta) {
+	protected boolean intakeSteam(Level world, int x, int y, int z, int meta) {
 		return false;
 	}
 
 	@Override
-	protected void dumpSteam(World world, int x, int y, int z, int meta) {
+	protected void dumpSteam(Level world, int x, int y, int z, int meta) {
 
 	}
 

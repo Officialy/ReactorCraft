@@ -12,13 +12,13 @@ package reika.reactorcraft.tileentities.fusion;
 import java.util.Collection;
 import java.util.List;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.ChunkCoordIntPair;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -85,7 +85,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	@Override
-	protected void onFirstTick(World world, int x, int y, int z) {
+	protected void onFirstTick(Level world, int x, int y, int z) {
 		if (!hasSolenoid) {
 			this.checkSurroundingMagnetsAndCopySolenoidState();
 		}
@@ -93,7 +93,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 
 		if (alpha > 0)
 			alpha -= 8;
@@ -103,7 +103,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 			charge = 250000;
 		}
 
-		AxisAlignedBB box = ReikaAABBHelper.getBlockAABB(x, y, z);
+		AABB box = ReikaAABBHelper.getBlockAABB(x, y, z);
 		List<EntityPlasma> li = world.getEntitiesWithinAABB(EntityPlasma.class, box);
 		int[] tg = this.getTarget();
 		for (EntityPlasma e : li) {
@@ -123,7 +123,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 
 		MachineRegistry m = MachineRegistry.getMachine(world, x, y+2, z);
 		if (m != null && m.isStandardPipe()) {
-			TileEntity te = world.getTileEntity(x, y+2, z);
+			BlockEntity te = world.getTileEntity(x, y+2, z);
 			int amt = Math.min(tank.getRemainingSpace(), ((TileEntityPiping)te).getFluidLevel());
 			if (amt > 0) {
 				if (FluidRegistry.getFluid("rc liquid nitrogen").equals(((TileEntityPiping)te).getFluidType())) {
@@ -180,7 +180,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		}
 	}
 
-	private boolean checkCompleteness(World world, int x, int y, int z) {
+	private boolean checkCompleteness(Level world, int x, int y, int z) {
 		FusionReactorToroidPart te = this.getNextPart(world, x, y, z);
 		int i = 60;
 		while (te != null && te != this && i >= 0) {
@@ -194,11 +194,11 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		return te == this;
 	}
 
-	public FusionReactorToroidPart getNextPart(World world, int x, int y, int z) {
+	public FusionReactorToroidPart getNextPart(Level world, int x, int y, int z) {
 		Aim a = this.getAim();
 		int dx = xCoord+a.xOffset;
 		int dz = zCoord+a.zOffset;
-		TileEntity te = worldObj.getTileEntity(dx, y, dz);
+		BlockEntity te = worldObj.getTileEntity(dx, y, dz);
 		return te instanceof FusionReactorToroidPart ? (FusionReactorToroidPart)te : null;
 	}
 
@@ -223,7 +223,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		else if (r == ReactorTiles.INJECTOR) {
 			dx += a.xOffset;
 			dz += a.zOffset;
-			TileEntity te = worldObj.getTileEntity(dx, yCoord, dz);
+			BlockEntity te = worldObj.getTileEntity(dx, yCoord, dz);
 			while (te instanceof TileEntityFusionInjector) {
 				dx += a.xOffset;
 				dz += a.zOffset;
@@ -235,7 +235,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		}
 	}
 
-	private void collectCharge(World world, int x, int y, int z) {
+	private void collectCharge(Level world, int x, int y, int z) {
 		MachineRegistry m = MachineRegistry.getMachine(world, x, y-3, z);
 		if (m == MachineRegistry.VANDEGRAFF) {
 			TileEntityVanDeGraff te = (TileEntityVanDeGraff)world.getTileEntity(x, y-3, z);
@@ -243,7 +243,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		}
 	}
 
-	private boolean distributeCharge(World world, int x, int y, int z) {
+	private boolean distributeCharge(Level world, int x, int y, int z) {
 		Aim a = this.getAim();
 		int dx = x+a.xOffset;
 		int dz = z+a.zOffset;
@@ -294,7 +294,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		return false;
 	}
 
-	private boolean shouldSpawnSparks(World world) {
+	private boolean shouldSpawnSparks(Level world) {
 		/*
 		int rate = this.getPacketDelay();
 		if (rate < 5)
@@ -306,14 +306,14 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		return rand.nextBoolean();//true;
 	}
 
-	private void updateCharge(World world, int x, int y, int z) {
+	private void updateCharge(Level world, int x, int y, int z) {
 		if (charge <= 1)
 			charge = 0;
 		else
 			charge *= 0.8;
 	}
 
-	private void clearArea(World world, int x, int y, int z) {
+	private void clearArea(Level world, int x, int y, int z) {
 		int r = 2;
 		for (int i = -r; i <= r; i++) {
 			for (int j = -r; j <= r; j++) {
@@ -358,12 +358,12 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		aim = this.getAim(NBT.getInteger("aim"));
@@ -382,7 +382,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		NBT.setInteger("aim", this.getAim().ordinal());
@@ -409,14 +409,14 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	@Override
-	public boolean onShiftRightClick(World world, int x, int y, int z, ForgeDirection side) {
+	public boolean onShiftRightClick(Level world, int x, int y, int z, ForgeDirection side) {
 		alpha = 512;
 		this.decrementAim();
 		return true;
 	}
 
 	@Override
-	public boolean onRightClick(World world, int x, int y, int z, ForgeDirection side) {
+	public boolean onRightClick(Level world, int x, int y, int z, ForgeDirection side) {
 		this.refreshAlpha();
 		this.incrementAim();
 		return true;
@@ -472,7 +472,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	@Override
-	public AxisAlignedBB getRenderBoundingBox() {
+	public AABB getRenderBoundingBox() {
 		return ReikaAABBHelper.getBlockAABB(xCoord, yCoord, zCoord).expand(3, 3, 3);
 	}
 
@@ -584,7 +584,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		return false;
 	}
 

@@ -9,12 +9,12 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.processing;
 
-import net.minecraft.block.Block;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.libraries.ReikaInventoryHelper;
@@ -43,7 +43,7 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		if (!world.isRemote) {
 			this.feed();
 		}
@@ -55,13 +55,13 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	private boolean feed() {
-		World world = worldObj;
+		Level world = worldObj;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
 		Block id = world.getBlock(x, y-1, z);
 		int meta = world.getBlockMetadata(x, y-1, z);
-		TileEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
 		if (tile instanceof TileEntityWasteDecayer) {
 			if (((TileEntityWasteDecayer)tile).feedIn(inv[inv.length-1])) {
 				for (int i = inv.length-1; i > 0; i--)
@@ -121,22 +121,22 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		NeutronType type = e.getType();
 		if (!world.isRemote && type.canIrradiateMaterials() && ReikaRandomHelper.doWithChance(50)) {
 			if (ReikaRandomHelper.doWithChance(this.getDecayChance()*e.getNeutronSpeed().getWasteConversionMultiplier()))
@@ -179,7 +179,7 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 			//ReikaJavaLibrary.pConsole("Decayed into nothing");
 			return true;
 		}
-		int amt = MathHelper.floor_double(split.amount);
+		int amt = Mth.floor_double(split.amount);
 		if (ReikaRandomHelper.doWithChance(split.amount-amt))
 			amt++;
 		if (amt == 0)
@@ -209,7 +209,7 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	public final int getTextureState(ForgeDirection side) {
 		if (side.offsetY != 0)
 			return 4;
-		World world = worldObj;
+		Level world = worldObj;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;

@@ -9,7 +9,7 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission.breeder;
 
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 
@@ -67,7 +67,7 @@ public class TileEntitySodiumHeater extends TileEntityIntermediateBoiler {
 	}
 
 	@Override
-	protected void overheat(World world, int x, int y, int z) {
+	protected void overheat(Level world, int x, int y, int z) {
 		world.createExplosion(null, x+0.5, y+0.5, z+0.5, 4, true);
 		for (int i = 0; i < 4; i++) {
 			ReikaItemHelper.dropItem(world, x+rand.nextDouble(), y+rand.nextDouble(), z+rand.nextDouble(), ItemStacks.scrap);
@@ -76,7 +76,7 @@ public class TileEntitySodiumHeater extends TileEntityIntermediateBoiler {
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		NeutronType type = e.getType();
 		return !tank.isEmpty() && ReikaRandomHelper.doWithChance(type.getSodiumBoilerAbsorptionChance());
 	}

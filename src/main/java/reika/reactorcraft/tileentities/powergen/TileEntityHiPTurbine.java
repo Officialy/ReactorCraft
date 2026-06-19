@@ -9,10 +9,10 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
 
-import net.minecraft.block.Block;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -98,13 +98,13 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 		}
 	}
 
-	private void fail(World world, int x, int y, int z) {
+	private void fail(Level world, int x, int y, int z) {
 		world.setBlockToAir(x, y, z);
 		new FlyingBlocksExplosion(world, x, y+0.5, z, 4).doExplosion();
 	}
 
 	@Override
-	protected boolean checkForMultiblock(World world, int x, int y, int z, int meta) {
+	protected boolean checkForMultiblock(Level world, int x, int y, int z, int meta) {
 		for (int i = 0; i < 6; i++) {
 			ForgeDirection dir = dirs[i];
 			if (dir != this.getSteamMovement() && dir.getOpposite() != this.getSteamMovement()) {
@@ -152,7 +152,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 	}
 
 	@Override
-	protected void dumpSteam(World world, int x, int y, int z, int meta) {
+	protected void dumpSteam(Level world, int x, int y, int z, int meta) {
 		if (dripBuffer > 0 && this.dumpLiquid(world, x, y, z, meta)) {
 			ForgeDirection s = this.getSteamMovement();
 			ForgeDirection dir = ReikaDirectionHelper.getLeftBy90(s);
@@ -170,13 +170,13 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 							}
 							FluidStack fs = new FluidStack(fluid.getLowPressureFluid(), FLUID_PER_RESERVOIR);
 							if (m == MachineRegistry.RESERVOIR) {
-								TileEntity te = this.getTileEntity(tx, ty, tz);
+								BlockEntity te = this.getTileEntity(tx, ty, tz);
 								((TileEntityReservoir)te).addLiquid(fs.amount, fs.getFluid());
 								dripBuffer -= fs.amount;
 								break;
 							}
 							else if (world.getBlock(tx, ty, tz) == BCMachineHandler.getInstance().tankID) {
-								TileEntity te = this.getTileEntity(tx, ty, tz);
+								BlockEntity te = this.getTileEntity(tx, ty, tz);
 								((IFluidHandler)te).fill(ForgeDirection.UP, fs, true);
 								dripBuffer -= fs.amount;
 								break;
@@ -204,7 +204,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 		}
 	}
 
-	private boolean dumpLiquid(World world, int x, int y, int z, int meta) {
+	private boolean dumpLiquid(Level world, int x, int y, int z, int meta) {
 		if (AtmosphereHandler.isNoAtmo(world, x+this.getSteamMovement().offsetX, y, z+this.getSteamMovement().offsetZ, blockType, false))
 			return false;
 		return this.getStage() == this.getNumberStagesTotal()-1;
@@ -243,7 +243,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 	}
 
 	@Override
-	protected void intakeLubricant(World world, int x, int y, int z, int meta) {
+	protected void intakeLubricant(Level world, int x, int y, int z, int meta) {
 		ForgeDirection dir = this.getSteamMovement().getOpposite();
 		int dx = x+dir.offsetX;
 		int dy = y+dir.offsetY;
@@ -257,7 +257,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 				int sx = c.xCoord;
 				int sy = c.yCoord;
 				int sz = c.zCoord;
-				TileEntity tile = world.getTileEntity(sx, sy, sz);
+				BlockEntity tile = world.getTileEntity(sx, sy, sz);
 				if (tile instanceof TileEntitySteamInjector) {
 					TileEntitySteamInjector te = (TileEntitySteamInjector)tile;
 					int lube = te.getLubricant();
@@ -272,7 +272,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 	}
 
 	@Override
-	protected boolean enabled(World world, int x, int y, int z) {
+	protected boolean enabled(Level world, int x, int y, int z) {
 		if (!DragonAPICore.debugtest && tank.isEmpty())
 			return false;
 		if (this.isRedstoned(world, x, y, z))
@@ -280,7 +280,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 		return super.enabled(world, x, y, z);
 	}
 
-	private boolean isRedstoned(World world, int x, int y, int z) {
+	private boolean isRedstoned(Level world, int x, int y, int z) {
 		ForgeDirection dir = this.getSteamMovement().getOpposite();
 		int dx = x+dir.offsetX;
 		int dy = y+dir.offsetY;
@@ -299,7 +299,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 	}
 
 	@Override
-	protected boolean intakeSteam(World world, int x, int y, int z, int meta) {
+	protected boolean intakeSteam(Level world, int x, int y, int z, int meta) {
 		ForgeDirection dir = this.getSteamMovement().getOpposite();
 		int dx = x+dir.offsetX;
 		int dy = y+dir.offsetY;
@@ -372,7 +372,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		fluid = WorkingFluid.getFromNBT(NBT);
@@ -380,7 +380,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		fluid.saveToNBT(NBT);

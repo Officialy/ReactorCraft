@@ -9,10 +9,10 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.instantiable.data.immutable.Coordinate;
@@ -43,7 +43,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		this.moveRods();
 		thermalTicker.update();
 		if (thermalTicker.checkCap())
@@ -63,7 +63,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
@@ -81,7 +81,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 		}
 
 		if (spread) {
-			TileEntity te = this.getAdjacentTileEntity(ForgeDirection.UP);
+			BlockEntity te = this.getAdjacentTileEntity(ForgeDirection.UP);
 			while (te instanceof TileEntityControlRod) {
 				TileEntityControlRod tc = (TileEntityControlRod)te;
 				tc.toggle(false, false);
@@ -117,7 +117,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		return this.isActive() ? ReikaRandomHelper.doWithChance(60) : false;
 	}
 
@@ -132,7 +132,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 
@@ -148,7 +148,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -167,7 +167,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 		return 0;
 	}
 
-	private void onMeltdown(World world, int x, int y, int z) {
+	private void onMeltdown(Level world, int x, int y, int z) {
 
 	}
 
@@ -188,7 +188,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	@Override
 	public void breakBlock() {
 		if (CPU != null) {
-			TileEntity te = CPU.getTileEntity(worldObj);
+			BlockEntity te = CPU.getTileEntity(worldObj);
 			if (te instanceof TileEntityCPU) {
 				((TileEntityCPU)te).getLayout().removeControlRod(this);
 				((TileEntityCPU)te).removeTemperatureCheck(this);
@@ -202,7 +202,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	}
 
 	@Override
-	public AxisAlignedBB getRenderBoundingBox() {
+	public AABB getRenderBoundingBox() {
 		return ReikaAABBHelper.getBlockAABB(this).addCoord(0, 2, 0);
 	}
 

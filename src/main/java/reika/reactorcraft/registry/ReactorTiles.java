@@ -11,12 +11,12 @@ package reika.reactorcraft.registry;
 
 import java.util.ArrayList;
 
-import net.minecraft.block.Block;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.StatCollector;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
 import reika.dragonapi.exception.RegistrationException;
@@ -135,17 +135,17 @@ public enum ReactorTiles implements TileEnum {
 	private final int meta;
 	private String render;
 	private final ReactorBlocks blockInstance;
-	private TileEntity renderInstance;
+	private BlockEntity renderInstance;
 
 	private static final BlockMap<ReactorTiles> reactorMappings = new BlockMap();
 
 	public static final ReactorTiles[] TEList = values();
 
-	private ReactorTiles(String n, ReactorBlocks block, Class<? extends TileEntity> tile, int m) {
+	private ReactorTiles(String n, ReactorBlocks block, Class<? extends BlockEntity> tile, int m) {
 		this(n, block, tile, m, null);
 	}
 
-	private ReactorTiles(String n, ReactorBlocks block, Class<? extends TileEntity> tile, int m, String r) {
+	private ReactorTiles(String n, ReactorBlocks block, Class<? extends BlockEntity> tile, int m, String r) {
 		teClass = tile;
 		name = n;
 		render = r;
@@ -170,7 +170,7 @@ public enum ReactorTiles implements TileEnum {
 		return li;
 	}
 
-	public static TileEntity createTEFromIDAndMetadata(Block id, int meta) {
+	public static BlockEntity createTEFromIDAndMetadata(Block id, int meta) {
 		ReactorTiles index = getMachineFromIDandMetadata(id, meta);
 		if (index == null) {
 			ReactorCraft.logger.logError("ID "+id+" and metadata "+meta+" are not a valid machine identification pair!");
@@ -178,15 +178,15 @@ public enum ReactorTiles implements TileEnum {
 		}
 		Class TEClass = index.teClass;
 		try {
-			return (TileEntity)TEClass.newInstance();
+			return (BlockEntity)TEClass.newInstance();
 		}
 		catch (InstantiationException e) {
 			e.printStackTrace();
-			throw new RegistrationException(ReactorCraft.instance, "ID "+id+" and Metadata "+meta+" failed to instantiate its TileEntity of "+TEClass);
+			throw new RegistrationException(ReactorCraft.instance, "ID "+id+" and Metadata "+meta+" failed to instantiate its BlockEntity of "+TEClass);
 		}
 		catch (IllegalAccessException e) {
 			e.printStackTrace();
-			throw new RegistrationException(ReactorCraft.instance, "ID "+id+" and Metadata "+meta+" failed illegally accessed its TileEntity of "+TEClass);
+			throw new RegistrationException(ReactorCraft.instance, "ID "+id+" and Metadata "+meta+" failed illegally accessed its BlockEntity of "+TEClass);
 		}
 	}
 
@@ -200,7 +200,7 @@ public enum ReactorTiles implements TileEnum {
 		return true;
 	}
 
-	public static ReactorTiles getTE(IBlockAccess iba, int x, int y, int z) {
+	public static ReactorTiles getTE(BlockGetter iba, int x, int y, int z) {
 		Block id = iba.getBlock(x, y, z);
 		int meta = iba.getBlockMetadata(x, y, z);
 		return getMachineFromIDandMetadata(id, meta);
@@ -210,10 +210,10 @@ public enum ReactorTiles implements TileEnum {
 		return new ItemStack(ReactorItems.PLACER.getItemInstance(), 1, this.ordinal());
 	}
 
-	public TileEntity createTEInstanceForRender() {
+	public BlockEntity createTEInstanceForRender() {
 		if (renderInstance == null) {
 			try {
-				renderInstance = (TileEntity)teClass.newInstance();
+				renderInstance = (BlockEntity)teClass.newInstance();
 			}
 			catch (InstantiationException e) {
 				e.printStackTrace();
@@ -433,7 +433,7 @@ public enum ReactorTiles implements TileEnum {
 		return LinkableReactorCore.class.isAssignableFrom(teClass);
 	}
 
-	public ItemStack getCraftedProduct(TileEntity te) {
+	public ItemStack getCraftedProduct(BlockEntity te) {
 		return this.getCraftedProduct();
 	}
 

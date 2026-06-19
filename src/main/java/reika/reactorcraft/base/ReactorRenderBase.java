@@ -19,7 +19,7 @@ public abstract class ReactorRenderBase extends TileEntityRenderBase implements 
 
 	@Override
 	public final String getTextureFolder() {
-		return "/Reika/ReactorCraft/Textures/TileEntity/";
+		return "/Reika/ReactorCraft/Textures/BlockEntity/";
 	}
 
 	@Override

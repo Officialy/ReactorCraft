@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 import reika.dragonapi.instantiable.data.WeightedRandom;
 import reika.dragonapi.instantiable.data.collections.ChancedOutputList;

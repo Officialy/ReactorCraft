@@ -13,12 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.Explosion;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
@@ -29,14 +29,14 @@ public class HydrogenExplosion extends Explosion {
 
 	private static final Random rand = new Random();
 
-	private World world;
+	private Level world;
 	private final double scatterFraction;
 
-	public HydrogenExplosion(World world, Entity e, double x, double y, double z, float power) {
+	public HydrogenExplosion(Level world, Entity e, double x, double y, double z, float power) {
 		this(world, e, x, y, z, power, 1);
 	}
 
-	public HydrogenExplosion(World world, Entity e, double x, double y, double z, float power, double fraction) {
+	public HydrogenExplosion(Level world, Entity e, double x, double y, double z, float power, double fraction) {
 		super(world, e, x, y, z, power);
 		this.world = world;
 		scatterFraction = fraction;
@@ -105,7 +105,7 @@ public class HydrogenExplosion extends Explosion {
 		 */
 	}
 
-	private boolean canEntitize(World world, int x, int y, int z, Block id, int meta) {
+	private boolean canEntitize(Level world, int x, int y, int z, Block id, int meta) {
 		if (id == Blocks.air)
 			return false;
 		if (id == Blocks.bedrock)

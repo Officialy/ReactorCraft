@@ -9,12 +9,12 @@
  ******************************************************************************/
 package reika.reactorcraft.base;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.ISidedInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.interfaces.tileentity.InertIInv;
@@ -52,7 +52,7 @@ public abstract class TileEntityInventoriedReactorBase extends TileEntityReactor
 	}
 
 	@Override
-	public boolean isUseableByPlayer(EntityPlayer ep) {
+	public boolean isUseableByPlayer(Player ep) {
 		return ReikaMathLibrary.py3d(ep.posX-xCoord-0.5, ep.posY-yCoord-0.5, ep.posZ-zCoord-0.5) <= 8;
 	}
 
@@ -106,14 +106,14 @@ public abstract class TileEntityInventoriedReactorBase extends TileEntityReactor
 	}
 
 	@Override
-	public void readFromNBT(NBTTagCompound NBT) {
+	public void readFromNBT(CompoundTag NBT) {
 		super.readFromNBT(NBT);
-		NBTTagList nbttaglist = NBT.getTagList("Items", NBTTypes.COMPOUND.ID);
+		ListTag nbttaglist = NBT.getTagList("Items", NBTTypes.COMPOUND.ID);
 		inv = new ItemStack[this.getSizeInventory()];
 
 		for (int i = 0; i < nbttaglist.tagCount(); i++)
 		{
-			NBTTagCompound nbttagcompound = nbttaglist.getCompoundTagAt(i);
+			CompoundTag nbttagcompound = nbttaglist.getCompoundTagAt(i);
 			byte byte0 = nbttagcompound.getByte("Slot");
 
 			if (byte0 >= 0 && byte0 < inv.length)
@@ -124,16 +124,16 @@ public abstract class TileEntityInventoriedReactorBase extends TileEntityReactor
 	}
 
 	@Override
-	public void writeToNBT(NBTTagCompound NBT) {
+	public void writeToNBT(CompoundTag NBT) {
 		super.writeToNBT(NBT);
 
-		NBTTagList nbttaglist = new NBTTagList();
+		ListTag nbttaglist = new ListTag();
 
 		for (int i = 0; i < inv.length; i++)
 		{
 			if (inv[i] != null)
 			{
-				NBTTagCompound nbttagcompound = new NBTTagCompound();
+				CompoundTag nbttagcompound = new CompoundTag();
 				nbttagcompound.setByte("Slot", (byte)i);
 				inv[i].writeToNBT(nbttagcompound);
 				nbttaglist.appendTag(nbttagcompound);

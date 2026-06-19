@@ -14,8 +14,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.instantiable.data.immutable.WorldLocation;
@@ -92,19 +92,19 @@ public class ReactorControlLayout {
 		}
 	}
 
-	public boolean hasControlRodAtRelativePosition(World world, int x, int y, int z) {
+	public boolean hasControlRodAtRelativePosition(Level world, int x, int y, int z) {
 		return this.getControlRodAtRelativePosition(world, x, y, z) != null;
 	}
 
-	public boolean hasControlRodAtAbsolutePosition(World world, int x, int y, int z) {
+	public boolean hasControlRodAtAbsolutePosition(Level world, int x, int y, int z) {
 		return this.getControlRodAtAbsolutePosition(world, x, y, z) != null;
 	}
 
-	public TileEntityControlRod getControlRodAtRelativePosition(World world, int x, int y, int z) {
+	public TileEntityControlRod getControlRodAtRelativePosition(Level world, int x, int y, int z) {
 		return controls.get(new WorldLocation(world, x+controller.xCoord, y+controller.yCoord, z+controller.zCoord));
 	}
 
-	public TileEntityControlRod getControlRodAtAbsolutePosition(World world, int x, int y, int z) {
+	public TileEntityControlRod getControlRodAtAbsolutePosition(Level world, int x, int y, int z) {
 		return controls.get(new WorldLocation(world, x, y, z));
 	}
 
@@ -133,7 +133,7 @@ public class ReactorControlLayout {
 	}
 
 	@SideOnly(Side.CLIENT)
-	public int getDisplayColorAtRelativePosition(World world, int x, int y, int z) {
+	public int getDisplayColorAtRelativePosition(Level world, int x, int y, int z) {
 		TileEntityControlRod rod = this.getControlRodAtRelativePosition(world, x, y, z);
 		if (rod != null) {
 			if (((TileEntityCPU)controller.getTileEntity(world)).getPower() >= this.getMinPower())
@@ -207,7 +207,7 @@ public class ReactorControlLayout {
 		return controls.isEmpty();
 	}
 
-	public void writeToNBT(NBTTagCompound NBT) {
+	public void writeToNBT(CompoundTag NBT) {
 		controls.writeToNBT(NBT);
 		controller.writeToNBT("control", NBT);
 		NBT.setInteger("maxx", maxX);
@@ -218,7 +218,7 @@ public class ReactorControlLayout {
 		NBT.setInteger("minz", minZ);
 	}
 
-	public void readFromNBT(NBTTagCompound NBT) {
+	public void readFromNBT(CompoundTag NBT) {
 		controls.readFromNBT(NBT);
 		controller = WorldLocation.readFromNBT("control", NBT);
 		maxX = NBT.getInteger("maxx");

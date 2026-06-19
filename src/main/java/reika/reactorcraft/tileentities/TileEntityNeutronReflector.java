@@ -9,7 +9,7 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
 import reika.reactorcraft.auxiliary.ReactorCoreTE;
 import reika.reactorcraft.base.TileEntityReactorBase;
@@ -19,7 +19,7 @@ import reika.reactorcraft.registry.ReactorTiles;
 public class TileEntityNeutronReflector extends TileEntityReactorBase implements ReactorCoreTE {
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		e.moderate();
 		if (rand.nextInt(4) == 0) {
 			e.motionX = -e.motionX;
@@ -37,12 +37,12 @@ public class TileEntityNeutronReflector extends TileEntityReactorBase implements
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 

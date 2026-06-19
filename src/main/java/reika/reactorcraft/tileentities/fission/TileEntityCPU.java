@@ -12,11 +12,11 @@ package reika.reactorcraft.tileentities.fission;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import net.minecraft.block.Block;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -59,14 +59,14 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	private final PropagationCondition reactorBlocks = new PropagationCondition() {
 
 		@Override
-		public boolean isValidLocation(World world, int x, int y, int z, Coordinate from) {
+		public boolean isValidLocation(Level world, int x, int y, int z, Coordinate from) {
 			return world.getTileEntity(x, y, z) instanceof ReactorBlock;
 		}
 
 	};
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		thermalTicker.update();
 		if (thermalTicker.checkCap())
 			this.updateTemperature(world, x, y, z);
@@ -131,7 +131,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	}
 
 	@Override
-	protected void onFirstTick(World world, int x, int y, int z) {
+	protected void onFirstTick(Level world, int x, int y, int z) {
 		layout = new ReactorControlLayout(this);
 	}
 
@@ -146,7 +146,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
@@ -281,7 +281,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		omega = NBT.getInteger("speed");
@@ -295,7 +295,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		NBT.setInteger("speed", omega);
@@ -309,10 +309,10 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	}
 
 	@Override
-	public void writeToNBT(NBTTagCompound NBT) {
+	public void writeToNBT(CompoundTag NBT) {
 		super.writeToNBT(NBT);
 
-		NBTTagList li = new NBTTagList();
+		ListTag li = new ListTag();
 		for (TemperatureMonitor m : temperatureChecks) {
 			li.appendTag(m.writeToNBT());
 		}
@@ -320,19 +320,19 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	}
 
 	@Override
-	public void readFromNBT(NBTTagCompound NBT) {
+	public void readFromNBT(CompoundTag NBT) {
 		super.readFromNBT(NBT);
 
 		temperatureChecks.clear();
-		NBTTagList li = NBT.getTagList("checks", NBTTypes.COMPOUND.ID);
+		ListTag li = NBT.getTagList("checks", NBTTypes.COMPOUND.ID);
 		for (Object o : li.tagList) {
-			NBTTagCompound tag = (NBTTagCompound)o;
+			CompoundTag tag = (CompoundTag)o;
 			temperatureChecks.add(TemperatureMonitor.readFromNBT(tag));
 		}
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		return false;
 	}
 
@@ -355,18 +355,18 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 		private final Coordinate location;
 
 		private TemperatureMonitor(LinkableReactorCore te) {
-			location = new Coordinate((TileEntity)te);
+			location = new Coordinate((BlockEntity)te);
 		}
 
 		private TemperatureMonitor(Coordinate c) {
 			location = c;
 		}
 
-		public NBTTagCompound writeToNBT() {
+		public CompoundTag writeToNBT() {
 			return location.writeToTag();
 		}
 
-		public static TemperatureMonitor readFromNBT(NBTTagCompound tag) {
+		public static TemperatureMonitor readFromNBT(CompoundTag tag) {
 			return new TemperatureMonitor(Coordinate.readTag(tag));
 		}
 

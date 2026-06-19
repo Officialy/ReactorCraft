@@ -9,10 +9,10 @@
  ******************************************************************************/
 package reika.reactorcraft.auxiliary;
 
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
 public interface FusionReactorToroidPart {
 
-	public FusionReactorToroidPart getNextPart(World world, int x, int y, int z);
+	public FusionReactorToroidPart getNextPart(Level world, int x, int y, int z);
 
 }

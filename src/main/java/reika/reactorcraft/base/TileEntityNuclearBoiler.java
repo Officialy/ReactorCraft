@@ -11,8 +11,8 @@ package reika.reactorcraft.base;
 
 import java.util.Collection;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
@@ -62,7 +62,7 @@ public abstract class TileEntityNuclearBoiler extends TileEntityTankedReactorMac
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		thermalTicker.update();
 
 		if (thermalTicker.checkCap() && !world.isRemote) {
@@ -73,14 +73,14 @@ public abstract class TileEntityNuclearBoiler extends TileEntityTankedReactorMac
 	}
 
 	@Override
-	protected final void updateTemperature(World world, int x, int y, int z) {
+	protected final void updateTemperature(Level world, int x, int y, int z) {
 		super.updateTemperature(world, x, y, z);
 
 		if (temperature > this.getMaxTemperature())
 			this.overheat(world, x, y, z);
 	}
 
-	protected abstract void overheat(World world, int x, int y, int z);
+	protected abstract void overheat(Level world, int x, int y, int z);
 
 	@Override
 	public final int getTemperature() {
@@ -118,11 +118,11 @@ public abstract class TileEntityNuclearBoiler extends TileEntityTankedReactorMac
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		return false;
 	}
 
-	protected void balanceFluid(World world, int x, int y, int z) {
+	protected void balanceFluid(Level world, int x, int y, int z) {
 		for (int i = 0; i < 2; i++) {
 			ForgeDirection dir = dirs[i];
 			int dx = x+dir.offsetX;
@@ -153,7 +153,7 @@ public abstract class TileEntityNuclearBoiler extends TileEntityTankedReactorMac
 	public final int getTextureState(ForgeDirection side) {
 		if (side.offsetY != 0)
 			return 0;
-		World world = worldObj;
+		Level world = worldObj;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
@@ -176,17 +176,17 @@ public abstract class TileEntityNuclearBoiler extends TileEntityTankedReactorMac
 	}
 
 	@Override
-	public void readFromNBT(NBTTagCompound NBT) {
+	public void readFromNBT(CompoundTag NBT) {
 		super.readFromNBT(NBT);
 
 		type.readFromNBT(NBT.getCompoundTag("types"), (NBTIO<ReactorType>)ReikaNBTHelper.getEnumConverter(ReactorType.class));
 	}
 
 	@Override
-	public void writeToNBT(NBTTagCompound NBT) {
+	public void writeToNBT(CompoundTag NBT) {
 		super.writeToNBT(NBT);
 
-		NBTTagCompound tag = new NBTTagCompound();
+		CompoundTag tag = new CompoundTag();
 		type.writeToNBT(tag, (NBTIO<ReactorType>)ReikaNBTHelper.getEnumConverter(ReactorType.class));
 		NBT.setTag("types", tag);
 	}

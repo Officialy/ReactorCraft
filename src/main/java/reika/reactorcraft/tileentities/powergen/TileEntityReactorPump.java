@@ -9,9 +9,9 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -40,7 +40,7 @@ public class TileEntityReactorPump extends TankedReactorPowerReceiver {
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		super.updateEntity(world, x, y, z, meta);
 
 		if (this.canConvert())
@@ -66,10 +66,10 @@ public class TileEntityReactorPump extends TankedReactorPowerReceiver {
 		return false;
 	}
 
-	private void dumpFluids(World world, int x, int y, int z) {
+	private void dumpFluids(Level world, int x, int y, int z) {
 		for (int i = 2; i < 6; i++) {
 			ForgeDirection dir = dirs[i];
-			TileEntity te = this.getAdjacentTileEntity(dir);
+			BlockEntity te = this.getAdjacentTileEntity(dir);
 			if (te instanceof TileEntityPipe) {
 				TileEntityPipe p = (TileEntityPipe)te;
 				if (p.canIntakeFluid(output.getActualFluid())) {
@@ -107,7 +107,7 @@ public class TileEntityReactorPump extends TankedReactorPowerReceiver {
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 		super.animateWithTick(world, x, y, z);
 		if (this.getPower() > 0) {
 			phi += 15F;
@@ -115,7 +115,7 @@ public class TileEntityReactorPump extends TankedReactorPowerReceiver {
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -123,7 +123,7 @@ public class TileEntityReactorPump extends TankedReactorPowerReceiver {
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 

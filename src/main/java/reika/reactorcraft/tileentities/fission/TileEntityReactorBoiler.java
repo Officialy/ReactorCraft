@@ -9,13 +9,13 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 
@@ -56,7 +56,7 @@ public class TileEntityReactorBoiler extends TileEntityNuclearBoiler implements 
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		super.updateEntity(world, x, y, z, meta);
 		if (temperature >= DETTEMP && fluid == WorkingFluid.AMMONIA)
 			this.detonateAmmonia(world, x, y, z);
@@ -87,7 +87,7 @@ public class TileEntityReactorBoiler extends TileEntityNuclearBoiler implements 
 		this.transferSteam(world, x, y, z);
 	}
 
-	private void detonateAmmonia(World world, int x, int y, int z) {
+	private void detonateAmmonia(Level world, int x, int y, int z) {
 		ReactorAchievements.NH3EXPLODE.triggerAchievement(this.getPlacer());
 		BlockArray pipes = new BlockArray();
 		Block id = ReactorTiles.STEAMLINE.getBlock();
@@ -124,7 +124,7 @@ public class TileEntityReactorBoiler extends TileEntityNuclearBoiler implements 
 			ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.glass");
 	}
 
-	protected void transferSteam(World world, int x, int y, int z) {
+	protected void transferSteam(Level world, int x, int y, int z) {
 		ReactorTiles r = ReactorTiles.getTE(world, x, y+1, z);
 		if (r == ReactorTiles.BOILER) {
 			TileEntityReactorBoiler te = (TileEntityReactorBoiler)world.getTileEntity(x, y+1, z);
@@ -148,7 +148,7 @@ public class TileEntityReactorBoiler extends TileEntityNuclearBoiler implements 
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
@@ -173,14 +173,14 @@ public class TileEntityReactorBoiler extends TileEntityNuclearBoiler implements 
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		fluid = WorkingFluid.getFromNBT(NBT);
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		fluid.saveToNBT(NBT);
@@ -196,14 +196,14 @@ public class TileEntityReactorBoiler extends TileEntityNuclearBoiler implements 
 	}
 
 	@Override
-	protected void overheat(World world, int x, int y, int z) {
+	protected void overheat(Level world, int x, int y, int z) {
 		world.createExplosion(null, x+0.5, y+0.5, z+0.5, 8, true);
 		for (int i = 0; i < 4; i++)
 			ReikaItemHelper.dropItem(world, x+rand.nextDouble(), y+rand.nextDouble(), z+rand.nextDouble(), ItemStacks.scrap);
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		NeutronType type = e.getType();
 		if (!tank.isEmpty()) {
 			if (tank.getActualFluid() == FluidRegistry.getFluid("rc heavy water")) {

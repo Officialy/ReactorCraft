@@ -9,9 +9,9 @@
  ******************************************************************************/
 package reika.reactorcraft.entities;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.base.InertEntity;
@@ -21,17 +21,17 @@ import reika.reactorcraft.registry.ReactorSounds;
 
 public class EntityFusion extends InertEntity {
 
-	public EntityFusion(World world) {
+	public EntityFusion(Level world) {
 		super(world);
 	}
 
-	public EntityFusion(World world, double x, double y, double z, String creator) {
+	public EntityFusion(Level world, double x, double y, double z, String creator) {
 		super(world);
 		this.setPosition(x, y, z);
 		//world.setBlock(MathHelper.floor_double(x), MathHelper.floor_double(y)+1, MathHelper.floor_double(z), 51);
 		//worldObj.playSoundEffect(posX, posY, posZ, "random.explode", 0.2F, 0.1F);
 		for (int i = 0; i < 3; i++)
-			this.spawnNeutrons(worldObj, MathHelper.floor_double(posX), MathHelper.floor_double(posY), MathHelper.floor_double(posZ));
+			this.spawnNeutrons(worldObj, Mth.floor_double(posX), Mth.floor_double(posY), Mth.floor_double(posZ));
 		ReactorSounds.FUSION.playSound(worldObj, posX, posY, posZ, 1, 1);
 
 		if (creator != null && !creator.isEmpty())
@@ -43,7 +43,7 @@ public class EntityFusion extends InertEntity {
 
 	}
 
-	private void spawnNeutrons(World world, int x, int y, int z) {
+	private void spawnNeutrons(Level world, int x, int y, int z) {
 		EntityNeutron e = new EntityNeutron(world, x, y, z, this.getRandomDirection(), NeutronType.FUSION);
 		if (!world.isRemote)
 			world.spawnEntityInWorld(e);
@@ -55,12 +55,12 @@ public class EntityFusion extends InertEntity {
 	}
 
 	@Override
-	protected void readEntityFromNBT(NBTTagCompound nbt) {
+	protected void readEntityFromNBT(CompoundTag nbt) {
 
 	}
 
 	@Override
-	protected void writeEntityToNBT(NBTTagCompound nbt) {
+	protected void writeEntityToNBT(CompoundTag nbt) {
 
 	}
 

@@ -9,8 +9,8 @@
  ******************************************************************************/
 package reika.reactorcraft.auxiliary.lua;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import reika.dragonapi.modinteract.lua.LuaMethod;
 import reika.reactorcraft.registry.ReactorItems;
@@ -23,7 +23,7 @@ public class LuaReactorCheckPebbles extends LuaMethod {
 	}
 
 	@Override
-	protected Object[] invoke(TileEntity te, Object[] args) throws LuaMethodException, InterruptedException {
+	protected Object[] invoke(BlockEntity te, Object[] args) throws LuaMethodException, InterruptedException {
 		TileEntityPebbleBed tile = (TileEntityPebbleBed)te;
 		int fuel = 0;
 		int maxfuel = tile.getSizeInventory()*ReactorItems.PELLET.getNumberMetadatas();

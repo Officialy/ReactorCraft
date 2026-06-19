@@ -11,11 +11,11 @@ package reika.reactorcraft.tileentities;
 
 import java.util.HashMap;
 
-import net.minecraft.block.Block;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidContainerRegistry;
@@ -66,7 +66,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 		if (power >= MINPOWER && torque >= MINTORQUE) {
 			phi += 10F;
 		}
@@ -120,7 +120,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		if (!PowerTransferHelper.checkPowerFrom(this, ForgeDirection.DOWN) && !PowerTransferHelper.checkPowerFrom(this, ForgeDirection.UP)) {
 			this.noInputMachine();
 		}
@@ -140,7 +140,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 		}
 	}
 
-	private Extraction getExtraction(World world, int x, int y, int z) {
+	private Extraction getExtraction(Level world, int x, int y, int z) {
 		Fluid f = null;
 		int c = 0;
 		for (int i = 2; i < 6; i++) {
@@ -161,7 +161,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 		return f != null && c >= 3 ? extractions.get(f) : null;
 	}
 
-	private void harvest(Extraction e, World world, int x, int y, int z) {
+	private void harvest(Extraction e, Level world, int x, int y, int z) {
 		tank.fill(new FluidStack(e.output, e.getExtractedAmount(world, x, y, z)), true);
 		e.onHarvest(world, x, y, z, this.getPlacer());
 	}
@@ -222,7 +222,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -234,7 +234,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 
@@ -288,13 +288,13 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 			output = f;
 		}
 
-		protected void onHarvest(World world, int x, int y, int z, EntityPlayer placer) {
+		protected void onHarvest(Level world, int x, int y, int z, Player placer) {
 
 		}
 
-		protected abstract boolean canPerform(World world, int x, int y, int z);
+		protected abstract boolean canPerform(Level world, int x, int y, int z);
 
-		protected abstract int getExtractedAmount(World world, int x, int y, int z);
+		protected abstract int getExtractedAmount(Level world, int x, int y, int z);
 
 	}
 
@@ -308,20 +308,20 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 		}
 
 		@Override
-		protected boolean canPerform(World world, int x, int y, int z) {
+		protected boolean canPerform(Level world, int x, int y, int z) {
 			return this.isValidWorld(world) && y < MAXY && ReikaBiomeHelper.isOcean(world.getBiomeGenForCoords(x, z)) && this.isOceanFloor(world, x, y, z);
 		}
 
-		private boolean isValidWorld(World world) {
+		private boolean isValidWorld(Level world) {
 			return ReactorCraft.config.isDimensionValidForHeavyWater(world.provider.dimensionId);
 		}
 
 		@Override
-		protected void onHarvest(World world, int x, int y, int z, EntityPlayer placer) {
+		protected void onHarvest(Level world, int x, int y, int z, Player placer) {
 			ReactorAchievements.HEAVYWATER.triggerAchievement(placer);
 		}
 
-		private boolean isOceanFloor(World world, int x, int y, int z) {
+		private boolean isOceanFloor(Level world, int x, int y, int z) {
 			for (int i = 0; i < MINDEPTH; i++) {
 				int dy = y+i;
 				for (int a = -1; a <= 1; a += 2) {
@@ -345,7 +345,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 		}
 
 		@Override
-		protected int getExtractedAmount(World world, int x, int y, int z) {
+		protected int getExtractedAmount(Level world, int x, int y, int z) {
 			return 200;
 		}
 
@@ -358,17 +358,17 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 		}
 
 		@Override
-		protected boolean canPerform(World world, int x, int y, int z) {
+		protected boolean canPerform(Level world, int x, int y, int z) {
 			return y == this.getSurfaceY(world, x, y, z) && this.isLavaSurface(world, x, y, z);
 		}
 
-		private boolean isLavaSurface(World world, int x, int y, int z) {
+		private boolean isLavaSurface(Level world, int x, int y, int z) {
 			Block b = world.getBlock(x, y-1, z);
 			Block b2 = world.getBlock(x, y+1, z);
 			return (b == Blocks.lava || b == Blocks.flowing_lava) && (b2 != Blocks.lava && b2 != Blocks.flowing_lava);
 		}
 
-		private int getSurfaceY(World world, int x, int y, int z) {
+		private int getSurfaceY(Level world, int x, int y, int z) {
 			switch(world.provider.dimensionId) {
 				case 0:
 					return 10;
@@ -380,7 +380,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 		}
 
 		@Override
-		protected int getExtractedAmount(World world, int x, int y, int z) {
+		protected int getExtractedAmount(Level world, int x, int y, int z) {
 			return world.provider.dimensionId == -1 ? 10+rand.nextInt(21)+rand.nextInt(51) : 10+rand.nextInt(31);
 		}
 

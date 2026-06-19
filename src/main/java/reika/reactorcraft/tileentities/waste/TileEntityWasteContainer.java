@@ -9,12 +9,12 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.waste;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
@@ -43,7 +43,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		thermalTicker.update();
 
 		if (thermalTicker.checkCap()) {
@@ -66,7 +66,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 		return false;
 	}
 
-	private void distributeHeat(World world, int x, int y, int z) {
+	private void distributeHeat(Level world, int x, int y, int z) {
 		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
 		//ReikaJavaLibrary.pConsole(temperature);
 		if (temperature > Tamb) {
@@ -97,7 +97,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
@@ -125,14 +125,14 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 		return 600;
 	}
 
-	public void onMeltdown(World world, int x, int y, int z) {
+	public void onMeltdown(Level world, int x, int y, int z) {
 		world.createExplosion(null, x+0.5, y+0.5, z+0.5, 9, true);
 		RadiationEffects.instance.contaminateArea(world, x, y, z, 9, 4, 1.5, true, RadiationIntensity.LETHAL);
 		ReactorAchievements.WASTELEAK.triggerAchievement(this.getPlacer());
 	}
 
 	@Override
-	public void updateTemperature(World world, int x, int y, int z, int meta) {
+	public void updateTemperature(Level world, int x, int y, int z, int meta) {
 		this.distributeHeat(world, x, y, z);
 	}
 
@@ -142,7 +142,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	@Override
-	public void overheat(World world, int x, int y, int z) {
+	public void overheat(Level world, int x, int y, int z) {
 		if (!world.isRemote)
 			this.onMeltdown(world, x, y, z);
 	}
@@ -158,13 +158,13 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	public boolean feed() {
-		World world = worldObj;
+		Level world = worldObj;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
 		Block id = world.getBlock(x, y-1, z);
 		int meta = world.getBlockMetadata(x, y-1, z);
-		TileEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
 		if (tile instanceof TileEntityWasteContainer) {
 			if (((Feedable)tile).feedIn(inv[inv.length-1])) {
 				for (int i = inv.length-1; i > 0; i--)
@@ -229,7 +229,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		return false;
 	}
 

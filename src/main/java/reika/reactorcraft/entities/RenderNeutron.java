@@ -15,7 +15,7 @@ import org.lwjgl.opengl.GL12;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
 import reika.dragonapi.libraries.rendering.ReikaRenderHelper;

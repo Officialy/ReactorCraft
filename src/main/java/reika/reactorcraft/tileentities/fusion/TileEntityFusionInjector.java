@@ -9,10 +9,10 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fusion;
 
-import net.minecraft.block.Block;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -61,7 +61,7 @@ ToggleTile, NeutronTile {
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		if (DragonAPICore.debugtest) {
 			tank.addLiquid(1000, FluidRegistry.getFluid("rc fusion plasma"));
 			hasMultiBlock = true;
@@ -87,12 +87,12 @@ ToggleTile, NeutronTile {
 		return true;
 	}
 
-	private void make(World world, int x, int y, int z) {
+	private void make(Level world, int x, int y, int z) {
 		this.createPlasma(world, x, y, z);
 		tank.removeLiquid(2);
 	}
 
-	private void createPlasma(World world, int x, int y, int z) {
+	private void createPlasma(Level world, int x, int y, int z) {
 		EntityPlasma e = new EntityPlasma(world, x, y, z, placer);
 		e.setTarget(x+this.getFacing().offsetX, z+this.getFacing().offsetZ);
 		if (!world.isRemote)
@@ -105,10 +105,10 @@ ToggleTile, NeutronTile {
 		return new int[]{dx, yCoord, dz};
 	}
 
-	public FusionReactorToroidPart getNextPart(World world, int x, int y, int z) {
+	public FusionReactorToroidPart getNextPart(Level world, int x, int y, int z) {
 		int dx = xCoord+this.getFacing().offsetX*2;
 		int dz = zCoord+this.getFacing().offsetZ*2;
-		TileEntity te = world.getTileEntity(dx, y, dz);
+		BlockEntity te = world.getTileEntity(dx, y, dz);
 		return te instanceof FusionReactorToroidPart ? (FusionReactorToroidPart)te : null;
 	}
 
@@ -174,12 +174,12 @@ ToggleTile, NeutronTile {
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT) {
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		tank.writeToNBT(NBT);
@@ -192,7 +192,7 @@ ToggleTile, NeutronTile {
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT) {
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		tank.readFromNBT(NBT);
@@ -238,7 +238,7 @@ ToggleTile, NeutronTile {
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		return false;
 	}
 

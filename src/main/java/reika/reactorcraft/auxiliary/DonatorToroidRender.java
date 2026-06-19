@@ -12,7 +12,7 @@ package reika.reactorcraft.auxiliary;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.entity.player.Player;
 
 import reika.dragonapi.auxiliary.trackers.playerspecificrenderer.PlayerRotationData;
 import reika.dragonapi.interfaces.PlayerRenderObj;
@@ -28,7 +28,7 @@ public class DonatorToroidRender implements PlayerRenderObj {
 	}
 
 	@Override
-	public void render(EntityPlayer ep, float ptick, PlayerRotationData dat) {
+	public void render(Player ep, float ptick, PlayerRotationData dat) {
 		GL11.glPushMatrix();
 		double d = 0.1875;
 		GL11.glTranslated(-d, 2.0625, -d);

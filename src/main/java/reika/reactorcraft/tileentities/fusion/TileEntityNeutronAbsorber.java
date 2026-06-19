@@ -10,7 +10,7 @@
 package reika.reactorcraft.tileentities.fusion;
 
 import net.minecraft.init.Blocks;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
@@ -33,7 +33,7 @@ public class TileEntityNeutronAbsorber extends TileEntityReactorBase implements 
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 		tempTimer.update();
 		if (tempTimer.checkCap()) {
 			this.updateTemperature(world, x, y, z);
@@ -48,12 +48,12 @@ public class TileEntityNeutronAbsorber extends TileEntityReactorBase implements 
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
 		if (e.getType() == NeutronType.FUSION) {
 			temperature += 40;
 			return true;

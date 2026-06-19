@@ -12,9 +12,9 @@ package reika.reactorcraft.base;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.ModList;
@@ -94,7 +94,7 @@ public abstract class TileEntityReactorBase extends TileEntityRegistryBase<React
 	}
 
 	@Override
-	protected void writeSyncTag(NBTTagCompound NBT)
+	protected void writeSyncTag(CompoundTag NBT)
 	{
 		super.writeSyncTag(NBT);
 
@@ -103,7 +103,7 @@ public abstract class TileEntityReactorBase extends TileEntityRegistryBase<React
 	}
 
 	@Override
-	protected void readSyncTag(NBTTagCompound NBT)
+	protected void readSyncTag(CompoundTag NBT)
 	{
 		super.readSyncTag(NBT);
 
@@ -112,13 +112,13 @@ public abstract class TileEntityReactorBase extends TileEntityRegistryBase<React
 	}
 
 	@Override
-	public void writeToNBT(NBTTagCompound NBT) {
+	public void writeToNBT(CompoundTag NBT) {
 		super.writeToNBT(NBT);
 
 	}
 
 	@Override
-	public void readFromNBT(NBTTagCompound NBT) {
+	public void readFromNBT(CompoundTag NBT) {
 		super.readFromNBT(NBT);
 
 	}
@@ -129,9 +129,9 @@ public abstract class TileEntityReactorBase extends TileEntityRegistryBase<React
 		return pass == 0 || ((r.renderInPass1() || this instanceof ShaftMachine) && pass == 1);
 	}
 
-	protected void updateTemperature(World world, int x, int y, int z) {
+	protected void updateTemperature(Level world, int x, int y, int z) {
 		//ReikaJavaLibrary.pConsole(temperature, Side.SERVER);
-		float af = 1+1.5F*MathHelper.clamp_float((temperature-100)/500F, 0, 1);
+		float af = 1+1.5F*Mth.clamp_float((temperature-100)/500F, 0, 1);
 		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z, af);
 
 		if (world.provider.dimensionId != -1)
@@ -260,7 +260,7 @@ public abstract class TileEntityReactorBase extends TileEntityRegistryBase<React
 		return dirs[r];
 	}
 
-	public final ArrayList<String> getMessages(World world, int x, int y, int z, int side) {
+	public final ArrayList<String> getMessages(Level world, int x, int y, int z, int side) {
 		ArrayList<String> li = new ArrayList();
 		if (this instanceof Temperatured) {
 			String s = String.format("%s %s: %dC", this.getTEName(), Variables.TEMPERATURE, ((Temperatured)this).getTemperature());

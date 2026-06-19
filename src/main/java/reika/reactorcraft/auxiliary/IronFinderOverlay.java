@@ -14,11 +14,11 @@ import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.BlockAir;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -50,7 +50,7 @@ public class IronFinderOverlay {
 	@SubscribeEvent
 	public void renderFinderArrow(RenderGameOverlayEvent evt) {
 		if (evt.type == ElementType.HELMET) {
-			EntityPlayer ep = Minecraft.getMinecraft().thePlayer;
+			Player ep = Minecraft.getMinecraft().thePlayer;
 			boolean render = ReactorItems.IRONFINDER.matchWith(ep.getCurrentEquippedItem()) || (ep.getEntityData().hasKey("ironfinder") && ep.getEntityData().getLong("ironfinder") >= ep.worldObj.getTotalWorldTime()-20);
 			if (render) {
 				Tessellator v5 = Tessellator.instance;

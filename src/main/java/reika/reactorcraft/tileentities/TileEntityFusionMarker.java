@@ -11,8 +11,8 @@ package reika.reactorcraft.tileentities;
 
 import java.util.ArrayList;
 
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.world.World;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.Level;
 
 import reika.reactorcraft.base.TileEntityReactorBase;
 import reika.reactorcraft.registry.ReactorTiles;
@@ -26,12 +26,12 @@ public class TileEntityFusionMarker extends TileEntityReactorBase {
 	}
 
 	@Override
-	public void updateEntity(World world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, int x, int y, int z, int meta) {
 
 	}
 
 	@Override
-	protected void animateWithTick(World world, int x, int y, int z) {
+	protected void animateWithTick(Level world, int x, int y, int z) {
 
 	}
 
@@ -85,7 +85,7 @@ public class TileEntityFusionMarker extends TileEntityReactorBase {
 	}
 
 	@Override
-	public AxisAlignedBB getRenderBoundingBox() {
+	public AABB getRenderBoundingBox() {
 		return INFINITE_EXTENT_AABB;
 	}
 
