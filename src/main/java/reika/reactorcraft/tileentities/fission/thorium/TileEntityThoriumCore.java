@@ -26,7 +26,7 @@ import reika.dragonapi.asm.apistripper.Strippable;
 import reika.dragonapi.asm.dependentmethodstripper.ModDependent;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.StepTimer;
-import reika.dragonapi.interfaces.tileentity.InertIInv;
+import reika.dragonapi.interfaces.blockentity.InertIInv;
 import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;

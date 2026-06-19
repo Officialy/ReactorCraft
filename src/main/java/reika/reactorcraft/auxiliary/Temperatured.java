@@ -9,7 +9,7 @@
  ******************************************************************************/
 package reika.reactorcraft.auxiliary;
 
-import reika.dragonapi.interfaces.tileentity.ThermalTile;
+import reika.dragonapi.interfaces.blockentity.ThermalTile;
 import reika.reactorcraft.tileentities.fission.TileEntityWaterCell.LiquidStates;
 import reika.rotarycraft.auxiliary.interfaces.HeatConduction;
 

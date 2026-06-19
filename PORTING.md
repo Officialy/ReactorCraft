@@ -118,13 +118,19 @@ exist in `reika.dragonapi.*` / `reika.rotarycraft.*` nested-class imports** — 
 (can't safely resolve across the relocated sibling modules); each surfaces as an obvious
 compile error when its owning file is ported. Fix in place then.
 
-### Known systematic import remaps (DragonAPI port relocations)
-The lowercase pass produced `reika.dragonapi.interfaces.tileentity.*`, but the DragonAPI port
-renamed that package to `interfaces.blockentity`. So **`reika.dragonapi.interfaces.tileentity.* →
-reika.dragonapi.interfaces.blockentity.*`** everywhere (confirmed for `BreakAction`; likely
-`ThermalTile` and the rest of that package). Candidate for an early scripted find/replace once a
-few more are confirmed. Watch for the same `TileEntity*`→`BlockEntity*` renames on DragonAPI base
-classes generally.
+### Systematic import remaps (DragonAPI port relocations)
+DragonAPI's `interfaces/tileentity/` package is GONE — wholesale-moved to `interfaces/blockentity/`.
+Remap **applied to the cluster** for classes that exist there: `BreakAction`, `ChunkLoadingTile`,
+`ToggleTile`, `InertIInv`, `NonIFluidTank`, `ThermalTile`. Non-cluster batches still hold the old
+path (pristine) — remap them when ported.
+
+### KEY BLOCKER: RenderFetcher / TextureFetcher removed in the port (26 TEs)
+`reika.dragonapi.interfaces.tileentity.RenderFetcher` and `TextureFetcher` have **no equivalent**
+in the ported DragonAPI (the 26.2 render overhaul removed the fetcher pattern). 26 cluster TEs
+(`TileEntityReactorBase implements RenderFetcher`, etc.) depend on it. Needs a porting decision,
+not a remap: in 26.2 machines render via a registered `BlockEntityRenderer` (see RC `RotaryTERenderer`
++ the submit pipeline) rather than the TE handing back a render object. Resolve this before the
+TE-cluster can compile. `Transducerable` is fine at `reika.rotarycraft.api.interfaces.Transducerable`.
 
 ### api/ leftovers (deliberately NOT ported yet — coupled, not leaf)
 - `api/MagneticOreOverride.java` — returns `IIcon[]` (1.7.10 render concept; no 1:1 target).

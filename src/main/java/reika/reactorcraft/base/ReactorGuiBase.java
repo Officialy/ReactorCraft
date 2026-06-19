@@ -19,7 +19,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.util.StatCollector;
 
 import reika.dragonapi.instantiable.gui.ImagedGuiButton;
-import reika.dragonapi.interfaces.tileentity.InertIInv;
+import reika.dragonapi.interfaces.blockentity.InertIInv;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.io.ReikaTextureHelper;
 import reika.dragonapi.libraries.rendering.ReikaGuiAPI;

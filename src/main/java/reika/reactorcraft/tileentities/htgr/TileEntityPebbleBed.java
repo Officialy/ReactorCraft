@@ -19,7 +19,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.instantiable.StepTimer;
-import reika.dragonapi.interfaces.tileentity.BreakAction;
+import reika.dragonapi.interfaces.blockentity.BreakAction;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;

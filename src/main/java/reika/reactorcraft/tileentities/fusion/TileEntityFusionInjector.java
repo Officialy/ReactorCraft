@@ -23,7 +23,7 @@ import net.minecraftforge.fluids.IFluidHandler;
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.rendering.StructureRenderer;
-import reika.dragonapi.interfaces.tileentity.ToggleTile;
+import reika.dragonapi.interfaces.blockentity.ToggleTile;
 import reika.reactorcraft.auxiliary.FusionReactorToroidPart;
 import reika.reactorcraft.auxiliary.MultiBlockTile;
 import reika.reactorcraft.auxiliary.NeutronTile;

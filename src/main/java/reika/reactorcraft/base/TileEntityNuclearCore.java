@@ -23,7 +23,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.auxiliary.ChunkManager;
 import reika.dragonapi.instantiable.data.immutable.Coordinate;
-import reika.dragonapi.interfaces.tileentity.ChunkLoadingTile;
+import reika.dragonapi.interfaces.blockentity.ChunkLoadingTile;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;

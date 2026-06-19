@@ -9,7 +9,7 @@
  ******************************************************************************/
 package reika.reactorcraft.auxiliary;
 
-import reika.dragonapi.interfaces.tileentity.BreakAction;
+import reika.dragonapi.interfaces.blockentity.BreakAction;
 import reika.reactorcraft.tileentities.fission.TileEntityCPU;
 
 

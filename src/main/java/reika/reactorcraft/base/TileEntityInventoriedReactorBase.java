@@ -17,7 +17,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import reika.dragonapi.interfaces.tileentity.InertIInv;
+import reika.dragonapi.interfaces.blockentity.InertIInv;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.reikanbthelper.NBTTypes;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
