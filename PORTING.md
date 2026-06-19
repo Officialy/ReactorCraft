@@ -101,6 +101,30 @@ a file the instant it is ported, rebuild to verify. Delete the whole block when 
 - `auxiliary/MultiBlockTile.java` — extends DragonAPI `BreakAction`; import remap (see below).
 - `auxiliary/ReactorPowerReceiver.java` — extends RC `ShaftPowerReceiver` (no edit needed).
 
+### In progress — TE cluster (edited, NOT yet in allowlist until cluster greens)
+- `base/TileEntityReactorBase.java` — **re-rooted** `TileEntityRegistryBase<ReactorTiles>` →
+  `BlockEntityBase implements Transducerable`. Removed `RenderFetcher`/`getRenderer` (gone — render
+  via registered BER), `shouldRenderInPass` (no render passes), `writeToNBT/readFromNBT` (use
+  save/load + sync tags), `canUpdate` → `shouldRunUpdateCode`. `ForgeDirection`→`Direction`
+  (`offsetX`→`getStepX`, inherit base `dirs`). OC `getOCNetworkVisibility` removed (OC not in build).
+  Bodies ported to verified sigs: `ReikaWorldHelper`/`ReikaBlockHelper` now in `libraries.level`;
+  `getAmbientTemperatureAt(Level,BlockPos[,float])`, `temperatureEnvironment(Level,BlockPos,int)`,
+  `getBlockVolume(Level,BlockPos)`; `setBlockToAir`→`removeBlock`; `createExplosion`→
+  `explode(...,Level.ExplosionInteraction.BLOCK)`; `world.provider.dimensionId!=-1`→
+  `dimension()!=Level.NETHER`; `Transducerable.getMessages(Level,BlockPos,Direction)`.
+
+**Contract this base now imposes on downstream cluster files (make them conform when porting):**
+- `ReactorTiles` (enum impl `TileEnum`): `static getTE(Level,BlockPos)`, `allowTickAcceleration()`,
+  `isReactorCore()`, constants `CONTROL/CPU/EXCHANGER/REFLECTOR`. `getBlockState()` from TileEnum.
+- `ReactorType`: `HTGR`, `FUSION`, `getTypeMismatchHeatEfficiency()`.
+- `TileEntityReactorPiping`: **rename `getLevel()`→`getFluidLevel()`** (clashes with
+  `BlockEntity.getLevel()`); `getFluidType()` returns a `net.minecraft...material.Fluid`.
+- `Temperatured`: `getTemperature()/setTemperature(int)`; `TypedReactorCoreTE.getReactorType()`.
+- Concrete TEs keep their display getters (TurbineCore `getPower/getOmega/getName/getLubricant`,
+  SteamLine `getSteam/getSourceReactorType:Proportionality<ReactorType>`, HeatPipe `getNetHeatEnergy`,
+  ReactorGenerator `getGeneratedOutputForDisplay`).
+- Systematic remap also seen here: **`reika.dragonapi.libraries.world.* → libraries.level.*`**.
+
 ### Deferred — need datagen / coupled (NOT leaves)
 - `auxiliary/PoisonGasDamage.java`, `auxiliary/RadiationDamage.java` — extend DragonAPI
   `CustomStringDamageSource`, whose ctor is now `(Holder<DamageType>, String)`; the old overridable

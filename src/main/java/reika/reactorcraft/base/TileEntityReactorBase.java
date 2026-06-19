@@ -12,26 +12,26 @@ package reika.reactorcraft.base;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 
-import reika.dragonapi.ModList;
-import reika.dragonapi.asm.dependentmethodstripper.ModDependent;
-import reika.dragonapi.base.TileEntityRegistryBase;
+import reika.dragonapi.base.BlockEntityBase;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.instantiable.data.Proportionality;
-import reika.dragonapi.interfaces.TextureFetcher;
-import reika.dragonapi.interfaces.tileentity.RenderFetcher;
+import reika.dragonapi.libraries.level.ReikaBlockHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.dragonapi.libraries.mathsci.ReikaEngLibrary;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
 import reika.dragonapi.libraries.mathsci.ReikaThermoHelper;
-import reika.dragonapi.libraries.world.ReikaBlockHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
 import reika.dragonapi.modinteract.lua.LuaMethod;
 import reika.reactorcraft.ReactorCraft;
-import reika.reactorcraft.auxiliary.ReactorRenderList;
 import reika.reactorcraft.auxiliary.ReactorTyped;
 import reika.reactorcraft.auxiliary.Temperatured;
 import reika.reactorcraft.auxiliary.TemperaturedReactorTyped;
@@ -46,16 +46,11 @@ import reika.reactorcraft.tileentities.powergen.TileEntitySteamLine;
 import reika.reactorcraft.tileentities.powergen.TileEntityTurbineCore;
 import reika.rotarycraft.api.interfaces.ThermalMachine;
 import reika.rotarycraft.api.interfaces.Transducerable;
-import reika.rotarycraft.api.power.ShaftMachine;
 import reika.rotarycraft.api.power.ShaftPowerReceiver;
 import reika.rotarycraft.auxiliary.Variables;
 import reika.rotarycraft.auxiliary.interfaces.TemperatureTE;
 
-import li.cil.oc.api.network.Visibility;
-
-public abstract class TileEntityReactorBase extends TileEntityRegistryBase<ReactorTiles> implements RenderFetcher, Transducerable {
-
-	protected ForgeDirection[] dirs = ForgeDirection.values();
+public abstract class TileEntityReactorBase extends BlockEntityBase implements Transducerable {
 
 	protected StepTimer thermalTicker = new StepTimer(20);
 
@@ -65,20 +60,17 @@ public abstract class TileEntityReactorBase extends TileEntityRegistryBase<React
 	private final HashMap<Integer, LuaMethod> luaMethods = new HashMap();
 	private final HashMap<String, LuaMethod> methodNames = new HashMap();
 
-	public final TextureFetcher getRenderer() {
-		if (this.getTile().hasRender())
-			return ReactorRenderList.getRenderForMachine(this.getTile());
-		else
-			return null;
+	public TileEntityReactorBase(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+		super(type, pos, state);
 	}
 
 	@Override
-	public final boolean allowTickAcceleration() {
+	public boolean allowTickAcceleration() {
 		return this.getTile().allowTickAcceleration();
 	}
 
 	@Override
-	public final boolean canUpdate() {
+	protected boolean shouldRunUpdateCode() {
 		return !ReactorCraft.instance.isLocked() && this.isTickingTE();
 	}
 
@@ -86,55 +78,35 @@ public abstract class TileEntityReactorBase extends TileEntityRegistryBase<React
 		return true;
 	}
 
-	@Override
 	public abstract ReactorTiles getTile();
 
-	public int getTextureState(ForgeDirection side) {
+	@Override
+	public Block getBlockEntityBlockID() {
+		return this.getTile().getBlockState().getBlock();
+	}
+
+	public int getTextureState(Direction side) {
 		return 0;
 	}
 
 	@Override
-	protected void writeSyncTag(CompoundTag NBT)
-	{
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
-
-		NBT.setInteger("temp", temperature);
-
+		NBT.putInt("temp", temperature);
 	}
 
 	@Override
-	protected void readSyncTag(CompoundTag NBT)
-	{
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
-
-		temperature = NBT.getInteger("temp");
-
+		temperature = NBT.getIntOr("temp", 0);
 	}
 
-	@Override
-	public void writeToNBT(CompoundTag NBT) {
-		super.writeToNBT(NBT);
+	protected void updateTemperature(Level world, BlockPos pos) {
+		int x = pos.getX(), y = pos.getY(), z = pos.getZ();
+		float af = 1+1.5F*Mth.clamp((temperature-100)/500F, 0, 1);
+		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, pos, af);
 
-	}
-
-	@Override
-	public void readFromNBT(CompoundTag NBT) {
-		super.readFromNBT(NBT);
-
-	}
-
-	@Override
-	public boolean shouldRenderInPass(int pass) {
-		ReactorTiles r = this.getTile();
-		return pass == 0 || ((r.renderInPass1() || this instanceof ShaftMachine) && pass == 1);
-	}
-
-	protected void updateTemperature(Level world, int x, int y, int z) {
-		//ReikaJavaLibrary.pConsole(temperature, Side.SERVER);
-		float af = 1+1.5F*Mth.clamp_float((temperature-100)/500F, 0, 1);
-		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z, af);
-
-		if (world.provider.dimensionId != -1)
+		if (world.dimension() != Level.NETHER)
 			Tamb = Math.min(Tamb, 95);
 
 		int dT = Tamb-temperature;
@@ -146,48 +118,37 @@ public abstract class TileEntityReactorBase extends TileEntityRegistryBase<React
 			temperature += diff;
 		}
 
-		ReikaWorldHelper.temperatureEnvironment(world, x, y, z, Math.min(temperature, 1000));
+		ReikaWorldHelper.temperatureEnvironment(world, pos, Math.min(temperature, 1000));
 
 		if (this instanceof TileEntityReactorBoiler && temperature >= 300 && Tamb > 100) {
 			if (!((TileEntityReactorBoiler)this).tank.isEmpty()) {
-				world.setBlockToAir(x, y, z);
-				world.createExplosion(null, x+0.5, y+0.5, z+0.5, 3F, true);
+				world.removeBlock(pos, false);
+				world.explode(null, x+0.5, y+0.5, z+0.5, 3F, Level.ExplosionInteraction.BLOCK);
 			}
 		}
 
-		ReactorTiles src = this.getTile();
 		for (int i = 0; i < 6; i++) {
-			ForgeDirection dir = dirs[i];
-			int dx = x+dir.offsetX;
-			int dy = y+dir.offsetY;
-			int dz = z+dir.offsetZ;
-			ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
+			Direction dir = dirs[i];
+			BlockPos dpos = pos.relative(dir);
+			ReactorTiles r = ReactorTiles.getTE(world, dpos);
 			if (r != null) {
-				TileEntityReactorBase te = (TileEntityReactorBase)world.getTileEntity(dx, dy, dz);
+				TileEntityReactorBase te = (TileEntityReactorBase)world.getBlockEntity(dpos);
 				if (te instanceof Temperatured) {
-					int Tamb_loc = ReikaWorldHelper.getAmbientTemperatureAt(world, dx, dy, dz);
+					int Tamb_loc = ReikaWorldHelper.getAmbientTemperatureAt(world, dpos);
 
 					Temperatured tr = (Temperatured)te;
-					boolean flag = true;/*
-					if (src == ReactorTiles.COOLANT) {
-						TileEntityWaterCell wc = (TileEntityWaterCell)this;
-						flag = tr.canDumpHeatInto(wc.getLiquidState());
-					}*/
+					boolean flag = true;
 					if (tr instanceof TileEntityNuclearCore)
 						flag = true;
 					if (flag) {
 						int T = tr.getTemperature();
 						dT = (T-temperature)-Math.max(0, (Tamb-Tamb_loc)); //if Tamb here is > Tamb there, subtract that difference to avoid exploits
 						float f = te.getHeatThroughput(this);
-						//ReikaJavaLibrary.pConsole(te.getMachine()+" > "+this.getMachine()+" = "+f);
 						dT *= f;
 						if (dT > 0) {
 							int d = this.getHeatFraction(te);
-							//ReikaJavaLibrary.pConsole(te.getMachine()+" > "+this.getMachine()+" = "+d);
 							int newT = T-dT/d;
-							//ReikaJavaLibrary.pConsole(temperature+":"+T+" "+this.getTEName()+":"+te.getTEName()+"->"+(temperature+dT/4D)+":"+newT, this instanceof TileEntityWaterCell && FMLCommonHandler.instance().getEffectiveSide()==Side.SERVER);
 							float e = te.getHeatEfficiency(this);
-							//ReikaJavaLibrary.pConsole(te.getMachine()+" > "+this.getMachine()+" = "+e);
 							double add = dT/d*e;
 							temperature += add;
 							tr.setTemperature(newT);
@@ -200,13 +161,6 @@ public abstract class TileEntityReactorBase extends TileEntityRegistryBase<React
 						}
 					}
 				}
-				/*
-				if (r == ReactorTiles.CO2HEATER || r == ReactorTiles.PEBBLEBED) {
-					if (src.getReactorType() != ReactorType.HTGR && temperature > Tamb) {
-						temperature -= Math.max(1, (temperature-Tamb)/2);
-					}
-				}
-				 */
 			}
 		}
 	}
@@ -255,12 +209,13 @@ public abstract class TileEntityReactorBase extends TileEntityRegistryBase<React
 		return 0.5F;
 	}
 
-	public ForgeDirection getRandomDirection(boolean allowVertical) {
+	public Direction getRandomDirection(boolean allowVertical) {
 		int r = allowVertical ? rand.nextInt(6) : 2+rand.nextInt(4);
 		return dirs[r];
 	}
 
-	public final ArrayList<String> getMessages(Level world, int x, int y, int z, int side) {
+	@Override
+	public final ArrayList<String> getMessages(Level world, BlockPos pos, Direction side) {
 		ArrayList<String> li = new ArrayList();
 		if (this instanceof Temperatured) {
 			String s = String.format("%s %s: %dC", this.getTEName(), Variables.TEMPERATURE, ((Temperatured)this).getTemperature());
@@ -276,12 +231,12 @@ public abstract class TileEntityReactorBase extends TileEntityRegistryBase<React
 		}
 		if (this instanceof TileEntityReactorPiping) {
 			TileEntityReactorPiping rp = (TileEntityReactorPiping)this;
-			if (rp.getLevel() <= 0) {
+			if (rp.getFluidLevel() <= 0) {
 				String s = String.format("%s is empty.", this.getTEName());
 				li.add(s);
 			}
 			else {
-				String s = String.format("%s contains %d mB of %s", this.getTEName(), rp.getLevel(), rp.getFluidType().getLocalizedName());
+				String s = String.format("%s contains %d mB of %s", this.getTEName(), rp.getFluidLevel(), rp.getFluidType().getFluidType().getDescription().getString());
 				li.add(s);
 			}
 		}
@@ -326,12 +281,6 @@ public abstract class TileEntityReactorBase extends TileEntityRegistryBase<React
 	}
 
 	@Override
-	@ModDependent(ModList.OPENCOMPUTERS)
-	public final Visibility getOCNetworkVisibility() {
-		return this.getTile().isPipe() || this.getTile() == ReactorTiles.REFLECTOR ? Visibility.None : Visibility.Network;
-	}
-
-	@Override
 	public int getRedstoneOverride() {
 		return 0;
 	}
@@ -353,7 +302,7 @@ public abstract class TileEntityReactorBase extends TileEntityRegistryBase<React
 	}
 
 	public double heatEnergyPerDegree() {
-		double base = ReikaThermoHelper.STEEL_HEAT*ReikaBlockHelper.getBlockVolume(worldObj, xCoord, yCoord, zCoord)*ReikaEngLibrary.rhoiron;
+		double base = ReikaThermoHelper.STEEL_HEAT*ReikaBlockHelper.getBlockVolume(level, getBlockPos())*ReikaEngLibrary.rhoiron;
 		if (this.getTile().isReactorCore() || this.getTile() == ReactorTiles.EXCHANGER)
 			base *= 50;
 		return base;
