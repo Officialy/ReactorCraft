@@ -182,6 +182,24 @@ TE-cluster can compile. `Transducerable` is fine at `reika.rotarycraft.api.inter
   method signatures (and the hardcoded `"Reika.ReactorCraft..."` class-name strings) only settle
   once `RadiationEffects` is ported. Do it with that file.
 
+## BLOCKER: DragonAPI `ParticleEntity` not ported (gates entity→registry→TE chain)
+`entities/EntityNeutron` and `entities/EntityPlasma` extend `reika.dragonapi.base.ParticleEntity`,
+which **does not exist in the ported DragonAPI** (only `InertEntity` was ported, and it's minimal —
+TODO stubs, uses `EntityTypes.ARROW`, doesn't implement `Entity`'s `defineSynchedData`/
+`add|readAdditionalSaveData`). Original is `git show upstream/master:Base/ParticleEntity.java` in
+the DragonAPI submodule (a moving projectile-style entity: motion via `motionX/Y/Z`, per-block
+`onEnterBlock` collision, `IEntityAdditionalSpawnData`, despawn-over-time/distance).
+
+Consequence: `EntityNeutron` (→ nested `NeutronType`) blocks `ReactorType` → `ReactorTiles` → all 47
+concrete TEs. So the TE cluster cannot compile until DragonAPI gets `ParticleEntity` (a cross-module
+port: 1.7.10 Entity API → modern — `motionX/Y/Z`→`setDeltaMovement`, `onUpdate`→`tick`,
+`setDead`→`discard`, `IEntityAdditionalSpawnData`→`IEntityWithComplexSpawn`, NBT→ValueInput/Output,
+`Coordinate`→`WorldLocation`). `InertEntity` likely needs hardening too.
+
+**Unblocked alternative work in ReactorCraft** (no ParticleEntity dependency): the item layer
+(`ReactorItemBase`, `ItemReactorTool`, `items/**`), `registry/ReactorItems`/`ReactorBlocks` for
+non-TE blocks, and auxiliary support that only touches `InertEntity`-based `EntityRadiation`.
+
 ## ChromatiCraft (optional integration, 10 files)
 Imports neutralized now. Usage sites (mostly `WorldRift`, `ChromatiAPI`, adjacency-upgrade,
 `CrystalElement`) are gated/removed when each owning file is ported. ChromatiCraft is not in
