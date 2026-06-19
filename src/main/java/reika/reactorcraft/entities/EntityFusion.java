@@ -1,74 +1,82 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
  * Distribution of the software in any form is only allowed with
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.entities;
 
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import reika.dragonapi.base.InertEntity;
 import reika.reactorcraft.entities.EntityNeutron.NeutronType;
 import reika.reactorcraft.registry.ReactorAchievements;
+import reika.reactorcraft.registry.ReactorEntities;
 import reika.reactorcraft.registry.ReactorSounds;
 
 public class EntityFusion extends InertEntity {
 
-	public EntityFusion(Level world) {
-		super(world);
+	public EntityFusion(EntityType<? extends Entity> type, Level world) {
+		super(type, world);
 	}
 
 	public EntityFusion(Level world, double x, double y, double z, String creator) {
-		super(world);
-		this.setPosition(x, y, z);
-		//world.setBlock(MathHelper.floor_double(x), MathHelper.floor_double(y)+1, MathHelper.floor_double(z), 51);
-		//worldObj.playSoundEffect(posX, posY, posZ, "random.explode", 0.2F, 0.1F);
+		super(ReactorEntities.FUSION.get(), world);
+		this.setPos(x, y, z);
+		BlockPos pos = new BlockPos(Mth.floor(x), Mth.floor(y), Mth.floor(z));
 		for (int i = 0; i < 3; i++)
-			this.spawnNeutrons(worldObj, Mth.floor_double(posX), Mth.floor_double(posY), Mth.floor_double(posZ));
-		ReactorSounds.FUSION.playSound(worldObj, posX, posY, posZ, 1, 1);
+			this.spawnNeutrons(world, pos);
+		ReactorSounds.FUSION.playSound(world, x, y, z, 1, 1);
 
-		if (creator != null && !creator.isEmpty())
-			ReactorAchievements.FUSION.triggerAchievement(world.getPlayerEntityByName(creator));
+		if (creator != null && !creator.isEmpty()) {
+			MinecraftServer server = world.getServer();
+			if (server != null)
+				ReactorAchievements.FUSION.triggerAchievement(server.getPlayerList().getPlayerByName(creator));
+		}
 	}
 
 	@Override
-	protected void entityInit() {
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
 
 	}
 
-	private void spawnNeutrons(Level world, int x, int y, int z) {
-		EntityNeutron e = new EntityNeutron(world, x, y, z, this.getRandomDirection(), NeutronType.FUSION);
-		if (!world.isRemote)
-			world.spawnEntityInWorld(e);
+	private void spawnNeutrons(Level world, BlockPos pos) {
+		EntityNeutron e = new EntityNeutron(world, pos, this.getRandomDirection(), NeutronType.FUSION);
+		if (!world.isClientSide())
+			world.addFreshEntity(e);
 	}
 
-	public ForgeDirection getRandomDirection() {
-		int r = 2+rand.nextInt(4);
-		return ForgeDirection.VALID_DIRECTIONS[r];
-	}
-
-	@Override
-	protected void readEntityFromNBT(CompoundTag nbt) {
-
+	public Direction getRandomDirection() {
+		return Direction.values()[2+this.random.nextInt(4)];
 	}
 
 	@Override
-	protected void writeEntityToNBT(CompoundTag nbt) {
+	protected void readAdditionalSaveData(ValueInput input) {
 
 	}
 
 	@Override
-	public void onUpdate() {
-		super.onUpdate();
-		if (ticksExisted > 5)
-			this.setDead();
+	protected void addAdditionalSaveData(ValueOutput output) {
+
+	}
+
+	@Override
+	public void tick() {
+		super.tick();
+		if (tickCount > 5)
+			this.discard();
 	}
 
 }

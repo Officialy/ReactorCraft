@@ -1,8 +1,8 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
  * Distribution of the software in any form is only allowed with
  * explicit, prior permission from the owner.
@@ -11,19 +11,25 @@ package reika.reactorcraft.entities;
 
 import java.util.List;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.potion.Potion;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import reika.dragonapi.base.ParticleEntity;
-import reika.dragonapi.libraries.ReikaAABBHelper;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.registry.ReactorAchievements;
+import reika.reactorcraft.registry.ReactorEntities;
 import reika.rotarycraft.api.interfaces.CustomFanEntity;
 
 public class EntityPlasma extends ParticleEntity implements CustomFanEntity {
@@ -37,13 +43,12 @@ public class EntityPlasma extends ParticleEntity implements CustomFanEntity {
 
 	private String placerOfInjector;
 
-	public EntityPlasma(Level world) {
-		super(world);
+	public EntityPlasma(EntityType<? extends Entity> type, Level world) {
+		super(type, world);
 	}
 
 	public EntityPlasma(Level world, int x, int y, int z, String placer) {
-		super(world, x, y, z);
-
+		super(ReactorEntities.PLASMA.get(), world, new BlockPos(x, y, z));
 		placerOfInjector = placer;
 	}
 
@@ -53,10 +58,10 @@ public class EntityPlasma extends ParticleEntity implements CustomFanEntity {
 	}
 
 	@Override
-	public boolean onEnterBlock(Level world, int x, int y, int z) {
-		if (!world.isRemote) {
-			if (ReikaWorldHelper.flammable(world, x, y, z))
-				ReikaWorldHelper.ignite(world, x, y, z);
+	public boolean onEnterBlock(Level world, BlockPos pos) {
+		if (!world.isClientSide()) {
+			if (ReikaWorldHelper.flammable(world, pos))
+				ReikaWorldHelper.ignite(world, pos);
 		}
 		return false;
 	}
@@ -64,36 +69,34 @@ public class EntityPlasma extends ParticleEntity implements CustomFanEntity {
 	public void setTarget(int x, int z) {
 		targetX = x;
 		targetZ = z;
-		double dx = targetX+0.5-posX;
-		double dz = targetZ+0.5-posZ;
+		double dx = targetX+0.5-this.getX();
+		double dz = targetZ+0.5-this.getZ();
 		double dd = ReikaMathLibrary.py3d(dx, 0, dz);
 		double v = this.getSpeed();
-		motionX = dx*v/dd;
-		motionZ = dz*v/dd;
-		//ReikaJavaLibrary.pConsole(motionX+":"+motionZ);
-		velocityChanged = true;
+		this.setDeltaMovement(dx*v/dd, this.getDeltaMovement().y, dz*v/dd);
+		this.hurtMarked = true;
 	}
 
 	private void checkFusion() {
-		AABB box = ReikaAABBHelper.getEntityCenteredAABB(this, 1);
-		List<EntityPlasma> li = worldObj.getEntitiesWithinAABB(EntityPlasma.class, box);
+		AABB box = this.getBoundingBox().inflate(1);
+		List<EntityPlasma> li = this.level().getEntitiesOfClass(EntityPlasma.class, box);
 		if (li.size() >= this.getFusionThreshold() && !li.get(0).hasEscaped() && !li.get(li.size()-1).hasEscaped()) {
-			EntityFusion fus = new EntityFusion(worldObj, posX, posY, posZ, placerOfInjector);
-			worldObj.spawnEntityInWorld(fus);
-			this.setDead();
+			EntityFusion fus = new EntityFusion(this.level(), this.getX(), this.getY(), this.getZ(), placerOfInjector);
+			this.level().addFreshEntity(fus);
+			this.discard();
 		}
 	}
 
 	public int getFusionThreshold() {
-		return 15+rand.nextInt(6);
+		return 15+this.random.nextInt(6);
 	}
 
 	@Override
 	public void applyEntityCollision(Entity e) {
-		int dmg = e instanceof LivingEntity && ((LivingEntity)e).isPotionActive(Potion.fireResistance) ? 4 : Integer.MAX_VALUE;
-		e.attackEntityFrom(ReactorCraft.fusionDamage, dmg);
+		float dmg = e instanceof LivingEntity && ((LivingEntity)e).hasEffect(MobEffects.FIRE_RESISTANCE) ? 4 : Integer.MAX_VALUE;
+		e.hurt(ReactorCraft.fusionDamage, dmg);
 		if (e instanceof Player) {
-			if (e.isDead || ((LivingEntity)e).getHealth() <= 0) {
+			if (!e.isAlive() || ((LivingEntity)e).getHealth() <= 0) {
 				ReactorAchievements.PLASMADIE.triggerAchievement((Player)e);
 			}
 		}
@@ -101,16 +104,15 @@ public class EntityPlasma extends ParticleEntity implements CustomFanEntity {
 
 	@Override
 	protected void onTick() {
-		if (ticksExisted > 1200)
-			;//this.setDead();
-		if (!worldObj.isRemote && !this.hasEscapedSeverely() && rand.nextInt(this.hasEscaped() ? 48 : 12) == 0)
+		if (!this.level().isClientSide() && !this.hasEscapedSeverely() && this.random.nextInt(this.hasEscaped() ? 48 : 12) == 0)
 			this.checkFusion();
-		motionY = 0;
+		Vec3 mot = this.getDeltaMovement();
+		this.setDeltaMovement(mot.x, 0, mot.z);
 		if (this.getSpawnLocation() != null)
-			posY = this.getSpawnLocation().yCoord+0.5;
+			this.setPos(this.getX(), this.getSpawnLocation().pos.getY()+0.5, this.getZ());
 
-		if (ticksExisted > 300 && this.hasEscapedSeverely())
-			this.setDead();
+		if (tickCount > 300 && this.hasEscapedSeverely())
+			this.discard();
 
 		escapeTicks++;
 	}
