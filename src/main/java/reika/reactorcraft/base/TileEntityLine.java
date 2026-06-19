@@ -1,26 +1,27 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
  * Distribution of the software in any form is only allowed with
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.base;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.init.Blocks;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.util.IIcon;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.client.MinecraftForgeClient;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 
-// CHROMA-PORT: import reika.chromaticraft.api.interfaces.WorldRift;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.auxiliary.interfaces.PipeRenderConnector;
 
@@ -28,34 +29,33 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 
 	private boolean[] connections = new boolean[6];
 
+	public TileEntityLine(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+		super(type, pos, state);
+	}
+
 	@Override
-	protected final void animateWithTick(Level world, int x, int y, int z) {
+	protected final void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 
 	}
 
-	public final boolean isConnectedOnSideAt(Level world, int x, int y, int z, ForgeDirection dir) {
-		dir = dir.offsetX == 0 ? dir.getOpposite() : dir;
-		int dx = x+dir.offsetX;
-		int dy = y+dir.offsetY;
-		int dz = z+dir.offsetZ;
-		Block id = world.getBlock(dx, dy, dz);
-		int meta = world.getBlockMetadata(dx, dy, dz);
-		if (id == Blocks.air)
+	public final boolean isConnectedOnSideAt(Level world, BlockPos pos, Direction dir) {
+		dir = dir.getStepX() == 0 ? dir.getOpposite() : dir;
+		BlockPos dpos = pos.relative(dir);
+		Block id = world.getBlockState(dpos).getBlock();
+		if (id == Blocks.AIR)
 			return false;
-		if (ReactorTiles.getMachineFromIDandMetadata(id, meta) == this.getTile())
+		if (ReactorTiles.getMachineFromBlock(id) == this.getTile())
 			return true;
-		BlockEntity te = world.getTileEntity(dx, dy, dz);
-		if (te instanceof WorldRift)
-			return true;
-		return this.canConnectToMachine(id, meta, dir, te);
+		BlockEntity te = world.getBlockEntity(dpos);
+		return this.canConnectToMachine(id, dir, te);
 	}
 
-	protected boolean canConnectToMachine(Block id, int meta, ForgeDirection dir, BlockEntity te) {
+	protected boolean canConnectToMachine(Block id, Direction dir, BlockEntity te) {
 		return false;
 	}
 
@@ -64,7 +64,7 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 		super.readSyncTag(NBT);
 
 		for (int i = 0; i < 6; i++) {
-			connections[i] = NBT.getBoolean("conn"+i);
+			connections[i] = NBT.getBooleanOr("conn"+i, false);
 		}
 	}
 
@@ -73,74 +73,62 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 		super.writeSyncTag(NBT);
 
 		for (int i = 0; i < 6; i++) {
-			NBT.setBoolean("conn"+i, connections[i]);
+			NBT.putBoolean("conn"+i, connections[i]);
 		}
 	}
 
 	/** Direction is relative to the piping block (so DOWN means the block is below the pipe) */
-	public final boolean isConnectionValidForSide(ForgeDirection dir) {
-		if (dir.offsetX == 0 && MinecraftForgeClient.getRenderPass() != 1)
-			dir = dir.getOpposite();
+	public final boolean isConnectionValidForSide(Direction dir) {
 		return connections[dir.ordinal()];
 	}
 
 	@Override
 	public final AABB getRenderBoundingBox() {
-		return AABB.getBoundingBox(xCoord, yCoord, zCoord, xCoord+1, yCoord+1, zCoord+1);
+		return new AABB(getBlockPos());
 	}
 
-	public final void recomputeConnections(Level world, int x, int y, int z) {
+	public final void recomputeConnections(Level world, BlockPos pos) {
 		for (int i = 0; i < 6; i++) {
 			connections[i] = this.isConnected(dirs[i]);
-			world.func_147479_m(x+dirs[i].offsetX, y+dirs[i].offsetY, z+dirs[i].offsetZ);
 		}
-		world.func_147479_m(x, y, z);
-		//ReikaJavaLibrary.pConsole(Arrays.toString(connections), Side.SERVER);
+		this.syncAllData(false);
 	}
 
-	public final void deleteFromAdjacentConnections(Level world, int x, int y, int z) {
+	public final void deleteFromAdjacentConnections(Level world, BlockPos pos) {
 		for (int i = 0; i < 6; i++) {
-			ForgeDirection dir = dirs[i];
-			int dx = x+dir.offsetX;
-			int dy = x+dir.offsetY;
-			int dz = x+dir.offsetZ;
-			ReactorTiles m = ReactorTiles.getTE(world, dx, dy, dz);
+			Direction dir = dirs[i];
+			BlockPos dpos = pos.relative(dir);
+			ReactorTiles m = ReactorTiles.getTE(world, dpos);
 			if (m == this.getTile()) {
-				TileEntityLine te = (TileEntityLine)world.getTileEntity(dx, dy, dz);
+				TileEntityLine te = (TileEntityLine)world.getBlockEntity(dpos);
 				te.connections[dir.getOpposite().ordinal()] = false;
-				world.func_147479_m(dx, dy, dz);
+				te.syncAllData(false);
 			}
 		}
 	}
 
-	public final void addToAdjacentConnections(Level world, int x, int y, int z) {
+	public final void addToAdjacentConnections(Level world, BlockPos pos) {
 		for (int i = 0; i < 6; i++) {
-			ForgeDirection dir = dirs[i];
-			int dx = x+dir.offsetX;
-			int dy = x+dir.offsetY;
-			int dz = x+dir.offsetZ;
-			ReactorTiles m = ReactorTiles.getTE(world, dx, dy, dz);
+			Direction dir = dirs[i];
+			BlockPos dpos = pos.relative(dir);
+			ReactorTiles m = ReactorTiles.getTE(world, dpos);
 			if (m == this.getTile()) {
-				TileEntityLine te = (TileEntityLine)world.getTileEntity(dx, dy, dz);
+				TileEntityLine te = (TileEntityLine)world.getBlockEntity(dpos);
 				te.connections[dir.getOpposite().ordinal()] = true;
-				world.func_147479_m(dx, dy, dz);
+				te.syncAllData(false);
 			}
 		}
 	}
 
-	private final boolean isConnected(ForgeDirection dir) {
-		int x = xCoord+dir.offsetX;
-		int y = yCoord+dir.offsetY;
-		int z = zCoord+dir.offsetZ;
+	private boolean isConnected(Direction dir) {
+		BlockPos dpos = getBlockPos().relative(dir);
 		ReactorTiles m = this.getTile();
-		ReactorTiles m2 = ReactorTiles.getTE(worldObj, x, y, z);
+		ReactorTiles m2 = ReactorTiles.getTE(level, dpos);
 		if (m == m2)
 			return true;
-		BlockEntity te = worldObj.getTileEntity(x, y, z);
+		BlockEntity te = level.getBlockEntity(dpos);
 		if (te instanceof PipeRenderConnector)
 			return ((PipeRenderConnector)te).canConnectToPipeOnSide(dir);
-		else if (te instanceof WorldRift)
-			return true;
 		return false;
 	}
 
@@ -149,7 +137,7 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 		return 4*super.getPacketDelay();
 	}
 
-	public abstract IIcon getTexture();
+	public abstract ResourceLocation getTexture();
 
 	public void onEntityCollided(Entity e) {
 
