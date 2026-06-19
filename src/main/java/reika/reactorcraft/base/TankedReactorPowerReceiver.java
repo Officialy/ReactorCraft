@@ -1,17 +1,20 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
  * Distribution of the software in any form is only allowed with
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.base;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 
 import reika.reactorcraft.auxiliary.ReactorPowerReceiver;
 import reika.rotarycraft.api.power.PowerTransferHelper;
@@ -25,15 +28,19 @@ public abstract class TankedReactorPowerReceiver extends TileEntityTankedReactor
 
 	private int iotick;
 
+	public TankedReactorPowerReceiver(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+		super(type, pos, state);
+	}
+
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
-		if (!PowerTransferHelper.checkPowerFrom(this, ForgeDirection.DOWN)) {
+	public void updateEntity(Level world, BlockPos pos) {
+		if (!PowerTransferHelper.checkPowerFrom(this, Direction.DOWN)) {
 			this.noInputMachine();
 		}
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 		if (iotick > 0)
 			iotick -= 8;
 	}
@@ -90,27 +97,21 @@ public abstract class TankedReactorPowerReceiver extends TileEntityTankedReactor
 	}
 
 	@Override
-	protected void readSyncTag(CompoundTag NBT)
-	{
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
-		tank.readFromNBT(NBT);
-
-		omega = NBT.getInteger("speed");
-		torque = NBT.getInteger("trq");
-		power = NBT.getLong("pwr");
+		omega = NBT.getIntOr("speed", 0);
+		torque = NBT.getIntOr("trq", 0);
+		power = NBT.getLongOr("pwr", 0);
 	}
 
 	@Override
-	protected void writeSyncTag(CompoundTag NBT)
-	{
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
-		tank.writeToNBT(NBT);
-
-		NBT.setInteger("speed", omega);
-		NBT.setInteger("trq", torque);
-		NBT.setLong("pwr", power);
+		NBT.putInt("speed", omega);
+		NBT.putInt("trq", torque);
+		NBT.putLong("pwr", power);
 	}
 
 	public final boolean sufficientPower() {

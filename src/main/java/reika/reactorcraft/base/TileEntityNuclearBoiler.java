@@ -11,29 +11,28 @@ package reika.reactorcraft.base;
 
 import java.util.Collection;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidStack;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
 
 import reika.dragonapi.instantiable.data.Proportionality;
-import reika.dragonapi.libraries.ReikaNBTHelper;
-import reika.dragonapi.libraries.reikanbthelper.NBTIO;
 import reika.reactorcraft.auxiliary.TypedReactorCoreTE;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.registry.ReactorType;
 import reika.reactorcraft.tileentities.fission.TileEntityWaterCell.LiquidStates;
 
-import buildcraft.api.transport.IPipeTile.PipeType;
-
 public abstract class TileEntityNuclearBoiler extends TileEntityTankedReactorMachine implements TypedReactorCoreTE {
 
 	protected int steam;
 	protected Proportionality<ReactorType> type = new Proportionality();
 
-	protected TileEntityNuclearBoiler() {
+	public TileEntityNuclearBoiler(BlockEntityType<?> t, BlockPos pos, BlockState state) {
+		super(t, pos, state);
 		this.setReactorType(this.getDefaultReactorType(), 1);
 	}
 
@@ -62,25 +61,25 @@ public abstract class TileEntityNuclearBoiler extends TileEntityTankedReactorMac
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		thermalTicker.update();
 
-		if (thermalTicker.checkCap() && !world.isRemote) {
-			this.updateTemperature(world, x, y, z);
+		if (thermalTicker.checkCap() && !world.isClientSide()) {
+			this.updateTemperature(world, pos);
 		}
 
-		this.balanceFluid(world, x, y, z);
+		this.balanceFluid(world, pos);
 	}
 
 	@Override
-	protected final void updateTemperature(Level world, int x, int y, int z) {
-		super.updateTemperature(world, x, y, z);
+	protected final void updateTemperature(Level world, BlockPos pos) {
+		super.updateTemperature(world, pos);
 
 		if (temperature > this.getMaxTemperature())
-			this.overheat(world, x, y, z);
+			this.overheat(world, pos);
 	}
 
-	protected abstract void overheat(Level world, int x, int y, int z);
+	protected abstract void overheat(Level world, BlockPos pos);
 
 	@Override
 	public final int getTemperature() {
@@ -98,41 +97,24 @@ public abstract class TileEntityNuclearBoiler extends TileEntityTankedReactorMac
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
-		return null;
+	public final boolean canReceiveFrom(Direction from) {
+		return from == Direction.DOWN;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
-		return null;
-	}
-
-	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		return false;
 	}
 
-	@Override
-	public final boolean canReceiveFrom(ForgeDirection from) {
-		return from == ForgeDirection.DOWN;
-	}
-
-	@Override
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
-		return false;
-	}
-
-	protected void balanceFluid(Level world, int x, int y, int z) {
+	protected void balanceFluid(Level world, BlockPos pos) {
 		for (int i = 0; i < 2; i++) {
-			ForgeDirection dir = dirs[i];
-			int dx = x+dir.offsetX;
-			int dy = y+dir.offsetY;
-			int dz = z+dir.offsetZ;
-			ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
-			if (r == ReactorTiles.TEList[this.getIndex()]) {
-				TileEntityNuclearBoiler te = (TileEntityNuclearBoiler)world.getTileEntity(dx, dy, dz);
-				if (te.tank.getLevel() < tank.getLevel() && (te.tank.isEmpty() || te.tank.getActualFluid() == tank.getActualFluid())) {
-					int dl = tank.getLevel()-te.tank.getLevel();
+			Direction dir = dirs[i];
+			BlockPos dpos = pos.relative(dir);
+			ReactorTiles r = ReactorTiles.getTE(world, dpos);
+			if (r == this.getTile()) {
+				TileEntityNuclearBoiler te = (TileEntityNuclearBoiler)world.getBlockEntity(dpos);
+				if (te.tank.getFluidLevel() < tank.getFluidLevel() && (te.tank.isEmpty() || te.tank.getActualFluid() == tank.getActualFluid())) {
+					int dl = tank.getFluidLevel()-te.tank.getFluidLevel();
 					te.tank.addLiquid(dl/4+1, tank.getActualFluid());
 					tank.removeLiquid(dl/4+1);
 				}
@@ -140,26 +122,17 @@ public abstract class TileEntityNuclearBoiler extends TileEntityTankedReactorMac
 		}
 	}
 
-	@Override
-	public ConnectOverride overridePipeConnection(PipeType type, ForgeDirection with) {
-		return type == PipeType.FLUID && with == ForgeDirection.DOWN ? ConnectOverride.CONNECT : ConnectOverride.DISCONNECT;
-	}
-
 	public final void addLiquid(int amt, Fluid fluid) {
 		tank.addLiquid(amt, fluid);
 	}
 
 	@Override
-	public final int getTextureState(ForgeDirection side) {
-		if (side.offsetY != 0)
+	public final int getTextureState(Direction side) {
+		if (side.getStepY() != 0)
 			return 0;
-		Level world = worldObj;
-		int x = xCoord;
-		int y = yCoord;
-		int z = zCoord;
 		ReactorTiles src = this.getTile();
-		ReactorTiles r = ReactorTiles.getTE(world, x, y-1, z);
-		ReactorTiles r2 = ReactorTiles.getTE(world, x, y+1, z);
+		ReactorTiles r = ReactorTiles.getTE(level, getBlockPos().below());
+		ReactorTiles r2 = ReactorTiles.getTE(level, getBlockPos().above());
 		if (r2 == src && r == src)
 			return 2;
 		else if (r2 == src)
@@ -176,18 +149,24 @@ public abstract class TileEntityNuclearBoiler extends TileEntityTankedReactorMac
 	}
 
 	@Override
-	public void readFromNBT(CompoundTag NBT) {
-		super.readFromNBT(NBT);
+	protected void readSyncTag(CompoundTag NBT) {
+		super.readSyncTag(NBT);
 
-		type.readFromNBT(NBT.getCompoundTag("types"), (NBTIO<ReactorType>)ReikaNBTHelper.getEnumConverter(ReactorType.class));
+		type = new Proportionality();
+		CompoundTag tag = NBT.getCompoundOrEmpty("types");
+		for (String key : tag.keySet()) {
+			type.addValue(ReactorType.valueOf(key), tag.getDoubleOr(key, 0));
+		}
 	}
 
 	@Override
-	public void writeToNBT(CompoundTag NBT) {
-		super.writeToNBT(NBT);
+	protected void writeSyncTag(CompoundTag NBT) {
+		super.writeSyncTag(NBT);
 
 		CompoundTag tag = new CompoundTag();
-		type.writeToNBT(tag, (NBTIO<ReactorType>)ReikaNBTHelper.getEnumConverter(ReactorType.class));
-		NBT.setTag("types", tag);
+		for (ReactorType r : type.getElements()) {
+			tag.putDouble(r.name(), type.getValue(r));
+		}
+		NBT.put("types", tag);
 	}
 }
