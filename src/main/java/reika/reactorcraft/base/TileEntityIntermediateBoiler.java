@@ -11,23 +11,23 @@ package reika.reactorcraft.base;
 
 import java.util.Locale;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTankInfo;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.StepTimer;
-import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.reactorcraft.auxiliary.TemperaturedReactorTyped;
 import reika.reactorcraft.registry.ReactorTiles;
-import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
+import reika.rotarycraft.base.blockentity.BlockEntityPiping;
 import reika.rotarycraft.registry.MachineRegistry;
-
-import buildcraft.api.transport.IPipeTile.PipeType;
 
 public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoiler implements TemperaturedReactorTyped {
 
@@ -35,10 +35,8 @@ public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoil
 
 	protected final HybridTank output = new HybridTank(this.getName().toLowerCase(Locale.ENGLISH)+"out", this.getCapacity());
 
-	@Override
-	public final FluidTankInfo[] getTankInfo(ForgeDirection from) {
-		//ReikaJavaLibrary.pConsole(tank, Side.SERVER);
-		return new FluidTankInfo[]{tank.getInfo(), output.getInfo()};
+	public TileEntityIntermediateBoiler(BlockEntityType<?> t, BlockPos pos, BlockState state) {
+		super(t, pos, state);
 	}
 
 	public abstract int getLiquidUsage();
@@ -46,8 +44,23 @@ public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoil
 	public abstract int getMinimumTemperature();
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
-		super.updateEntity(world, x, y, z, meta);
+	public int getTanks() {
+		return 2;
+	}
+
+	@Override
+	public FluidStack getFluidInTank(int i) {
+		return i == 0 ? tank.getFluid() : output.getFluid();
+	}
+
+	@Override
+	public int getTankCapacity(int i) {
+		return i == 0 ? tank.getCapacity() : output.getCapacity();
+	}
+
+	@Override
+	public void updateEntity(Level world, BlockPos pos) {
+		super.updateEntity(world, pos);
 
 		timer.update();
 
@@ -55,28 +68,25 @@ public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoil
 			if (this.canHeat())
 				this.heat();
 		}
-		//ReikaJavaLibrary.pConsole(temperature);
-		//ReikaJavaLibrary.pConsole(output, !output.isEmpty());
-		//ReikaJavaLibrary.pConsole(tank, Side.SERVER);
 
 		if (DragonAPICore.debugtest)
 			this.addLiquid(1000);
 
-		this.transferFluid(world, x, y, z);
+		this.transferFluid(world, pos);
 	}
 
-	private void transferFluid(Level world, int x, int y, int z) {
-		ReactorTiles r = ReactorTiles.getTE(world, x, y+1, z);
+	private void transferFluid(Level world, BlockPos pos) {
+		ReactorTiles r = ReactorTiles.getTE(world, pos.above());
 		if (r == this.getTile()) {
-			TileEntityIntermediateBoiler te = (TileEntityIntermediateBoiler)world.getTileEntity(x, y+1, z);
-			if (!te.tank.isFull() && !tank.isEmpty()) {
-				int amt = Math.min(tank.getLevel(), Math.min(100, te.tank.getCapacity()-te.tank.getLevel()));
+			TileEntityIntermediateBoiler te = (TileEntityIntermediateBoiler)world.getBlockEntity(pos.above());
+			if (te.tank.getFluidLevel() < te.tank.getCapacity() && !tank.isEmpty()) {
+				int amt = Math.min(tank.getFluidLevel(), Math.min(100, te.tank.getCapacity()-te.tank.getFluidLevel()));
 				te.tank.addLiquid(amt, tank.getActualFluid());
 				tank.removeLiquid(amt);
 			}
 
-			if (!te.output.isFull() && !output.isEmpty()) {
-				int amt = Math.min(output.getLevel(), Math.min(100, te.output.getCapacity()-te.output.getLevel()));
+			if (te.output.getFluidLevel() < te.output.getCapacity() && !output.isEmpty()) {
+				int amt = Math.min(output.getFluidLevel(), Math.min(100, te.output.getCapacity()-te.output.getFluidLevel()));
 				te.output.addLiquid(amt, output.getActualFluid());
 				output.removeLiquid(amt);
 			}
@@ -96,7 +106,7 @@ public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoil
 	protected abstract double getFluidHeatCapacity();
 
 	public boolean canHeat() {
-		return temperature >= this.getMinimumTemperature() && tank.getLevel() >= this.getLiquidUsage() && !output.isFull() && tank.getActualFluid().equals(this.getInputFluid());
+		return temperature >= this.getMinimumTemperature() && tank.getFluidLevel() >= this.getLiquidUsage() && output.getFluidLevel() < output.getCapacity() && tank.getActualFluid().equals(this.getInputFluid());
 	}
 
 	@Override
@@ -105,62 +115,47 @@ public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoil
 	}
 
 	@Override
-	public final void animateWithTick(Level world, int x, int y, int z) {
+	public final void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
 	@Override
-	protected void readSyncTag(CompoundTag NBT)
-	{
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
-
-		tank.readFromNBT(NBT);
 		output.readFromNBT(NBT);
 	}
 
 	@Override
-	protected void writeSyncTag(CompoundTag NBT)
-	{
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
-
-		tank.writeToNBT(NBT);
 		output.writeToNBT(NBT);
 	}
 
 	@Override
-	public final FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
-		return this.canDrain(from, resource.getFluid()) ? output.drain(resource.amount, doDrain) : null;
+	public FluidStack drain(FluidStack resource, FluidAction action) {
+		return output.drain(resource, action);
 	}
 
 	@Override
-	public final FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
-		if (!this.canDrain(from, null))
-			return null;
-		return output.drain(maxDrain, doDrain);
+	public FluidStack drain(int maxDrain, FluidAction action) {
+		return output.drain(maxDrain, action);
 	}
 
 	@Override
-	public final boolean canDrain(ForgeDirection from, Fluid fluid) {
-		return from == ForgeDirection.UP && ReikaFluidHelper.isFluidDrainableFromTank(fluid, tank);
+	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
+		return from == Direction.UP ? output.drain(maxDrain, doDrain) : FluidStack.EMPTY;
 	}
 
 	@Override
-	public final ConnectOverride overridePipeConnection(PipeType type, ForgeDirection with) {
-		if (with == ForgeDirection.UP)
-			return ConnectOverride.CONNECT;
-		return super.overridePipeConnection(type, with);
-	}
-
-	@Override
-	public final Flow getFlowForSide(ForgeDirection side) {
-		if (side == ForgeDirection.UP)
-			return Flow.OUTPUT;
+	public final BlockEntityPiping.Flow getFlowForSide(Direction side) {
+		if (side == Direction.UP)
+			return BlockEntityPiping.Flow.OUTPUT;
 		return super.getFlowForSide(side);
 	}
 
 	@Override
-	public final boolean canConnectToPipeOnSide(MachineRegistry p, ForgeDirection side) {
-		return side.offsetY != 0 && this.canConnectToPipe(p);
+	public final boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
+		return side.getStepY() != 0 && this.canConnectToPipe(p);
 	}
 
 }

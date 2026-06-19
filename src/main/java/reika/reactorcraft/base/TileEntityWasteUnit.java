@@ -9,18 +9,14 @@
  ******************************************************************************/
 package reika.reactorcraft.base;
 
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 
-// CHROMA-PORT: import reika.chromaticraft.api.ChromatiAPI;
-// CHROMA-PORT: import reika.chromaticraft.api.CrystalElementAccessor;
-// CHROMA-PORT: import reika.chromaticraft.api.interfaces.AdjacencyCheckHandler;
-// CHROMA-PORT: import reika.chromaticraft.base.tileentity.TileEntityAdjacencyUpgrade;
-// CHROMA-PORT: import reika.chromaticraft.registry.CrystalElement;
-import reika.dragonapi.ModList;
-import reika.dragonapi.asm.dependentmethodstripper.ModDependent;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.mathsci.Isotopes;
@@ -30,24 +26,25 @@ import reika.reactorcraft.auxiliary.WasteManager;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.entities.EntityNeutron.NeutronType;
 import reika.reactorcraft.registry.ReactorItems;
-import reika.reactorcraft.registry.ReactorTiles;
 
 public abstract class TileEntityWasteUnit extends TileEntityInventoriedReactorBase {
 
-	private static AdjacencyCheckHandler adjacency;
-
 	private long lastTickTime = -1;
 
-	@ModDependent(ModList.CHROMATICRAFT)
-	public static void registerAdjacency() {
-		adjacency = TileEntityAdjacencyUpgrade.getOrCreateAdjacencyCheckHandler(CrystalElement.LIGHTBLUE, "Accelerate waste decay", ReactorTiles.STORAGE.getCraftedProduct(), ReactorTiles.WASTEDECAYER.getCraftedProduct());
+	public TileEntityWasteUnit(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+		super(type, pos, state);
 	}
 
+	// CHROMA-PORT: ChromatiCraft adjacency-upgrade decay acceleration (registerAdjacency +
+	// the Chroma branch of getAcceleratorBoost) is gated out — ChromatiCraft is not in this
+	// build, so getAcceleratorBoost falls back to its no-Chroma value of 1 exactly as the
+	// original did when ChromatiCraft was absent.
+
 	protected void fill() {
-		for (int i = 0; i < this.getSizeInventory(); i++) {
-			if (this.getStackInSlot(i) == null) {
+		for (int i = 0; i < this.getContainerSize(); i++) {
+			if (this.getItem(i).isEmpty()) {
 				ItemStack is = WasteManager.getFullyRandomWasteItem();
-				this.setInventorySlotContents(i, is);
+				this.setItem(i, is);
 			}
 		}
 	}
@@ -60,38 +57,31 @@ public abstract class TileEntityWasteUnit extends TileEntityInventoriedReactorBa
 
 	protected abstract double getBaseDecayRate();
 
-	private final double getAccelerationFactor() {
+	private double getAccelerationFactor() {
 		double base = this.getBaseDecayRate();
 		if (this.canBeAccelerated())
 			base = Math.pow(base, this.getAcceleratorBoost());
 		return base*192;
 	}
 
-	private final double getAcceleratorBoost() {
-		if (!ModList.CHROMATICRAFT.isLoaded()) {
-			return 1;
-		}
-		int tier = adjacency.getAdjacentUpgradeTier(worldObj, xCoord, yCoord, zCoord);
-		if (tier <= 0)
-			return 1;
-		return Math.sqrt(ChromatiAPI.getAPI().adjacency().getFactor(CrystalElementAccessor.getByEnum("LIGHTBLUE"), tier));
+	private double getAcceleratorBoost() {
+		return 1;
 	}
 
 	protected final void decayWaste() {
 		double mult = this.getAccelerationFactor();
 		if (this.accountForOutGameTime())
 			mult *= (1+this.getSkippedTicks());
-		for (int i = 0; i < this.getSizeInventory(); i++) {
-			if (inv[i] != null && inv[i].getItem() == ReactorItems.WASTE.getItemInstance()) {
-				Isotopes atom = Isotopes.getIsotope(inv[i].getItemDamage());
+		for (int i = 0; i < this.getContainerSize(); i++) {
+			ItemStack s = this.getItem(i);
+			if (!s.isEmpty() && s.getItem() == ReactorItems.WASTE.getItemInstance()) {
+				Isotopes atom = Isotopes.getIsotope(s.getDamageValue());
 				if (ReikaRandomHelper.doWithChance(mult/this.getBaseDecayRate()*0.5*ReikaNuclearHelper.getDecayChanceFromHalflife(Math.log(atom.getMCHalfLife())))) {
-					//ReikaJavaLibrary.pConsole("Radiating from "+atom);
 					if (this.leaksRadiation() && rand.nextBoolean())
-						this.leakRadiation(worldObj, xCoord, yCoord, zCoord);
+						this.leakRadiation(level, getBlockPos());
 				}
-				//ReikaJavaLibrary.pConsole(ReikaNuclearHelper.getDecayChanceFromHalflife(atom.getMCHalfLife()));
 				if (ReikaNuclearHelper.shouldDecay(atom, mult)) {
-					ReikaInventoryHelper.decrStack(i, this, Math.max(1, inv[i].stackSize/2));
+					ReikaInventoryHelper.decrStack(i, this, Math.max(1, s.getCount()/2));
 					this.onDecayWaste(i);
 				}
 			}
@@ -115,15 +105,15 @@ public abstract class TileEntityWasteUnit extends TileEntityInventoriedReactorBa
 
 	}
 
-	protected void leakRadiation(Level world, int x, int y, int z) {
-		ForgeDirection dir = dirs[rand.nextInt(dirs.length)];
-		if (!world.isRemote)
-			world.spawnEntityInWorld(new EntityNeutron(world, x, y, z, dir, NeutronType.WASTE));
+	protected void leakRadiation(Level world, BlockPos pos) {
+		Direction dir = dirs[rand.nextInt(dirs.length)];
+		if (!world.isClientSide())
+			world.addFreshEntity(new EntityNeutron(world, pos, dir, NeutronType.WASTE));
 	}
 
 	@Override
 	public final boolean isItemValidForSlot(int i, ItemStack is) {
-		return is.getItem() == ReactorItems.WASTE.getItemInstance() && is.getItemDamage() < 1000 && this.isValidIsotope(Isotopes.getIsotope(is.getItemDamage())) && this.isValidSlot(i, is);
+		return is.getItem() == ReactorItems.WASTE.getItemInstance() && is.getDamageValue() < 1000 && this.isValidIsotope(Isotopes.getIsotope(is.getDamageValue())) && this.isValidSlot(i, is);
 	}
 
 	protected boolean isValidSlot(int i, ItemStack is) {
@@ -131,27 +121,26 @@ public abstract class TileEntityWasteUnit extends TileEntityInventoriedReactorBa
 	}
 
 	@Override
-	public int getInventoryStackLimit() {
+	public int getMaxStackSize() {
 		return 1;
 	}
 
 	@Override
-	public final boolean canItemEnterFromSide(ForgeDirection dir) {
+	public final boolean canItemEnterFromSide(Direction dir) {
 		return true;
 	}
 
 	@Override
-	public final boolean canItemExitToSide(ForgeDirection dir) {
+	public final boolean canItemExitToSide(Direction dir) {
 		return true;
 	}
 
 	public final int countWaste() {
 		int count = 0;
-		for (int i = 0; i < this.getSizeInventory(); i++) {
-			if (inv[i] != null) {
-				if (inv[i].getItem() == ReactorItems.WASTE.getItemInstance()) {
-					count += inv[i].stackSize;
-				}
+		for (int i = 0; i < this.getContainerSize(); i++) {
+			ItemStack s = this.getItem(i);
+			if (!s.isEmpty() && s.getItem() == ReactorItems.WASTE.getItemInstance()) {
+				count += s.getCount();
 			}
 		}
 		return count;
@@ -164,7 +153,7 @@ public abstract class TileEntityWasteUnit extends TileEntityInventoriedReactorBa
 	public static double getHalfLife(ItemStack is) {
 		if (is.getItem() != ReactorItems.WASTE.getItemInstance())
 			return 0;
-		return Isotopes.getIsotope(is.getItemDamage()).getMCHalfLife();//WasteManager.getWasteList().get(is.getItemDamage()).getMCHalfLife();
+		return Isotopes.getIsotope(is.getDamageValue()).getMCHalfLife();
 	}
 
 	public static boolean isLongLivedWaste(ItemStack is) {
@@ -176,16 +165,14 @@ public abstract class TileEntityWasteUnit extends TileEntityInventoriedReactorBa
 	}
 
 	@Override
-	public void readFromNBT(CompoundTag NBT) {
-		super.readFromNBT(NBT);
-
-		lastTickTime = NBT.getLong("lasttime");
+	protected void readSyncTag(CompoundTag NBT) {
+		super.readSyncTag(NBT);
+		lastTickTime = NBT.getLongOr("lasttime", -1);
 	}
 
 	@Override
-	public void writeToNBT(CompoundTag NBT) {
-		super.writeToNBT(NBT);
-
-		NBT.setLong("lasttime", lastTickTime);
+	protected void writeSyncTag(CompoundTag NBT) {
+		super.writeSyncTag(NBT);
+		NBT.putLong("lasttime", lastTickTime);
 	}
 }
