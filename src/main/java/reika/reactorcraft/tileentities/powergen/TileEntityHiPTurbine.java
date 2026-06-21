@@ -384,7 +384,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 		super.readSyncTag(NBT);
 
 		fluid = WorkingFluid.getFromNBT(NBT);
-		dripBuffer = NBT.getInteger("dripb");
+		dripBuffer = NBT.getIntOr("dripb", 0);
 	}
 
 	@Override
@@ -392,7 +392,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 		super.writeSyncTag(NBT);
 
 		fluid.saveToNBT(NBT);
-		NBT.setInteger("dripb", dripBuffer);
+		NBT.putInt("dripb", dripBuffer);
 	}
 
 	@Override

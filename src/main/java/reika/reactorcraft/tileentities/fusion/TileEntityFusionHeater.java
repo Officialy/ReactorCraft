@@ -148,26 +148,26 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("temp", temperature);
+		NBT.putInt("temp", temperature);
 
 		tank.writeToNBT(NBT);
 		h2.writeToNBT(NBT);
 		h3.writeToNBT(NBT);
 
-		NBT.setBoolean("multi", hasMultiBlock);
+		NBT.putBoolean("multi", hasMultiBlock);
 	}
 
 	@Override
 	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
-		temperature = NBT.getInteger("temp");
+		temperature = NBT.getIntOr("temp", 0);
 
 		tank.readFromNBT(NBT);
 		h2.readFromNBT(NBT);
 		h3.readFromNBT(NBT);
 
-		hasMultiBlock = NBT.getBoolean("multi");
+		hasMultiBlock = NBT.getBooleanOr("multi", false);
 	}
 
 	@Override

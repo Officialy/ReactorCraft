@@ -295,7 +295,7 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
-		split = NBT.getInteger("time");
+		split = NBT.getIntOr("time", 0);
 
 		powerHandler.readFromNBT(NBT);
 
@@ -306,7 +306,7 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("time", split);
+		NBT.putInt("time", split);
 
 		powerHandler.writeToNBT(NBT);
 

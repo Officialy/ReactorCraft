@@ -325,7 +325,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	{
 		super.readSyncTag(NBT);
 
-		timer = NBT.getInteger("time");
+		timer = NBT.getIntOr("time", 0);
 
 		water.readFromNBT(NBT);
 		tank.readFromNBT(NBT);
@@ -336,7 +336,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	{
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("time", timer);
+		NBT.putInt("time", timer);
 
 		water.writeToNBT(NBT);
 		tank.writeToNBT(NBT);

@@ -188,11 +188,11 @@ ToggleTile, NeutronTile {
 
 		tank.writeToNBT(NBT);
 
-		NBT.setInteger("face", this.getFacing().ordinal());
+		NBT.putInt("face", this.getFacing().ordinal());
 
-		NBT.setBoolean("multi", hasMultiBlock);
+		NBT.putBoolean("multi", hasMultiBlock);
 
-		NBT.setBoolean("t_enable", enabled);
+		NBT.putBoolean("t_enable", enabled);
 	}
 
 	@Override
@@ -201,12 +201,12 @@ ToggleTile, NeutronTile {
 
 		tank.readFromNBT(NBT);
 
-		facing = dirs[NBT.getInteger("face")];
+		facing = dirs[NBT.getIntOr("face", 0)];
 
-		hasMultiBlock = NBT.getBoolean("multi");
+		hasMultiBlock = NBT.getBooleanOr("multi", false);
 
 		if (NBT.hasKey("t_enable"))
-			enabled = NBT.getBoolean("t_enable");
+			enabled = NBT.getBooleanOr("t_enable", false);
 	}
 
 	@Override

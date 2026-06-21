@@ -160,7 +160,7 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 	{
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("chg", charge);
+		NBT.putInt("chg", charge);
 	}
 
 	@Override
@@ -168,7 +168,7 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 	{
 		super.readSyncTag(NBT);
 
-		charge = NBT.getInteger("chg");
+		charge = NBT.getIntOr("chg", 0);
 	}
 
 	@Override

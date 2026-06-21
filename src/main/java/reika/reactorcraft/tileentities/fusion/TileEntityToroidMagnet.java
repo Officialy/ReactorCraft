@@ -373,38 +373,38 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
-		aim = this.getAim(NBT.getInteger("aim"));
-		hasSolenoid = NBT.getBoolean("solenoid");
+		aim = this.getAim(NBT.getIntOr("aim", 0));
+		hasSolenoid = NBT.getBooleanOr("solenoid", false);
 
-		charge = NBT.getInteger("chg");
+		charge = NBT.getIntOr("chg", 0);
 
-		alpha = NBT.getInteger("alp");
+		alpha = NBT.getIntOr("alp", 0);
 
 		tank.readFromNBT(NBT);
 
-		hasNext = NBT.getBoolean("next");
+		hasNext = NBT.getBooleanOr("next", false);
 
-		isActive = NBT.getBoolean("active");
-		lastPlasma = NBT.getInteger("lastplasma");
+		isActive = NBT.getBooleanOr("active", false);
+		lastPlasma = NBT.getIntOr("lastplasma", 0);
 	}
 
 	@Override
 	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("aim", this.getAim().ordinal());
-		NBT.setBoolean("solenoid", hasSolenoid);
+		NBT.putInt("aim", this.getAim().ordinal());
+		NBT.putBoolean("solenoid", hasSolenoid);
 
-		NBT.setInteger("alp", alpha);
+		NBT.putInt("alp", alpha);
 
-		NBT.setInteger("chg", charge);
+		NBT.putInt("chg", charge);
 
 		tank.writeToNBT(NBT);
 
-		NBT.setBoolean("next", hasNext);
+		NBT.putBoolean("next", hasNext);
 
-		NBT.setBoolean("active", isActive);
-		NBT.setInteger("lastplasma", lastPlasma);
+		NBT.putBoolean("active", isActive);
+		NBT.putInt("lastplasma", lastPlasma);
 	}
 
 	public Aim getAim() {

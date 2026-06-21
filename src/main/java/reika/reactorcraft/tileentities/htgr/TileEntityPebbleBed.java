@@ -379,14 +379,14 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	public void loadAdditional(/*PORT*/CompoundTag NBT) {
 		super.loadAdditional(/*PORT*/NBT);
 
-		damage = NBT.getInteger("dmg");
+		damage = NBT.getIntOr("dmg", 0);
 	}
 
 	@Override
 	public void saveAdditional(/*PORT*/CompoundTag NBT) {
 		super.saveAdditional(/*PORT*/NBT);
 
-		NBT.setInteger("dmg", damage);
+		NBT.putInt("dmg", damage);
 	}
 
 	@Override

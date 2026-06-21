@@ -235,9 +235,9 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 
 		tank.readFromNBT(NBT);
 
-		omega = NBT.getInteger("speed");
-		torque = NBT.getInteger("trq");
-		power = NBT.getLong("pwr");
+		omega = NBT.getIntOr("speed", 0);
+		torque = NBT.getIntOr("trq", 0);
+		power = NBT.getLongOr("pwr", 0L);
 	}
 
 	@Override
@@ -247,9 +247,9 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 
 		tank.writeToNBT(NBT);
 
-		NBT.setInteger("speed", omega);
-		NBT.setInteger("trq", torque);
-		NBT.setLong("pwr", power);
+		NBT.putInt("speed", omega);
+		NBT.putInt("trq", torque);
+		NBT.putLong("pwr", power);
 	}
 
 	@Override

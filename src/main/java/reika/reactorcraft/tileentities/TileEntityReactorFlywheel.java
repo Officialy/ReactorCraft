@@ -220,20 +220,20 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
-		facing = dirs[NBT.getInteger("face")];
-		hasMultiBlock = NBT.getBoolean("multi");
+		facing = dirs[NBT.getIntOr("face", 0)];
+		hasMultiBlock = NBT.getBooleanOr("multi", false);
 
-		power = NBT.getLong("pwr");
+		power = NBT.getLongOr("pwr", 0L);
 	}
 
 	@Override
 	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("face", this.getFacing().ordinal());
-		NBT.setBoolean("multi", hasMultiBlock);
+		NBT.putInt("face", this.getFacing().ordinal());
+		NBT.putBoolean("multi", hasMultiBlock);
 
-		NBT.setLong("pwr", power);
+		NBT.putLong("pwr", power);
 	}
 
 	@Override

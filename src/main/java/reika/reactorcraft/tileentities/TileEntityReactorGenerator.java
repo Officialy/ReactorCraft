@@ -233,25 +233,25 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
-		facingDir = dirs[NBT.getInteger("face")];
-		hasMultiblock = NBT.getBoolean("multi");
+		facingDir = dirs[NBT.getIntOr("face", 0)];
+		hasMultiblock = NBT.getBooleanOr("multi", false);
 
-		power = NBT.getLong("pwr");
+		power = NBT.getLongOr("pwr", 0L);
 
 		if (NBT.hasKey("mode"))
-			mode = Modes.list[NBT.getInteger("mode")];
+			mode = Modes.list[NBT.getIntOr("mode", 0)];
 	}
 
 	@Override
 	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("face", this.getFacing().ordinal());
-		NBT.setBoolean("multi", hasMultiblock);
+		NBT.putInt("face", this.getFacing().ordinal());
+		NBT.putBoolean("multi", hasMultiblock);
 
-		NBT.setLong("pwr", power);
+		NBT.putLong("pwr", power);
 
-		NBT.setInteger("mode", mode.ordinal());
+		NBT.putInt("mode", mode.ordinal());
 	}
 
 	@Override

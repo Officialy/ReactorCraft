@@ -166,7 +166,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
-		steam = NBT.getInteger("energy");
+		steam = NBT.getIntOr("energy", 0);
 
 		fluid = WorkingFluid.getFromNBT(NBT);
 	}
@@ -175,7 +175,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("energy", steam);
+		NBT.putInt("energy", steam);
 
 		fluid.saveToNBT(NBT);
 	}

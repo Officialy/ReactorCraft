@@ -112,7 +112,7 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 	{
 		super.readSyncTag(NBT);
 
-		steam = NBT.getInteger("energy");
+		steam = NBT.getIntOr("energy", 0);
 	}
 
 	@Override
@@ -120,7 +120,7 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 	{
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("energy", steam);
+		NBT.putInt("energy", steam);
 	}
 
 	@Override

@@ -397,15 +397,15 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable {
 		tankL.writeToNBT(NBT);
 		input.writeToNBT(NBT);
 
-		NBT.setInteger("temp", temperature);
-		//NBT.setInteger("time", time);
+		NBT.putInt("temp", temperature);
+		//NBT.putInt("time", time);
 
 		/*
-		NBT.setInteger("omg", omega);
-		NBT.setInteger("tq", torque);
-		NBT.setLong("pwr", power);
+		NBT.putInt("omg", omega);
+		NBT.putInt("tq", torque);
+		NBT.putLong("pwr", power);
 
-		NBT.setInteger("io", iotick);*/
+		NBT.putInt("io", iotick);*/
 	}
 
 	@Override
@@ -416,15 +416,15 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable {
 		tankL.readFromNBT(NBT);
 		input.readFromNBT(NBT);
 
-		temperature = NBT.getInteger("temp");
-		//time = NBT.getInteger("time");
+		temperature = NBT.getIntOr("temp", 0);
+		//time = NBT.getIntOr("time", 0);
 
 		/*
-		omega = NBT.getInteger("omg");
-		torque = NBT.getInteger("tq");
-		power = NBT.getLong("pwr");
+		omega = NBT.getIntOr("omg", 0);
+		torque = NBT.getIntOr("tq", 0);
+		power = NBT.getLongOr("pwr", 0L);
 
-		iotick = NBT.getInteger("io");*/
+		iotick = NBT.getIntOr("io", 0);*/
 	}
 
 	public boolean addHeavyWater(int amt) {

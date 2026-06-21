@@ -425,8 +425,8 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	{
 		super.readSyncTag(NBT);
 
-		output_timer = NBT.getInteger("uf6");
-		intermediate_timer = NBT.getInteger("hf");
+		output_timer = NBT.getIntOr("uf6", 0);
+		intermediate_timer = NBT.getIntOr("hf", 0);
 
 		input.readFromNBT(NBT);
 		intermediate.readFromNBT(NBT);
@@ -438,8 +438,8 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	{
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("uf6", output_timer);
-		NBT.setInteger("hf", intermediate_timer);
+		NBT.putInt("uf6", output_timer);
+		NBT.putInt("hf", intermediate_timer);
 
 		input.writeToNBT(NBT);
 		intermediate.writeToNBT(NBT);

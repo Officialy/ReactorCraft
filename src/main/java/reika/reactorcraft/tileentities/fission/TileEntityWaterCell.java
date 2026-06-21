@@ -231,7 +231,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 	{
 		super.readSyncTag(NBT);
 
-		this.setLiquidState(LiquidStates.list[NBT.getInteger("liq")]);
+		this.setLiquidState(LiquidStates.list[NBT.getIntOr("liq", 0)]);
 	}
 
 	@Override
@@ -239,7 +239,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 	{
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("liq", this.getLiquidState().ordinal());
+		NBT.putInt("liq", this.getLiquidState().ordinal());
 	}
 
 	@Override

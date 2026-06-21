@@ -175,26 +175,26 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
-		NBT.setBoolean("multi", hasMultiBlock);
+		NBT.putBoolean("multi", hasMultiBlock);
 
-		NBT.setInteger("omg", omega);
-		NBT.setInteger("tq", torque);
-		NBT.setLong("pwr", power);
+		NBT.putInt("omg", omega);
+		NBT.putInt("tq", torque);
+		NBT.putLong("pwr", power);
 
-		NBT.setFloat("phi", phi);
+		NBT.putFloat("phi", phi);
 	}
 
 	@Override
 	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
-		hasMultiBlock = NBT.getBoolean("multi");
+		hasMultiBlock = NBT.getBooleanOr("multi", false);
 
-		omega = NBT.getInteger("omg");
-		torque = NBT.getInteger("tq");
-		power = NBT.getLong("pwr");
+		omega = NBT.getIntOr("omg", 0);
+		torque = NBT.getIntOr("tq", 0);
+		power = NBT.getLongOr("pwr", 0L);
 
-		phi = NBT.getFloat("phi");
+		phi = NBT.getFloatOr("phi", 0F);
 	}
 
 	public void addToToroids() {

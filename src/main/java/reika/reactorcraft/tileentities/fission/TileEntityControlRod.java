@@ -143,12 +143,12 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	{
 		super.writeSyncTag(NBT);
 
-		NBT.setBoolean("down", lowered);
+		NBT.putBoolean("down", lowered);
 
 		if (motion != null)
-			NBT.setInteger("motion", motion.ordinal());
+			NBT.putInt("motion", motion.ordinal());
 
-		NBT.setInteger("rodoffset", rodOffset);
+		NBT.putInt("rodoffset", rodOffset);
 
 		if (CPU != null)
 			CPU.saveAdditional("cpu", NBT);
@@ -159,12 +159,12 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	{
 		super.readSyncTag(NBT);
 
-		lowered = NBT.getBoolean("down");
+		lowered = NBT.getBooleanOr("down", false);
 
 		if (NBT.hasKey("motion"))
-			motion = Motions.values()[NBT.getInteger("motion")];
+			motion = Motions.values()[NBT.getIntOr("motion", 0)];
 
-		rodOffset = NBT.getInteger("rodoffset");
+		rodOffset = NBT.getIntOr("rodoffset", 0);
 
 		CPU = Coordinate.load("cpu", NBT);
 	}

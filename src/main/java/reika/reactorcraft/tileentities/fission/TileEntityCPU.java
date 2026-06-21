@@ -291,11 +291,11 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
-		omega = NBT.getInteger("speed");
-		torque = NBT.getInteger("trq");
-		power = NBT.getLong("pwr");
+		omega = NBT.getIntOr("speed", 0);
+		torque = NBT.getIntOr("trq", 0);
+		power = NBT.getLongOr("pwr", 0L);
 
-		redstoneUpdate = NBT.getInteger("redsu");
+		redstoneUpdate = NBT.getIntOr("redsu", 0);
 
 		if (layout != null)
 			layout.readFromNBT(NBT);
@@ -305,11 +305,11 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("speed", omega);
-		NBT.setInteger("trq", torque);
-		NBT.setLong("pwr", power);
+		NBT.putInt("speed", omega);
+		NBT.putInt("trq", torque);
+		NBT.putLong("pwr", power);
 
-		NBT.setInteger("redsu", redstoneUpdate);
+		NBT.putInt("redsu", redstoneUpdate);
 
 		if (layout != null)
 			layout.writeToNBT(NBT);

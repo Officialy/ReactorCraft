@@ -687,23 +687,23 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	{
 		super.readSyncTag(NBT);
 
-		omega = NBT.getInteger("speed");
-		steam = NBT.getInteger("steamlevel");
+		omega = NBT.getIntOr("speed", 0);
+		steam = NBT.getIntOr("steamlevel", 0);
 
-		inter = Interference.get(NBT.getInteger("blocked"));
+		inter = Interference.get(NBT.getIntOr("blocked", 0));
 
-		damage = NBT.getInteger("dmg");
-		ammonia = NBT.getBoolean("ammonia");
+		damage = NBT.getIntOr("dmg", 0);
+		ammonia = NBT.getBooleanOr("ammonia", false);
 
 		if (this.needsMultiblock() && NBT.hasKey("multi"))
-			hasMultiBlock = NBT.getBoolean("multi");
+			hasMultiBlock = NBT.getBooleanOr("multi", false);
 
 		tank.readFromNBT(NBT);
 
-		stage = NBT.getInteger("stage");
+		stage = NBT.getIntOr("stage", 0);
 
 		if (NBT.hasKey("t_enable"))
-			enabled = NBT.getBoolean("t_enable");
+			enabled = NBT.getBooleanOr("t_enable", false);
 	}
 
 	@Override
@@ -711,25 +711,25 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	{
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("speed", omega);
-		NBT.setInteger("steamlevel", steam);
+		NBT.putInt("speed", omega);
+		NBT.putInt("steamlevel", steam);
 
-		NBT.setInteger("dmg", damage);
-		NBT.setBoolean("ammonia", ammonia);
+		NBT.putInt("dmg", damage);
+		NBT.putBoolean("ammonia", ammonia);
 
 		if (inter != null)
-			NBT.setInteger("blocked", inter.ordinal());
+			NBT.putInt("blocked", inter.ordinal());
 		else
-			NBT.setInteger("blocked", -1);
+			NBT.putInt("blocked", -1);
 
 		if (this.needsMultiblock())
-			NBT.setBoolean("multi", hasMultiBlock);
+			NBT.putBoolean("multi", hasMultiBlock);
 
 		tank.writeToNBT(NBT);
 
-		NBT.setInteger("stage", stage);
+		NBT.putInt("stage", stage);
 
-		NBT.setBoolean("t_enable", enabled);
+		NBT.putBoolean("t_enable", enabled);
 	}
 
 	@Override
@@ -880,7 +880,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	public final void setLubricant(ItemStack is) {
 		if (ReikaItemHelper.matchStacks(this.getTile().getCraftedProduct(), is)) {
 			if (is.stackTagCompound != null) {
-				int lube = is.stackTagCompound.getInteger("lube");
+				int lube = is.stackTagCompound.getIntOr("lube", 0);
 				tank.setContents(lube, ReactorFluids.getLegacyFluid("rc lubricant"));
 			}
 		}

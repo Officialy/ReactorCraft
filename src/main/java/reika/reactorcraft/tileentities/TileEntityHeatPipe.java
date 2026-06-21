@@ -185,7 +185,7 @@ public class TileEntityHeatPipe extends TileEntityLine {
 	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
-		heatEnergy = NBT.getDouble("heat");
+		heatEnergy = NBT.getDoubleOr("heat", 0D);
 		this.updateBrightness();
 	}
 
@@ -193,7 +193,7 @@ public class TileEntityHeatPipe extends TileEntityLine {
 	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
-		NBT.setDouble("heat", heatEnergy);
+		NBT.putDouble("heat", heatEnergy);
 	}
 
 	private void updateBrightness() {

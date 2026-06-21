@@ -134,11 +134,11 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 	{
 		super.readSyncTag(NBT);
 
-		steam = NBT.getInteger("energy");
+		steam = NBT.getIntOr("energy", 0);
 
 		fluid = WorkingFluid.getFromNBT(NBT);
 
-		requireRedstone = NBT.getBoolean("red");
+		requireRedstone = NBT.getBooleanOr("red", false);
 	}
 
 	@Override
@@ -146,11 +146,11 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 	{
 		super.writeSyncTag(NBT);
 
-		NBT.setInteger("energy", steam);
+		NBT.putInt("energy", steam);
 
 		fluid.saveToNBT(NBT);
 
-		NBT.setBoolean("red", requireRedstone);
+		NBT.putBoolean("red", requireRedstone);
 	}
 
 	@Override
