@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "experience": 0.4,
+  "ingredient": "reactorcraft:pink_fluorite_ore",
+  "result": {
+    "id": "reactorcraft:pink_fluorite"
+  }
+}

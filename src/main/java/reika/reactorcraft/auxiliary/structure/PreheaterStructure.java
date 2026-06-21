@@ -29,7 +29,7 @@ public class PreheaterStructure extends ReactorStructureBase {
 						array.setBlock(x+i, y+h, z+k, b, 1);
 						if (i == 2 && k == 2 && h >= 2) {
 							ReactorTiles r = h > 2 ? ReactorTiles.MAGNETPIPE : ReactorTiles.HEATER;
-							array.setBlock(x+i, y+h, z+k, r.getBlock(), r.getBlockMetadata());
+							array.setBlock(x+i, y+h, z+k, r.getBlock(), r);
 						}
 					}
 				}
@@ -54,12 +54,12 @@ public class PreheaterStructure extends ReactorStructureBase {
 			}
 		}
 
-		array.setBlock(x+2, y+5, z+2, ReactorTiles.MAGNETPIPE.getBlock(), ReactorTiles.MAGNETPIPE.getBlockMetadata());
-		array.setBlock(x+2, y+6, z+2, ReactorTiles.MAGNETPIPE.getBlock(), ReactorTiles.MAGNETPIPE.getBlockMetadata());
+		array.setBlock(x+2, y+5, z+2, ReactorTiles.MAGNETPIPE.getBlock(), ReactorTiles.MAGNETPIPE);
+		array.setBlock(x+2, y+6, z+2, ReactorTiles.MAGNETPIPE.getBlock(), ReactorTiles.MAGNETPIPE);
 
 		for (int i = 0; i < 5; i++) {
 			if (i != 2)
-				array.setBlock(x+i, y+2, z+2, MachineRegistry.PIPE.getBlock(), MachineRegistry.PIPE.getBlockMetadata());
+				array.setBlock(x+i, y+2, z+2, MachineRegistry.PIPE.getBlock(), MachineRegistry.PIPE);
 		}
 
 		array.setBlock(x+2, y+2, z+3, b, 0);

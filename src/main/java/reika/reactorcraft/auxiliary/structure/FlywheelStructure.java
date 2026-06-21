@@ -2,7 +2,7 @@ package reika.reactorcraft.auxiliary.structure;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.instantiable.data.blockstruct.FilledBlockArray;
 import reika.dragonapi.libraries.ReikaDirectionHelper;
@@ -19,8 +19,8 @@ public class FlywheelStructure extends ReactorStructureBase {
 		int midX = x;
 		int midY = y;
 		int midZ = z;
-		array.setBlock(midX, midY, midZ, ReactorTiles.FLYWHEEL.getBlock(), ReactorTiles.FLYWHEEL.getBlockMetadata());
-		ForgeDirection left = ReikaDirectionHelper.getLeftBy90(dir);
+		array.setBlock(midX, midY, midZ, ReactorTiles.FLYWHEEL.getBlock(), ReactorTiles.FLYWHEEL);
+		Direction left = ReikaDirectionHelper.getLeftBy90(dir);
 		Block b = ReactorBlocks.FLYWHEELMULTI.getBlockInstance();
 
 		for (int i = 1; i <= 2; i++) {

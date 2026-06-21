@@ -378,7 +378,7 @@ public class ReactorRecipes {
 		CustomRecipeList crl = new CustomRecipeList(ReactorCraft.instance, id);
 		if (crl.load()) {
 			for (LuaBlock lb : crl.getEntries()) {
-				Exception e = null;
+				Exception e = ItemStack.EMPTY;
 				boolean flag = false;
 				String n = lb.getString("type");
 				try {
@@ -449,7 +449,7 @@ public class ReactorRecipes {
 		LuaBlock fluidDown = lb.getChild("fluid_out_down");
 		Fluid in = fluidIn != null ? FluidRegistry.getFluid(fluidIn.getString("type")) : null;
 		int amt = fluidIn != null ? fluidIn.getInt("amount") : 0;
-		ItemMatch item = null;
+		ItemMatch item = ItemStack.EMPTY;
 		boolean cata = false;
 		if (itemIn != null) {
 			item = new ItemMatch(crl.parseItemCollection(itemIn.getChild("items").getDataValues(), false));

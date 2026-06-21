@@ -1,0 +1,7 @@
+{
+  "type": "rotarycraft:grinder",
+  "input": "reactorcraft:uranium_ingot",
+  "output": {
+    "id": "reactorcraft:uranium_dust"
+  }
+}

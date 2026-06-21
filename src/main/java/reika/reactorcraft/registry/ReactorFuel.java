@@ -11,14 +11,13 @@ package reika.reactorcraft.registry;
 
 import java.util.HashMap;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public enum ReactorFuel {
 
-	URANIUM(ReactorItems.FUEL.getItemInstance(), 25, 3, 5, 20, 0),
-	PLUTONIUM(ReactorItems.PLUTONIUM.getItemInstance(), 30, 4, 10, 30, 0.025F);
-	//THORIUM(ReactorItems.THORIUM.getItemInstance(), 20, 3, 2, 15);
+	URANIUM(ReactorItems.FUEL_ROD.get(), 25, 3, 5, 20, 0),
+	PLUTONIUM(ReactorItems.FUEL_ROD.get(), 30, 4, 10, 30, 0.025F);
 
 	private final Item fuel;
 	public final int fissionChance;
@@ -27,7 +26,7 @@ public enum ReactorFuel {
 	public final int temperatureStep;
 	public final float voidCoefficient;
 
-	private static final HashMap<Item, ReactorFuel> itemMap = new HashMap();
+	private static final HashMap<Item, ReactorFuel> itemMap = new HashMap<>();
 	public static final ReactorFuel[] fuelList = values();
 
 	private ReactorFuel(Item item, int fiss, int con, int waste, int temp, float v) {
@@ -48,37 +47,22 @@ public enum ReactorFuel {
 	}
 
 	public ItemStack getFissionProduct(ItemStack input) {
-		if (input == null)
+		if (input == null || input.isEmpty())
 			return null;
-		switch(this) {
-			case PLUTONIUM:
-				if (input.getItemDamage() == ReactorItems.PLUTONIUM.getNumberMetadatas()-1)
-					return null;
-				else
-					return ReactorItems.PLUTONIUM.getStackOfMetadata(input.getItemDamage()+1);
-				/*
-			case THORIUM:
-				if (input.getItemDamage() == ReactorItems.THORIUM.getNumberMetadatas()-1)
-					return null;
-				else
-					return ReactorItems.THORIUM.getStackOfMetadata(input.getItemDamage()+1);
-				 */
-			case URANIUM:
-				if (input.getItemDamage() == ReactorItems.FUEL.getNumberMetadatas()-1)
-					return ReactorItems.DEPLETED.getStackOf();
-				else
-					return ReactorItems.FUEL.getStackOfMetadata(input.getItemDamage()+1);
-		}
-		return null;
+		return switch (this) {
+			case PLUTONIUM -> ReactorItems.PLUTONIUM.getStackOfMetadata(input.getDamageValue() + 1);
+			case URANIUM -> input.getDamageValue() >= ReactorItems.FUEL.getNumberMetadatas() - 1
+					? ReactorItems.DEPLETED.getStackOf()
+					: ReactorItems.FUEL.getStackOfMetadata(input.getDamageValue() + 1);
+		};
 	}
 
 	public static ReactorFuel getFrom(ItemStack is) {
-		return is != null ? itemMap.get(is.getItem()) : null;
+		return is != null && !is.isEmpty() ? itemMap.get(is.getItem()) : null;
 	}
 
 	static {
-		for (int i = 0; i < fuelList.length; i++) {
-			ReactorFuel f = fuelList[i];
+		for (ReactorFuel f : fuelList) {
 			itemMap.put(f.fuel, f);
 		}
 	}

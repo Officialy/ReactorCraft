@@ -13,16 +13,16 @@ import java.util.ArrayList;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.ModList;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.rendering.ReikaColorAPI;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.registry.FluoriteTypes;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorItems;
@@ -85,7 +85,7 @@ public class BlockFluoriteOre extends BlockFluorite {
 	}
 
 	@Override
-	public int getLightValue(IBlockAccess world, int x, int y, int z) //may need to call lighting updates on generate
+	public int getLightValue(BlockGetter world, int x, int y, int z) //may need to call lighting updates on generate
 	{
 		int color = this.getColorType(world, x, y, z).getColor();
 		int l = this.isActivated(world, x, y, z) ? 12 : 6;
@@ -105,7 +105,7 @@ public class BlockFluoriteOre extends BlockFluorite {
 	}
 
 	@Override
-	public int getLightOpacity(IBlockAccess world, int x, int y, int z)
+	public int getLightOpacity(BlockGetter world, int x, int y, int z)
 	{
 		return 0;
 	}

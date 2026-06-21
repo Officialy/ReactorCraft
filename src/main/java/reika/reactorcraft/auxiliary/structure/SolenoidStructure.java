@@ -117,7 +117,7 @@ public class SolenoidStructure extends ReactorStructureBase {
 			array.setBlock(dx, dy, dz, b, m);
 		}
 
-		array.setBlock(array.getMidX(), 0, array.getMidZ(), ReactorTiles.SOLENOID.getBlock(), ReactorTiles.SOLENOID.getBlockMetadata());
+		array.setBlock(array.getMidX(), 0, array.getMidZ(), ReactorTiles.SOLENOID.getBlock(), ReactorTiles.SOLENOID);
 
 		return array;
 	}

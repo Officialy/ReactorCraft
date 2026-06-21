@@ -10,10 +10,10 @@
 package reika.reactorcraft.blocks.multi;
 
 import net.minecraft.block.material.Material;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
 import reika.dragonapi.instantiable.data.blockstruct.StructuredBlockArray;
@@ -36,7 +36,7 @@ public class BlockFlywheelMulti extends BlockReCMultiBlock {
 	}
 
 	@Override
-	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, ForgeDirection dir, BlockMatchFailCallback call) {
+	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
 		StructuredBlockArray blocks = new StructuredBlockArray(world);
 		blocks.recursiveAddWithBoundsRanged(world, x, y, z, this, x-6, y-6, z-6, x+6, y+6, z+6, 1);
 		if (blocks.getSize() != 20)
@@ -49,8 +49,8 @@ public class BlockFlywheelMulti extends BlockReCMultiBlock {
 				call.onBlockFailure(world, midX, midY, midZ, new BlockKey(ReactorTiles.FLYWHEEL));
 			return false;
 		}
-		TileEntityReactorFlywheel te = (TileEntityReactorFlywheel)world.getTileEntity(midX, midY, midZ);
-		ForgeDirection left = ReikaDirectionHelper.getLeftBy90(te.getFacing());
+		TileEntityReactorFlywheel te = (TileEntityReactorFlywheel)world.getBlockEntity(midX, midY, midZ);
+		Direction left = ReikaDirectionHelper.getLeftBy90(te.getFacing());
 
 		for (int i = 1; i <= 2; i++) {
 			int dx = midX+left.offsetX*i;
@@ -179,7 +179,7 @@ public class BlockFlywheelMulti extends BlockReCMultiBlock {
 		int midY = blocks.getMidY();
 		int midZ = blocks.getMidZ();
 		if (ReactorTiles.getTE(world, midX, midY, midZ) == ReactorTiles.FLYWHEEL) {
-			TileEntityReactorFlywheel te = (TileEntityReactorFlywheel)world.getTileEntity(midX, midY, midZ);
+			TileEntityReactorFlywheel te = (TileEntityReactorFlywheel)world.getBlockEntity(midX, midY, midZ);
 			te.setHasMultiBlock(false);
 		}
 	}
@@ -199,7 +199,7 @@ public class BlockFlywheelMulti extends BlockReCMultiBlock {
 		int midY = blocks.getMidY();
 		int midZ = blocks.getMidZ();
 		if (ReactorTiles.getTE(world, midX, midY, midZ) == ReactorTiles.FLYWHEEL) {
-			TileEntityReactorFlywheel te = (TileEntityReactorFlywheel)world.getTileEntity(midX, midY, midZ);
+			TileEntityReactorFlywheel te = (TileEntityReactorFlywheel)world.getBlockEntity(midX, midY, midZ);
 			te.setHasMultiBlock(true);
 		}
 	}
@@ -215,7 +215,7 @@ public class BlockFlywheelMulti extends BlockReCMultiBlock {
 	}
 
 	@Override
-	public int getTextureIndex(IBlockAccess world, int x, int y, int z, int side, int meta) {
+	public int getTextureIndex(BlockGetter world, int x, int y, int z, int side, int meta) {
 		return meta >= 8 ? 3 : meta;
 	}
 
@@ -238,7 +238,7 @@ public class BlockFlywheelMulti extends BlockReCMultiBlock {
 		int midZ = blocks.getMinZ()+blocks.getSizeZ()/2;
 		if (ReactorTiles.getTE(world, midX, midY, midZ) != ReactorTiles.FLYWHEEL)
 			return null;
-		return world.getTileEntity(midX, midY, midZ);
+		return world.getBlockEntity(midX, midY, midZ);
 	}
 
 }

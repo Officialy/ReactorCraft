@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_depleted_dust": {
+      "conditions": {
+        "items": [
+          {
+            "items": "reactorcraft:depleted_dust"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "reactorcraft:depleted_fuel"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_depleted_dust"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "reactorcraft:depleted_fuel"
+    ]
+  }
+}

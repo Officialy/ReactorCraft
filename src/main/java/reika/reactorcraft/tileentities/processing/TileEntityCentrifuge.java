@@ -9,6 +9,9 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.processing;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,11 +19,11 @@ import java.util.HashMap;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidHandler;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.StepTimer;
@@ -40,6 +43,10 @@ import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
 public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase implements IFluidHandler, ReactorPowerReceiver, PipeConnector {
+	public TileEntityCentrifuge(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.CENTRIFUGE.get(), pos, state);
+	}
+
 
 	/** "In the range of 100000 rpm" -> 10.5k rad/s <br>
 	 * http://science.howstuffworks.com/uranium-centrifuge.htm */
@@ -69,7 +76,7 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 		int omega = powerHandler.getOmega();
 		if (omega >= 262144) {
 			phi += 40;
@@ -96,19 +103,19 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		timer.setCap(this.setTimer());
 
-		if (!PowerTransferHelper.checkPowerFrom(this, ForgeDirection.DOWN)) {
+		if (!PowerTransferHelper.checkPowerFrom(this, Direction.DOWN)) {
 			this.noInputMachine();
 		}
 
 		if (powerHandler.getPower() > 0 && powerHandler.getOmega() >= MINSPEED && !tank.isEmpty()) {
 			Centrifuging recipe = recipes.get(tank.getActualFluid());
-			if (recipe != null && tank.getLevel() >= recipe.fluidAmount && this.hasInventorySpace(recipe)) {
+			if (recipe != null && tank.getFluidLevel() >= recipe.fluidAmount && this.hasInventorySpace(recipe)) {
 				timer.update(recipe.speedFactor);
 				if (timer.checkCap()) {
-					if (!world.isRemote)
+					if (!world.isClientSide())
 						this.make(recipe);
 				}
 			}
@@ -119,7 +126,7 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 		else {
 			timer.reset();
 		}
-		if (!world.isRemote) {
+		if (!world.isClientSide()) {
 			split = timer.getTick();
 		}
 	}
@@ -165,13 +172,13 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 	}
 
 	private boolean hasInventorySpace(Centrifuging recipe) {
-		if (inv[0] != null && !ReikaItemHelper.matchStacks(inv[0], recipe.outputA))
+		if (itemHandler.getStackInSlot(0) != null && !ReikaItemHelper.matchStacks(itemHandler.getStackInSlot(0), recipe.outputA))
 			return false;
-		if (inv[1] != null && recipe.outputB != null && !ReikaItemHelper.matchStacks(inv[1], recipe.outputB))
+		if (itemHandler.getStackInSlot(1) != null && recipe.outputB != null && !ReikaItemHelper.matchStacks(itemHandler.getStackInSlot(1), recipe.outputB))
 			return false;
-		if (inv[0] != null && inv[0].stackSize >= inv[0].getMaxStackSize())
+		if (itemHandler.getStackInSlot(0) != null && itemHandler.getStackInSlot(0).getCount() >= itemHandler.getStackInSlot(0).getMaxStackSize())
 			return false;
-		if (inv[1] != null && inv[1].stackSize >= inv[1].getMaxStackSize())
+		if (itemHandler.getStackInSlot(1) != null && itemHandler.getStackInSlot(1).getCount() >= itemHandler.getStackInSlot(1).getMaxStackSize())
 			return false;
 		return true;
 	}
@@ -181,7 +188,7 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 	}
 
 	public int getFluidScaled(int p) {
-		return p*tank.getLevel()/tank.getCapacity();
+		return p*tank.getFluidLevel()/tank.getCapacity();
 	}
 
 	@Override
@@ -190,7 +197,7 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		return 2;
 	}
 
@@ -240,8 +247,8 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	public boolean canReadFrom(ForgeDirection dir) {
-		return dir == ForgeDirection.DOWN;
+	public boolean canReadFrom(Direction dir) {
+		return dir == Direction.DOWN;
 	}
 
 	@Override
@@ -255,32 +262,32 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	public int fill(ForgeDirection from, FluidStack resource, boolean doFill) {
+	public int fill(Direction from, FluidStack resource, boolean doFill) {
 		return this.canFill(from, resource.getFluid()) ? tank.fill(resource, doFill) : 0;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
 		return null;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
+	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
 		return null;
 	}
 
 	@Override
-	public boolean canFill(ForgeDirection from, Fluid fluid) {
-		return from == ForgeDirection.UP && recipes.containsKey(fluid);
+	public boolean canFill(Direction from, Fluid fluid) {
+		return from == Direction.UP && recipes.containsKey(fluid);
 	}
 
 	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
+	public boolean canDrain(Direction from, Fluid fluid) {
 		return false;
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(ForgeDirection from) {
+	public FluidTankInfo[] getTankInfo(Direction from) {
 		return new FluidTankInfo[]{tank.getInfo()};
 	}
 
@@ -319,12 +326,12 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	public boolean canItemEnterFromSide(ForgeDirection dir) {
+	public boolean canItemEnterFromSide(Direction dir) {
 		return false;
 	}
 
 	@Override
-	public boolean canItemExitToSide(ForgeDirection dir) {
+	public boolean canItemExitToSide(Direction dir) {
 		return dir.offsetY != 0;
 	}
 
@@ -334,13 +341,13 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	public boolean canConnectToPipeOnSide(MachineRegistry p, ForgeDirection side) {
-		return this.canConnectToPipe(p) && side == ForgeDirection.UP;
+	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
+		return this.canConnectToPipe(p) && side == Direction.UP;
 	}
 
 	@Override
-	public Flow getFlowForSide(ForgeDirection side) {
-		return side == ForgeDirection.UP ? Flow.INPUT : Flow.NONE;
+	public Flow getFlowForSide(Direction side) {
+		return side == Direction.UP ? Flow.INPUT : Flow.NONE;
 	}
 
 	@Override
@@ -364,7 +371,7 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 	}
 
 	public int getUF6() {
-		return tank.getActualFluid() == ReactorCraft.UF6 ? tank.getLevel() : 0;
+		return tank.getActualFluid() == ReactorCraft.UF6 ? tank.getFluidLevel() : 0;
 	}
 
 	public Fluid getFluid() {

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": "reactorcraft:alloy",
+    "C": "reactorcraft:graphite",
+    "S": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "SAS",
+    "ACA",
+    "SAS"
+  ],
+  "result": {
+    "id": "reactorcraft:rod"
+  }
+}

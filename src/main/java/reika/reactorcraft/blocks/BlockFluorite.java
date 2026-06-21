@@ -11,12 +11,12 @@ package reika.reactorcraft.blocks;
 
 import java.util.Random;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.ModList;
 import reika.dragonapi.libraries.registry.ReikaParticleHelper;
@@ -35,7 +35,7 @@ public class BlockFluorite extends Block {
 		super(par2Material);
 		this.setHardness(1.2F);
 		this.setResistance(4F);
-		this.setCreativeTab(ReactorCraft.instance.isLocked() ? null : ReactorCraft.tabRctr);
+		this.setCreativeTab(ReactorCraft.getInstance().isLocked() ? null : ReactorCraft.tabRctr);
 		this.setTickRandomly(true);
 	}
 
@@ -75,7 +75,7 @@ public class BlockFluorite extends Block {
 	}
 
 	@Override
-	public int getLightValue(IBlockAccess world, int x, int y, int z)
+	public int getLightValue(BlockGetter world, int x, int y, int z)
 	{
 		int color = this.getColorType(world, x, y, z).getColor();
 		return this.isActivated(world, x, y, z) ? (ModList.COLORLIGHT.isLoaded() ? ReikaColorAPI.getPackedIntForColoredLight(color, 15) : 15) : 0;
@@ -98,12 +98,12 @@ public class BlockFluorite extends Block {
 		}
 	}
 
-	public boolean isActivated(IBlockAccess world, int x, int y, int z) {
+	public boolean isActivated(BlockGetter world, int x, int y, int z) {
 		int meta = world.getBlockMetadata(x, y, z);
 		return meta >= FluoriteTypes.colorList.length;
 	}
 
-	public FluoriteTypes getColorType(IBlockAccess world, int x, int y, int z) {
+	public FluoriteTypes getColorType(BlockGetter world, int x, int y, int z) {
 		return FluoriteTypes.colorList[world.getBlockMetadata(x, y, z)%FluoriteTypes.colorList.length];
 	}
 }

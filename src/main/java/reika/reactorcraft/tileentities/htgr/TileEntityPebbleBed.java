@@ -9,13 +9,16 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.htgr;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.block.Block;
-import net.minecraft.init.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.instantiable.StepTimer;
@@ -24,7 +27,7 @@ import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.registry.ReikaParticleHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.auxiliary.Feedable;
 import reika.reactorcraft.auxiliary.PebbleBedArrangement;
 import reika.reactorcraft.auxiliary.ReactorBlock;
@@ -37,6 +40,10 @@ import reika.reactorcraft.registry.ReactorType;
 import reika.reactorcraft.tileentities.fission.TileEntityWaterCell.LiquidStates;
 
 public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implements TemperaturedReactorTyped, Feedable, ReactorBlock, BreakAction {
+	public TileEntityPebbleBed(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.PEBBLEBED.get(), pos, state);
+	}
+
 
 	protected StepTimer tempTimer = new StepTimer(20);
 
@@ -51,7 +58,7 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	private int cycleCooldown = 0;
 
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		return 47;
 	}
 
@@ -61,8 +68,8 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
-		if (!world.isRemote && this.isFissile() && ReikaRandomHelper.doWithChance(this.getFissionChance()/100D))
+	public void updateEntity(Level world, BlockPos pos) {
+		if (!world.isClientSide() && this.isFissile() && ReikaRandomHelper.doWithChance(this.getFissionChance()/100D))
 			this.runDecayCycle();
 
 		if (DragonAPICore.debugtest) {
@@ -70,8 +77,8 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 			ReikaInventoryHelper.addToIInv(ReactorItems.PELLET.getStackOf(), this);
 		}
 
-		//ReikaJavaLibrary.pConsole(temperature, Side.SERVER);
-		if (!world.isRemote)
+		//ReikaJavaLibrary.pConsole(temperature, Dist.DEDICATED_SERVER);
+		if (!world.isClientSide())
 			this.feed();
 
 		tempTimer.update();
@@ -102,7 +109,7 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 					int dx = x+i;
 					int dy = y+j;
 					int dz = z+k;
-					BlockEntity te = this.getTileEntity(dx, dy, dz);
+					BlockEntity te = this.getBlockEntity(dx, dy, dz);
 					if (te instanceof TileEntityPebbleBed) {
 						reactor.merge(((TileEntityPebbleBed)te).reactor);
 					}
@@ -145,10 +152,10 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	private void runDecayCycle() {
-		if (!worldObj.isRemote) {
+		if (!level.isRemote) {
 			int slot = -1;
-			for (int i = inv.length-1; i >= 0; i--) {
-				ItemStack is = inv[i];
+			for (int i = itemHandler.getSlots()-1; i >= 0; i--) {
+				ItemStack is = itemHandler.getStackInSlot(i);
 				if (is != null && is.getItem() == ReactorItems.PELLET.getItemInstance()) {
 					slot = i;
 					i = -1;
@@ -156,8 +163,8 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 			}
 			if (slot != -1) {
 				if (ReikaRandomHelper.doWithChance(3)) {
-					ItemStack is = inv[slot];
-					inv[slot] = this.getFissionProduct(is);
+					ItemStack is = itemHandler.getStackInSlot(slot);
+					itemHandler.getStackInSlot(slot) = this.getFissionProduct(is);
 				}
 				temperature += 20;
 			}
@@ -165,9 +172,9 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	private ItemStack getFissionProduct(ItemStack is) {
-		if (is.getItemDamage() == ReactorItems.PELLET.getNumberMetadatas()-1)
+		if (is.getDamageValue() == ReactorItems.PELLET.getNumberMetadatas()-1)
 			return ReactorItems.OLDPELLET.getStackOf();
-		return ReactorItems.PELLET.getStackOfMetadata(is.getItemDamage()+1);
+		return ReactorItems.PELLET.getStackOfMetadata(is.getDamageValue()+1);
 	}
 
 	@Override
@@ -183,14 +190,14 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 
 		if (dT > 0) {
 			for (int i = 2; i < 6; i++) {
-				ForgeDirection dir = dirs[i];
+				Direction dir = dirs[i];
 				int dx = x+dir.offsetX;
 				int dy = y+dir.offsetY;
 				int dz = z+dir.offsetZ;
 				ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
 
 				if (r == this.getTile()) {
-					TileEntityPebbleBed te = (TileEntityPebbleBed)world.getTileEntity(dx, dy, dz);
+					TileEntityPebbleBed te = (TileEntityPebbleBed)world.getBlockEntity(dx, dy, dz);
 					int dTemp = temperature-te.temperature;
 					if (dTemp > 0) {
 						temperature -= dTemp/16;
@@ -231,13 +238,13 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	@Override
-	public boolean canItemEnterFromSide(ForgeDirection dir) {
-		return dir == ForgeDirection.UP;
+	public boolean canItemEnterFromSide(Direction dir) {
+		return dir == Direction.UP;
 	}
 
 	@Override
-	public boolean canItemExitToSide(ForgeDirection dir) {
-		return dir == ForgeDirection.DOWN;
+	public boolean canItemExitToSide(Direction dir) {
+		return dir == Direction.DOWN;
 	}
 
 	@Override
@@ -257,7 +264,7 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
@@ -266,26 +273,26 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	public boolean feed() {
-		Level world = worldObj;
+		Level world = level;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
 		Block id = world.getBlock(x, y-1, z);
 		int meta = world.getBlockMetadata(x, y-1, z);
-		BlockEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity tile = this.getAdjacentTileEntity(Direction.DOWN);
 		if (tile instanceof TileEntityPebbleBed) {
-			if (((Feedable)tile).feedIn(inv[inv.length-1])) {
-				for (int i = inv.length-1; i > 0; i--)
-					inv[i] = inv[i-1];
+			if (((Feedable)tile).feedIn(itemHandler.getStackInSlot(itemHandler.getSlots()-1))) {
+				for (int i = itemHandler.getSlots()-1; i > 0; i--)
+					itemHandler.getStackInSlot(i) = itemHandler.getStackInSlot(i-1);
 
 				id = world.getBlock(x, y+1, z);
 				meta = world.getBlockMetadata(x, y+1, z);
-				tile = this.getAdjacentTileEntity(ForgeDirection.UP);
+				tile = this.getAdjacentTileEntity(Direction.UP);
 				if (tile instanceof TileEntityPebbleBed) {
-					inv[0] = ((Feedable) tile).feedOut();
+					itemHandler.getStackInSlot(0) = ((Feedable) tile).feedOut();
 				}
 				else
-					inv[0] = null;
+					itemHandler.getStackInSlot(0) = ItemStack.EMPTY;
 			}
 		}
 		this.collapseInventory();
@@ -293,11 +300,11 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	private void collapseInventory() {
-		for (int i = 0; i < inv.length; i++) {
-			for (int k = inv.length-1; k > 0; k--) {
-				if (inv[k] == null && inv[k-1] != null) {
-					inv[k] = inv[k-1];
-					inv[k-1] = null;
+		for (int i = 0; i < itemHandler.getSlots(); i++) {
+			for (int k = itemHandler.getSlots()-1; k > 0; k--) {
+				if (itemHandler.getStackInSlot(k) == null && itemHandler.getStackInSlot(k-1) != null) {
+					itemHandler.getStackInSlot(k) = itemHandler.getStackInSlot(k-1);
+					itemHandler.getStackInSlot(k-1) = ItemStack.EMPTY;
 					return;
 				}
 			}
@@ -310,8 +317,8 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 			return true;
 		if (!this.isItemValidForSlot(0, is))
 			return false;
-		if (inv[0] == null) {
-			inv[0] = is.copy();
+		if (itemHandler.getStackInSlot(0) == null) {
+			itemHandler.getStackInSlot(0) = is.copy();
 			return true;
 		}
 		return false;
@@ -319,11 +326,11 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 
 	@Override
 	public ItemStack feedOut() {
-		if (inv[inv.length-1] == null)
+		if (itemHandler.getStackInSlot(itemHandler.getSlots()-1) == null)
 			return null;
 		else {
-			ItemStack is = inv[inv.length-1].copy();
-			inv[inv.length-1] = null;
+			ItemStack is = itemHandler.getStackInSlot(itemHandler.getSlots()-1).copy();
+			itemHandler.getStackInSlot(itemHandler.getSlots()-1) = ItemStack.EMPTY;
 			return is;
 		}
 	}
@@ -349,10 +356,10 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	@Override
-	public final int getTextureState(ForgeDirection side) {
+	public final int getTextureState(Direction side) {
 		if (side.offsetY != 0)
 			return 4;
-		Level world = worldObj;
+		Level world = level;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
@@ -369,15 +376,15 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	@Override
-	public void readFromNBT(CompoundTag NBT) {
-		super.readFromNBT(NBT);
+	public void loadAdditional(/*PORT*/CompoundTag NBT) {
+		super.loadAdditional(/*PORT*/NBT);
 
 		damage = NBT.getInteger("dmg");
 	}
 
 	@Override
-	public void writeToNBT(CompoundTag NBT) {
-		super.writeToNBT(NBT);
+	public void saveAdditional(/*PORT*/CompoundTag NBT) {
+		super.saveAdditional(/*PORT*/NBT);
 
 		NBT.setInteger("dmg", damage);
 	}

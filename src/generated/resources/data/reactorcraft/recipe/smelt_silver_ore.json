@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "experience": 0.5,
+  "ingredient": "reactorcraft:silver_ore",
+  "result": {
+    "id": "reactorcraft:silver_ingot"
+  }
+}

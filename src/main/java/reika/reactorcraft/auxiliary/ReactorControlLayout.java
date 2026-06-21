@@ -23,8 +23,6 @@ import reika.dragonapi.instantiable.data.maps.TileEntityCache;
 import reika.reactorcraft.tileentities.fission.TileEntityCPU;
 import reika.reactorcraft.tileentities.fission.TileEntityControlRod;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class ReactorControlLayout {
 
@@ -93,11 +91,11 @@ public class ReactorControlLayout {
 	}
 
 	public boolean hasControlRodAtRelativePosition(Level world, int x, int y, int z) {
-		return this.getControlRodAtRelativePosition(world, x, y, z) != null;
+		return this.getControlRodAtRelativePosition(world, x, y, z) != ItemStack.EMPTY;
 	}
 
 	public boolean hasControlRodAtAbsolutePosition(Level world, int x, int y, int z) {
-		return this.getControlRodAtAbsolutePosition(world, x, y, z) != null;
+		return this.getControlRodAtAbsolutePosition(world, x, y, z) != ItemStack.EMPTY;
 	}
 
 	public TileEntityControlRod getControlRodAtRelativePosition(Level world, int x, int y, int z) {
@@ -132,11 +130,11 @@ public class ReactorControlLayout {
 		return maxZ-controller.zCoord;
 	}
 
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	public int getDisplayColorAtRelativePosition(Level world, int x, int y, int z) {
 		TileEntityControlRod rod = this.getControlRodAtRelativePosition(world, x, y, z);
 		if (rod != null) {
-			if (((TileEntityCPU)controller.getTileEntity(world)).getPower() >= this.getMinPower())
+			if (((TileEntityCPU)controller.getBlockEntity(world)).getPower() >= this.getMinPower())
 				return rod.isActive() ? 0x00ff00 : 0xff0000;
 			else
 				return 0xa0a0a0;
@@ -209,7 +207,7 @@ public class ReactorControlLayout {
 
 	public void writeToNBT(CompoundTag NBT) {
 		controls.writeToNBT(NBT);
-		controller.writeToNBT("control", NBT);
+		controller.saveAdditional(/*PORT*/"control", NBT);
 		NBT.setInteger("maxx", maxX);
 		NBT.setInteger("maxy", maxY);
 		NBT.setInteger("maxz", maxZ);
@@ -220,7 +218,7 @@ public class ReactorControlLayout {
 
 	public void readFromNBT(CompoundTag NBT) {
 		controls.readFromNBT(NBT);
-		controller = WorldLocation.readFromNBT("control", NBT);
+		controller = WorldLocation.load("control", NBT);
 		maxX = NBT.getInteger("maxx");
 		maxY = NBT.getInteger("maxy");
 		maxZ = NBT.getInteger("maxz");

@@ -9,19 +9,19 @@
  ******************************************************************************/
 package reika.reactorcraft.blocks;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.IIcon;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.util.Mth;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
 
 import reika.reactorcraft.base.TileEntityReactorPiping;
 import reika.reactorcraft.registry.ReactorTiles;
@@ -39,7 +39,7 @@ public class BlockDuct extends BlockReactorTile {
 
 	public BlockDuct(Material mat) {
 		super(mat);
-		this.setHardness(MathHelper.clamp_float(ConfigRegistry.PIPEHARDNESS.getFloat(), 0, 1));
+		this.setHardness(Mth.clamp_float(ConfigRegistry.PIPEHARDNESS.getFloat(), 0, 1));
 		this.setResistance(1F);
 		this.setLightLevel(0F);
 	}
@@ -51,7 +51,7 @@ public class BlockDuct extends BlockReactorTile {
 
 	@Override
 	public void onBlockAdded(World world, int x, int y, int z) {
-		TileEntityReactorPiping te = (TileEntityReactorPiping)world.getTileEntity(x, y, z);
+		TileEntityReactorPiping te = (TileEntityReactorPiping)world.getBlockEntity(x, y, z);
 		te.addToAdjacentConnections(world, x, y, z);
 		te.recomputeConnections(world, x, y, z);
 	}
@@ -59,17 +59,17 @@ public class BlockDuct extends BlockReactorTile {
 	@Override
 	public void onNeighborBlockChange(World world, int x, int y, int z, Block id) {
 		super.onNeighborBlockChange(world, x, y, z, id);
-		TileEntityReactorPiping te = (TileEntityReactorPiping)world.getTileEntity(x, y, z);
+		TileEntityReactorPiping te = (TileEntityReactorPiping)world.getBlockEntity(x, y, z);
 		te.recomputeConnections(world, x, y, z);
 	}
 
 	@Override
 	public final AxisAlignedBB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
-		TileEntityReactorPiping te = (TileEntityReactorPiping)world.getTileEntity(x, y, z);
+		TileEntityReactorPiping te = (TileEntityReactorPiping)world.getBlockEntity(x, y, z);
 		double d = 0.125;
 		double[] dd = new double[6];
 		for (int i = 0; i < 6; i++)
-			dd[i] = te.isConnectedDirectly(ForgeDirection.VALID_DIRECTIONS[i]) ? 0 : d;
+			dd[i] = te.isConnectedDirectly(Direction.VALID_DIRECTIONS[i]) ? 0 : d;
 		AxisAlignedBB box = AxisAlignedBB.getBoundingBox(x+dd[4], y+dd[1], z+dd[2], x+1-dd[5], y+1-dd[0], z+1-dd[3]);
 		this.setBounds(box, x, y, z);
 		return box;
@@ -88,16 +88,16 @@ public class BlockDuct extends BlockReactorTile {
 	}
 
 	@Override
-	public int getLightValue(IBlockAccess world, int x, int y, int z) {
-		TileEntityReactorPiping te = (TileEntityReactorPiping)world.getTileEntity(x, y, z);
-		return te != null && te.getLevel() > 0 && te.getFluidType() != null ? te.getFluidType().getLuminosity(te.worldObj, x, y, z) : 0;
+	public int getLightValue(BlockGetter world, int x, int y, int z) {
+		TileEntityReactorPiping te = (TileEntityReactorPiping)world.getBlockEntity(x, y, z);
+		return te != null && te.getLevel() > 0 && te.getFluidType() != null ? te.getFluidType().getLuminosity(te.level, x, y, z) : 0;
 	}
 
 	@Override
 	public void onEntityCollidedWithBlock(World world, int x, int y, int z, Entity e) {
 		if (TileEntityTurbineCore.canDamageTurbine(e)) {
 			if (ReactorTiles.getTE(world, x, y, z) == ReactorTiles.MAGNETPIPE) {
-				TileEntityMagneticPipe te = (TileEntityMagneticPipe)world.getTileEntity(x, y, z);
+				TileEntityMagneticPipe te = (TileEntityMagneticPipe)world.getBlockEntity(x, y, z);
 				int charge = te.getCharge();
 				if (charge > 0) {
 					double sx = te.getAimX();
@@ -105,7 +105,7 @@ public class BlockDuct extends BlockReactorTile {
 					double sz = te.getAimZ();
 					EntityDischarge ed = new EntityDischarge(world, sx, sy, sz, charge, e.posX, e.posY+e.getEyeHeight()/4, e.posZ);
 					te.onDischarge(-1, 1);
-					if (!world.isRemote)
+					if (!world.isClientSide())
 						world.spawnEntityInWorld(ed);
 					e.attackEntityFrom(DamageSource.generic, 1);
 				}
@@ -154,7 +154,7 @@ public class BlockDuct extends BlockReactorTile {
 	}
 
 	@Override
-	public int getLightOpacity(IBlockAccess world, int x, int y, int z) {
+	public int getLightOpacity(BlockGetter world, int x, int y, int z) {
 		return 0;
 	}
 

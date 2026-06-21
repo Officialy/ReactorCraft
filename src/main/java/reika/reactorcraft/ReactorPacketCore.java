@@ -46,8 +46,8 @@ public class ReactorPacketCore implements PacketHandler {
 		double dy = 0;
 		double dz = 0;
 		boolean readinglong = false;
-		String stringdata = null;
-		UUID id = null;
+		String stringdata = ItemStack.EMPTY;
+		UUID id = ItemStack.EMPTY;
 		//System.out.print(packet.length);
 		try {
 			//ReikaJavaLibrary.pConsole(inputStream.readInt()+":"+inputStream.readInt()+":"+inputStream.readInt()+":"+inputStream.readInt()+":"+inputStream.readInt()+":"+inputStream.readInt()+":"+inputStream.readInt());

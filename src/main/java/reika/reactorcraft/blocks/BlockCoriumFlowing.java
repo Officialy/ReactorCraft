@@ -9,29 +9,27 @@
  ******************************************************************************/
 package reika.reactorcraft.blocks;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.init.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
 import net.minecraftforge.fluids.BlockFluidClassic;
 
 import reika.dragonapi.libraries.ReikaAABBHelper;
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.registry.ReikaParticleHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.RadiationEffects;
 import reika.reactorcraft.auxiliary.RadiationEffects.RadiationIntensity;
 import reika.reactorcraft.entities.EntityRadiation;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockCoriumFlowing extends BlockFluidClassic {
 
@@ -43,7 +41,7 @@ public class BlockCoriumFlowing extends BlockFluidClassic {
 		this.setHardness(100F);
 		this.setLightOpacity(0);
 		this.setResistance(500);
-		this.setCreativeTab(ReactorCraft.instance.isLocked() ? null : ReactorCraft.tabRctr);
+		this.setCreativeTab(ReactorCraft.getInstance().isLocked() ? null : ReactorCraft.tabRctr);
 	}
 	/*
 	@Override
@@ -73,8 +71,8 @@ public class BlockCoriumFlowing extends BlockFluidClassic {
 			//}
 		}
 
-		ForgeDirection iceside = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.ice);
-		ForgeDirection waterside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
+		Direction iceside = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.ice);
+		Direction waterside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
 		if (iceside != null || waterside != null) {
 			if (ReikaRandomHelper.doWithChance(15))
 				;//world.setBlock(i, j, k, ReactorBlocks.MATS.getBlock(), MatBlocks.SLAG.ordinal(), 3);
@@ -117,18 +115,18 @@ public class BlockCoriumFlowing extends BlockFluidClassic {
 	}
 
 	@Override
-	public boolean isReplaceable(IBlockAccess world, int i, int j, int k) {
+	public boolean isReplaceable(BlockGetter world, int i, int j, int k) {
 		return true;
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	public void registerBlockIcons(IIconRegister iconRegister) {
 		icon = new IIcon[]{iconRegister.registerIcon("ReactorCraft:mat/slag"), iconRegister.registerIcon("ReactorCraft:fluid/slag_flow")};
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	public IIcon getIcon(int s, int meta)
 	{
 		return s != 0 && s != 1 ? icon[1] : icon[0];

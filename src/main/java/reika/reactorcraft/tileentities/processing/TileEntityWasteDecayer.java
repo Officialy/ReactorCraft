@@ -9,13 +9,16 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.processing;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
@@ -33,6 +36,10 @@ import reika.reactorcraft.registry.ReactorItems;
 import reika.reactorcraft.registry.ReactorTiles;
 
 public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase implements ReactorCoreTE {
+	public TileEntityWasteDecayer(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.WASTEDECAYER.get(), pos, state);
+	}
+
 
 	public static final int BASE_TEMP = 150;
 	public static final int OPTIMAL_TEMP = 400;
@@ -43,8 +50,8 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
-		if (!world.isRemote) {
+	public void updateEntity(Level world, BlockPos pos) {
+		if (!world.isClientSide()) {
 			this.feed();
 		}
 
@@ -55,26 +62,26 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	private boolean feed() {
-		Level world = worldObj;
+		Level world = level;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
 		Block id = world.getBlock(x, y-1, z);
 		int meta = world.getBlockMetadata(x, y-1, z);
-		BlockEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity tile = this.getAdjacentTileEntity(Direction.DOWN);
 		if (tile instanceof TileEntityWasteDecayer) {
-			if (((TileEntityWasteDecayer)tile).feedIn(inv[inv.length-1])) {
-				for (int i = inv.length-1; i > 0; i--)
-					inv[i] = inv[i-1];
+			if (((TileEntityWasteDecayer)tile).feedIn(itemHandler.getStackInSlot(itemHandler.getSlots()-1))) {
+				for (int i = itemHandler.getSlots()-1; i > 0; i--)
+					itemHandler.getStackInSlot(i) = itemHandler.getStackInSlot(i-1);
 
 				id = world.getBlock(x, y+1, z);
 				meta = world.getBlockMetadata(x, y+1, z);
-				tile = this.getAdjacentTileEntity(ForgeDirection.UP);
+				tile = this.getAdjacentTileEntity(Direction.UP);
 				if (tile instanceof TileEntityWasteDecayer) {
-					inv[0] = ((TileEntityWasteDecayer) tile).feedOut();
+					itemHandler.getStackInSlot(0) = ((TileEntityWasteDecayer) tile).feedOut();
 				}
 				else
-					inv[0] = null;
+					itemHandler.getStackInSlot(0) = ItemStack.EMPTY;
 			}
 		}
 		this.collapseInventory();
@@ -82,15 +89,15 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	private void collapseInventory() {
-		for (int i = 0; i < inv.length; i++) {
-			for (int k = inv.length-1; k > 0; k--) {
-				if (inv[k] == null && inv[k-1] != null) {
-					inv[k] = inv[k-1];
-					inv[k-1] = null;
+		for (int i = 0; i < itemHandler.getSlots(); i++) {
+			for (int k = itemHandler.getSlots()-1; k > 0; k--) {
+				if (itemHandler.getStackInSlot(k) == null && itemHandler.getStackInSlot(k-1) != null) {
+					itemHandler.getStackInSlot(k) = itemHandler.getStackInSlot(k-1);
+					itemHandler.getStackInSlot(k-1) = ItemStack.EMPTY;
 					return;
 				}
-				else if (ReikaItemHelper.areStacksCombinable(inv[k], inv[k-1], Integer.MAX_VALUE) && inv[k].stackSize < Math.min(inv[k].getMaxStackSize(), this.getInventoryStackLimit())) {
-					inv[k].stackSize++;
+				else if (ReikaItemHelper.areStacksCombinable(itemHandler.getStackInSlot(k), itemHandler.getStackInSlot(k-1), Integer.MAX_VALUE) && itemHandler.getStackInSlot(k).getCount() < Math.min(itemHandler.getStackInSlot(k).getMaxStackSize(), this.getInventoryStackLimit())) {
+					itemHandler.getStackInSlot(k).getCount()++;
 					ReikaInventoryHelper.decrStack(k-1, inv);
 					return;
 				}
@@ -103,25 +110,25 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 			return true;
 		if (!this.isItemValidForSlot(0, is))
 			return false;
-		if (inv[0] == null) {
-			inv[0] = is.copy();
+		if (itemHandler.getStackInSlot(0) == null) {
+			itemHandler.getStackInSlot(0) = is.copy();
 			return true;
 		}
 		return false;
 	}
 
 	private ItemStack feedOut() {
-		if (inv[inv.length-1] == null)
+		if (itemHandler.getStackInSlot(itemHandler.getSlots()-1) == null)
 			return null;
 		else {
-			ItemStack is = inv[inv.length-1].copy();
-			inv[inv.length-1] = null;
+			ItemStack is = itemHandler.getStackInSlot(itemHandler.getSlots()-1).copy();
+			itemHandler.getStackInSlot(itemHandler.getSlots()-1) = ItemStack.EMPTY;
 			return is;
 		}
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
@@ -136,9 +143,9 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		NeutronType type = e.getType();
-		if (!world.isRemote && type.canIrradiateMaterials() && ReikaRandomHelper.doWithChance(50)) {
+		if (!world.isClientSide() && type.canIrradiateMaterials() && ReikaRandomHelper.doWithChance(50)) {
 			if (ReikaRandomHelper.doWithChance(this.getDecayChance()*e.getNeutronSpeed().getWasteConversionMultiplier()))
 				this.tryDecay();
 			return true;
@@ -151,10 +158,10 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	private boolean tryDecay() {
-		for (int i = 0; i < inv.length; i++) {
-			ItemStack is = inv[i];
+		for (int i = 0; i < itemHandler.getSlots(); i++) {
+			ItemStack is = itemHandler.getStackInSlot(i);
 			if (is != null && TileEntityWasteUnit.isLongLivedWaste(is)) {
-				//ReikaJavaLibrary.pConsole("Trying to decay "+Isotopes.getIsotope(is.getItemDamage())+" in slot #"+i);
+				//ReikaJavaLibrary.pConsole("Trying to decay "+Isotopes.getIsotope(is.getDamageValue())+" in slot #"+i);
 				if (this.tryDecay(i, is)) {
 					//ReikaJavaLibrary.pConsole("Success");
 					return true;
@@ -165,15 +172,15 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	private boolean tryDecay(int i, ItemStack is) {/*
-		int slot = is.stackSize == 1 ? i : ReikaInventoryHelper.findEmptySlot(inv);
+		int slot = is.getCount() == 1 ? i : ReikaInventoryHelper.findEmptySlot(inv);
 		if (slot >= 0) {
-			if (is.stackSize > 1)
-				is.stackSize--;
-			inv[slot] = ReikaItemHelper.getSizedItemStack(Isotopes.getIsotope(is.getItemDamage()).getForcedFissionProduct(), 2);
+			if (is.getCount() > 1)
+				is.getCount()--;
+			itemHandler.getStackInSlot(slot) = ReikaItemHelper.getSizedItemStack(Isotopes.getIsotope(is.getDamageValue()).getForcedFissionProduct(), 2);
 			return true;
 		}
 		return false;*/
-		DecayData split = Isotopes.getIsotope(is.getItemDamage()).getDecay();
+		DecayData split = Isotopes.getIsotope(is.getDamageValue()).getDecay();
 		if (split == null) {
 			ReikaInventoryHelper.decrStack(i, inv);
 			//ReikaJavaLibrary.pConsole("Decayed into nothing");
@@ -188,7 +195,7 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 		if (add == null) {
 			return true;
 		}
-		//ReikaJavaLibrary.pConsole("Decayed into "+split.isotope+" x"+add.stackSize);
+		//ReikaJavaLibrary.pConsole("Decayed into "+split.isotope+" x"+add.getCount());
 		if (ReikaInventoryHelper.addToIInv(add, this)) {
 			ReikaInventoryHelper.decrStack(i, inv);
 			return true;
@@ -206,10 +213,10 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	@Override
-	public final int getTextureState(ForgeDirection side) {
+	public final int getTextureState(Direction side) {
 		if (side.offsetY != 0)
 			return 4;
-		Level world = worldObj;
+		Level world = level;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
@@ -226,7 +233,7 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		return 15;
 	}
 
@@ -236,13 +243,13 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	@Override
-	public boolean canItemEnterFromSide(ForgeDirection dir) {
-		return dir == ForgeDirection.UP;
+	public boolean canItemEnterFromSide(Direction dir) {
+		return dir == Direction.UP;
 	}
 
 	@Override
-	public boolean canItemExitToSide(ForgeDirection dir) {
-		return dir == ForgeDirection.DOWN;
+	public boolean canItemExitToSide(Direction dir) {
+		return dir == Direction.DOWN;
 	}
 
 	@Override

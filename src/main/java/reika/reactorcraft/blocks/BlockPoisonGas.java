@@ -12,31 +12,29 @@ package reika.reactorcraft.blocks;
 import java.util.Locale;
 import java.util.Random;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockFire;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BlockFire;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.init.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fluids.BlockFluidClassic;
-import net.minecraftforge.fluids.Fluid;
+import net.minecraft.world.level.material.Fluid;
 
 import reika.dragonapi.libraries.registry.ReikaParticleHelper;
 import reika.dragonapi.libraries.rendering.ReikaColorAPI;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.RadiationEffects;
 import reika.reactorcraft.registry.ReactorBlocks;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockPoisonGas extends BlockFluidClassic {
 
@@ -46,7 +44,7 @@ public class BlockPoisonGas extends BlockFluidClassic {
 		this.setHardness(100F);
 		this.setLightOpacity(0);
 		this.setResistance(500);
-		this.setCreativeTab(ReactorCraft.instance.isLocked() ? null : ReactorCraft.tabRctr);
+		this.setCreativeTab(ReactorCraft.getInstance().isLocked() ? null : ReactorCraft.tabRctr);
 	}
 	/*
 	@Override
@@ -77,34 +75,34 @@ public class BlockPoisonGas extends BlockFluidClassic {
 		return this.getFluid() == ReactorCraft.HF;
 	}
 
-	private boolean blockBlocksFlow(IBlockAccess world, int x, int y, int z) {
+	private boolean blockBlocksFlow(BlockGetter world, int x, int y, int z) {
 		Block l = world.getBlock(x, y, z);
 		return l.getMaterial().blocksMovement() || l instanceof BlockFire;
 	}
 
 	@Override
-	protected boolean canFlowInto(IBlockAccess world, int x, int y, int z) {
+	protected boolean canFlowInto(BlockGetter world, int x, int y, int z) {
 		return this.liquidCanDisplaceBlock(world, x, y, z);
 	}
 
-	private boolean liquidCanDisplaceBlock(IBlockAccess world, int i, int j, int k) {
+	private boolean liquidCanDisplaceBlock(BlockGetter world, int i, int j, int k) {
 		Material mat = ReikaWorldHelper.getMaterial(world, i, j, k);
 		return mat != blockMaterial && !this.blockBlocksFlow(world, i, j, k);
 	}
 
 	@Override
-	public boolean isReplaceable(IBlockAccess world, int i, int j, int k) {
+	public boolean isReplaceable(BlockGetter world, int i, int j, int k) {
 		return true;
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	public void registerBlockIcons(IIconRegister ico) {
 		blockIcon = ico.registerIcon("ReactorCraft:fluid/"+ReactorBlocks.getBlock(this).name().toLowerCase(Locale.ENGLISH));
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	public IIcon getIcon(int s, int meta) {
 		return blockIcon;
 	}

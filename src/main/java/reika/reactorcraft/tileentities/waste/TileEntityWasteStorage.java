@@ -9,6 +9,9 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.waste;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import java.util.List;
 
 import net.minecraft.world.level.block.Block;
@@ -17,7 +20,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.libraries.ReikaAABBHelper;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
@@ -26,7 +29,7 @@ import reika.dragonapi.libraries.mathsci.Isotopes;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
 import reika.dragonapi.libraries.registry.ReikaItemHelper;
 import reika.dragonapi.libraries.registry.ReikaParticleHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.auxiliary.Feedable;
 import reika.reactorcraft.auxiliary.RadiationEffects;
 import reika.reactorcraft.auxiliary.RadiationEffects.RadiationIntensity;
@@ -36,18 +39,22 @@ import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.auxiliary.interfaces.RangedEffect;
 
 public class TileEntityWasteStorage extends TileEntityWasteUnit implements RangedEffect, Feedable {
+	public TileEntityWasteStorage(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.STORAGE.get(), pos, state);
+	}
+
 
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		return 12;
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		if (rand.nextInt(20) == 0)
 			this.sickenMobs(world, x, y, z);
 
-		if (!world.isRemote) {
+		if (!world.isClientSide()) {
 			this.decayWaste();
 			this.feed();
 		}
@@ -58,7 +65,7 @@ public class TileEntityWasteStorage extends TileEntityWasteUnit implements Range
 				if (rand.nextInt(4) == 0)
 					ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.fizz");
 				if (rand.nextInt(200) == 0) {
-					world.setBlockToAir(x, y, z);
+					world.removeBlock(x, y, z);
 					world.newExplosion(null, x+0.5, y+0.5, y+0.5, 4F, true, true);
 				}
 			}
@@ -97,15 +104,15 @@ public class TileEntityWasteStorage extends TileEntityWasteUnit implements Range
 	}
 
 	private boolean isAppropriateWasteSlot(ItemStack is, int slot) {
-		for (int i = 0; i < inv.length; i++) {
-			ItemStack in = inv[i];
+		for (int i = 0; i < itemHandler.getSlots(); i++) {
+			ItemStack in = itemHandler.getStackInSlot(i);
 			if (ReikaItemHelper.matchStacks(is, in)) {
-				if (in.stackSize+is.stackSize <= Math.min(this.getInventoryStackLimit(), is.getMaxStackSize())) {
+				if (in.getCount()+is.getCount() <= Math.min(this.getInventoryStackLimit(), is.getMaxStackSize())) {
 					return i == slot;
 				}
 			}
 		}
-		return inv[slot] == null;
+		return itemHandler.getStackInSlot(slot) == ItemStack.EMPTY;
 	}
 
 	@Override
@@ -114,7 +121,7 @@ public class TileEntityWasteStorage extends TileEntityWasteUnit implements Range
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
@@ -141,7 +148,7 @@ public class TileEntityWasteStorage extends TileEntityWasteUnit implements Range
 
 	@Override
 	public int getMaxRange() {
-		int amt = this.getSizeInventory();
+		int amt = this.getContainerSize();
 		return this.getRangeFromWasteCount(amt);
 	}
 
@@ -155,26 +162,26 @@ public class TileEntityWasteStorage extends TileEntityWasteUnit implements Range
 	}
 
 	public boolean feed() {
-		Level world = worldObj;
+		Level world = level;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
 		Block id = world.getBlock(x, y-1, z);
 		int meta = world.getBlockMetadata(x, y-1, z);
-		BlockEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity tile = this.getAdjacentTileEntity(Direction.DOWN);
 		if (tile instanceof TileEntityWasteStorage) {
-			if (((Feedable)tile).feedIn(inv[inv.length-1])) {
-				for (int i = inv.length-1; i > 0; i--)
-					inv[i] = inv[i-1];
+			if (((Feedable)tile).feedIn(itemHandler.getStackInSlot(itemHandler.getSlots()-1))) {
+				for (int i = itemHandler.getSlots()-1; i > 0; i--)
+					itemHandler.getStackInSlot(i) = itemHandler.getStackInSlot(i-1);
 
 				id = world.getBlock(x, y+1, z);
 				meta = world.getBlockMetadata(x, y+1, z);
-				tile = this.getAdjacentTileEntity(ForgeDirection.UP);
+				tile = this.getAdjacentTileEntity(Direction.UP);
 				if (tile instanceof TileEntityWasteStorage) {
-					inv[0] = ((Feedable) tile).feedOut();
+					itemHandler.getStackInSlot(0) = ((Feedable) tile).feedOut();
 				}
 				else
-					inv[0] = null;
+					itemHandler.getStackInSlot(0) = ItemStack.EMPTY;
 			}
 		}
 		this.collapseInventory();
@@ -182,16 +189,16 @@ public class TileEntityWasteStorage extends TileEntityWasteUnit implements Range
 	}
 
 	private void collapseInventory() {
-		for (int i = 0; i < inv.length; i++) {
-			for (int k = inv.length-1; k > 0; k--) {
-				if (inv[k-1] != null) {
-					if (inv[k] == null) {
-						inv[k] = inv[k-1];
-						inv[k-1] = null;
+		for (int i = 0; i < itemHandler.getSlots(); i++) {
+			for (int k = itemHandler.getSlots()-1; k > 0; k--) {
+				if (itemHandler.getStackInSlot(k-1) != null) {
+					if (itemHandler.getStackInSlot(k) == null) {
+						itemHandler.getStackInSlot(k) = itemHandler.getStackInSlot(k-1);
+						itemHandler.getStackInSlot(k-1) = ItemStack.EMPTY;
 					}
-					else if (ReikaItemHelper.matchStacks(inv[k], inv[k-1]) && ItemStack.areItemStackTagsEqual(inv[k], inv[k-1]) && inv[k].stackSize+inv[k-1].stackSize <= Math.min(this.getInventoryStackLimit(), inv[k].getMaxStackSize())) {
-						inv[k].stackSize += inv[k-1].stackSize;
-						inv[k-1] = null;
+					else if (ReikaItemHelper.matchStacks(itemHandler.getStackInSlot(k), itemHandler.getStackInSlot(k-1)) && ItemStack.areItemStackTagsEqual(itemHandler.getStackInSlot(k), itemHandler.getStackInSlot(k-1)) && itemHandler.getStackInSlot(k).getCount()+itemHandler.getStackInSlot(k-1).getCount() <= Math.min(this.getInventoryStackLimit(), itemHandler.getStackInSlot(k).getMaxStackSize())) {
+						itemHandler.getStackInSlot(k).getCount() += itemHandler.getStackInSlot(k-1).getCount();
+						itemHandler.getStackInSlot(k-1) = ItemStack.EMPTY;
 					}
 				}
 			}
@@ -204,8 +211,8 @@ public class TileEntityWasteStorage extends TileEntityWasteUnit implements Range
 			return true;
 		if (!this.isItemValidForSlot(0, is))
 			return false;
-		if (inv[0] == null) {
-			inv[0] = is.copy();
+		if (itemHandler.getStackInSlot(0) == null) {
+			itemHandler.getStackInSlot(0) = is.copy();
 			return true;
 		}
 		return false;
@@ -213,11 +220,11 @@ public class TileEntityWasteStorage extends TileEntityWasteUnit implements Range
 
 	@Override
 	public ItemStack feedOut() {
-		if (inv[inv.length-1] == null)
+		if (itemHandler.getStackInSlot(itemHandler.getSlots()-1) == null)
 			return null;
 		else {
-			ItemStack is = inv[inv.length-1].copy();
-			inv[inv.length-1] = null;
+			ItemStack is = itemHandler.getStackInSlot(itemHandler.getSlots()-1).copy();
+			itemHandler.getStackInSlot(itemHandler.getSlots()-1) = ItemStack.EMPTY;
 			return is;
 		}
 	}

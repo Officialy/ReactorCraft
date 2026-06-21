@@ -9,6 +9,9 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.processing;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -18,13 +21,13 @@ import java.util.List;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidContainerRegistry;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidHandler;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.fluids./*FLUIDCONTAINER-PORT*/ FluidContainerRegistry;
+import net.minecraft.world.level.material.FluidRegistry;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.oredict.OreDictionary;
 
 import reika.dragonapi.ModList;
@@ -46,10 +49,11 @@ import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
 import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
-import buildcraft.api.tiles.IHasWork;
+public class TileEntityUProcessor extends TileEntityInventoriedReactorBase implements IFluidHandler, PipeConnector {
+	public TileEntityUProcessor(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.PROCESSOR.get(), pos, state);
+	}
 
-@Strippable("buildcraft.api.tiles.IHasWork")
-public class TileEntityUProcessor extends TileEntityInventoriedReactorBase implements IFluidHandler, PipeConnector, IHasWork {
 
 	private final HybridTank output = new HybridTank("uprocout", 3000);
 	private final HybridTank intermediate = new HybridTank("uprocmid", 3000);
@@ -58,7 +62,7 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	public int intermediate_timer;
 	public int output_timer;
 
-	private ForgeDirection facing;
+	private Direction facing;
 
 	private ParallelTicker timer = new ParallelTicker().addTicker("intermediate", 0).addTicker("output", 0);
 
@@ -94,9 +98,9 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 		}
 
 		private Processes(String f, String f1, String f2, int incons, int outprod, int prod, int cons, int t1, int t2, Collection<ItemStack> in) {
-			inputFluid = FluidRegistry.getFluid(f);
-			intermediateFluid = FluidRegistry.getFluid(f1);
-			outputFluid = FluidRegistry.getFluid(f2);
+			inputFluid = ReactorFluids.getLegacyFluid(f);
+			intermediateFluid = ReactorFluids.getLegacyFluid(f1);
+			outputFluid = ReactorFluids.getLegacyFluid(f2);
 
 			intermediateTime = t1;
 			ouputTime = t2;
@@ -151,12 +155,12 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		this.getFacing(meta);
 		this.getFluidContainers();
 		Processes p = this.getProcess();
@@ -182,7 +186,7 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 			timer.resetTicker("output");
 		}
 
-		if (!world.isRemote) {
+		if (!world.isClientSide()) {
 			intermediate_timer = timer.getTickOf("intermediate");
 			output_timer = timer.getTickOf("output");
 		}
@@ -207,15 +211,15 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	private boolean hasInputItem(Processes p) {
-		if (inv[2] == null)
+		if (itemHandler.getStackInSlot(2) == null)
 			return false;
-		return p.isValidItem(inv[2]);
+		return p.isValidItem(itemHandler.getStackInSlot(2));
 	}
 
 	private boolean hasFluorite() {
-		if (inv[0] == null)
+		if (itemHandler.getStackInSlot(0) == null)
 			return false;
-		return this.isFluorite(inv[0]);
+		return this.isFluorite(itemHandler.getStackInSlot(0));
 	}
 
 	private boolean isFluorite(ItemStack is) {
@@ -270,15 +274,15 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	public int getInput() {
-		return input.getLevel();
+		return input.getFluidLevel();
 	}
 
 	public int getIntermediate() {
-		return intermediate.getLevel();
+		return intermediate.getFluidLevel();
 	}
 
 	public int getOutput() {
-		return output.getLevel();
+		return output.getFluidLevel();
 	}
 
 	public Fluid getInputFluid() {
@@ -294,11 +298,11 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	private void getFluidContainers() {
-		if (inv[1] != null) {
-			FluidStack fs = ReikaFluidHelper.getFluidForItem(inv[1]);
+		if (itemHandler.getStackInSlot(1) != null) {
+			FluidStack fs = ReikaFluidHelper.getFluidForItem(itemHandler.getStackInSlot(1));
 			if (fs != null && Processes.processMap.get(fs.getFluid().getName()) != null && this.canAcceptMoreInput(fs.amount)) {
 				input.fill(fs.copy(), true);
-				inv[1] = FluidContainerRegistry.drainFluidContainer(inv[1]);
+				itemHandler.getStackInSlot(1) = /*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.drainFluidContainer(itemHandler.getStackInSlot(1));
 			}
 		}
 	}
@@ -321,7 +325,7 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		return 3;
 	}
 
@@ -331,9 +335,9 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 			case 0:
 				return this.isFluorite(is);
 			case 1:
-				return this.getProcessByFluidItem(is) != null;
+				return this.getProcessByFluidItem(is) != ItemStack.EMPTY;
 			case 2:
-				return this.getProcessByMainItem(is) != null;
+				return this.getProcessByMainItem(is) != ItemStack.EMPTY;
 		}
 		return false;
 	}
@@ -371,24 +375,24 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	public int fill(ForgeDirection from, FluidStack resource, boolean doFill) {
+	public int fill(Direction from, FluidStack resource, boolean doFill) {
 		if (!this.canFill(from, resource.getFluid()))
 			return 0;
 		return input.fill(resource, doFill);
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
+	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
 		return output.drain(maxDrain, doDrain);
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
 		return this.canDrain(from, resource.getFluid()) ? output.drain(resource.amount, doDrain) : null;
 	}
 
 	@Override
-	public boolean canFill(ForgeDirection from, Fluid fluid) {
+	public boolean canFill(Direction from, Fluid fluid) {
 		for (int i = 0; i < Processes.list.length; i++) {
 			if (Processes.list[i].inputFluid.equals(fluid))
 				return true;
@@ -399,7 +403,7 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
+	public boolean canDrain(Direction from, Fluid fluid) {
 		for (int i = 0; i < Processes.list.length; i++) {
 			if (Processes.list[i].outputFluid.equals(fluid))
 				return true;
@@ -408,7 +412,7 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(ForgeDirection from) {
+	public FluidTankInfo[] getTankInfo(Direction from) {
 		return new FluidTankInfo[]{input.getInfo(), intermediate.getInfo(), output.getInfo()};
 	}
 
@@ -443,12 +447,12 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	public boolean canItemEnterFromSide(ForgeDirection dir) {
+	public boolean canItemEnterFromSide(Direction dir) {
 		return true;
 	}
 
 	@Override
-	public boolean canItemExitToSide(ForgeDirection dir) {
+	public boolean canItemExitToSide(Direction dir) {
 		return false;
 	}
 
@@ -458,28 +462,28 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	public boolean canConnectToPipeOnSide(MachineRegistry p, ForgeDirection side) {
+	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
 		return this.canConnectToPipe(p);
 	}
 
 	@Override
-	public Flow getFlowForSide(ForgeDirection side) {
+	public Flow getFlowForSide(Direction side) {
 		return side == facing ? Flow.OUTPUT : Flow.INPUT;
 	}
 
 	private void getFacing(int meta) {
 		switch(meta) {
 			case 0:
-				facing = ForgeDirection.WEST;
+				facing = Direction.WEST;
 				break;
 			case 1:
-				facing = ForgeDirection.EAST;
+				facing = Direction.EAST;
 				break;
 			case 2:
-				facing = ForgeDirection.NORTH;
+				facing = Direction.NORTH;
 				break;
 			case 3:
-				facing = ForgeDirection.SOUTH;
+				facing = Direction.SOUTH;
 				break;
 		}
 	}

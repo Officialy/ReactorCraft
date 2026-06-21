@@ -16,7 +16,7 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.util.StatCollector;
+import net.minecraft.client.resources.language.I18n;
 
 import reika.dragonapi.instantiable.gui.ImagedGuiButton;
 import reika.dragonapi.interfaces.blockentity.InertIInv;
@@ -54,9 +54,9 @@ public abstract class ReactorGuiBase extends GuiContainer {
 		if (b.id == 24000 || b.id == 24001) {
 			player.closeScreen();
 			if (ReikaInventoryHelper.checkForItem(ReactorItems.BOOK.getItemInstance(), player.inventory.mainInventory))
-				player.openGui(ReactorCraft.instance, 11, tile.worldObj, tile.xCoord, tile.yCoord, tile.zCoord);
+				player.openGui(ReactorCraft.getInstance(), 11, tile.level, tile.xCoord, tile.yCoord, tile.zCoord);
 			else
-				player.openGui(ReactorCraft.instance, 12, tile.worldObj, tile.xCoord, tile.yCoord, tile.zCoord);
+				player.openGui(ReactorCraft.getInstance(), 12, tile.level, tile.xCoord, tile.yCoord, tile.zCoord);
 		}
 	}
 
@@ -69,7 +69,7 @@ public abstract class ReactorGuiBase extends GuiContainer {
 
 		ReikaGuiAPI.instance.drawCenteredStringNoShadow(fontRendererObj, tile.getName(), xSize/2, 5, 4210752);
 		if (tile instanceof IInventory && !(tile instanceof InertIInv && ySize <= 100) && this.showInventoryLabel())
-			fontRendererObj.drawString(StatCollector.translateToLocal("container.inventory"), xSize-58, (ySize - 96) + 3, 4210752);
+			fontRendererObj.drawString(I18n.get("container.inventory"), xSize-58, (ySize - 96) + 3, 4210752);
 
 		fontRendererObj.drawString("?", -10, ySize/2-4, 0xffffff);
 	}

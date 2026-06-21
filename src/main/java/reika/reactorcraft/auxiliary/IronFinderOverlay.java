@@ -15,11 +15,11 @@ import java.util.Set;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.world.level.block.Block;
-import net.minecraft.block.BlockAir;
+import net.minecraft.world.level.block.BlockAir;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.init.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
@@ -34,7 +34,6 @@ import reika.reactorcraft.api.MagneticOreOverride;
 import reika.reactorcraft.items.ItemIronFinder;
 import reika.reactorcraft.registry.ReactorItems;
 
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 
 public class IronFinderOverlay {
@@ -51,16 +50,16 @@ public class IronFinderOverlay {
 	public void renderFinderArrow(RenderGameOverlayEvent evt) {
 		if (evt.type == ElementType.HELMET) {
 			Player ep = Minecraft.getMinecraft().thePlayer;
-			boolean render = ReactorItems.IRONFINDER.matchWith(ep.getCurrentEquippedItem()) || (ep.getEntityData().hasKey("ironfinder") && ep.getEntityData().getLong("ironfinder") >= ep.worldObj.getTotalWorldTime()-20);
+			boolean render = ReactorItems.IRONFINDER.matchWith(ep.getCurrentEquippedItem()) || (ep.getEntityData().hasKey("ironfinder") && ep.getEntityData().getLong("ironfinder") >= ep.level.getTotalWorldTime()-20);
 			if (render) {
 				Tessellator v5 = Tessellator.instance;
 
 				//ArrayList<CrystalElement> left = new ArrayList();
 				//ArrayList<CrystalElement> right = new ArrayList();
 
-				//int x = MathHelper.floor_double(ep.posX);
-				//int y = MathHelper.floor_double(ep.posY);
-				//int z = MathHelper.floor_double(ep.posZ);
+				//int x = Mth.floor_double(ep.posX);
+				//int y = Mth.floor_double(ep.posY);
+				//int z = Mth.floor_double(ep.posZ);
 				int h = evt.resolution.getScaledHeight()/2;
 				float yaw = ep.rotationYawHead%360;
 				float pitch = ep.rotationPitch+90;
@@ -77,15 +76,15 @@ public class IronFinderOverlay {
 					double dy = c.yCoord+0.5-ep.posY;
 					double dz = c.zCoord+0.5-ep.posZ;
 
-					Block b = c.getBlock(ep.worldObj);
+					Block b = c.getBlock(ep.level);
 					if (b instanceof BlockAir)
 						continue;
-					IIcon[] icons = new IIcon[]{b.getIcon(1, c.getBlockMetadata(ep.worldObj))};
+					IIcon[] icons = new IIcon[]{b.getIcon(1, c.getBlockMetadata(ep.level))};
 					if (ModList.MIMICRY.isLoaded() && b == MimicryHandler.getInstance().oreID) {
 						icons = new IIcon[]{icons[0], this.getMimichiteOreOverlay(b)};
 					}
 					else if (b instanceof MagneticOreOverride) {
-						icons = ((MagneticOreOverride)b).getRenderIcons(ep.worldObj, c.xCoord, c.yCoord, c.zCoord);
+						icons = ((MagneticOreOverride)b).getRenderIcons(ep.level, c.xCoord, c.yCoord, c.zCoord);
 					}
 
 					double dl = ReikaMathLibrary.py3d(dx, 0, dz);

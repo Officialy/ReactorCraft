@@ -9,19 +9,22 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import java.util.HashMap;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidContainerRegistry;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.IFluidHandler;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.fluids./*FLUIDCONTAINER-PORT*/ FluidContainerRegistry;
+import net.minecraft.world.level.material.FluidRegistry;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.ReactorCoreTE;
 import reika.reactorcraft.auxiliary.Temperatured;
@@ -33,6 +36,10 @@ import reika.rotarycraft.registry.MachineRegistry;
 import reika.rotarycraft.tileentities.storage.TileEntityReservoir;
 
 public class TileEntityWaterCell extends TileEntityReactorBase implements ReactorCoreTE, Temperatured {
+	public TileEntityWaterCell(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.COOLANT.get(), pos, state);
+	}
+
 
 	private LiquidStates internalLiquid;
 
@@ -41,10 +48,10 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		thermalTicker.update();
 		if (ReactorTiles.getTE(world, x, y-1, z) == this.getTile()) {
-			TileEntityWaterCell te = (TileEntityWaterCell)world.getTileEntity(x, y-1, z);
+			TileEntityWaterCell te = (TileEntityWaterCell)world.getBlockEntity(x, y-1, z);
 			if (te.getLiquidState() == LiquidStates.EMPTY && this.getLiquidState() != LiquidStates.EMPTY) {
 				te.setLiquidState(this.getLiquidState());
 				this.setLiquidState(LiquidStates.EMPTY);
@@ -52,7 +59,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 		}
 		MachineRegistry m = MachineRegistry.getMachine(world, x, y+1, z);
 		if (m == MachineRegistry.RESERVOIR) {
-			TileEntityReservoir te = (TileEntityReservoir)this.getAdjacentTileEntity(ForgeDirection.UP);
+			TileEntityReservoir te = (TileEntityReservoir)this.getAdjacentTileEntity(Direction.UP);
 			if (te.getLevel() >= 1000) {
 				Fluid f = te.getFluid();
 				if (this.canIntakeFluid(f)) {
@@ -63,17 +70,17 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 			}
 		}
 
-		if (thermalTicker.checkCap() && !world.isRemote) {
+		if (thermalTicker.checkCap() && !world.isClientSide()) {
 			this.updateTemperature(world, x, y, z);
 		}
 
 		if (this.getLiquidState() == LiquidStates.EMPTY) {
-			BlockEntity te = world.getTileEntity(x, y+1, z);
+			BlockEntity te = world.getBlockEntity(x, y+1, z);
 			if (te instanceof IFluidHandler) {
 				IFluidHandler ic = (IFluidHandler)te;
-				FluidStack liq = ic.drain(ForgeDirection.DOWN, FluidContainerRegistry.BUCKET_VOLUME, false);
-				if (liq != null && liq.amount >= FluidContainerRegistry.BUCKET_VOLUME) {
-					ic.drain(ForgeDirection.DOWN, FluidContainerRegistry.BUCKET_VOLUME, true);
+				FluidStack liq = ic.drain(Direction.DOWN, /*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME, false);
+				if (liq != null && liq.amount >= /*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME) {
+					ic.drain(Direction.DOWN, /*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME, true);
 					if (liq.getFluid().equals(FluidRegistry.WATER)) {
 						this.setLiquidState(LiquidStates.WATER);
 					}
@@ -98,7 +105,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 			temperature -= dT/8;
 		}
 		for (int i = 0; i < 6; i++) {
-			ForgeDirection dir = dirs[i];
+			Direction dir = dirs[i];
 			BlockEntity te = this.getAdjacentTileEntity(dir);
 			if (te instanceof Temperatured) {
 				Temperatured tr = (Temperatured)te;
@@ -117,7 +124,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
@@ -127,7 +134,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {/*
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {/*
 		if (ReikaMathLibrary.doWithChance(this.getChanceToStop())) {
 			temperature += ReikaThermoHelper.getTemperatureIncrease(ReikaThermoHelper.WATER_HEAT, 1000, ReikaNuclearHelper.getUraniumFissionNeutronE());
 			storedEnergy += ReikaNuclearHelper.getUraniumFissionNeutronE(); //3.8kJ per neutron (kinetic energy)
@@ -151,7 +158,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	public int getTextureState(ForgeDirection side) {
+	public int getTextureState(Direction side) {
 		return this.getLiquidState().ordinal();
 	}
 
@@ -170,9 +177,9 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 	public enum LiquidStates {
 		EMPTY(null),
 		WATER(FluidRegistry.WATER),
-		HEAVY(FluidRegistry.getFluid("rc heavy water")),
-		SODIUM(FluidRegistry.getFluid("rc sodium")),
-		LITHIUM(FluidRegistry.getFluid("rc lifbe"));
+		HEAVY(ReactorFluids.getLegacyFluid("rc heavy water")),
+		SODIUM(ReactorFluids.getLegacyFluid("rc sodium")),
+		LITHIUM(ReactorFluids.getLegacyFluid("rc lifbe"));
 
 		public static final LiquidStates[] list = values();
 
@@ -206,8 +213,8 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 
 	public void setLiquidState(LiquidStates liq) {
 		internalLiquid = liq;
-		if (worldObj != null)
-			worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
+		if (level != null)
+			level.markBlockForUpdate(xCoord, yCoord, zCoord);
 	}
 
 	@Override

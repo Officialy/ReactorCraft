@@ -9,17 +9,24 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
 
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
+
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.base.TileEntityReactorBase;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.powergen.TileEntityTurbineCore;
 
 public class TileEntityTurbineMeter extends TileEntityReactorBase {
+	public TileEntityTurbineMeter(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.TURBINEMETER.get(), pos, state);
+	}
+
 
 	private int turbineY = -1;
 	private int oldlvl;
@@ -31,7 +38,7 @@ public class TileEntityTurbineMeter extends TileEntityReactorBase {
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		if (this.getTicksExisted() == 0 || world.getTotalWorldTime()%32 == 0) {
 			this.remapTurbine(world, x, y, z);
 		}
@@ -64,7 +71,7 @@ public class TileEntityTurbineMeter extends TileEntityReactorBase {
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
@@ -84,15 +91,15 @@ public class TileEntityTurbineMeter extends TileEntityReactorBase {
 	}
 
 	private TileEntityTurbineCore getTurbine() {
-		ReactorTiles r = ReactorTiles.getTE(worldObj, xCoord, turbineY, zCoord);
+		ReactorTiles r = ReactorTiles.getTE(level, xCoord, turbineY, zCoord);
 		if (r == null || !r.isTurbine())
 			return null;
-		return (TileEntityTurbineCore)this.getTileEntity(xCoord, turbineY, zCoord);
+		return (TileEntityTurbineCore)this.getBlockEntity(xCoord, turbineY, zCoord);
 	}
 
 	@Override
-	public int getTextureState(ForgeDirection side) {
-		return side == ForgeDirection.UP ? 2 : side == ForgeDirection.DOWN ? 0 : 1;
+	public int getTextureState(Direction side) {
+		return side == Direction.UP ? 2 : side == Direction.DOWN ? 0 : 1;
 	}
 
 }

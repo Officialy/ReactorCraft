@@ -1,0 +1,13 @@
+{
+  "type": "reactorcraft:ore",
+  "config": {
+    "count": 7,
+    "dim_type": 0,
+    "max_y": 192,
+    "min_y": 60,
+    "needs_lava": false,
+    "ore": "reactorcraft:magnetite_ore",
+    "random_fluorite": false,
+    "size": 16
+  }
+}

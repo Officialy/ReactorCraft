@@ -9,15 +9,18 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.waste;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.block.Block;
-import net.minecraft.init.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.MinecraftForgeClient;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidRegistry;
 
 // CHROMA-PORT: import reika.chromaticraft.api.interfaces.WorldRift;
 import reika.reactorcraft.auxiliary.NeutronTile;
@@ -30,6 +33,10 @@ import reika.reactorcraft.tileentities.fission.thorium.TileEntityThoriumCore;
 import reika.rotarycraft.tileentities.processing.TileEntityCrystallizer;
 
 public class TileEntityWastePipe extends TileEntityReactorPiping implements NeutronTile {
+	public TileEntityWastePipe(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.WASTEPIPE.get(), pos, state);
+	}
+
 
 	@Override
 	public ReactorTiles getTile() {
@@ -46,7 +53,7 @@ public class TileEntityWastePipe extends TileEntityReactorPiping implements Neut
 		return Blocks.leaves.getIcon(0, 1);
 	}
 
-	public boolean isConnectedToNonSelf(ForgeDirection dir) {
+	public boolean isConnectedToNonSelf(Direction dir) {
 		if (!this.isConnectionValidForSide(dir))
 			return false;
 		if (dir.offsetX == 0 && MinecraftForgeClient.getRenderPass() != 1)
@@ -54,15 +61,15 @@ public class TileEntityWastePipe extends TileEntityReactorPiping implements Neut
 		int dx = xCoord+dir.offsetX;
 		int dy = yCoord+dir.offsetY;
 		int dz = zCoord+dir.offsetZ;
-		Level world = worldObj;
+		Level world = level;
 		Block id = world.getBlock(dx, dy, dz);
 		int meta = world.getBlockMetadata(dx, dy, dz);
-		return id != this.getTile().getBlock() || meta != this.getTile().getBlockMetadata();
+		return id != this.getTile().getBlock() || meta != this.getTile();
 	}
 
 	@Override
 	public boolean isValidFluid(Fluid f) {
-		return f == FluidRegistry.getFluid("rc nuclear waste");
+		return f == ReactorFluids.getLegacyFluid("rc nuclear waste");
 	}
 
 	@Override
@@ -76,7 +83,7 @@ public class TileEntityWastePipe extends TileEntityReactorPiping implements Neut
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		return false;
 	}
 

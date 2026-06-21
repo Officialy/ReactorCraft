@@ -9,11 +9,14 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.instantiable.data.immutable.Coordinate;
 import reika.dragonapi.libraries.ReikaAABBHelper;
@@ -27,6 +30,10 @@ import reika.reactorcraft.registry.ReactorType;
 import reika.reactorcraft.tileentities.fission.TileEntityWaterCell.LiquidStates;
 
 public class TileEntityControlRod extends TileEntityReactorBase implements LinkableReactorCore {
+	public TileEntityControlRod(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.CONTROL.get(), pos, state);
+	}
+
 
 	private boolean lowered = true;
 	private Motions motion;
@@ -43,7 +50,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		this.moveRods();
 		thermalTicker.update();
 		if (thermalTicker.checkCap())
@@ -55,7 +62,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 			rodOffset += motion.stepHeight;
 		}
 		if (rodOffset <= MINOFFSET || rodOffset >= MAXOFFSET) {
-			motion = null;
+			motion = ItemStack.EMPTY;
 			rodOffset = Math.max(MINOFFSET, rodOffset);
 			rodOffset = Math.min(MAXOFFSET, rodOffset);
 			lowered = rodOffset == MINOFFSET;
@@ -63,7 +70,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
@@ -81,34 +88,34 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 		}
 
 		if (spread) {
-			BlockEntity te = this.getAdjacentTileEntity(ForgeDirection.UP);
+			BlockEntity te = this.getAdjacentTileEntity(Direction.UP);
 			while (te instanceof TileEntityControlRod) {
 				TileEntityControlRod tc = (TileEntityControlRod)te;
 				tc.toggle(false, false);
-				te = tc.getAdjacentTileEntity(ForgeDirection.UP);
+				te = tc.getAdjacentTileEntity(Direction.UP);
 			}
-			te = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+			te = this.getAdjacentTileEntity(Direction.DOWN);
 			while (te instanceof TileEntityControlRod) {
 				TileEntityControlRod tc = (TileEntityControlRod)te;
 				tc.toggle(false, false);
-				te = tc.getAdjacentTileEntity(ForgeDirection.DOWN);
+				te = tc.getAdjacentTileEntity(Direction.DOWN);
 			}
 		}
 
 		if (sound)
-			ReactorSounds.CONTROL.playSoundAtBlock(worldObj, xCoord, yCoord, zCoord, 1, 1.3F);
+			ReactorSounds.CONTROL.playSoundAtBlock(level, xCoord, yCoord, zCoord, 1, 1.3F);
 	}
 
 	public void setActive(boolean active, boolean sound) {
 		motion = active ? Motions.LOWERING : Motions.RAISING;
 		if (sound)
-			ReactorSounds.CONTROL.playSoundAtBlock(worldObj, xCoord, yCoord, zCoord, 1, 1.3F);
+			ReactorSounds.CONTROL.playSoundAtBlock(level, xCoord, yCoord, zCoord, 1, 1.3F);
 	}
 
 	public void drop(boolean sound) {
 		if (sound)
 			if (rodOffset > MINOFFSET && motion != Motions.SCRAM)
-				ReactorSounds.SCRAM.playSoundAtBlock(worldObj, xCoord, yCoord, zCoord, 1, 1F);
+				ReactorSounds.SCRAM.playSoundAtBlock(level, xCoord, yCoord, zCoord, 1, 1F);
 		motion = Motions.SCRAM;
 	}
 
@@ -117,7 +124,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		return this.isActive() ? ReikaRandomHelper.doWithChance(60) : false;
 	}
 
@@ -144,7 +151,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 		NBT.setInteger("rodoffset", rodOffset);
 
 		if (CPU != null)
-			CPU.writeToNBT("cpu", NBT);
+			CPU.saveAdditional("cpu", NBT);
 	}
 
 	@Override
@@ -159,7 +166,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 
 		rodOffset = NBT.getInteger("rodoffset");
 
-		CPU = Coordinate.readFromNBT("cpu", NBT);
+		CPU = Coordinate.load("cpu", NBT);
 	}
 
 	@Override
@@ -177,7 +184,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	}
 
 	@Override
-	public int getTextureState(ForgeDirection side) {
+	public int getTextureState(Direction side) {
 		return this.isActive() ? 1 : 0;
 	}
 
@@ -188,7 +195,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	@Override
 	public void breakBlock() {
 		if (CPU != null) {
-			BlockEntity te = CPU.getTileEntity(worldObj);
+			BlockEntity te = CPU.getBlockEntity(level);
 			if (te instanceof TileEntityCPU) {
 				((TileEntityCPU)te).getLayout().removeControlRod(this);
 				((TileEntityCPU)te).removeTemperatureCheck(this);

@@ -11,13 +11,13 @@ package reika.reactorcraft.blocks.multi;
 
 import java.util.Set;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.init.Blocks;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
 import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
@@ -43,7 +43,7 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 	}
 
 	@Override
-	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, ForgeDirection dir, BlockMatchFailCallback call) {
+	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
 		StructuredBlockArray blocks = new StructuredBlockArray(world);
 		Set<BlockKey> set = ReikaJavaLibrary.getSet(new BlockKey(this), new BlockKey(ReactorTiles.HEATER));
 		blocks.recursiveAddMultipleWithBounds(world, x, y, z, set, x-6, y-6, z-6, x+6, y+6, z+6);
@@ -108,7 +108,7 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 							Block id = block.blockID;
 							int meta = block.metadata;
 							if (i == 2 && j == 2 && k == 2) {
-								if (id != ReactorTiles.HEATER.getBlock() || meta != ReactorTiles.HEATER.getBlockMetadata()) {
+								if (id != ReactorTiles.HEATER.getBlock() || meta != ReactorTiles.HEATER) {
 									if (call != null)
 										call.onBlockFailure(world, dx, dy, dz, new BlockKey(ReactorTiles.HEATER));
 									return false;
@@ -372,13 +372,13 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 			}
 			if (meta == 0) {
 				for (int k = 2; k < 6; k++) {
-					ForgeDirection dir = dirs[k];
+					Direction dir = dirs[k];
 					int dx = c.xCoord+dir.offsetX;
 					int dy = c.yCoord+dir.offsetY;
 					int dz = c.zCoord+dir.offsetZ;
 					//ReikaJavaLibrary.pConsole(world.getBlock(dx, dy, dz)+":"+world.getBlockMetadata(dx, dy, dz)+" from "+Arrays.toString(xyz));
 					if (ReactorTiles.getTE(world, dx, dy, dz) == ReactorTiles.HEATER) {
-						TileEntityFusionHeater te = (TileEntityFusionHeater)world.getTileEntity(dx, dy, dz);
+						TileEntityFusionHeater te = (TileEntityFusionHeater)world.getBlockEntity(dx, dy, dz);
 						te.setHasMultiBlock(true);
 					}
 				}
@@ -396,13 +396,13 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 			world.setBlockMetadataWithNotify(c.xCoord, c.yCoord, c.zCoord, meta&7, 3);
 			if (meta == 8) {
 				for (int k = 2; k < 6; k++) {
-					ForgeDirection dir = dirs[k];
+					Direction dir = dirs[k];
 					int dx = c.xCoord+dir.offsetX;
 					int dy = c.yCoord+dir.offsetY;
 					int dz = c.zCoord+dir.offsetZ;
 					//ReikaJavaLibrary.pConsole(world.getBlock(dx, dy, dz)+":"+world.getBlockMetadata(dx, dy, dz)+" from "+Arrays.toString(xyz));
 					if (ReactorTiles.getTE(world, dx, dy, dz) == ReactorTiles.HEATER) {
-						TileEntityFusionHeater te = (TileEntityFusionHeater)world.getTileEntity(dx, dy, dz);
+						TileEntityFusionHeater te = (TileEntityFusionHeater)world.getBlockEntity(dx, dy, dz);
 						te.setHasMultiBlock(false);
 					}
 				}
@@ -421,7 +421,7 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 	}
 
 	@Override
-	public int getTextureIndex(IBlockAccess world, int x, int y, int z, int side, int meta) {
+	public int getTextureIndex(BlockGetter world, int x, int y, int z, int side, int meta) {
 		if ((meta&7) <= 1)
 			return meta&7;
 		if (meta == 12)
@@ -456,7 +456,7 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 
 					if (world.getBlock(x, y-1, z) == this && world.getBlockMetadata(x, y-1, z) == 9) {
 						Block did = ReactorTiles.MAGNETPIPE.getBlock();
-						int dmeta = ReactorTiles.MAGNETPIPE.getBlockMetadata();
+						int dmeta = ReactorTiles.MAGNETPIPE;
 						if (world.getBlock(x+1, y, z+1) == did && world.getBlockMetadata(x+1, y, z+1) == dmeta && world.getBlock(x, y, z+1) == this)
 							return 2;
 						if (world.getBlock(x-1, y, z+1) == did && world.getBlockMetadata(x-1, y, z+1) == dmeta && world.getBlock(x, y, z+1) == this)
@@ -479,7 +479,7 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 
 					if (world.getBlock(x, y-1, z) == this && world.getBlockMetadata(x, y-1, z) == 9) {
 						Block did = ReactorTiles.MAGNETPIPE.getBlock();
-						int dmeta = ReactorTiles.MAGNETPIPE.getBlockMetadata();
+						int dmeta = ReactorTiles.MAGNETPIPE;
 						if (world.getBlock(x+1, y, z+1) == did && world.getBlockMetadata(x+1, y, z+1) == dmeta && world.getBlock(x, y, z+1) == this)
 							return 3;
 						if (world.getBlock(x-1, y, z+1) == did && world.getBlockMetadata(x-1, y, z+1) == dmeta && world.getBlock(x, y, z+1) == this)
@@ -498,7 +498,7 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 
 					if (world.getBlock(x, y-1, z) == this && world.getBlockMetadata(x, y-1, z) == 9) {
 						Block did = ReactorTiles.MAGNETPIPE.getBlock();
-						int dmeta = ReactorTiles.MAGNETPIPE.getBlockMetadata();
+						int dmeta = ReactorTiles.MAGNETPIPE;
 						if (world.getBlock(x+1, y, z-1) == did && world.getBlockMetadata(x+1, y, z-1) == dmeta && world.getBlock(x, y, z-1) == this)
 							return 2;
 						if (world.getBlock(x-1, y, z-1) == did && world.getBlockMetadata(x-1, y, z-1) == dmeta && world.getBlock(x, y, z-1) == this)
@@ -517,7 +517,7 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 
 					if (world.getBlock(x, y-1, z) == this && world.getBlockMetadata(x, y-1, z) == 9) {
 						Block did = ReactorTiles.MAGNETPIPE.getBlock();
-						int dmeta = ReactorTiles.MAGNETPIPE.getBlockMetadata();
+						int dmeta = ReactorTiles.MAGNETPIPE;
 						if (world.getBlock(x+1, y, z+1) == did && world.getBlockMetadata(x+1, y, z+1) == dmeta && world.getBlock(x, y, z+1) == this)
 							return 2;
 						if (world.getBlock(x+1, y, z-1) == did && world.getBlockMetadata(x+1, y, z-1) == dmeta && world.getBlock(x, y, z-1) == this)
@@ -536,7 +536,7 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 
 					if (world.getBlock(x, y-1, z) == this && world.getBlockMetadata(x, y-1, z) == 9) {
 						Block did = ReactorTiles.MAGNETPIPE.getBlock();
-						int dmeta = ReactorTiles.MAGNETPIPE.getBlockMetadata();
+						int dmeta = ReactorTiles.MAGNETPIPE;
 						if (world.getBlock(x-1, y, z+1) == did && world.getBlockMetadata(x-1, y, z+1) == dmeta && world.getBlock(x, y, z+1) == this)
 							return 3;
 						if (world.getBlock(x-1, y, z-1) == did && world.getBlockMetadata(x-1, y, z-1) == dmeta && world.getBlock(x, y, z-1) == this)
@@ -569,7 +569,7 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 
 					if (world.getBlock(x, y-1, z) == this && world.getBlockMetadata(x, y-1, z) == 9) {
 						Block did = ReactorTiles.MAGNETPIPE.getBlock();
-						int dmeta = ReactorTiles.MAGNETPIPE.getBlockMetadata();
+						int dmeta = ReactorTiles.MAGNETPIPE;
 						if (world.getBlock(x+1, y, z) == did && world.getBlockMetadata(x+1, y, z) == dmeta && world.getBlock(x-1, y, z) == Blocks.air)
 							return 8;
 						if (world.getBlock(x-1, y, z) == did && world.getBlockMetadata(x-1, y, z) == dmeta && world.getBlock(x+1, y, z) == Blocks.air)
@@ -592,7 +592,7 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 
 					if (world.getBlock(x, y-1, z) == this && world.getBlockMetadata(x, y-1, z) == 9) {
 						Block did = ReactorTiles.MAGNETPIPE.getBlock();
-						int dmeta = ReactorTiles.MAGNETPIPE.getBlockMetadata();
+						int dmeta = ReactorTiles.MAGNETPIPE;
 						if (world.getBlock(x, y, z+1) == did && world.getBlockMetadata(x, y, z+1) == dmeta)
 							return 9;
 					}
@@ -609,7 +609,7 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 
 					if (world.getBlock(x, y-1, z) == this && world.getBlockMetadata(x, y-1, z) == 9) {
 						Block did = ReactorTiles.MAGNETPIPE.getBlock();
-						int dmeta = ReactorTiles.MAGNETPIPE.getBlockMetadata();
+						int dmeta = ReactorTiles.MAGNETPIPE;
 						if (world.getBlock(x, y, z-1) == did && world.getBlockMetadata(x, y, z-1) == dmeta)
 							return 9;
 					}
@@ -626,7 +626,7 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 
 					if (world.getBlock(x, y-1, z) == this && world.getBlockMetadata(x, y-1, z) == 9) {
 						Block did = ReactorTiles.MAGNETPIPE.getBlock();
-						int dmeta = ReactorTiles.MAGNETPIPE.getBlockMetadata();
+						int dmeta = ReactorTiles.MAGNETPIPE;
 						if (world.getBlock(x+1, y, z) == did && world.getBlockMetadata(x+1, y, z) == dmeta)
 							return 9;
 					}
@@ -643,7 +643,7 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 
 					if (world.getBlock(x, y-1, z) == this && world.getBlockMetadata(x, y-1, z) == 9) {
 						Block did = ReactorTiles.MAGNETPIPE.getBlock();
-						int dmeta = ReactorTiles.MAGNETPIPE.getBlockMetadata();
+						int dmeta = ReactorTiles.MAGNETPIPE;
 						if (world.getBlock(x-1, y, z) == did && world.getBlockMetadata(x-1, y, z) == dmeta)
 							return 9;
 					}
@@ -683,7 +683,7 @@ public class BlockHeaterMulti extends BlockReCMultiBlock implements SemiTranspar
 		int mx = blocks.getMidX();
 		int my = blocks.getMidY()-1;
 		int mz = blocks.getMidZ();
-		return ReactorTiles.getTE(world, mx, my, mz) == ReactorTiles.HEATER ? world.getTileEntity(mx, my, mz) : null;
+		return ReactorTiles.getTE(world, mx, my, mz) == ReactorTiles.HEATER ? world.getBlockEntity(mx, my, mz) : null;
 	}
 
 }

@@ -13,25 +13,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Items;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.PlayerMP;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.FluidContainerRegistry;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidHandler;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
+import net.minecraftforge.fluids./*FLUIDCONTAINER-PORT*/ FluidContainerRegistry;
+import net.minecraft.world.level.material.FluidRegistry;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.ModList;
 import reika.dragonapi.asm.apistripper.Strippable;
@@ -44,7 +44,7 @@ import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
 import reika.dragonapi.libraries.registry.ReikaItemHelper;
 import reika.dragonapi.libraries.rendering.ReikaColorAPI;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.ReactorStacks;
 import reika.reactorcraft.auxiliary.Temperatured;
@@ -72,11 +72,8 @@ import reika.rotarycraft.auxiliary.RotaryAux;
 import reika.rotarycraft.auxiliary.interfaces.TemperatureTE;
 import reika.rotarycraft.registry.ItemRegistry;
 
-import mcp.mobius.waila.api.IWailaConfigHandler;
-import mcp.mobius.waila.api.IWailaDataAccessor;
-import mcp.mobius.waila.api.IWailaDataProvider;
 
-@Strippable(value = {"mcp.mobius.waila.api.IWailaDataProvider"})
+// @Strippable /*PORT*/(value = {"// WAILA-PORT: mcp.mobius.waila.api.IWailaDataProvider"})
 public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, ReactorTiles> implements IWailaDataProvider {
 
 	protected static final IIcon[][][] icons = new IIcon[ReactorTiles.TEList.length][6][16];
@@ -88,8 +85,8 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 	}
 
 	@Override
-	public int getLightValue(IBlockAccess iba, int x, int y, int z) {
-		TileEntity te = iba.getTileEntity(x, y, z);
+	public int getLightValue(BlockGetter iba, int x, int y, int z) {
+		TileEntity te = iba.getBlockEntity(x, y, z);
 		if (te instanceof TileEntityNuclearCore) {
 			TileEntityNuclearCore tile = (TileEntityNuclearCore)te;
 			if (tile.isActive()) {
@@ -118,14 +115,14 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 	}
 
 	@Override
-	public final boolean canBeReplacedByLeaves(IBlockAccess world, int x, int y, int z)
+	public final boolean canBeReplacedByLeaves(BlockGetter world, int x, int y, int z)
 	{
 		return false;
 	}
 
 	@Override
 	public void registerBlockIcons(IIconRegister ico) {
-		if (ReactorCraft.instance.isLocked())
+		if (ReactorCraft.getInstance().isLocked())
 			return;
 		for (int i = 0; i < ReactorTiles.TEList.length; i++) {
 			ReactorTiles r = ReactorTiles.TEList[i];
@@ -186,13 +183,13 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 	}
 
 	@Override
-	public IIcon getIcon(IBlockAccess iba, int x, int y, int z, int s) {
+	public IIcon getIcon(BlockGetter iba, int x, int y, int z, int s) {
 		ReactorTiles r = ReactorTiles.getTE(iba, x, y, z);
 		if (r == null)
 			return null;
 		if (r.hasTextureStates()) {
-			TileEntityReactorBase te = (TileEntityReactorBase)iba.getTileEntity(x, y, z);
-			int k = te.getTextureState(ForgeDirection.VALID_DIRECTIONS[s]);
+			TileEntityReactorBase te = (TileEntityReactorBase)iba.getBlockEntity(x, y, z);
+			int k = te.getTextureState(Direction.VALID_DIRECTIONS[s]);
 			return icons[r.ordinal()][s][k];
 		}
 		else {
@@ -215,10 +212,10 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 	@Override
 	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer ep, int par6, float par7, float par8, float par9) {
 		super.onBlockActivated(world, x, y, z, ep, par6, par7, par8, par9);
-		if (ReactorCraft.instance.isLocked())
+		if (ReactorCraft.getInstance().isLocked())
 			return false;
 		ReactorTiles r = ReactorTiles.getTE(world, x, y, z);
-		TileEntity tile = world.getTileEntity(x, y, z);
+		TileEntity tile = world.getBlockEntity(x, y, z);
 		if (tile instanceof TileEntityBase)
 			((TileEntityBase)tile).syncAllData(true);
 
@@ -238,8 +235,8 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 			if (is.getItem() == ReactorItems.REMOTE.getItemInstance())
 				return false;
 		}
-		if (r == ReactorTiles.COOLANT && is != null && is.stackSize == 1) {
-			TileEntityWaterCell te = (TileEntityWaterCell)world.getTileEntity(x, y, z);
+		if (r == ReactorTiles.COOLANT && is != null && is.getCount() == 1) {
+			TileEntityWaterCell te = (TileEntityWaterCell)world.getBlockEntity(x, y, z);
 			switch(te.getLiquidState()) {
 				case EMPTY:
 					if (is.getItem() == Items.water_bucket) {
@@ -295,8 +292,8 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 					}
 			}
 		}
-		if (r == ReactorTiles.SYNTHESIZER && is != null && is.stackSize == 1) {
-			TileEntitySynthesizer te = (TileEntitySynthesizer)world.getTileEntity(x, y, z);
+		if (r == ReactorTiles.SYNTHESIZER && is != null && is.getCount() == 1) {
+			TileEntitySynthesizer te = (TileEntitySynthesizer)world.getBlockEntity(x, y, z);
 			if (is.getItem() == Items.water_bucket) {
 				boolean flag = te.addWater(1000);
 				if (flag && !ep.capabilities.isCreativeMode)
@@ -304,8 +301,8 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 				return true;
 			}
 		}
-		if (r == ReactorTiles.ELECTROLYZER && is != null && is.stackSize == 1) {
-			TileEntityElectrolyzer te = (TileEntityElectrolyzer)world.getTileEntity(x, y, z);
+		if (r == ReactorTiles.ELECTROLYZER && is != null && is.getCount() == 1) {
+			TileEntityElectrolyzer te = (TileEntityElectrolyzer)world.getBlockEntity(x, y, z);
 			if (ReikaItemHelper.matchStacks(is, ReactorItems.BUCKET.getStackOf())) {
 				boolean flag = te.addHeavyWater(1000);
 				if (flag && !ep.capabilities.isCreativeMode)
@@ -313,27 +310,27 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 				return true;
 			}
 		}
-		if (r == ReactorTiles.FLUIDEXTRACTOR && is != null && is.stackSize == 1) {
-			TileEntityHeavyPump te = (TileEntityHeavyPump)world.getTileEntity(x, y, z);
+		if (r == ReactorTiles.FLUIDEXTRACTOR && is != null && is.getCount() == 1) {
+			TileEntityHeavyPump te = (TileEntityHeavyPump)world.getBlockEntity(x, y, z);
 			if (te.hasABucket()) {
-				if (is.getItem() == Items.bucket && te.getFluid() == FluidRegistry.getFluid("rc heavy water")) {
+				if (is.getItem() == Items.bucket && te.getFluid() == ReactorFluids.getLegacyFluid("rc heavy water")) {
 					te.subtractBucket();
 					ep.setCurrentItemOrArmor(0, ReactorItems.BUCKET.getStackOf());
 					return true;
 				}
-				else if (ReikaItemHelper.matchStacks(is, ReactorStacks.emptycan) && te.getFluid() == FluidRegistry.getFluid("rc lithium")) {
+				else if (ReikaItemHelper.matchStacks(is, ReactorStacks.emptycan) && te.getFluid() == ReactorFluids.getLegacyFluid("rc lithium")) {
 					te.subtractBucket();
 					ep.setCurrentItemOrArmor(0, ReactorStacks.lican.copy());
 					return true;
 				}
 			}
 		}
-		if (r == ReactorTiles.SODIUMBOILER && is != null && is.stackSize == 1) {
-			TileEntitySodiumHeater te = (TileEntitySodiumHeater)world.getTileEntity(x, y, z);
-			if (te.getLevel()+FluidContainerRegistry.BUCKET_VOLUME <= te.getCapacity()) {
+		if (r == ReactorTiles.SODIUMBOILER && is != null && is.getCount() == 1) {
+			TileEntitySodiumHeater te = (TileEntitySodiumHeater)world.getBlockEntity(x, y, z);
+			if (te.getLevel()+/*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME <= te.getCapacity()) {
 				if (ReikaItemHelper.matchStacks(is, ReactorStacks.nacan)) {
-					if (te.getLevel() <= 0 || te.getContainedFluid().equals(FluidRegistry.getFluid("rc sodium"))) {
-						te.addLiquid(FluidContainerRegistry.BUCKET_VOLUME, FluidRegistry.getFluid("rc sodium"));
+					if (te.getLevel() <= 0 || te.getContainedFluid().equals(ReactorFluids.getLegacyFluid("rc sodium"))) {
+						te.addLiquid(/*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME, ReactorFluids.getLegacyFluid("rc sodium"));
 						if (!ep.capabilities.isCreativeMode)
 							ep.setCurrentItemOrArmor(0, new ItemStack(Items.bucket));
 					}
@@ -341,20 +338,20 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 				}
 			}
 		}
-		if (r == ReactorTiles.BOILER && is != null && is.stackSize == 1) {
-			TileEntityReactorBoiler te = (TileEntityReactorBoiler)world.getTileEntity(x, y, z);
-			if (te.getLevel()+FluidContainerRegistry.BUCKET_VOLUME <= te.getCapacity()) {
+		if (r == ReactorTiles.BOILER && is != null && is.getCount() == 1) {
+			TileEntityReactorBoiler te = (TileEntityReactorBoiler)world.getBlockEntity(x, y, z);
+			if (te.getLevel()+/*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME <= te.getCapacity()) {
 				if (is.getItem() == Items.water_bucket) {
 					if (te.getLevel() <= 0 || te.getContainedFluid().equals(FluidRegistry.WATER)) {
-						te.addLiquid(FluidContainerRegistry.BUCKET_VOLUME, FluidRegistry.WATER);
+						te.addLiquid(/*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME, FluidRegistry.WATER);
 						if (!ep.capabilities.isCreativeMode)
 							ep.setCurrentItemOrArmor(0, new ItemStack(Items.bucket));
 					}
 					return true;
 				}
 				if (ReikaItemHelper.matchStacks(is, ReactorStacks.nh3can)) {
-					if (te.getLevel() <= 0 || te.getContainedFluid().equals(FluidRegistry.getFluid("rc ammonia"))) {
-						te.addLiquid(FluidContainerRegistry.BUCKET_VOLUME, FluidRegistry.getFluid("rc ammonia"));
+					if (te.getLevel() <= 0 || te.getContainedFluid().equals(ReactorFluids.getLegacyFluid("rc ammonia"))) {
+						te.addLiquid(/*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME, ReactorFluids.getLegacyFluid("rc ammonia"));
 						if (!ep.capabilities.isCreativeMode)
 							ep.setCurrentItemOrArmor(0, ReactorStacks.emptycan);
 					}
@@ -362,37 +359,37 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 				}
 			}
 		}
-		if (r == ReactorTiles.PROCESSOR && is != null && is.getItem() == ReactorItems.CANISTER.getItemInstance() && is.stackSize == 1) {
-			TileEntityUProcessor te = (TileEntityUProcessor)world.getTileEntity(x, y, z);
-			if (is.getItemDamage() == ReactorStacks.emptycan.getItemDamage() && te.getOutput() >= FluidContainerRegistry.BUCKET_VOLUME) {
+		if (r == ReactorTiles.PROCESSOR && is != null && is.getItem() == ReactorItems.CANISTER.getItemInstance() && is.getCount() == 1) {
+			TileEntityUProcessor te = (TileEntityUProcessor)world.getBlockEntity(x, y, z);
+			if (is.getDamageValue() == ReactorStacks.emptycan.getDamageValue() && te.getOutput() >= /*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME) {
 				if (!ep.capabilities.isCreativeMode)
-					ep.setCurrentItemOrArmor(0, /*te.getOutputFluid() == FluidRegistry.getFluid("rc uranium hexafluoride") ? ReactorStacks.uf6can.copy() : ReactorStacks.lifbecan.copy()*/ReikaFluidHelper.getAllContainersFor(te.getOutputFluid()).get(0));
-				te.drain(null, FluidContainerRegistry.BUCKET_VOLUME, true);
+					ep.setCurrentItemOrArmor(0, /*te.getOutputFluid() == ReactorFluids.getLegacyFluid("rc uranium hexafluoride") ? ReactorStacks.uf6can.copy() : ReactorStacks.lifbecan.copy()*/ReikaFluidHelper.getAllContainersFor(te.getOutputFluid()).get(0));
+				te.drain(null, /*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME, true);
 			}
-			else if (is.getItemDamage() == ReactorStacks.hfcan.getItemDamage() && te.canAcceptMoreIntermediate(FluidContainerRegistry.BUCKET_VOLUME)) {
+			else if (is.getDamageValue() == ReactorStacks.hfcan.getDamageValue() && te.canAcceptMoreIntermediate(/*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME)) {
 				if (!ep.capabilities.isCreativeMode)
 					ep.setCurrentItemOrArmor(0, ReactorStacks.emptycan.copy());
-				te.addIntermediate(FluidContainerRegistry.BUCKET_VOLUME, FluidRegistry.getFluid("rc hydrofluoric acid"));
+				te.addIntermediate(/*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME, ReactorFluids.getLegacyFluid("rc hydrofluoric acid"));
 			}
 			return true;
 		}
-		if (r == ReactorTiles.CENTRIFUGE && is != null && is.getItem() == ReactorItems.CANISTER.getItemInstance() && is.stackSize == 1) {
-			TileEntityCentrifuge te = (TileEntityCentrifuge)world.getTileEntity(x, y, z);
-			if (is.getItemDamage() == ReactorStacks.emptycan.getItemDamage() && te.getUF6() >= FluidContainerRegistry.BUCKET_VOLUME) {
+		if (r == ReactorTiles.CENTRIFUGE && is != null && is.getItem() == ReactorItems.CANISTER.getItemInstance() && is.getCount() == 1) {
+			TileEntityCentrifuge te = (TileEntityCentrifuge)world.getBlockEntity(x, y, z);
+			if (is.getDamageValue() == ReactorStacks.emptycan.getDamageValue() && te.getUF6() >= /*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME) {
 				if (!ep.capabilities.isCreativeMode)
 					ep.setCurrentItemOrArmor(0, ReactorStacks.uf6can.copy());
-				te.removeFluid(FluidContainerRegistry.BUCKET_VOLUME);
+				te.removeFluid(/*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME);
 			}
-			else if (is.getItemDamage() == ReactorStacks.uf6can.getItemDamage() && te.canAcceptMoreUF6(FluidContainerRegistry.BUCKET_VOLUME)) {
+			else if (is.getDamageValue() == ReactorStacks.uf6can.getDamageValue() && te.canAcceptMoreUF6(/*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME)) {
 				if (!ep.capabilities.isCreativeMode)
 					ep.setCurrentItemOrArmor(0, ReactorStacks.emptycan.copy());
-				te.addUF6(FluidContainerRegistry.BUCKET_VOLUME);
+				te.addUF6(/*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME);
 			}
 			return true;
 		}
 		if (r.isTurbine()) {
-			if (is != null && is.stackSize == 1 && ReikaItemHelper.matchStacks(is, ItemStacks.lubebucket)) {
-				TileEntityTurbineCore te = (TileEntityTurbineCore)world.getTileEntity(x, y, z);
+			if (is != null && is.getCount() == 1 && ReikaItemHelper.matchStacks(is, ItemStacks.lubebucket)) {
+				TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(x, y, z);
 				int amt = 1000;
 				if (te.canAcceptLubricant(amt)) {
 					te.addLubricant(amt);
@@ -403,7 +400,7 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 		}
 
 		if (ReactorCraft.hasGui(world, x, y, z, ep)) {
-			ep.openGui(ReactorCraft.instance, 0, world, x, y, z);
+			ep.openGui(ReactorCraft.getInstance(), 0, world, x, y, z);
 			return true;
 		}
 
@@ -418,7 +415,7 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 
 	@Override
 	public final void breakBlock(World world, int x, int y, int z, Block par5, int par6) {
-		TileEntity te = world.getTileEntity(x, y, z);
+		TileEntity te = world.getBlockEntity(x, y, z);
 		if (te instanceof TileEntitySolenoidMagnet) {
 			((TileEntitySolenoidMagnet) te).removeFromToroids();
 			Block id = world.getBlock(x, y-1, z);
@@ -446,7 +443,7 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 	}
 
 	@Override
-	public int getLightOpacity(IBlockAccess world, int x, int y, int z) {
+	public int getLightOpacity(BlockGetter world, int x, int y, int z) {
 		ReactorTiles r = ReactorTiles.getTE(world, x, y, z);
 		if (r == ReactorTiles.HEATER)
 			return 0;
@@ -458,7 +455,7 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 	{
 		if (!player.capabilities.isCreativeMode && this.canHarvest(world, player, x, y, z))
 			this.harvestBlock(world, player, x, y, z, world.getBlockMetadata(x, y, z));
-		return world.setBlockToAir(x, y, z);
+		return world.removeBlock(x, y, z);
 	}
 
 	@Override
@@ -481,7 +478,7 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 		ReactorTiles r = ReactorTiles.getMachineFromIDandMetadata(this, meta);
 		if (r != null) {
 			if (r.isTurbine()) {
-				TileEntityTurbineCore te = (TileEntityTurbineCore)world.getTileEntity(x, y, z);
+				TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(x, y, z);
 				if (te == null)
 					return li;
 				if (te.getDamage() > 0) {
@@ -493,7 +490,7 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 				else {
 					ItemStack is = r.getCraftedProduct();
 					if (te.getLubricant() > 0) {
-						is.stackTagCompound = new NBTTagCompound();
+						is.stackTagCompound = new CompoundTag();
 						int lube = ReikaMathLibrary.roundDownToX(10, te.getLubricantToDrop()); //to help with stacking
 						is.stackTagCompound.setInteger("lube", lube);
 					}
@@ -530,7 +527,7 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 	public List<String> getWailaBody(ItemStack itemStack, List<String> tip, IWailaDataAccessor acc, IWailaConfigHandler config) {
 		//if (/*LegacyWailaHelper.cacheAndReturn(acc)*/!tip.isEmpty())
 		//	return tip;
-		TileEntity te = acc.getTileEntity();
+		TileEntity te = acc.getBlockEntity();
 		if (te instanceof TileEntityReactorBase)
 			((TileEntityBase)te).syncAllData(false);
 		if (te instanceof Temperatured)
@@ -540,7 +537,7 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 		else if (te instanceof ThermalMachine)
 			tip.add(String.format("Temperature: %dC", ((ThermalMachine) te).getTemperature()));
 		if (te instanceof IFluidHandler) {
-			FluidTankInfo[] tanks = ((IFluidHandler)te).getTankInfo(ForgeDirection.UP);
+			FluidTankInfo[] tanks = ((IFluidHandler)te).getTankInfo(Direction.UP);
 			if (tanks != null) {
 				for (int i = 0; i < tanks.length; i++) {
 					FluidTankInfo info = tanks[i];
@@ -570,12 +567,12 @@ public class BlockReactorTile extends BlockTileEnum<TileEntityReactorBase, React
 
 	@Override
 	@ModDependent(ModList.WAILA)
-	public final NBTTagCompound getNBTData(EntityPlayerMP player, TileEntity te, NBTTagCompound tag, World world, int x, int y, int z) {
+	public final CompoundTag getNBTData(EntityPlayerMP player, TileEntity te, CompoundTag tag, World world, int x, int y, int z) {
 		return tag;
 	}
 
 	@Override
-	public final ReactorTiles getMapping(IBlockAccess world, int x, int y, int z) {
+	public final ReactorTiles getMapping(BlockGetter world, int x, int y, int z) {
 		return ReactorTiles.getTE(world, x, y, z);
 	}
 

@@ -9,16 +9,19 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.processing;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.EnumHelper;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidHandler;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidRegistry;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.instantiable.HybridTank;
@@ -36,6 +39,10 @@ import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
 public class TileEntityTritizer extends TileEntityReactorBase implements ReactorCoreTE, PipeConnector, IFluidHandler {
+	public TileEntityTritizer(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.TRITIZER.get(), pos, state);
+	}
+
 
 	public static final int CAPACITY = 1000;
 
@@ -48,15 +55,15 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		if (DragonAPICore.debugtest) {
 			input.addLiquid(100, ReactorCraft.H2);
-			if (output.getLevel() > CAPACITY/2)
+			if (output.getFluidLevel() > CAPACITY/2)
 				output.empty();
 		}
 		//this.onNeutron(null, world, x, y, z);
 
-		if (!world.isRemote) {
+		if (!world.isClientSide()) {
 			this.feed();
 		}
 
@@ -67,11 +74,11 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	}
 
 	private void feed() {
-		Level world = worldObj;
+		Level world = level;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
-		BlockEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity tile = this.getAdjacentTileEntity(Direction.DOWN);
 		if (tile instanceof TileEntityTritizer) {
 			int amt = ((TileEntityTritizer)tile).feedIn(input.getFluid(), false);
 			if (amt > 0) {
@@ -102,7 +109,7 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
@@ -123,13 +130,13 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		if (input.isEmpty())
 			return false;
 		NeutronType type = e.getType();
 		if (type.canIrradiateMaterials()) {
 			Reactions r = Reactions.getReactionFrom(input.getActualFluid());
-			if (!world.isRemote && this.canMake(r) && ReikaRandomHelper.doWithChance(r.chance)) {
+			if (!world.isClientSide() && this.canMake(r) && ReikaRandomHelper.doWithChance(r.chance)) {
 				this.make(r);
 				return true;
 			}
@@ -145,7 +152,7 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 
 	private boolean canMake(Reactions r) {
 		int amt = r.amount;
-		return input.getLevel() >= amt && output.canTakeIn(amt) && input.getActualFluid().equals(r.input);
+		return input.getFluidLevel() >= amt && output.canTakeIn(amt) && input.getActualFluid().equals(r.input);
 	}
 
 	public static enum Reactions {
@@ -160,7 +167,7 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 		private static Reactions[] reactionList = values();
 
 		private Reactions(String in, String out, int chance, int amt) {
-			this(FluidRegistry.getFluid(in), FluidRegistry.getFluid(out), chance, amt);
+			this(ReactorFluids.getLegacyFluid(in), ReactorFluids.getLegacyFluid(out), chance, amt);
 		}
 
 		private Reactions(Fluid in, Fluid out, int chance, int amt) {
@@ -198,29 +205,29 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
 		return this.canDrain(from, resource.getFluid()) ? output.drain(resource.amount, doDrain) : null;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
+	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
 		if (!this.canDrain(from, null))
 			return null;
 		return output.drain(maxDrain, doDrain);
 	}
 
 	@Override
-	public boolean canFill(ForgeDirection from, Fluid fluid) {
-		return from == ForgeDirection.UP && Reactions.getReactionFrom(fluid) != null;
+	public boolean canFill(Direction from, Fluid fluid) {
+		return from == Direction.UP && Reactions.getReactionFrom(fluid) != ItemStack.EMPTY;
 	}
 
 	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
-		return from == ForgeDirection.DOWN && ReikaFluidHelper.isFluidDrainableFromTank(fluid, output);
+	public boolean canDrain(Direction from, Fluid fluid) {
+		return from == Direction.DOWN && ReikaFluidHelper.isFluidDrainableFromTank(fluid, output);
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(ForgeDirection from) {
+	public FluidTankInfo[] getTankInfo(Direction from) {
 		return new FluidTankInfo[]{input.getInfo(), output.getInfo()};
 	}
 
@@ -230,31 +237,31 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	}
 
 	@Override
-	public boolean canConnectToPipeOnSide(MachineRegistry p, ForgeDirection side) {
+	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
 		return this.canConnectToPipe(p) && side.offsetY != 0;
 	}
 
 	@Override
-	public int fill(ForgeDirection from, FluidStack resource, boolean doFill) {
+	public int fill(Direction from, FluidStack resource, boolean doFill) {
 		if (!this.canFill(from, resource.getFluid()))
 			return 0;
 		return input.fill(resource, doFill);
 	}
 
 	@Override
-	public Flow getFlowForSide(ForgeDirection side) {
-		if (side == ForgeDirection.UP)
+	public Flow getFlowForSide(Direction side) {
+		if (side == Direction.UP)
 			return Flow.INPUT;
-		if (side == ForgeDirection.DOWN)
+		if (side == Direction.DOWN)
 			return Flow.OUTPUT;
 		return Flow.NONE;
 	}
 
 	@Override
-	public final int getTextureState(ForgeDirection side) {
+	public final int getTextureState(Direction side) {
 		if (side.offsetY != 0)
 			return 4;
-		Level world = worldObj;
+		Level world = level;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;

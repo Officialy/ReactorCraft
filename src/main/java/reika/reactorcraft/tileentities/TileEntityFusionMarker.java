@@ -9,6 +9,9 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import java.util.ArrayList;
 
 import net.minecraft.world.phys.AABB;
@@ -19,6 +22,10 @@ import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.fusion.TileEntityToroidMagnet.Aim;
 
 public class TileEntityFusionMarker extends TileEntityReactorBase {
+	public TileEntityFusionMarker(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.MARKER.get(), pos, state);
+	}
+
 
 	@Override
 	public ReactorTiles getTile() {
@@ -26,12 +33,12 @@ public class TileEntityFusionMarker extends TileEntityReactorBase {
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 

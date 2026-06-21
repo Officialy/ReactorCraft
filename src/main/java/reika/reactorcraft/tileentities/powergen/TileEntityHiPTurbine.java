@@ -9,14 +9,18 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.block.Block;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.IFluidHandler;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.FluidRegistry;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.instantiable.FlyingBlocksExplosion;
@@ -41,6 +45,10 @@ import reika.rotarycraft.registry.MachineRegistry;
 import reika.rotarycraft.tileentities.storage.TileEntityReservoir;
 
 public class TileEntityHiPTurbine extends TileEntityTurbineCore implements MultiBlockTile {
+	public TileEntityHiPTurbine(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.BIGTURBINE.get(), pos, state);
+	}
+
 
 	public static final int GEN_OMEGA = 131072;
 	public static final int FLUID_PER_RESERVOIR = TileEntityReactorBoiler.WATER_PER_STEAM * 131 / 20 / 24 * 6/10;
@@ -50,7 +58,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 
 	private RelativePositionList getInjectors() {
 		RelativePositionList injectors = new RelativePositionList();
-		ForgeDirection dir = this.getSteamMovement();
+		Direction dir = this.getSteamMovement();
 		if (dir.offsetX == 0) {
 			injectors.addPosition(1, 1, 0);
 			injectors.addPosition(0, 1, 0);
@@ -94,19 +102,19 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 
 	private void testBreakageFailure() {
 		if (omega > 2048) {
-			this.fail(worldObj, xCoord, yCoord, zCoord);
+			this.fail(level, xCoord, yCoord, zCoord);
 		}
 	}
 
 	private void fail(Level world, int x, int y, int z) {
-		world.setBlockToAir(x, y, z);
+		world.removeBlock(x, y, z);
 		new FlyingBlocksExplosion(world, x, y+0.5, z, 4).doExplosion();
 	}
 
 	@Override
 	protected boolean checkForMultiblock(Level world, int x, int y, int z, int meta) {
 		for (int i = 0; i < 6; i++) {
-			ForgeDirection dir = dirs[i];
+			Direction dir = dirs[i];
 			if (dir != this.getSteamMovement() && dir.getOpposite() != this.getSteamMovement()) {
 				int dx = x+dir.offsetX;
 				int dy = y+dir.offsetY;
@@ -154,10 +162,10 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 	@Override
 	protected void dumpSteam(Level world, int x, int y, int z, int meta) {
 		if (dripBuffer > 0 && this.dumpLiquid(world, x, y, z, meta)) {
-			ForgeDirection s = this.getSteamMovement();
-			ForgeDirection dir = ReikaDirectionHelper.getLeftBy90(s);
+			Direction s = this.getSteamMovement();
+			Direction dir = ReikaDirectionHelper.getLeftBy90(s);
 			int th = (int)(this.getRadius());
-			if (!world.isRemote) {
+			if (!world.isClientSide()) {
 				for (int d = 0; d <= 1; d++) {
 					for (int dy = 2; dy < 5; dy++) {
 						int ty = y-th-dy;
@@ -170,14 +178,14 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 							}
 							FluidStack fs = new FluidStack(fluid.getLowPressureFluid(), FLUID_PER_RESERVOIR);
 							if (m == MachineRegistry.RESERVOIR) {
-								BlockEntity te = this.getTileEntity(tx, ty, tz);
+								BlockEntity te = this.getBlockEntity(tx, ty, tz);
 								((TileEntityReservoir)te).addLiquid(fs.amount, fs.getFluid());
 								dripBuffer -= fs.amount;
 								break;
 							}
 							else if (world.getBlock(tx, ty, tz) == BCMachineHandler.getInstance().tankID) {
-								BlockEntity te = this.getTileEntity(tx, ty, tz);
-								((IFluidHandler)te).fill(ForgeDirection.UP, fs, true);
+								BlockEntity te = this.getBlockEntity(tx, ty, tz);
+								((IFluidHandler)te).fill(Direction.UP, fs, true);
 								dripBuffer -= fs.amount;
 								break;
 							}
@@ -244,7 +252,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 
 	@Override
 	protected void intakeLubricant(Level world, int x, int y, int z, int meta) {
-		ForgeDirection dir = this.getSteamMovement().getOpposite();
+		Direction dir = this.getSteamMovement().getOpposite();
 		int dx = x+dir.offsetX;
 		int dy = y+dir.offsetY;
 		int dz = z+dir.offsetZ;
@@ -257,14 +265,14 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 				int sx = c.xCoord;
 				int sy = c.yCoord;
 				int sz = c.zCoord;
-				BlockEntity tile = world.getTileEntity(sx, sy, sz);
+				BlockEntity tile = world.getBlockEntity(sx, sy, sz);
 				if (tile instanceof TileEntitySteamInjector) {
 					TileEntitySteamInjector te = (TileEntitySteamInjector)tile;
 					int lube = te.getLubricant();
 					int rem = Math.min(lube, tank.getRemainingSpace());
 					if (rem > 0) {
 						te.remove(rem);
-						tank.addLiquid(rem, FluidRegistry.getFluid("rc lubricant"));
+						tank.addLiquid(rem, ReactorFluids.getLegacyFluid("rc lubricant"));
 					}
 				}
 			}
@@ -281,7 +289,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 	}
 
 	private boolean isRedstoned(Level world, int x, int y, int z) {
-		ForgeDirection dir = this.getSteamMovement().getOpposite();
+		Direction dir = this.getSteamMovement().getOpposite();
 		int dx = x+dir.offsetX;
 		int dy = y+dir.offsetY;
 		int dz = z+dir.offsetZ;
@@ -300,7 +308,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 
 	@Override
 	protected boolean intakeSteam(Level world, int x, int y, int z, int meta) {
-		ForgeDirection dir = this.getSteamMovement().getOpposite();
+		Direction dir = this.getSteamMovement().getOpposite();
 		int dx = x+dir.offsetX;
 		int dy = y+dir.offsetY;
 		int dz = z+dir.offsetZ;
@@ -318,7 +326,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 		if (r == ReactorTiles.STEAMLINE) {
 			TileEntitySteamLine te = (TileEntitySteamLine)this.getAdjacentTileEntity(dir);
 			int s = te.getSteam();
-			//ReikaJavaLibrary.pConsole(steam+"/"+this.getMaxSteam()+" from "+s, Side.SERVER);
+			//ReikaJavaLibrary.pConsole(steam+"/"+this.getMaxSteam()+" from "+s, Dist.DEDICATED_SERVER);
 			if (s > 8 && this.canTakeIn(te.getWorkingFluid())) {
 				Proportionality<ReactorType> source = te.getSourceReactorType();
 				s = source != null ? this.getEffectiveUsable(s, source) : 0;
@@ -330,10 +338,10 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 						fluid = te.getWorkingFluid();
 						te.removeSteam(rm2);
 						dripBuffer += rm2*1000;
-						//ReikaJavaLibrary.pConsole("Took in "+rm2+" of "+s+" available", Side.SERVER);
+						//ReikaJavaLibrary.pConsole("Took in "+rm2+" of "+s+" available", Dist.DEDICATED_SERVER);
 					}
 					flag = s > rm+32 && steam >= this.getMaxSteam()/15;
-					//ReikaJavaLibrary.pConsole("Has "+steam+"/"+this.getMaxSteam()+", s/rm = "+s+"/"+rm, Side.SERVER);
+					//ReikaJavaLibrary.pConsole("Has "+steam+"/"+this.getMaxSteam()+", s/rm = "+s+"/"+rm, Dist.DEDICATED_SERVER);
 				}
 			}
 		}
@@ -402,15 +410,15 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 
 	@Override
 	public void breakBlock() {
-		if (!worldObj.isRemote) {
+		if (!level.isRemote) {
 			for (int i = 0; i < 6; i++) {
-				ForgeDirection dir = dirs[i];
+				Direction dir = dirs[i];
 				int dx = xCoord+dir.offsetX;
 				int dy = yCoord+dir.offsetY;
 				int dz = zCoord+dir.offsetZ;
-				Block b = worldObj.getBlock(dx, dy, dz);
+				Block b = level.getBlock(dx, dy, dz);
 				if (b instanceof BlockReCMultiBlock) {
-					((BlockReCMultiBlock)b).breakMultiBlock(worldObj, dx, dy, dz);
+					((BlockReCMultiBlock)b).breakMultiBlock(level, dx, dy, dz);
 				}
 			}
 		}

@@ -9,17 +9,17 @@
  ******************************************************************************/
 package reika.reactorcraft.blocks;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.ModList;
 import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
@@ -48,15 +48,15 @@ public class BlockTritiumLamp extends Block {
 	}
 
 	@Override
-	public int getLightValue(IBlockAccess iba, int x, int y, int z) {
+	public int getLightValue(BlockGetter iba, int x, int y, int z) {
 		if (iba.getBlockMetadata(x, y, z) < FluoriteTypes.colorList.length)
 			return 0;
 		int color = this.getColor(iba, x, y, z).getColor();
 		return ModList.COLORLIGHT.isLoaded() ? ReikaColorAPI.getPackedIntForColoredLight(color, 15) : 15;
 	}
 
-	private FluoriteTypes getColor(IBlockAccess iba, int x, int y, int z) {
-		//TileEntityTritiumLamp te = (TileEntityTritiumLamp)iba.getTileEntity(x, y, z);
+	private FluoriteTypes getColor(BlockGetter iba, int x, int y, int z) {
+		//TileEntityTritiumLamp te = (TileEntityTritiumLamp)iba.getBlockEntity(x, y, z);
 		//return te != null ? te.getColor() : FluoriteTypes.WHITE;
 		return FluoriteTypes.colorList[iba.getBlockMetadata(x, y, z)%FluoriteTypes.colorList.length];
 	}
@@ -136,7 +136,7 @@ public class BlockTritiumLamp extends Block {
 
 	@Override
 	public void breakBlock(World world, int x, int y, int z, Block old, int oldmeta) {
-		TileEntityTritiumLamp te = (TileEntityTritiumLamp)world.getTileEntity(x, y, z);
+		TileEntityTritiumLamp te = (TileEntityTritiumLamp)world.getBlockEntity(x, y, z);
 		te.onBreak();
 		super.breakBlock(world, x, y, z, old, oldmeta);
 	}
@@ -163,59 +163,59 @@ public class BlockTritiumLamp extends Block {
 
 		@Override
 		public void updateEntity() {
-			if (ticks == 0 && worldObj.getBlockMetadata(xCoord, yCoord, zCoord) >= FluoriteTypes.colorList.length) {
+			if (ticks == 0 && level.getBlockMetadata(xCoord, yCoord, zCoord) >= FluoriteTypes.colorList.length) {
 				this.onCreate();
 			}
-			if (!worldObj.isRemote) {
-				if (worldObj.getTotalWorldTime()-createdTime >= LIFESPAN) {
+			if (!level.isRemote) {
+				if (level.getTotalWorldTime()-createdTime >= LIFESPAN) {
 					this.onBreak();
-					worldObj.setBlockMetadataWithNotify(xCoord, yCoord, zCoord, worldObj.getBlockMetadata(xCoord, yCoord, zCoord)%FluoriteTypes.colorList.length, 3);
+					level.setBlockMetadataWithNotify(xCoord, yCoord, zCoord, level.getBlockMetadata(xCoord, yCoord, zCoord)%FluoriteTypes.colorList.length, 3);
 				}
 			}
 			ticks++;
 		}
 
 		@Override
-		public void writeToNBT(NBTTagCompound NBT) {
-			super.writeToNBT(NBT);
+		public void saveAdditional(/*PORT*/CompoundTag NBT) {
+			super.saveAdditional(/*PORT*/NBT);
 
-			//ReikaJavaLibrary.pConsole("NBT write: "+this+" % "+FMLCommonHandler.instance().getEffectiveSide()+"/"+blocks);
-			blocks.writeToNBT("blocks", NBT);
+			//ReikaJavaLibrary.pConsole("NBT write: "+this+" % "+FMLEnvironment.dist+"/"+blocks);
+			blocks.saveAdditional(/*PORT*/"blocks", NBT);
 			NBT.setLong("created", createdTime);
 		}
 
 		@Override
-		public void readFromNBT(NBTTagCompound NBT) {
-			super.readFromNBT(NBT);
+		public void loadAdditional(/*PORT*/CompoundTag NBT) {
+			super.loadAdditional(/*PORT*/NBT);
 
-			blocks.readFromNBT("blocks", NBT);
+			blocks.loadAdditional(/*PORT*/"blocks", NBT);
 			createdTime = NBT.getLong("created");
 			//ReikaJavaLibrary.pConsole("NBT read: "+this+" % "+blocks);
 		}
 
 		@Override
 		public Packet getDescriptionPacket() {
-			NBTTagCompound NBT = new NBTTagCompound();
-			this.writeToNBT(NBT);
+			CompoundTag NBT = new CompoundTag();
+			this.saveAdditional(/*PORT*/NBT);
 			S35PacketUpdateTileEntity pack = new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, 0, NBT);
 			return pack;
 		}
 
 		@Override
 		public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity p)  {
-			this.readFromNBT(p.field_148860_e);
+			this.loadAdditional(/*PORT*/p.field_148860_e);
 		}
 
 		private void onBreak() {
-			if (!worldObj.isRemote) {
+			if (!level.isRemote) {
 				//ReikaJavaLibrary.pConsole("Break: "+this+" % "+blocks);
 				for (int i = 0; i < blocks.getSize(); i++) {
 					Coordinate c = blocks.getNthBlock(i);
 					int x = c.xCoord;
 					int y = c.yCoord;
 					int z = c.zCoord;
-					if (worldObj.getBlock(x, y, z) == BlockRegistry.LIGHT.getBlockInstance()) {
-						worldObj.setBlockToAir(x, y, z);
+					if (level.getBlock(x, y, z) == BlockRegistry.LIGHT.getBlockInstance()) {
+						level.removeBlock(x, y, z);
 					}
 				}
 
@@ -227,8 +227,8 @@ public class BlockTritiumLamp extends Block {
 							int x = xCoord+i;
 							int y = yCoord+j;
 							int z = zCoord+k;
-							if (worldObj.getBlock(x, y, z) == BlockRegistry.LIGHT.getBlockInstance()) {
-								worldObj.setBlockToAir(x, y, z);
+							if (level.getBlock(x, y, z) == BlockRegistry.LIGHT.getBlockInstance()) {
+								level.removeBlock(x, y, z);
 							}
 						}
 					}
@@ -238,12 +238,12 @@ public class BlockTritiumLamp extends Block {
 		}
 
 		private void onCreate() {
-			if (!worldObj.isRemote) {
+			if (!level.isRemote) {
 
 				if (createdTime == 0)
-					createdTime = worldObj.getTotalWorldTime();
+					createdTime = level.getTotalWorldTime();
 
-				if (worldObj.getTotalWorldTime()-createdTime < LIFESPAN) {
+				if (level.getTotalWorldTime()-createdTime < LIFESPAN) {
 					int r = 16;
 					for (int i = -r; i <= r; i++) {
 						for (int j = -r; j <= r; j++) {
@@ -252,9 +252,9 @@ public class BlockTritiumLamp extends Block {
 									int x = xCoord+i;
 									int y = yCoord+j;
 									int z = zCoord+k;
-									if (worldObj.getBlock(x, y, z).isAir(worldObj, x, y, z)) {
-										worldObj.setBlock(x, y, z, BlockRegistry.LIGHT.getBlockInstance(), 15, 3);
-										worldObj.markBlockForUpdate(x, y, z);
+									if (level.getBlock(x, y, z).isAir(level, x, y, z)) {
+										level.setBlock(x, y, z, BlockRegistry.LIGHT.getBlockInstance(), 15, 3);
+										level.markBlockForUpdate(x, y, z);
 										blocks.addBlockCoordinate(x, y, z);
 									}
 									else {

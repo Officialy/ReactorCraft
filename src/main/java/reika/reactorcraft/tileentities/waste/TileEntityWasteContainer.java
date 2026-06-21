@@ -9,19 +9,22 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.waste;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.init.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
 import reika.dragonapi.libraries.mathsci.Isotopes;
 import reika.dragonapi.libraries.mathsci.ReikaNuclearHelper;
 import reika.dragonapi.libraries.mathsci.ReikaThermoHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.auxiliary.Feedable;
 import reika.reactorcraft.auxiliary.NeutronTile;
 import reika.reactorcraft.auxiliary.RadiationEffects;
@@ -33,6 +36,10 @@ import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.auxiliary.interfaces.TemperatureTE;
 
 public class TileEntityWasteContainer extends TileEntityWasteUnit implements TemperatureTE, Feedable, NeutronTile {
+	public TileEntityWasteContainer(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.WASTECONTAINER.get(), pos, state);
+	}
+
 
 	public static final int WIDTH = 9;
 	public static final int HEIGHT = 3;
@@ -43,7 +50,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		thermalTicker.update();
 
 		if (thermalTicker.checkCap()) {
@@ -52,10 +59,10 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 			this.updateTemperature(world, x, y, z, meta);
 		}
 
-		if (!world.isRemote)
+		if (!world.isClientSide())
 			this.decayWaste();
 
-		if (!world.isRemote)
+		if (!world.isClientSide())
 			this.feed();
 
 		//this.fill();
@@ -70,7 +77,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
 		//ReikaJavaLibrary.pConsole(temperature);
 		if (temperature > Tamb) {
-			ForgeDirection side = ReikaWorldHelper.checkForAdjSourceBlock(world, x, y, z, Material.water);
+			Direction side = ReikaWorldHelper.checkForAdjSourceBlock(world, x, y, z, Material.water);
 			if (side != null) {
 				temperature -= ReikaThermoHelper.getTemperatureIncrease(1, 15000, ReikaThermoHelper.WATER_BLOCK_HEAT);
 				//ReikaJavaLibrary.pConsole(temperature);
@@ -97,7 +104,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
@@ -107,7 +114,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		return WIDTH*HEIGHT;
 	}
 
@@ -126,7 +133,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	public void onMeltdown(Level world, int x, int y, int z) {
-		world.createExplosion(null, x+0.5, y+0.5, z+0.5, 9, true);
+		world.explode(/*PORT*/null, x+0.5, y+0.5, z+0.5, 9, true);
 		RadiationEffects.instance.contaminateArea(world, x, y, z, 9, 4, 1.5, true, RadiationIntensity.LETHAL);
 		ReactorAchievements.WASTELEAK.triggerAchievement(this.getPlacer());
 	}
@@ -143,7 +150,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 
 	@Override
 	public void overheat(Level world, int x, int y, int z) {
-		if (!world.isRemote)
+		if (!world.isClientSide())
 			this.onMeltdown(world, x, y, z);
 	}
 
@@ -158,26 +165,26 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	public boolean feed() {
-		Level world = worldObj;
+		Level world = level;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
 		Block id = world.getBlock(x, y-1, z);
 		int meta = world.getBlockMetadata(x, y-1, z);
-		BlockEntity tile = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity tile = this.getAdjacentTileEntity(Direction.DOWN);
 		if (tile instanceof TileEntityWasteContainer) {
-			if (((Feedable)tile).feedIn(inv[inv.length-1])) {
-				for (int i = inv.length-1; i > 0; i--)
-					inv[i] = inv[i-1];
+			if (((Feedable)tile).feedIn(itemHandler.getStackInSlot(itemHandler.getSlots()-1))) {
+				for (int i = itemHandler.getSlots()-1; i > 0; i--)
+					itemHandler.getStackInSlot(i) = itemHandler.getStackInSlot(i-1);
 
 				id = world.getBlock(x, y+1, z);
 				meta = world.getBlockMetadata(x, y+1, z);
-				tile = this.getAdjacentTileEntity(ForgeDirection.UP);
+				tile = this.getAdjacentTileEntity(Direction.UP);
 				if (tile instanceof TileEntityWasteContainer) {
-					inv[0] = ((Feedable) tile).feedOut();
+					itemHandler.getStackInSlot(0) = ((Feedable) tile).feedOut();
 				}
 				else
-					inv[0] = null;
+					itemHandler.getStackInSlot(0) = ItemStack.EMPTY;
 			}
 		}
 		this.collapseInventory();
@@ -185,11 +192,11 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	private void collapseInventory() {
-		for (int i = 0; i < inv.length; i++) {
-			for (int k = inv.length-1; k > 0; k--) {
-				if (inv[k] == null) {
-					inv[k] = inv[k-1];
-					inv[k-1] = null;
+		for (int i = 0; i < itemHandler.getSlots(); i++) {
+			for (int k = itemHandler.getSlots()-1; k > 0; k--) {
+				if (itemHandler.getStackInSlot(k) == null) {
+					itemHandler.getStackInSlot(k) = itemHandler.getStackInSlot(k-1);
+					itemHandler.getStackInSlot(k-1) = ItemStack.EMPTY;
 				}
 			}
 		}
@@ -201,8 +208,8 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 			return true;
 		if (!this.isItemValidForSlot(0, is))
 			return false;
-		if (inv[0] == null) {
-			inv[0] = is.copy();
+		if (itemHandler.getStackInSlot(0) == null) {
+			itemHandler.getStackInSlot(0) = is.copy();
 			return true;
 		}
 		return false;
@@ -210,11 +217,11 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 
 	@Override
 	public ItemStack feedOut() {
-		if (inv[inv.length-1] == null)
+		if (itemHandler.getStackInSlot(itemHandler.getSlots()-1) == null)
 			return null;
 		else {
-			ItemStack is = inv[inv.length-1].copy();
-			inv[inv.length-1] = null;
+			ItemStack is = itemHandler.getStackInSlot(itemHandler.getSlots()-1).copy();
+			itemHandler.getStackInSlot(itemHandler.getSlots()-1) = ItemStack.EMPTY;
 			return is;
 		}
 	}
@@ -229,7 +236,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		return false;
 	}
 

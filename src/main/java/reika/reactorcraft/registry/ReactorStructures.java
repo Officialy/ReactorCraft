@@ -14,10 +14,10 @@ import java.util.Locale;
 import org.lwjgl.input.Keyboard;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.StatCollector;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.base.StructureBase;
 import reika.dragonapi.instantiable.data.blockstruct.FilledBlockArray;
@@ -31,8 +31,6 @@ import reika.reactorcraft.auxiliary.structure.SolenoidStructure;
 import reika.reactorcraft.auxiliary.structure.TurbineStructure;
 import reika.reactorcraft.base.ReactorStructureBase;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 
 public enum ReactorStructures implements StructureEnum {
@@ -55,10 +53,10 @@ public enum ReactorStructures implements StructureEnum {
 		structure = struct;
 	}
 
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	public StructureRenderer getRenderer() {
 		if (render == null || Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
-			FilledBlockArray f = this.getStructure(Minecraft.getMinecraft().theWorld, 0, 0, 0, ForgeDirection.EAST);
+			FilledBlockArray f = this.getStructure(Minecraft.getMinecraft().theWorld, 0, 0, 0, Direction.EAST);
 			render = new StructureRenderer(f);
 
 			this.addOverrides();
@@ -67,18 +65,18 @@ public enum ReactorStructures implements StructureEnum {
 	}
 
 	private void addOverrides() {
-		render.addOverride(new ItemStack(tile.getBlock(), 1, tile.getBlockMetadata()), tile.getCraftedProduct());
+		render.addOverride(new ItemStack(tile.getBlock(), 1, tile), tile.getCraftedProduct());
 
-		render.addOverride(new ItemStack(ReactorTiles.STEAMLINE.getBlock(), 1, ReactorTiles.STEAMLINE.getBlockMetadata()), ReactorTiles.STEAMLINE.getCraftedProduct());
+		render.addOverride(new ItemStack(ReactorTiles.STEAMLINE.getBlock(), 1, ReactorTiles.STEAMLINE), ReactorTiles.STEAMLINE.getCraftedProduct());
 	}
 
-	public FilledBlockArray getStructure(World world, int x, int y, int z, ForgeDirection dir) {
+	public FilledBlockArray getStructure(World world, int x, int y, int z, Direction dir) {
 		structure.dir = dir;
 		return structure.getArray(world, x, y, z);
 	}
 
 	public String getName() {
-		return StatCollector.translateToLocal("reactorstruct."+this.name().toLowerCase(Locale.ENGLISH));
+		return I18n.get("reactorstruct."+this.name().toLowerCase(Locale.ENGLISH));
 	}
 
 	@Override

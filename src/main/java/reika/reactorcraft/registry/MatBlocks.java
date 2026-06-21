@@ -9,11 +9,11 @@
  ******************************************************************************/
 package reika.reactorcraft.registry;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.IIcon;
-import net.minecraft.util.StatCollector;
-import net.minecraft.world.World;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.exception.RegistrationException;
 import reika.dragonapi.instantiable.data.immutable.BlockKey;
@@ -43,7 +43,7 @@ public enum MatBlocks {
 	}
 
 	public String getName() {
-		return StatCollector.translateToLocal(name);
+		return I18n.get(name);
 	}
 
 	public boolean isMultiSidedTexture() {
@@ -75,12 +75,12 @@ public enum MatBlocks {
 			return (TileEntity)tileClass.newInstance();
 		}
 		catch (Exception e) {
-			throw new RegistrationException(ReactorCraft.instance, "Could not create TileEntity for MatBlock "+this+"!", e);
+			throw new RegistrationException(ReactorCraft.getInstance(), "Could not create TileEntity for MatBlock "+this+"!", e);
 		}
 	}
 
 	public boolean hasTile() {
-		return tileClass != null;
+		return tileClass != ItemStack.EMPTY;
 	}
 
 }

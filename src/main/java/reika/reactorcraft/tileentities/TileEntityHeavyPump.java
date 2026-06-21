@@ -9,27 +9,30 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import java.util.HashMap;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.init.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidContainerRegistry;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidHandler;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.fluids./*FLUIDCONTAINER-PORT*/ FluidContainerRegistry;
+import net.minecraft.world.level.material.FluidRegistry;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
-import reika.dragonapi.libraries.world.ReikaBiomeHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaBiomeHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.ReactorPowerReceiver;
 import reika.reactorcraft.base.TileEntityReactorBase;
@@ -41,6 +44,10 @@ import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
 public class TileEntityHeavyPump extends TileEntityReactorBase implements ReactorPowerReceiver, IFluidHandler, PipeConnector {
+	public TileEntityHeavyPump(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.FLUIDEXTRACTOR.get(), pos, state);
+	}
+
 
 	public static final int MINPOWER = 65536;
 	public static final int MINTORQUE = 512;
@@ -66,7 +73,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 		if (power >= MINPOWER && torque >= MINTORQUE) {
 			phi += 10F;
 		}
@@ -104,7 +111,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	public boolean canReadFrom(ForgeDirection dir) {
+	public boolean canReadFrom(Direction dir) {
 		return dir.offsetY != 0;
 	}
 
@@ -120,8 +127,8 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
-		if (!PowerTransferHelper.checkPowerFrom(this, ForgeDirection.DOWN) && !PowerTransferHelper.checkPowerFrom(this, ForgeDirection.UP)) {
+	public void updateEntity(Level world, BlockPos pos) {
+		if (!PowerTransferHelper.checkPowerFrom(this, Direction.DOWN) && !PowerTransferHelper.checkPowerFrom(this, Direction.UP)) {
 			this.noInputMachine();
 		}
 
@@ -141,10 +148,10 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	}
 
 	private Extraction getExtraction(Level world, int x, int y, int z) {
-		Fluid f = null;
+		Fluid f = ItemStack.EMPTY;
 		int c = 0;
 		for (int i = 2; i < 6; i++) {
-			ForgeDirection dir = dirs[i];
+			Direction dir = dirs[i];
 			int dx = x+dir.offsetX;
 			int dz = z+dir.offsetZ;
 			Fluid f2 = ReikaWorldHelper.getFluid(world, dx, y, dz);
@@ -167,7 +174,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
+	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
 		if (from.offsetY != 0)
 			return null;
 		else
@@ -175,36 +182,36 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	public int fill(ForgeDirection from, FluidStack resource, boolean doFill) {
+	public int fill(Direction from, FluidStack resource, boolean doFill) {
 		return 0;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
 		return this.canDrain(from, resource.getFluid()) ? tank.drain(resource.amount, doDrain) : null;
 	}
 
 	@Override
-	public boolean canFill(ForgeDirection from, Fluid fluid) {
+	public boolean canFill(Direction from, Fluid fluid) {
 		return false;
 	}
 
 	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
+	public boolean canDrain(Direction from, Fluid fluid) {
 		return from.offsetY == 0 && ReikaFluidHelper.isFluidDrainableFromTank(fluid, tank);
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(ForgeDirection from) {
+	public FluidTankInfo[] getTankInfo(Direction from) {
 		return new FluidTankInfo[]{tank.getInfo()};
 	}
 
 	public boolean hasABucket() {
-		return tank.getFluid() != null && tank.getFluid().amount >= FluidContainerRegistry.BUCKET_VOLUME;
+		return tank.getFluid() != null && tank.getFluid().amount >= /*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME;
 	}
 
 	public void subtractBucket() {
-		tank.drain(FluidContainerRegistry.BUCKET_VOLUME, true);
+		tank.drain(/*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME, true);
 	}
 
 	public int getTankLevel() {
@@ -251,12 +258,12 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	}
 
 	@Override
-	public boolean canConnectToPipeOnSide(MachineRegistry p, ForgeDirection side) {
+	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
 		return this.canConnectToPipe(p) && side.offsetY == 0;
 	}
 
 	@Override
-	public Flow getFlowForSide(ForgeDirection side) {
+	public Flow getFlowForSide(Direction side) {
 		return side.offsetY == 0 ? Flow.OUTPUT : Flow.NONE;
 	}
 
@@ -304,7 +311,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 		public static final int MINDEPTH = 16;
 
 		private HeavyWaterExtraction() {
-			super(FluidRegistry.getFluid("rc heavy water"));
+			super(ReactorFluids.getLegacyFluid("rc heavy water"));
 		}
 
 		@Override
@@ -354,7 +361,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	private static class MoltenLithiumExtraction extends Extraction {
 
 		private MoltenLithiumExtraction() {
-			super(FluidRegistry.getFluid("rc lithium"));
+			super(ReactorFluids.getLegacyFluid("rc lithium"));
 		}
 
 		@Override

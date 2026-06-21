@@ -14,7 +14,7 @@ import java.util.Locale;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.util.StatCollector;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.world.level.Level;
 
 import reika.dragonapi.base.BlockMultiBlock;
@@ -26,7 +26,7 @@ public abstract class BlockReCMultiBlock extends BlockMultiBlock<Boolean> {
 		super(par2Material);
 		this.setResistance(10);
 		this.setHardness(2);
-		this.setCreativeTab(ReactorCraft.instance.isLocked() ? null : ReactorCraft.tabRctrMultis);
+		this.setCreativeTab(ReactorCraft.getInstance().isLocked() ? null : ReactorCraft.tabRctrMultis);
 	}
 
 	@Override
@@ -41,7 +41,7 @@ public abstract class BlockReCMultiBlock extends BlockMultiBlock<Boolean> {
 	}
 
 	public final String getName(int meta) {
-		return StatCollector.translateToLocal("multiblock."+this.getIconBaseName().toLowerCase(Locale.ENGLISH)+"."+(meta&7));
+		return I18n.get("multiblock."+this.getIconBaseName().toLowerCase(Locale.ENGLISH)+"."+(meta&7));
 	}
 
 	protected abstract String getIconBaseName();

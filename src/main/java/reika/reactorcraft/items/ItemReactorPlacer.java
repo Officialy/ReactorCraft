@@ -103,7 +103,7 @@ public class ItemReactorPlacer extends Item implements ISize {
 		else
 		{
 			if (!ep.capabilities.isCreativeMode)
-				--is.stackSize;
+				--is.getCount();
 			world.setBlock(x, y, z, m.getBlock(), m.getBlockMetadata(), 3);
 		}
 		world.playSoundEffect(x+0.5, y+0.5, z+0.5, "step.stone", 1F, 1.5F);

@@ -9,21 +9,24 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.init.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 // CHROMA-PORT: import reika.chromaticraft.api.interfaces.WorldRift;
 import reika.dragonapi.instantiable.data.Proportionality;
 import reika.dragonapi.libraries.mathsci.ReikaEngLibrary;
 import reika.dragonapi.libraries.mathsci.ReikaThermoHelper;
 import reika.dragonapi.libraries.rendering.ReikaColorAPI;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.auxiliary.ReactorTyped;
 import reika.reactorcraft.base.TileEntityLine;
 import reika.reactorcraft.base.TileEntityNuclearBoiler;
@@ -34,6 +37,10 @@ import reika.rotarycraft.auxiliary.interfaces.HeatConduction;
 
 
 public class TileEntityHeatPipe extends TileEntityLine {
+	public TileEntityHeatPipe(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.HEATPIPE.get(), pos, state);
+	}
+
 
 	private static final double HEAT_CAPACITY = ReikaThermoHelper.COPPER_HEAT*ReikaEngLibrary.rhoiron;
 
@@ -57,10 +64,10 @@ public class TileEntityHeatPipe extends TileEntityLine {
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
-		super.updateEntity(world, x, y, z, meta);
+	public void updateEntity(Level world, BlockPos pos) {
+		super.updateEntity(world, pos);
 
-		if (!world.isRemote) {
+		if (!world.isClientSide()) {
 			this.balanceHeat(world, x, y, z);
 
 			if (this.getTicksExisted()%32 == 0) {
@@ -80,7 +87,7 @@ public class TileEntityHeatPipe extends TileEntityLine {
 	}
 
 	public double getNetHeatEnergy() {
-		return heatEnergy-ReikaWorldHelper.getAmbientTemperatureAt(worldObj, xCoord, yCoord, zCoord)*HEAT_CAPACITY;
+		return heatEnergy-ReikaWorldHelper.getAmbientTemperatureAt(level, xCoord, yCoord, zCoord)*HEAT_CAPACITY;
 	}
 
 	public static double getNetTemperature(HeatConduction hc) {
@@ -119,7 +126,7 @@ public class TileEntityHeatPipe extends TileEntityLine {
 					this.balanceWith(ts);
 				}
 			}
-			else if (te != null && this.canConnectToMachine(te.getBlockType(), te.getBlockMetadata(), dirs[i], te)) {
+			else if (te != null && this.canConnectToMachine(te.getBlockType(), te, dirs[i], te)) {
 				HeatConduction hc = (HeatConduction)te;
 				double theirheat = this.getNetHeat(hc);
 				double ourheat = this.getNetHeatEnergy();
@@ -127,17 +134,17 @@ public class TileEntityHeatPipe extends TileEntityLine {
 				double ourtemp = this.getTemperatureForPipe(this, true);
 				boolean intake = theirheat > ourheat;
 				boolean valid = intake ? hc.allowHeatExtraction() && ourtemp < theirtemp : hc.allowExternalHeating() && ourtemp > theirtemp;
-				//ReikaJavaLibrary.pConsole(our+" vs "+heat+" > "+valid, Side.SERVER);
-				//ReikaJavaLibrary.pConsole("our "+ourheat+", their "+theirheat+" (Ts = "+theirtemp+", "+ourtemp+")", Side.SERVER, valid && !intake);
+				//ReikaJavaLibrary.pConsole(our+" vs "+heat+" > "+valid, Dist.DEDICATED_SERVER);
+				//ReikaJavaLibrary.pConsole("our "+ourheat+", their "+theirheat+" (Ts = "+theirtemp+", "+ourtemp+")", Dist.DEDICATED_SERVER, valid && !intake);
 				if (valid) {
 					double diff = ourheat-theirheat; // >0 if applying heat
 					diff /= 4;
 					int put = this.getTemperatureForHeat(diff, hc);
-					//ReikaJavaLibrary.pConsole("Adding "+put+" to "+hc, Side.SERVER, !intake);
+					//ReikaJavaLibrary.pConsole("Adding "+put+" to "+hc, Dist.DEDICATED_SERVER, !intake);
 					hc.setTemperature(put+hc.getAmbientTemperature());
 					heatEnergy -= diff;
 					if (diff < 0) {
-						ReactorType type = null;
+						ReactorType type = ItemStack.EMPTY;
 						if (te instanceof ReactorTyped) {
 							ReactorTyped tb = (ReactorTyped)te;
 							type = tb.getReactorType();
@@ -193,7 +200,7 @@ public class TileEntityHeatPipe extends TileEntityLine {
 		float f = this.computeBrightness();
 		brightnessDeltaSinceUpdate += Math.abs(f-lastBrightness);
 		renderBrightness = f;
-		if (worldObj != null && (brightnessDeltaSinceUpdate >= 0.2 || this.getTicksExisted()-lastUpdateTime > 40)) {
+		if (level != null && (brightnessDeltaSinceUpdate >= 0.2 || this.getTicksExisted()-lastUpdateTime > 40)) {
 			this.triggerBlockUpdate();
 			brightnessDeltaSinceUpdate = 0;
 			lastUpdateTime = this.getTicksExisted();
@@ -201,7 +208,7 @@ public class TileEntityHeatPipe extends TileEntityLine {
 	}
 
 	@Override
-	protected boolean canConnectToMachine(Block id, int meta, ForgeDirection dir, BlockEntity te) {
+	protected boolean canConnectToMachine(Block id, int meta, Direction dir, BlockEntity te) {
 		if (!(te instanceof HeatConduction))
 			return false;
 		HeatConduction h = (HeatConduction)te;

@@ -9,11 +9,14 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission.thorium;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidStack;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.neoforged.neoforge.fluids.FluidStack;
 
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
 import reika.reactorcraft.ReactorCraft;
@@ -25,13 +28,17 @@ import reika.rotarycraft.registry.MachineRegistry;
 
 
 public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
+	public TileEntityFuelDump(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.FUELDUMP.get(), pos, state);
+	}
+
 
 	private int fullTicks = 0;
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
-		if (!world.isRemote) {
-			BlockEntity te = this.getAdjacentTileEntity(ForgeDirection.UP);
+	public void updateEntity(Level world, BlockPos pos) {
+		if (!world.isClientSide()) {
+			BlockEntity te = this.getAdjacentTileEntity(Direction.UP);
 			if (te instanceof TileEntityThoriumCore) {
 				TileEntityThoriumCore tc = (TileEntityThoriumCore)te;
 				if (tc.getTemperature() >= tc.FUEL_DUMP_TEMPERATURE && tc.hasFuel()) {
@@ -51,14 +58,14 @@ public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
 					}
 				}
 			}
-			if (tank.getLevel() >= 125 && this.canDumpAt(world, x, y-1, z)) {
+			if (tank.getFluidLevel() >= 125 && this.canDumpAt(world, x, y-1, z)) {
 				this.dumpFuel(world, x, y, z);
 			}
 		}
 	}
 
 	private void dumpFuel(Level world, int x, int y, int z) {
-		int n1 = Math.min(8, tank.getLevel()/125);
+		int n1 = Math.min(8, tank.getFluidLevel()/125);
 		int n2 = n1-1;
 		if (world.getBlock(x, y-1, z) == ReactorBlocks.THORIUM.getBlockInstance()) {
 			int fmeta = world.getBlockMetadata(x, y-1, z);
@@ -82,17 +89,17 @@ public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
 		return this.hasTile() ? this.getCore().drain(from, resource, doDrain) : null;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
+	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
 		return this.hasTile() ? this.getCore().drain(from, maxDrain, doDrain) : null;
 	}
 
 	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
+	public boolean canDrain(Direction from, Fluid fluid) {
 		return this.hasTile() ? this.getCore().canDrain(from, fluid) : false;
 	}
 
@@ -102,11 +109,11 @@ public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
 	}
 
 	private boolean hasTile() {
-		return this.getAdjacentTileEntity(ForgeDirection.UP) instanceof TileEntityThoriumCore;
+		return this.getAdjacentTileEntity(Direction.UP) instanceof TileEntityThoriumCore;
 	}
 
 	private TileEntityThoriumCore getCore() {
-		return (TileEntityThoriumCore)this.getAdjacentTileEntity(ForgeDirection.UP);
+		return (TileEntityThoriumCore)this.getAdjacentTileEntity(Direction.UP);
 	}
 
 	@Override
@@ -115,7 +122,7 @@ public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
 	}
 
 	@Override
-	public boolean canReceiveFrom(ForgeDirection from) {
+	public boolean canReceiveFrom(Direction from) {
 		return false;
 	}
 
@@ -130,7 +137,7 @@ public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 

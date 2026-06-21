@@ -34,7 +34,7 @@ public abstract class ReactorRenderBase extends TileEntityRenderBase implements 
 
 	@Override
 	protected final DragonAPIMod getOwnerMod() {
-		return ReactorCraft.instance;
+		return ReactorCraft.getInstance();
 	}
 
 }

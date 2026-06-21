@@ -15,6 +15,6 @@ import reika.reactorcraft.entities.EntityNeutron;
 
 public interface NeutronBlock {
 
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z);
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos);
 
 }

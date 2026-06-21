@@ -9,19 +9,22 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fusion;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import java.util.Collection;
 import java.util.List;
 
 import net.minecraft.world.level.block.Block;
-import net.minecraft.init.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidRegistry;
 
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.auxiliary.ChunkManager;
@@ -49,6 +52,10 @@ import reika.rotarycraft.tileentities.weaponry.TileEntityVanDeGraff;
 
 public class TileEntityToroidMagnet extends TileEntityReactorBase implements Screwdriverable, Shockable, MultiBlockTile, FusionReactorToroidPart,
 ChunkLoadingTile, NeutronTile, NonIFluidTank {
+	public TileEntityToroidMagnet(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.MAGNET.get(), pos, state);
+	}
+
 
 	//0 is +x(E), rotates to -z(N)
 	private Aim aim = Aim.N;
@@ -93,7 +100,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 
 		if (alpha > 0)
 			alpha -= 8;
@@ -123,11 +130,11 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 
 		MachineRegistry m = MachineRegistry.getMachine(world, x, y+2, z);
 		if (m != null && m.isStandardPipe()) {
-			BlockEntity te = world.getTileEntity(x, y+2, z);
+			BlockEntity te = world.getBlockEntity(x, y+2, z);
 			int amt = Math.min(tank.getRemainingSpace(), ((TileEntityPiping)te).getFluidLevel());
 			if (amt > 0) {
-				if (FluidRegistry.getFluid("rc liquid nitrogen").equals(((TileEntityPiping)te).getFluidType())) {
-					tank.addLiquid(amt, FluidRegistry.getFluid("rc liquid nitrogen"));
+				if (ReactorFluids.getLegacyFluid("rc liquid nitrogen").equals(((TileEntityPiping)te).getFluidType())) {
+					tank.addLiquid(amt, ReactorFluids.getLegacyFluid("rc liquid nitrogen"));
 					((TileEntityPiping)te).removeLiquid(amt);
 				}
 			}
@@ -142,14 +149,14 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 
 		if (hasSolenoid) {
 			reCheckTimer.update();
-			if (reCheckTimer.checkCap() && !world.isRemote) {
+			if (reCheckTimer.checkCap() && !world.isClientSide()) {
 				hasNext = this.checkCompleteness(world, x, y, z);
 			}
 		}
 
 		//if (this.getTicksExisted() == 0)
 		//	this.clearArea(world, x, y, z);
-		//ReikaJavaLibrary.pConsole(aim, !hasSolenoid && this.getSide() == Side.SERVER);
+		//ReikaJavaLibrary.pConsole(aim, !hasSolenoid && this.getSide() == Dist.DEDICATED_SERVER);
 
 		if (lastPlasma > 0) {
 			lastPlasma--;
@@ -164,7 +171,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		isActive = true;
 		lastPlasma = 20;
 		if (!last) {
-			worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
+			level.markBlockForUpdate(xCoord, yCoord, zCoord);
 			if (ReactorOptions.CHUNKLOADING.getState()) {
 				ChunkManager.instance.loadChunks(this);
 			}
@@ -175,7 +182,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		boolean last = isActive;
 		isActive = false;
 		if (last) {
-			worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
+			level.markBlockForUpdate(xCoord, yCoord, zCoord);
 			ChunkManager.instance.unloadChunks(this);
 		}
 	}
@@ -187,7 +194,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 			te = te.getNextPart(world, x, y, z);
 			i--;
 		}
-		//ReikaJavaLibrary.pConsole("B:"+(te == world.getTileEntity(x+aim.xOffset, y, z+aim.zOffset))+"   "+te+"/"+this+"@"+aim, Side.SERVER);
+		//ReikaJavaLibrary.pConsole("B:"+(te == world.getBlockEntity(x+aim.xOffset, y, z+aim.zOffset))+"   "+te+"/"+this+"@"+aim, Dist.DEDICATED_SERVER);
 		if (te != this)
 			if (te instanceof TileEntityToroidMagnet)
 				((TileEntityToroidMagnet)te).hasNext = false;
@@ -198,12 +205,12 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		Aim a = this.getAim();
 		int dx = xCoord+a.xOffset;
 		int dz = zCoord+a.zOffset;
-		BlockEntity te = worldObj.getTileEntity(dx, y, dz);
+		BlockEntity te = level.getBlockEntity(dx, y, dz);
 		return te instanceof FusionReactorToroidPart ? (FusionReactorToroidPart)te : null;
 	}
 
 	public int getCoolant() {
-		return tank.getLevel();
+		return tank.getFluidLevel();
 	}
 
 	public int getCharge() {
@@ -214,20 +221,20 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		Aim a = this.getAim();
 		int dx = xCoord+a.xOffset;
 		int dz = zCoord+a.zOffset;
-		ReactorTiles r = ReactorTiles.getTE(worldObj, dx, yCoord, dz);
+		ReactorTiles r = ReactorTiles.getTE(level, dx, yCoord, dz);
 		if (r == ReactorTiles.MAGNET) {
-			TileEntityToroidMagnet te = (TileEntityToroidMagnet)worldObj.getTileEntity(dx, yCoord, dz);
+			TileEntityToroidMagnet te = (TileEntityToroidMagnet)level.getBlockEntity(dx, yCoord, dz);
 			hasSolenoid = te.hasSolenoid;
-			te.checkCompleteness(worldObj, xCoord, yCoord, zCoord);
+			te.checkCompleteness(level, xCoord, yCoord, zCoord);
 		}
 		else if (r == ReactorTiles.INJECTOR) {
 			dx += a.xOffset;
 			dz += a.zOffset;
-			BlockEntity te = worldObj.getTileEntity(dx, yCoord, dz);
+			BlockEntity te = level.getBlockEntity(dx, yCoord, dz);
 			while (te instanceof TileEntityFusionInjector) {
 				dx += a.xOffset;
 				dz += a.zOffset;
-				te = worldObj.getTileEntity(dx, yCoord, dz);
+				te = level.getBlockEntity(dx, yCoord, dz);
 			}
 			if (te instanceof TileEntityToroidMagnet) {
 				hasSolenoid = ((TileEntityToroidMagnet)te).hasSolenoid;
@@ -238,7 +245,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	private void collectCharge(Level world, int x, int y, int z) {
 		MachineRegistry m = MachineRegistry.getMachine(world, x, y-3, z);
 		if (m == MachineRegistry.VANDEGRAFF) {
-			TileEntityVanDeGraff te = (TileEntityVanDeGraff)world.getTileEntity(x, y-3, z);
+			TileEntityVanDeGraff te = (TileEntityVanDeGraff)world.getBlockEntity(x, y-3, z);
 			te.dischargeToBlock(x, y, z, this);
 		}
 	}
@@ -249,7 +256,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		int dz = z+a.zOffset;
 		ReactorTiles r = ReactorTiles.getTE(world, dx, y, dz);
 		if (r == ReactorTiles.MAGNET) {
-			TileEntityToroidMagnet te = (TileEntityToroidMagnet)world.getTileEntity(dx, y, dz);
+			TileEntityToroidMagnet te = (TileEntityToroidMagnet)world.getBlockEntity(dx, y, dz);
 			int dC = charge-te.charge;
 			if (dC > 0) {
 				te.charge += dC/4;
@@ -265,7 +272,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 				double fz2 = 1.75*Math.cos(Math.toRadians(ang2));
 				EntityDischarge e3 = new EntityDischarge(world, x+0.5+fx, y+0.5, z+0.5+fz, charge, te.xCoord+0.5+fx2, te.yCoord+0.5, te.zCoord+0.5+fz2);
 				EntityDischarge e4 = new EntityDischarge(world, x+0.5-fx, y+0.5, z+0.5-fz, charge, te.xCoord+0.5-fx2, te.yCoord+0.5, te.zCoord+0.5-fz2);
-				if (!world.isRemote && this.shouldSpawnSparks(world)) {
+				if (!world.isClientSide() && this.shouldSpawnSparks(world)) {
 					world.spawnEntityInWorld(e1);
 					world.spawnEntityInWorld(e2);
 					world.spawnEntityInWorld(e3);
@@ -276,7 +283,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		else if (r == ReactorTiles.INJECTOR) {
 			dx += a.xOffset;
 			dz += a.zOffset;
-			TileEntityToroidMagnet te = (TileEntityToroidMagnet)world.getTileEntity(dx, y, dz);
+			TileEntityToroidMagnet te = (TileEntityToroidMagnet)world.getBlockEntity(dx, y, dz);
 			if (te != null) {
 				int dC = charge-te.charge;
 				if (dC > 0) {
@@ -284,7 +291,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 					charge -= dC/4;
 					EntityDischarge e1 = new EntityDischarge(world, x+0.5, y+2, z+0.5, charge, te.xCoord+0.5, te.yCoord+2, te.zCoord+0.5);
 					EntityDischarge e2 = new EntityDischarge(world, x+0.5, y-1, z+0.5, charge, te.xCoord+0.5, te.yCoord-1, te.zCoord+0.5);
-					if (!world.isRemote && this.shouldSpawnSparks(world)) {
+					if (!world.isClientSide() && this.shouldSpawnSparks(world)) {
 						world.spawnEntityInWorld(e1);
 						world.spawnEntityInWorld(e2);
 					}
@@ -320,7 +327,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 				for (int k = -r; k <= r; k++) {
 					Block b = world.getBlock(x+i, y+j, z+k);
 					if (b == Blocks.grass || b == Blocks.dirt) {
-						world.setBlockToAir(x+i, y+j, z+k);
+						world.removeBlock(x+i, y+j, z+k);
 					}
 				}
 			}
@@ -358,7 +365,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
@@ -409,14 +416,14 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	@Override
-	public boolean onShiftRightClick(Level world, int x, int y, int z, ForgeDirection side) {
+	public boolean onShiftRightClick(Level world, int x, int y, int z, Direction side) {
 		alpha = 512;
 		this.decrementAim();
 		return true;
 	}
 
 	@Override
-	public boolean onRightClick(Level world, int x, int y, int z, ForgeDirection side) {
+	public boolean onRightClick(Level world, int x, int y, int z, Direction side) {
 		this.refreshAlpha();
 		this.incrementAim();
 		return true;
@@ -584,7 +591,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		return false;
 	}
 

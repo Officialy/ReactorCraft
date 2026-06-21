@@ -1,8 +1,8 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
  * Distribution of the software in any form is only allowed with
  * explicit, prior permission from the owner.
@@ -11,9 +11,9 @@ package reika.reactorcraft.registry;
 
 import java.util.Locale;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 
 public enum WorkingFluid {
 
@@ -34,45 +34,42 @@ public enum WorkingFluid {
 	}
 
 	public Fluid getFluid() {
-		return FluidRegistry.getFluid(fluidName);
+		if (fluidName.isEmpty())
+			return null;
+		if ("water".equals(fluidName))
+			return Fluids.WATER;
+		return ReactorFluids.getLegacyFluid(fluidName);
 	}
 
 	public Fluid getLowPressureFluid() {
-		return FluidRegistry.getFluid("rc lowp"+this.name().toLowerCase(Locale.ENGLISH));
+		if (this == WATER)
+			return ReactorFluids.LOWP_WATER.get();
+		if (this == AMMONIA)
+			return ReactorFluids.LOWP_AMMONIA.get();
+		return null;
 	}
 
-	public static WorkingFluid getFromNBT(NBTTagCompound NBT) {
-		int val = NBT.getInteger("workingfluid");
+	public static WorkingFluid getFromNBT(CompoundTag tag) {
+		int val = tag.getInt("workingfluid");
 		if (val >= 0 && val < list.length)
 			return list[val];
 		return EMPTY;
 	}
 
-	public void saveToNBT(NBTTagCompound NBT) {
-		NBT.setInteger("workingfluid", this.ordinal());
+	public void saveToNBT(CompoundTag tag) {
+		tag.putInt("workingfluid", this.ordinal());
 	}
-
-	/*
-	public static boolean isWorkingFluid(Fluid f) {
-		for (int i = 0; i < list.length; i++) {
-			Fluid fl = list[i].getFluid();
-			if (f.equals(fl))
-				return true;
-		}
-		return false;
-	}*/
 
 	public static WorkingFluid getWorkingFluid(Fluid f) {
 		if (f == null)
 			return null;
-		if (f.equals(FluidRegistry.getFluid("rc heavy water")))
+		if (f == ReactorFluids.HEAVY_WATER.get() || f == Fluids.WATER)
 			return WATER;
-		for (int i = 0; i < list.length; i++) {
-			Fluid fl = list[i].getFluid();
+		for (WorkingFluid wf : list) {
+			Fluid fl = wf.getFluid();
 			if (f.equals(fl))
-				return list[i];
+				return wf;
 		}
 		return null;
 	}
-
 }

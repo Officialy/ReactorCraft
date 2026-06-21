@@ -13,15 +13,13 @@ import java.util.HashMap;
 
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 
-import reika.dragonapi.interfaces.tileentity.RenderFetcher;
+import reika.dragonapi.interfaces.blockentity.RenderFetcher;
 import reika.dragonapi.libraries.java.ReikaJavaLibrary;
 import reika.reactorcraft.base.ReactorRenderBase;
 import reika.reactorcraft.registry.ReactorTiles;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
+@SideOnly(Dist.CLIENT)
 public class ReactorRenderList {
 
 	private static HashMap<ReactorTiles, ReactorRenderBase> renders = new HashMap<ReactorTiles, ReactorRenderBase>();
@@ -45,7 +43,7 @@ public class ReactorRenderList {
 		return renders.get(m);
 	}
 
-	public static String getRenderTexture(ReactorTiles m, RenderFetcher te) {
+	public static String getRenderTexture(ReactorTiles m te) {
 		return getRenderForMachine(m).getImageFileName(te);
 	}
 

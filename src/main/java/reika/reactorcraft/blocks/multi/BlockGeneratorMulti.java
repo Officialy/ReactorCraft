@@ -11,12 +11,12 @@ package reika.reactorcraft.blocks.multi;
 
 import java.util.Set;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
 import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
@@ -40,7 +40,7 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 	}
 
 	@Override
-	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, ForgeDirection dir, BlockMatchFailCallback call) {
+	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
 		if (!this.checkCore(world, x, y, z, dir, call))
 			return false;
 		if (!this.checkWindings(world, x, y, z, dir, call))
@@ -53,7 +53,7 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 		return ReactorTiles.getTE(world, x+dir.offsetX*l, y, z+dir.offsetZ*l) == ReactorTiles.GENERATOR;
 	}
 
-	private boolean checkCore(World world, int x, int y, int z, ForgeDirection dir, BlockMatchFailCallback call) {
+	private boolean checkCore(World world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
 		int l = TileEntityReactorGenerator.getGeneratorLength()-1;
 		for (int i = 0; i < l; i++) {
 			int dx = x+dir.offsetX*i;
@@ -68,7 +68,7 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 		}
 		int dx = x+dir.offsetX*l;
 		int dz = z+dir.offsetZ*l;
-		TileEntity te = world.getTileEntity(dx, y, dz);
+		TileEntity te = world.getBlockEntity(dx, y, dz);
 		if (te instanceof TileEntityReactorGenerator) {
 			return dir == ((TileEntityReactorGenerator)te).getFacing().getOpposite();
 		}
@@ -77,9 +77,9 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 		return false;
 	}
 
-	private boolean checkWindings(World world, int x, int y, int z, ForgeDirection dir, BlockMatchFailCallback call) {
+	private boolean checkWindings(World world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
 		int l = TileEntityReactorGenerator.getGeneratorLength()-1;
-		ForgeDirection left = ReikaDirectionHelper.getLeftBy90(dir);
+		Direction left = ReikaDirectionHelper.getLeftBy90(dir);
 		for (int i = 0; i < l; i++) {
 			int seekmeta = i < 2 ? 3 : 1;
 			int dx = x+dir.offsetX*i;
@@ -118,9 +118,9 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 		return true;
 	}
 
-	private boolean checkHousing(World world, int x, int y, int z, ForgeDirection dir, BlockMatchFailCallback call) {
+	private boolean checkHousing(World world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
 		int l = TileEntityReactorGenerator.getGeneratorLength()-1;
-		ForgeDirection left = ReikaDirectionHelper.getLeftBy90(dir);
+		Direction left = ReikaDirectionHelper.getLeftBy90(dir);
 
 		for (int i = 0; i < l; i++) {
 			int dx = x+dir.offsetX*i;
@@ -184,9 +184,9 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 		return true;
 	}
 
-	private boolean checkEndCap(World world, int x, int y, int z, ForgeDirection dir, BlockMatchFailCallback call) {
+	private boolean checkEndCap(World world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
 		int l = TileEntityReactorGenerator.getGeneratorLength()-1;
-		ForgeDirection left = ReikaDirectionHelper.getLeftBy90(dir);
+		Direction left = ReikaDirectionHelper.getLeftBy90(dir);
 		int dx = x+dir.offsetX*l;
 		int dz = z+dir.offsetZ*l;
 		for (int k = -2; k <= 2; k++) {
@@ -255,7 +255,7 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 			Coordinate c = blocks.getNthBlock(i);
 			int meta = c.getBlockMetadata(world);
 			if (ReactorTiles.getTE(world, c.xCoord, c.yCoord, c.zCoord) == ReactorTiles.GENERATOR) {
-				TileEntityReactorGenerator te = (TileEntityReactorGenerator)world.getTileEntity(c.xCoord, c.yCoord, c.zCoord);
+				TileEntityReactorGenerator te = (TileEntityReactorGenerator)world.getBlockEntity(c.xCoord, c.yCoord, c.zCoord);
 				te.setHasMultiBlock(false);
 			}
 			else if (meta >= 8) {
@@ -273,7 +273,7 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 			Coordinate c = blocks.getNthBlock(i);
 			int meta = c.getBlockMetadata(world);
 			if (ReactorTiles.getTE(world, c.xCoord, c.yCoord, c.zCoord) == ReactorTiles.GENERATOR) {
-				TileEntityReactorGenerator te = (TileEntityReactorGenerator)world.getTileEntity(c.xCoord, c.yCoord, c.zCoord);
+				TileEntityReactorGenerator te = (TileEntityReactorGenerator)world.getBlockEntity(c.xCoord, c.yCoord, c.zCoord);
 				te.setHasMultiBlock(true);
 			}
 			else if (meta < 8) {
@@ -293,7 +293,7 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 	}
 
 	@Override
-	public int getTextureIndex(IBlockAccess world, int x, int y, int z, int side, int meta) {
+	public int getTextureIndex(BlockGetter world, int x, int y, int z, int side, int meta) {
 		if (meta >= 8)
 			return 9;
 		if (meta == 3)
@@ -326,7 +326,7 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 		for (int i = 0; i < blocks.getSize(); i++) {
 			Coordinate c = blocks.getNthBlock(i);
 			if (ReactorTiles.getTE(world, c.xCoord, c.yCoord+1, c.zCoord) == ReactorTiles.GENERATOR) {
-				TileEntityReactorGenerator te = (TileEntityReactorGenerator)world.getTileEntity(c.xCoord, c.yCoord+1, c.zCoord);
+				TileEntityReactorGenerator te = (TileEntityReactorGenerator)world.getBlockEntity(c.xCoord, c.yCoord+1, c.zCoord);
 				return te;
 			}
 		}

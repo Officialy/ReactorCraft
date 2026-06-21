@@ -1,315 +1,173 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
  * Distribution of the software in any form is only allowed with
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.registry;
 
-import java.util.HashMap;
-import java.util.Locale;
+import java.util.EnumMap;
+import java.util.function.Supplier;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.StatCollector;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.registries.DeferredItem;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
-import reika.dragonapi.interfaces.registry.ItemEnum;
-import reika.dragonapi.libraries.java.ReikaStringParser;
-import reika.dragonapi.libraries.mathsci.ReikaEngLibrary;
-import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
 import reika.reactorcraft.ReactorCraft;
-import reika.reactorcraft.ReactorNames;
-import reika.reactorcraft.auxiliary.WasteManager;
 import reika.reactorcraft.base.ItemReactorMulti;
 import reika.reactorcraft.items.ItemCanister;
-import reika.reactorcraft.items.ItemGeigerCounter;
-import reika.reactorcraft.items.ItemHazmatSuit;
-import reika.reactorcraft.items.ItemHeavyBucket;
-import reika.reactorcraft.items.ItemIronFinder;
-import reika.reactorcraft.items.ItemNuclearWaste;
-import reika.reactorcraft.items.ItemPlutonium;
-import reika.reactorcraft.items.ItemRadiationCleaner;
 import reika.reactorcraft.items.ItemRadiationGoggles;
-import reika.reactorcraft.items.ItemReactorBasic;
-import reika.reactorcraft.items.ItemReactorBook;
 import reika.reactorcraft.items.ItemReactorFuel;
-import reika.reactorcraft.items.ItemReactorPlacer;
-import reika.reactorcraft.items.ItemRemoteControl;
-import reika.rotarycraft.registry.ItemRegistry;
 
-public enum ReactorItems implements ItemEnum {
+/**
+ * 26.2 item registry for the ore→fuel slice, replacing the 1.7.10 metadata-variant
+ * {@code ReactorItems} enum (one registered {@link Item} + {@code getStackOfMetadata}). Per the
+ * PORTING.md item-variant decision and the plan's data-component refactor, each former metadata
+ * variant is now either its own {@link DeferredItem} (ore products, fluorite colours, crafting
+ * parts) or a single item carrying the variant in a {@link ReactorDataComponents} component
+ * (fuel-rod burnup, canister fluid, waste isotope).
+ */
+public final class ReactorItems {
 
-	WASTE(0,		"item.waste", 			ItemNuclearWaste.class),
-	FUEL(1,			"item.fuel",			ItemReactorFuel.class),
-	DEPLETED(2, 	"item.depleted",		ItemReactorBasic.class),
-	PLACER(-1,		"Part Placer",			ItemReactorPlacer.class),
-	BUCKET(3,		"item.heavybucket", 	ItemHeavyBucket.class),
-	RAW(4,			"Raw Materials",		ItemReactorMulti.class),
-	FLUORITE(16,	"Fluorite",				ItemReactorMulti.class),
-	INGOTS(32,		"Ingots",				ItemReactorMulti.class),
-	CANISTER(48,	"Fluid Canister",		ItemCanister.class),
-	GOGGLES(64,		"item.goggles",			ItemRadiationGoggles.class),
-	CRAFTING(144,	"Crafting item", 		ItemReactorMulti.class),
-	PLUTONIUM(96,	"item.plutonium",		ItemPlutonium.class),
-	//THORIUM(97,		"item.thorium",			ItemReactorFuel.class),
-	BREEDERFUEL(98,	"item.breeder",			ItemReactorFuel.class),
-	CLEANUP(99,		"item.cleaner",			ItemRadiationCleaner.class),
-	MAGNET(100,		"item.magnet",			ItemReactorMulti.class),
-	REMOTE(101,		"item.remotecpu",		ItemRemoteControl.class),
-	PELLET(102,		"item.pellet",			ItemReactorFuel.class),
-	OLDPELLET(103,	"item.depletedpellet",	ItemReactorBasic.class),
-	BOOK(104,		"item.reactorbook",		ItemReactorBook.class),
-	HAZHELMET(112,	"item.hazhelmet",		ItemHazmatSuit.class),
-	HAZCHEST(113,	"item.hazchest",		ItemHazmatSuit.class),
-	HAZLEGS(114,	"item.hazlegs",			ItemHazmatSuit.class),
-	HAZBOOTS(115,	"item.hazboots",		ItemHazmatSuit.class),
-	GEIGER(116, 	"item.geiger",			ItemGeigerCounter.class),
-	IRONFINDER(117, "item.ironfinder",		ItemIronFinder.class);
+    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(ReactorCraft.MODID);
 
-	private String name;
-	private Class itemClass;
-	private int spriteIndex;
-	private int spritesheet;
+    private static final ThreadLocal<ResourceKey<Item>> CURRENT_ITEM_KEY = new ThreadLocal<>();
 
-	public static final ReactorItems[] itemList = values();
-	private static final HashMap<Item, ReactorItems> itemMap = new HashMap();
+    public static Item.Properties itemProperties() {
+        Item.Properties p = new Item.Properties();
+        ResourceKey<Item> k = CURRENT_ITEM_KEY.get();
+        if (k != null) p.setId(k);
+        return p;
+    }
 
-	private ReactorItems(int index, String n, Class<? extends Item> cl) {
-		name = n;
-		itemClass = cl;
-		spriteIndex = index%256;
-		spritesheet = index/256;
-	}
+    private static <I extends Item> DeferredItem<I> reg(String name, Supplier<I> factory) {
+        return ITEMS.register(name, rl -> {
+            CURRENT_ITEM_KEY.set(ResourceKey.create(Registries.ITEM, rl));
+            try {
+                return factory.get();
+            } finally {
+                CURRENT_ITEM_KEY.remove();
+            }
+        });
+    }
 
-	@Override
-	public Class[] getConstructorParamTypes() {
-		if (this.isHazmat())
-			return new Class[]{int.class, int.class, int.class};
-		return new Class[]{int.class};
-	}
+    // --- Ore products (smelted from the ore blocks) ---
+    public static final DeferredItem<Item> URANIUM_INGOT = reg("uranium_ingot", () -> new Item(itemProperties()));
+    public static final DeferredItem<Item> CADMIUM_INGOT = reg("cadmium_ingot", () -> new Item(itemProperties()));
+    public static final DeferredItem<Item> INDIUM_INGOT = reg("indium_ingot", () -> new Item(itemProperties()));
+    public static final DeferredItem<Item> SILVER_INGOT = reg("silver_ingot", () -> new Item(itemProperties()));
+    public static final DeferredItem<Item> AMMONIUM_DUST = reg("ammonium_dust", () -> new Item(itemProperties()));
+    public static final DeferredItem<Item> THORIUM_DUST = reg("thorium_dust", () -> new Item(itemProperties()));
+    public static final DeferredItem<Item> CALCITE = reg("calcite", () -> new Item(itemProperties()));
+    public static final DeferredItem<Item> LODESTONE = reg("lodestone", () -> new Item(itemProperties()));
 
-	@Override
-	public Object[] getConstructorParams() {
-		if (this.isHazmat())
-			return new Object[]{this.getSpriteIndex(), 0, this.ordinal()-HAZHELMET.ordinal()};
-		return new Object[]{this.getSpriteIndex()};
-	}
+    // --- Secondary materials (raw-dust line) ---
+    public static final DeferredItem<Item> LIME = reg("lime", () -> new Item(itemProperties()));
+    public static final DeferredItem<Item> EMERALD_DUST = reg("emerald_dust", () -> new Item(itemProperties()));
+    public static final DeferredItem<Item> FUEL_DUST = reg("fuel_dust", () -> new Item(itemProperties()));
+    public static final DeferredItem<Item> DEPLETED_DUST = reg("depleted_dust", () -> new Item(itemProperties()));
+    public static final DeferredItem<Item> WASTE_DUST = reg("waste_dust", () -> new Item(itemProperties()));
 
-	public int getSpriteIndex() {
-		return spriteIndex;
-	}
+    // --- Fuel rods (burnup carried by the FUEL_BURNUP data component) ---
+    public static final DeferredItem<ItemReactorFuel> FUEL_ROD = reg("fuel_rod", () -> new ItemReactorFuel(itemProperties(), 1));
+    public static final DeferredItem<ItemReactorFuel> FUEL_PELLET = reg("fuel_pellet", () -> new ItemReactorFuel(itemProperties(), 1));
+    public static final DeferredItem<ItemReactorFuel> BREEDER_FUEL = reg("breeder_fuel", () -> new ItemReactorFuel(itemProperties(), 1));
+    public static final DeferredItem<Item> DEPLETED_FUEL = reg("depleted_fuel", () -> new Item(itemProperties()));
+    public static final DeferredItem<Item> DEPLETED_PELLET = reg("depleted_pellet", () -> new Item(itemProperties()));
 
-	public int getSpriteSheet() {
-		return spritesheet;
-	}
+    // --- Fluid canister (empty; fluid contents carried by CANISTER_FLUID data component) ---
+    public static final DeferredItem<ItemCanister> CANISTER = reg("canister", () -> new ItemCanister(itemProperties(), 1));
 
-	public String getLiquidIconName() {
-		return this.name().toLowerCase(Locale.ENGLISH);
-	}
+    // --- Crafting components (CraftingItems enum, one item per former metadata) ---
+    public static final EnumMap<CraftingItems, DeferredItem<Item>> CRAFTING = new EnumMap<>(CraftingItems.class);
+    static {
+        for (CraftingItems c : CraftingItems.partList) {
+            CRAFTING.put(c, reg(c.registryName(), () -> new Item(itemProperties())));
+        }
+    }
 
-	public boolean isHazmat() {
-		switch(this) {
-			case HAZHELMET:
-			case HAZCHEST:
-			case HAZLEGS:
-			case HAZBOOTS:
-				return true;
-			default:
-				return false;
-		}
-	}
+    // --- Fluorite gems (one per colour) ---
+    public static final EnumMap<FluoriteTypes, DeferredItem<Item>> FLUORITE_GEMS = new EnumMap<>(FluoriteTypes.class);
+    static {
+        for (FluoriteTypes f : FluoriteTypes.colorList) {
+            FLUORITE_GEMS.put(f, reg(f.getGemItemName(), () -> new Item(itemProperties())));
+        }
+    }
 
-	public boolean hasMetadataSprites() {
-		switch(this) {
-			case FUEL:
-			case PLUTONIUM:
-				//case THORIUM:
-			case PELLET:
-			case WASTE:
-			case BREEDERFUEL:
-			case CLEANUP:
-			case MAGNET:
-			case GEIGER:
-			case REMOTE:
-				return false;
-			default:
-				return true;
-		}
-	}
+    public static Item crafting(CraftingItems c) {
+        return CRAFTING.get(c).get();
+    }
 
-	@Override
-	public String getUnlocalizedName() {
-		return ReikaStringParser.stripSpaces(name);
-	}
+    public static Item fluorite(FluoriteTypes f) {
+        return FLUORITE_GEMS.get(f).get();
+    }
 
-	@Override
-	public Class getObjectClass() {
-		return itemClass;
-	}
+    // --- TE-cluster items + compatibility refs (mirrors old enum API) ---
+    public static final DeferredItem<Item> WASTE_ITEM = reg("waste", () -> new Item(itemProperties()));
+    public static final DeferredItem<Item> REACTOR_BOOK = reg("reactor_book", () -> new Item(itemProperties()));
+    public static final DeferredItem<Item> MAGNET_ITEM = reg("magnet", () -> new ItemReactorMulti(itemProperties(), 4));
+    public static final DeferredItem<ItemRadiationGoggles> GOGGLES_ITEM = reg("radiation_goggles", () -> new ItemRadiationGoggles(itemProperties()));
 
-	@Override
-	public String getBasicName() {
-		return StatCollector.translateToLocal(name);
-	}
+    public static final ItemRef FUEL = ref(FUEL_ROD, 16);
+    public static final ItemRef PLUTONIUM = ref(FUEL_ROD, 8);
+    public static final ItemRef DEPLETED = ref(DEPLETED_FUEL);
+    public static final ItemRef BREEDERFUEL = ref(BREEDER_FUEL, 8);
+    public static final ItemRef PELLET = ref(FUEL_PELLET, 8);
+    public static final ItemRef OLDPELLET = ref(DEPLETED_PELLET);
+    public static final ItemRef CANISTER_REF = ref(CANISTER, 16);
+    public static final ItemRef FLUORITE_REF = ref(FLUORITE_GEMS.get(FluoriteTypes.WHITE), FluoriteTypes.colorList.length);
+    public static final ItemRef RAW = ref(FUEL_DUST, 10);
+    public static final ItemRef WASTE = ref(WASTE_ITEM);
+    public static final ItemRef BOOK = ref(REACTOR_BOOK);
+    public static final ItemRef GOGGLES = ref(GOGGLES_ITEM);
+    public static final ItemRef MAGNET = ref(MAGNET_ITEM, 4);
+    public static final ItemRef FLUORITE = FLUORITE_REF;
 
-	@Override
-	public String getMultiValuedName(int meta) {
-		switch(this) {
-			case FUEL:
-			case PLUTONIUM:
-				//case THORIUM:
-			case PELLET:
-				if (meta == 0)
-					return this.getBasicName()+" (Fresh)";
-				else
-					return this.getBasicName()+" ("+(meta*100/this.getNumberMetadatas())+"% Depleted)";
-			case PLACER:
-				return ReactorTiles.TEList[meta].getName();
-			case RAW:
-				return StatCollector.translateToLocal(ReactorNames.rawNames[meta]);
-			case FLUORITE:
-				return FluoriteTypes.colorList[meta].getItemName();
-			case INGOTS:
-				return ReactorOres.oreList[meta+1].getProductName();
-			case CANISTER:
-				return StatCollector.translateToLocal(ReactorNames.canNames[meta]);
-			case CRAFTING:
-				return CraftingItems.partList[meta].itemName;
-			case BREEDERFUEL:
-				return this.getBasicName()+" ("+(meta*5)+"% Converted)";
-			case CLEANUP:
-				return this.getBasicName()+" ("+meta+" kJ)";
-			case MAGNET:
-				double num = ReikaMathLibrary.intpow2(4, meta)/1000D;
-				return this.getBasicName()+String.format(" (%.3f %sT)", ReikaMathLibrary.getThousandBase(num), ReikaEngLibrary.getSIPrefix(num));
-			default:
-				return this.getBasicName();
-		}
-	}
+    private static ItemRef ref(DeferredItem<? extends Item> item) {
+        return new ItemRef(item, 1);
+    }
 
-	@Override
-	public boolean hasMultiValuedName() {
-		switch(this) {
-			case FUEL:
-			case PLUTONIUM:
-				//case THORIUM:
-			case PELLET:
-			case PLACER:
-			case RAW:
-			case FLUORITE:
-			case INGOTS:
-			case CANISTER:
-			case CRAFTING:
-			case BREEDERFUEL:
-			case CLEANUP:
-			case MAGNET:
-				return true;
-			default:
-				return false;
-		}
-	}
+    private static ItemRef ref(DeferredItem<? extends Item> item, int variants) {
+        return new ItemRef(item, variants);
+    }
+    public static final class ItemRef {
+        private final DeferredItem<? extends Item> item;
+        private final int variants;
 
-	@Override
-	public int getNumberMetadatas() {
-		switch(this) {
-			case FUEL:
-			case PLUTONIUM:
-				return 100;
-				//case THORIUM:
-				//	return 40;
-			case PELLET:
-				return 25;
-			case PLACER:
-				return ReactorTiles.TEList.length;
-			case RAW:
-				return ReactorNames.rawNames.length;
-			case FLUORITE:
-				return FluoriteTypes.colorList.length;
-			case INGOTS:
-				return ReactorOres.oreList.length-3;
-			case CANISTER:
-				return ReactorNames.canNames.length;
-			case CRAFTING:
-				return CraftingItems.partList.length;
-			case WASTE:
-				return WasteManager.getNumberWastes();
-			case BREEDERFUEL:
-				return 20;
-			case CLEANUP:
-				return ItemRegistry.STRONGCOIL.getNumberMetadatas();
-			case MAGNET:
-				return 8;
-			default:
-				return 1;
-		}
-	}
+        ItemRef(DeferredItem<? extends Item> item, int variants) {
+            this.item = item;
+            this.variants = variants;
+        }
 
-	public boolean isDummiedOut() {
-		return itemClass == null;
-	}
+        public Item getItemInstance() {
+            return item.get();
+        }
 
-	public ItemStack getCraftedProduct(int amt) {
-		return new ItemStack(this.getItemInstance(), amt, 0);
-	}
+        public ItemStack getStackOf() {
+            return new ItemStack(getItemInstance());
+        }
 
-	public ItemStack getCraftedMetadataProduct(int amt, int meta) {
-		return new ItemStack(this.getItemInstance(), amt, meta);
-	}
+        public ItemStack getStackOfMetadata(int meta) {
+            ItemStack s = getStackOf();
+            if (meta != 0)
+                s.setDamageValue(meta);
+            return s;
+        }
 
-	public ItemStack getStackOf() {
-		return this.getCraftedProduct(1);
-	}
+        public int getNumberMetadatas() {
+            return variants;
+        }
 
-	public ItemStack getStackOfMetadata(int meta) {
-		return this.getCraftedMetadataProduct(1, meta);
-	}
+        public boolean matchWith(ItemStack stack) {
+            return stack != null && !stack.isEmpty() && stack.getItem() == getItemInstance();
+        }
+    }
 
-	public Item getItemInstance() {
-		return ReactorCraft.items[this.ordinal()];
-	}
-
-	public static ReactorItems getEntryByID(Item id) {
-		return itemMap.get(id);
-	}
-
-	public static ReactorItems getEntry(ItemStack is) {
-		if (is == null)
-			return null;
-		return getEntryByID(is.getItem());
-	}
-
-	public boolean isAvailableInCreative(ItemStack item) {
-		switch(this) {
-			case INGOTS:
-				return item.getItemDamage() != ReactorOres.ENDBLENDE.getProductMetadata();
-			case FUEL:
-				//case THORIUM:
-			case PLUTONIUM:
-			case BREEDERFUEL:
-			case PELLET:
-				return item.getItemDamage() == 0;
-			default:
-				return true;
-		}
-	}
-
-	@Override
-	public boolean overwritingItem() {
-		return false;
-	}
-
-	public static void loadMappings() {
-		for (int i = 0; i < itemList.length; i++) {
-			ReactorItems r = itemList[i];
-			itemMap.put(r.getItemInstance(), r);
-		}
-	}
-
-	public boolean matchWith(ItemStack is) {
-		return is != null && is.getItem() == this.getItemInstance();
-	}
-
+    private ReactorItems() {}
 }

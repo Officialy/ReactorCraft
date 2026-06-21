@@ -26,12 +26,12 @@ public class LuaReactorCheckPebbles extends LuaMethod {
 	protected Object[] invoke(BlockEntity te, Object[] args) throws LuaMethodException, InterruptedException {
 		TileEntityPebbleBed tile = (TileEntityPebbleBed)te;
 		int fuel = 0;
-		int maxfuel = tile.getSizeInventory()*ReactorItems.PELLET.getNumberMetadatas();
-		for (int i = 0; i < tile.getSizeInventory(); i++) {
+		int maxfuel = tile.getContainerSize()*ReactorItems.PELLET.getNumberMetadatas();
+		for (int i = 0; i < tile.getContainerSize(); i++) {
 			ItemStack is = tile.getStackInSlot(i);
 			if (is != null) {
 				if (is.getItem() == ReactorItems.PELLET.getItemInstance()) {
-					fuel += ReactorItems.PELLET.getNumberMetadatas()-1-is.getItemDamage();
+					fuel += ReactorItems.PELLET.getNumberMetadatas()-1-is.getDamageValue();
 				}
 			}
 		}

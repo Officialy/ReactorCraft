@@ -9,9 +9,13 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.htgr;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidRegistry;
 
 import reika.dragonapi.libraries.mathsci.ReikaThermoHelper;
 import reika.dragonapi.libraries.registry.ReikaItemHelper;
@@ -21,6 +25,10 @@ import reika.reactorcraft.registry.ReactorType;
 import reika.rotarycraft.auxiliary.ItemStacks;
 
 public class TileEntityCO2Heater extends TileEntityIntermediateBoiler {
+	public TileEntityCO2Heater(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.CO2HEATER.get(), pos, state);
+	}
+
 
 	@Override
 	public int getLiquidUsage() {
@@ -54,17 +62,17 @@ public class TileEntityCO2Heater extends TileEntityIntermediateBoiler {
 
 	@Override
 	public Fluid getInputFluid() {
-		return FluidRegistry.getFluid("rc co2");
+		return ReactorFluids.getLegacyFluid("rc co2");
 	}
 
 	@Override
 	protected Fluid getOutputFluid() {
-		return FluidRegistry.getFluid("rc hot co2");
+		return ReactorFluids.getLegacyFluid("rc hot co2");
 	}
 
 	@Override
 	protected void overheat(Level world, int x, int y, int z) {
-		world.createExplosion(null, x+0.5, y+0.5, z+0.5, 4, true);
+		world.explode(/*PORT*/null, x+0.5, y+0.5, z+0.5, 4, true);
 		for (int i = 0; i < 4; i++)
 			ReikaItemHelper.dropItem(world, x+rand.nextDouble(), y+rand.nextDouble(), z+rand.nextDouble(), ItemStacks.scrap);
 	}

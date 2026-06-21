@@ -13,8 +13,8 @@ import java.net.URL;
 
 import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.entity.Entity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.instantiable.data.immutable.WorldLocation;
 import reika.dragonapi.interfaces.registry.CustomDistanceSound;
@@ -23,9 +23,6 @@ import reika.dragonapi.libraries.io.ReikaSoundHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.rotarycraft.registry.ConfigRegistry;
 
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public enum ReactorSounds implements CustomDistanceSound {
 
@@ -81,17 +78,17 @@ public enum ReactorSounds implements CustomDistanceSound {
 	}
 
 	public void playSound(Entity e, float vol, float pitch) {
-		this.playSound(e.worldObj, e.posX, e.posY, e.posZ, vol, pitch);
+		this.playSound(e.level, e.posX, e.posY, e.posZ, vol, pitch);
 	}
 
 	public void playSound(World world, double x, double y, double z, float vol, float pitch) {
-		if (FMLCommonHandler.instance().getEffectiveSide() != Side.SERVER)
+		if (FMLEnvironment.dist != Dist.DEDICATED_SERVER)
 			return;
 		ReikaSoundHelper.playSound(this, world, x, y, z, vol/* *this.getModulatedVolume()*/, pitch);
 	}
 
 	public void playSound(World world, double x, double y, double z, float vol, float pitch, boolean attenuate) {
-		if (world.isRemote)
+		if (world.isClientSide())
 			return;
 		ReikaSoundHelper.playSound(this, world, x, y, z, vol/* *this.getModulatedVolume()*/, pitch, attenuate);
 	}
@@ -105,11 +102,11 @@ public enum ReactorSounds implements CustomDistanceSound {
 	}
 
 	public void playSoundAtBlock(TileEntity te) {
-		this.playSoundAtBlock(te.worldObj, te.xCoord, te.yCoord, te.zCoord);
+		this.playSoundAtBlock(te.level, te.xCoord, te.yCoord, te.zCoord);
 	}
 
 	public void playSoundAtBlock(TileEntity te, float v, float p) {
-		this.playSoundAtBlock(te.worldObj, te.xCoord, te.yCoord, te.zCoord, v, p);
+		this.playSoundAtBlock(te.level, te.xCoord, te.yCoord, te.zCoord, v, p);
 	}
 
 	public void playSoundAtBlock(WorldLocation loc) {
@@ -117,9 +114,9 @@ public enum ReactorSounds implements CustomDistanceSound {
 	}
 
 	public void playSoundNoAttenuation(World world, double x, double y, double z, float vol, float pitch, int broadcast) {
-		if (world.isRemote)
+		if (world.isClientSide())
 			return;
-		//ReikaSoundHelper.playSound(this, ReactorCraft.packetChannel, te.worldObj, x, y, z, vol/* *this.getModulatedVolume()*/, pitch, false);
+		//ReikaSoundHelper.playSound(this, ReactorCraft.packetChannel, te.level, x, y, z, vol/* *this.getModulatedVolume()*/, pitch, false);
 		ReikaPacketHelper.sendSoundPacket(this, world, x, y, z, vol, pitch, false, broadcast);
 	}
 
@@ -136,7 +133,7 @@ public enum ReactorSounds implements CustomDistanceSound {
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	public SoundCategory getCategory() {
 		return SoundCategory.MASTER;
 	}

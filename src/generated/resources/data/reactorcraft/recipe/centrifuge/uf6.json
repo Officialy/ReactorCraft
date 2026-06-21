@@ -1,0 +1,16 @@
+{
+  "type": "reactorcraft:centrifuge",
+  "chance_a_over_b": 9.0,
+  "input": {
+    "amount": 50,
+    "id": "reactorcraft:uranium_hexafluoride"
+  },
+  "min_speed": 262144,
+  "output_a": {
+    "id": "reactorcraft:fuel_dust"
+  },
+  "output_b": {
+    "id": "reactorcraft:depleted_dust"
+  },
+  "speed_factor": 1
+}

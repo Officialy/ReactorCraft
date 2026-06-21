@@ -1,0 +1,13 @@
+{
+  "type": "reactorcraft:ore",
+  "config": {
+    "count": 2,
+    "dim_type": 0,
+    "max_y": 40,
+    "min_y": 16,
+    "needs_lava": false,
+    "ore": "reactorcraft:silver_ore",
+    "random_fluorite": false,
+    "size": 9
+  }
+}

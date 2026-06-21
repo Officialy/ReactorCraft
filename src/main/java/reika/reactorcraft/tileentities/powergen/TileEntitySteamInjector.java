@@ -11,12 +11,12 @@ package reika.reactorcraft.tileentities.powergen;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidHandler;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidRegistry;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.instantiable.HybridTank;
 import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
@@ -38,42 +38,42 @@ public class TileEntitySteamInjector extends BlockEntity implements IFluidHandle
 	}
 
 	@Override
-	public boolean canConnectToPipeOnSide(MachineRegistry p, ForgeDirection side) {
+	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
 		return this.canConnectToPipe(p);
 	}
 
 	@Override
-	public Flow getFlowForSide(ForgeDirection side) {
+	public Flow getFlowForSide(Direction side) {
 		return Flow.INPUT;
 	}
 
 	@Override
-	public int fill(ForgeDirection from, FluidStack resource, boolean doFill) {
+	public int fill(Direction from, FluidStack resource, boolean doFill) {
 		return this.canFill(from, resource.getFluid()) ? tank.fill(resource, doFill) : 0;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
 		return null;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
+	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
 		return null;
 	}
 
 	@Override
-	public boolean canFill(ForgeDirection from, Fluid fluid) {
-		return fluid.equals(FluidRegistry.getFluid("rc lubricant"));
+	public boolean canFill(Direction from, Fluid fluid) {
+		return fluid.equals(ReactorFluids.getLegacyFluid("rc lubricant"));
 	}
 
 	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
+	public boolean canDrain(Direction from, Fluid fluid) {
 		return false;
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(ForgeDirection from) {
+	public FluidTankInfo[] getTankInfo(Direction from) {
 		return new FluidTankInfo[]{tank.getInfo()};
 	}
 
@@ -83,21 +83,21 @@ public class TileEntitySteamInjector extends BlockEntity implements IFluidHandle
 	}
 
 	@Override
-	public void readFromNBT(CompoundTag NBT) {
-		super.readFromNBT(NBT);
+	public void loadAdditional(/*PORT*/CompoundTag NBT) {
+		super.loadAdditional(/*PORT*/NBT);
 
 		tank.readFromNBT(NBT);
 	}
 
 	@Override
-	public void writeToNBT(CompoundTag NBT) {
-		super.writeToNBT(NBT);
+	public void saveAdditional(/*PORT*/CompoundTag NBT) {
+		super.saveAdditional(/*PORT*/NBT);
 
 		tank.writeToNBT(NBT);
 	}
 
 	public int getLubricant() {
-		return tank.getLevel();
+		return tank.getFluidLevel();
 	}
 
 	void remove(int amt) {

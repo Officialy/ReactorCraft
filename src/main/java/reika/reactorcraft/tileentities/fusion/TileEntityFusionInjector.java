@@ -9,16 +9,19 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fusion;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.block.Block;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidHandler;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidRegistry;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.instantiable.HybridTank;
@@ -37,16 +40,17 @@ import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
 import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class TileEntityFusionInjector extends TileEntityReactorBase implements IFluidHandler, PipeConnector, MultiBlockTile, FusionReactorToroidPart,
 ToggleTile, NeutronTile {
+	public TileEntityFusionInjector(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.INJECTOR.get(), pos, state);
+	}
+
 
 	private final HybridTank tank = new HybridTank("injector", 8000);
 
-	private ForgeDirection facing;
+	private Direction facing;
 
 	private boolean hasMultiBlock;
 
@@ -61,9 +65,9 @@ ToggleTile, NeutronTile {
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		if (DragonAPICore.debugtest) {
-			tank.addLiquid(1000, FluidRegistry.getFluid("rc fusion plasma"));
+			tank.addLiquid(1000, ReactorFluids.getLegacyFluid("rc fusion plasma"));
 			hasMultiBlock = true;
 		}
 
@@ -71,7 +75,7 @@ ToggleTile, NeutronTile {
 			this.make(world, x, y, z);
 	}
 
-	public void setFacing(ForgeDirection dir) {
+	public void setFacing(Direction dir) {
 		facing = dir;
 	}
 
@@ -95,7 +99,7 @@ ToggleTile, NeutronTile {
 	private void createPlasma(Level world, int x, int y, int z) {
 		EntityPlasma e = new EntityPlasma(world, x, y, z, placer);
 		e.setTarget(x+this.getFacing().offsetX, z+this.getFacing().offsetZ);
-		if (!world.isRemote)
+		if (!world.isClientSide())
 			world.spawnEntityInWorld(e);
 	}
 
@@ -108,17 +112,17 @@ ToggleTile, NeutronTile {
 	public FusionReactorToroidPart getNextPart(Level world, int x, int y, int z) {
 		int dx = xCoord+this.getFacing().offsetX*2;
 		int dz = zCoord+this.getFacing().offsetZ*2;
-		BlockEntity te = world.getTileEntity(dx, y, dz);
+		BlockEntity te = world.getBlockEntity(dx, y, dz);
 		return te instanceof FusionReactorToroidPart ? (FusionReactorToroidPart)te : null;
 	}
 
-	public ForgeDirection getFacing() {
-		if (FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT && this.shouldFlip())
-			return System.currentTimeMillis()%4000 >= 2000 ? ForgeDirection.NORTH : ForgeDirection.SOUTH;
-			return facing != null ? facing : ForgeDirection.EAST;
+	public Direction getFacing() {
+		if (FMLEnvironment.dist == Dist.CLIENT && this.shouldFlip())
+			return System.currentTimeMillis()%4000 >= 2000 ? Direction.NORTH : Direction.SOUTH;
+			return facing != null ? facing : Direction.EAST;
 	}
 
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	private boolean shouldFlip() {
 		return StructureRenderer.isRenderingTiles();
 	}
@@ -129,42 +133,42 @@ ToggleTile, NeutronTile {
 	}
 
 	@Override
-	public boolean canConnectToPipeOnSide(MachineRegistry p, ForgeDirection side) {
+	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
 		return true;
 	}
 
 	@Override
-	public Flow getFlowForSide(ForgeDirection side) {
+	public Flow getFlowForSide(Direction side) {
 		return Flow.INPUT;
 	}
 
 	@Override
-	public int fill(ForgeDirection from, FluidStack resource, boolean doFill) {
+	public int fill(Direction from, FluidStack resource, boolean doFill) {
 		return this.canFill(from, resource.getFluid()) ? tank.fill(resource, doFill) : 0;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
 		return null;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, int amount, boolean doDrain) {
+	public FluidStack drain(Direction from, int amount, boolean doDrain) {
 		return null;
 	}
 
 	@Override
-	public boolean canFill(ForgeDirection from, Fluid fluid) {
-		return fluid.equals(FluidRegistry.getFluid("rc fusion plasma")) && this.getAdjacentTileEntity(from) instanceof TileEntityMagneticPipe;
+	public boolean canFill(Direction from, Fluid fluid) {
+		return fluid.equals(ReactorFluids.getLegacyFluid("rc fusion plasma")) && this.getAdjacentTileEntity(from) instanceof TileEntityMagneticPipe;
 	}
 
 	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
+	public boolean canDrain(Direction from, Fluid fluid) {
 		return false;
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(ForgeDirection from) {
+	public FluidTankInfo[] getTankInfo(Direction from) {
 		return new FluidTankInfo[]{tank.getInfo()};
 	}
 
@@ -174,7 +178,7 @@ ToggleTile, NeutronTile {
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
@@ -206,7 +210,7 @@ ToggleTile, NeutronTile {
 	}
 
 	@Override
-	public int getTextureState(ForgeDirection side) {
+	public int getTextureState(Direction side) {
 		return side == this.getFacing() ? 0 : side.offsetY != 0 ? 2 : 2;
 	}
 
@@ -223,22 +227,22 @@ ToggleTile, NeutronTile {
 
 	@Override
 	public void breakBlock() {
-		if (!worldObj.isRemote) {
+		if (!level.isRemote) {
 			for (int i = 0; i < 6; i++) {
-				ForgeDirection dir = dirs[i];
+				Direction dir = dirs[i];
 				int dx = xCoord+dir.offsetX;
 				int dy = yCoord+dir.offsetY;
 				int dz = zCoord+dir.offsetZ;
-				Block b = worldObj.getBlock(dx, dy, dz);
+				Block b = level.getBlock(dx, dy, dz);
 				if (b instanceof BlockReCMultiBlock) {
-					((BlockReCMultiBlock)b).breakMultiBlock(worldObj, dx, dy, dz);
+					((BlockReCMultiBlock)b).breakMultiBlock(level, dx, dy, dz);
 				}
 			}
 		}
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		return false;
 	}
 

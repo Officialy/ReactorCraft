@@ -9,84 +9,57 @@
  ******************************************************************************/
 package reika.reactorcraft.registry;
 
-import java.util.Locale;
-
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.StatCollector;
-import net.minecraftforge.oredict.ShapedOreRecipe;
-import net.minecraftforge.oredict.ShapelessOreRecipe;
-
-import reika.dragonapi.libraries.registry.ReikaItemHelper;
-
-import cpw.mods.fml.common.registry.GameRegistry;
-
+/**
+ * The ReactorCraft crafting components. In 1.7.10 these were metadata variants of a single
+ * {@code ItemReactorMulti} with {@code GameRegistry} recipe helpers; in 26.2 each is its own
+ * {@link net.minecraft.world.item.Item} (see {@link ReactorItems#CRAFTING}) and the recipes are
+ * emitted by datagen, so this enum keeps only the component identity (registry id + gating flag).
+ */
 public enum CraftingItems {
 
-	CANISTER(),
-	ROD(),
-	TANK(),
-	ALLOY(),
-	BACKING(),
-	MAGNETIC(),
-	MAGNETCORE(),
-	COOLANT(),
-	WIRE(),
-	SHIELD(),
-	FERROINGOT(),
-	HYSTERESIS(),
-	HYSTERESISRING(),
-	GRAPHITE(),
-	UDUST(),
-	FABRIC(),
-	CARBIDEFLAKES(),
-	CARBIDE(),
-	TURBCORE();
+    CANISTER("canister_part"),
+    ROD("rod"),
+    TANK("tank"),
+    ALLOY("alloy"),
+    BACKING("backing"),
+    MAGNETIC("magnetic"),
+    MAGNETCORE("magnet_core"),
+    COOLANT("coolant"),
+    WIRE("wire"),
+    SHIELD("shield"),
+    FERROINGOT("ferromagnetic_ingot"),
+    HYSTERESIS("hysteresis_unit"),
+    HYSTERESISRING("hysteresis_ring"),
+    GRAPHITE("graphite"),
+    UDUST("uranium_dust"),
+    FABRIC("radiation_fabric"),
+    CARBIDEFLAKES("carbide_flakes"),
+    CARBIDE("carbide"),
+    TURBCORE("turbine_core");
 
-	public final String itemName;
+    private final String registryName;
 
-	public static final CraftingItems[] partList = values();
+    public static final CraftingItems[] partList = values();
 
-	private CraftingItems() {
-		itemName = StatCollector.translateToLocal("crafting."+this.name().toLowerCase(Locale.ENGLISH));
-	}
+    CraftingItems(String registryName) {
+        this.registryName = registryName;
+    }
 
-	public ItemStack getItem() {
-		return ReactorItems.CRAFTING.getStackOfMetadata(this.ordinal());
-	}
+    public String registryName() {
+        return registryName;
+    }
 
-	public void addRecipe(Object... o) {
-		GameRegistry.addRecipe(this.getItem(), o);
-	}
-
-	public void addSizedRecipe(int size, Object... o) {
-		GameRegistry.addRecipe(ReikaItemHelper.getSizedItemStack(this.getItem(), size), o);
-	}
-
-	public void addSizedOreRecipe(int size, Object... o) {
-		ShapedOreRecipe ir = new ShapedOreRecipe(ReikaItemHelper.getSizedItemStack(this.getItem(), size), o);
-		GameRegistry.addRecipe(ir);
-	}
-
-	public void addShapelessRecipe(Object... o) {
-		GameRegistry.addShapelessRecipe(this.getItem(), o);
-	}
-
-	public void addShapelessOreRecipe(Object... o) {
-		GameRegistry.addRecipe(new ShapelessOreRecipe(this.getItem(), o));
-	}
-
-	public boolean isGating() {
-		switch(this) {
-			case WIRE:
-			case COOLANT:
-			case UDUST:
-			case FABRIC:
-			case HYSTERESIS:
-			case HYSTERESISRING:
-				return false;
-			default:
-				return true;
-		}
-	}
-
+    public boolean isGating() {
+        switch (this) {
+            case WIRE:
+            case COOLANT:
+            case UDUST:
+            case FABRIC:
+            case HYSTERESIS:
+            case HYSTERESISRING:
+                return false;
+            default:
+                return true;
+        }
+    }
 }

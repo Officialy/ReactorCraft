@@ -9,9 +9,8 @@
  ******************************************************************************/
 package reika.reactorcraft.event;
 
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
-import cpw.mods.fml.common.eventhandler.Event;
 
 public class ReactorMeltdownEvent extends Event {
 

@@ -1,22 +1,22 @@
 package reika.reactorcraft.base;
 
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.base.StructureBase;
 
 
 public abstract class ReactorStructureBase extends StructureBase {
 
-	public ForgeDirection dir;
+	public Direction dir;
 
 	@Override
 	protected void initDisplayData() {
-		dir = ForgeDirection.EAST;
+		dir = Direction.EAST;
 	}
 
 	@Override
 	protected void finishDisplayCall() {
-		dir = null;
+		dir = ItemStack.EMPTY;
 	}
 
 }

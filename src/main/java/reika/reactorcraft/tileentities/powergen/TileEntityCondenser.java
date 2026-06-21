@@ -9,12 +9,15 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidRegistry;
+import net.neoforged.neoforge.fluids.FluidStack;
 
 import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.reactorcraft.base.TileEntityTankedReactorMachine;
@@ -27,6 +30,10 @@ import reika.rotarycraft.registry.MachineRegistry;
 import buildcraft.api.transport.IPipeTile.PipeType;
 
 public class TileEntityCondenser extends TileEntityTankedReactorMachine {
+	public TileEntityCondenser(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.CONDENSER.get(), pos, state);
+	}
+
 
 	@Override
 	public ReactorTiles getTile() {
@@ -34,15 +41,15 @@ public class TileEntityCondenser extends TileEntityTankedReactorMachine {
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		thermalTicker.update();
 		//this.getSteam(world, x, y, z);
-		if (world.getBlock(x, y-1, z) == ReactorBlocks.STEAM.getBlockInstance() && !tank.isFull() && temperature < 100 && !world.isRemote) {
+		if (world.getBlock(x, y-1, z) == ReactorBlocks.STEAM.getBlockInstance() && !tank.isFull() && temperature < 100 && !world.isClientSide()) {
 			int smeta = world.getBlockMetadata(x, y-1, z);
 			Fluid f = this.getFluidFromSteamMetadata(smeta);
 			//ReikaJavaLibrary.pConsole(f.getName());
 			if (tank.isEmpty() || tank.getActualFluid().equals(f)) {
-				world.setBlockToAir(x, y-1, z);
+				world.removeBlock(x, y-1, z);
 				tank.addLiquid(TileEntityReactorBoiler.WATER_PER_STEAM, f);
 			}
 		}
@@ -52,22 +59,22 @@ public class TileEntityCondenser extends TileEntityTankedReactorMachine {
 	}
 
 	private Fluid getFluidFromSteamMetadata(int smeta) {
-		//ReikaJavaLibrary.pConsole(String.format("%4s", Integer.toBinaryString(smeta)).replace(" ", "0"), Side.SERVER);
+		//ReikaJavaLibrary.pConsole(String.format("%4s", Integer.toBinaryString(smeta)).replace(" ", "0"), Dist.DEDICATED_SERVER);
 		if ((smeta&4) == 4)
-			return FluidRegistry.getFluid("rc lowpammonia");
-		return FluidRegistry.getFluid("rc lowpwater");
+			return ReactorFluids.getLegacyFluid("rc lowpammonia");
+		return ReactorFluids.getLegacyFluid("rc lowpwater");
 	}
 
 	private void balance(Level world, int x, int y, int z) {
 		for (int i = 0; i < 6; i++) {
-			ForgeDirection dir = dirs[i];
+			Direction dir = dirs[i];
 			int dx = x+dir.offsetX;
 			int dy = y+dir.offsetY;
 			int dz = z+dir.offsetZ;
 			ReactorTiles rt = ReactorTiles.getTE(world, dx, dy, dz);
 			if (rt == ReactorTiles.CONDENSER) {
-				TileEntityCondenser te = (TileEntityCondenser)world.getTileEntity(dx, dy, dz);
-				int dL = te.tank.getLevel() - tank.getLevel();
+				TileEntityCondenser te = (TileEntityCondenser)world.getBlockEntity(dx, dy, dz);
+				int dL = te.tank.getFluidLevel() - tank.getFluidLevel();
 				if (dL/4 > 0) {
 					tank.addLiquid(dL/4, te.tank.getActualFluid());
 					te.tank.removeLiquid(dL/4);
@@ -77,18 +84,18 @@ public class TileEntityCondenser extends TileEntityTankedReactorMachine {
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
 		return this.canDrain(from, resource.getFluid()) ? tank.drain(resource.amount, doDrain) : null;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
-		//ReikaJavaLibrary.pConsole(from, Side.SERVER);
+	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
+		//ReikaJavaLibrary.pConsole(from, Dist.DEDICATED_SERVER);
 		if (this.canDrain(from, null)) {
 			return tank.drain(maxDrain, doDrain);
 		}
@@ -96,8 +103,8 @@ public class TileEntityCondenser extends TileEntityTankedReactorMachine {
 	}
 
 	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
-		return from == ForgeDirection.UP && ReikaFluidHelper.isFluidDrainableFromTank(fluid, tank);
+	public boolean canDrain(Direction from, Fluid fluid) {
+		return from == Direction.UP && ReikaFluidHelper.isFluidDrainableFromTank(fluid, tank);
 	}
 
 	@Override
@@ -111,7 +118,7 @@ public class TileEntityCondenser extends TileEntityTankedReactorMachine {
 	}
 
 	@Override
-	public boolean canReceiveFrom(ForgeDirection from) {
+	public boolean canReceiveFrom(Direction from) {
 		return false;
 	}
 
@@ -136,22 +143,22 @@ public class TileEntityCondenser extends TileEntityTankedReactorMachine {
 
 	@Override
 	public boolean isValidFluid(Fluid f) {
-		return false;//WorkingFluid.getWorkingFluid(f) != null;
+		return false;//WorkingFluid.getWorkingFluid(f) != ItemStack.EMPTY;
 	}
 
 	@Override
-	public ConnectOverride overridePipeConnection(PipeType type, ForgeDirection with) {
-		return type == PipeType.FLUID ? (with == ForgeDirection.UP ? ConnectOverride.CONNECT : ConnectOverride.DISCONNECT) : ConnectOverride.DEFAULT;
+	public ConnectOverride overridePipeConnection(PipeType type, Direction with) {
+		return type == PipeType.FLUID ? (with == Direction.UP ? ConnectOverride.CONNECT : ConnectOverride.DISCONNECT) : ConnectOverride.DEFAULT;
 	}
 
 	@Override
-	public boolean canConnectToPipeOnSide(MachineRegistry p, ForgeDirection side) {
-		return side == ForgeDirection.UP && this.canConnectToPipe(p);
+	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
+		return side == Direction.UP && this.canConnectToPipe(p);
 	}
 
 	@Override
-	public Flow getFlowForSide(ForgeDirection side) {
-		return side == ForgeDirection.UP ? Flow.OUTPUT : Flow.NONE;
+	public Flow getFlowForSide(Direction side) {
+		return side == Direction.UP ? Flow.OUTPUT : Flow.NONE;
 	}
 
 }

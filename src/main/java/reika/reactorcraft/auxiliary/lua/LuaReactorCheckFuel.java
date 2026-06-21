@@ -35,7 +35,7 @@ public class LuaReactorCheckFuel extends LuaMethod {
 				ItemStack is = tile.getStackInSlot(i);
 				if (is != null) {
 					if (is.getItem() == ReactorItems.BREEDERFUEL.getItemInstance()) {
-						fuel += ReactorItems.BREEDERFUEL.getNumberMetadatas()-1-is.getItemDamage();
+						fuel += ReactorItems.BREEDERFUEL.getNumberMetadatas()-1-is.getDamageValue();
 					}
 				}
 			}
@@ -46,10 +46,10 @@ public class LuaReactorCheckFuel extends LuaMethod {
 				ItemStack is = tile.getStackInSlot(i);
 				if (is != null) {
 					if (is.getItem() == ReactorItems.FUEL.getItemInstance()) {
-						fuel += ReactorItems.FUEL.getNumberMetadatas()-1-is.getItemDamage();
+						fuel += ReactorItems.FUEL.getNumberMetadatas()-1-is.getDamageValue();
 					}
 					else if (is.getItem() == ReactorItems.PLUTONIUM.getItemInstance()) {
-						fuel += ReactorItems.PLUTONIUM.getNumberMetadatas()-1-is.getItemDamage();
+						fuel += ReactorItems.PLUTONIUM.getNumberMetadatas()-1-is.getDamageValue();
 					}
 				}
 			}

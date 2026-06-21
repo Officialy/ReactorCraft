@@ -1,0 +1,177 @@
+package reika.reactorcraft.data;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.data.PackOutput;
+import net.minecraft.data.recipes.RecipeCategory;
+import net.minecraft.data.recipes.RecipeOutput;
+import net.minecraft.data.recipes.RecipeProvider;
+import net.minecraft.data.recipes.SimpleCookingRecipeBuilder;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.ItemStackTemplate;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.CookingBookCategory;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.level.ItemLike;
+
+import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.registry.CraftingItems;
+import reika.reactorcraft.registry.FluoriteTypes;
+import reika.reactorcraft.registry.ReactorItems;
+import reika.reactorcraft.registry.ReactorOreType;
+import reika.rotarycraft.auxiliary.recipemanagers.FrictionHeaterRecipe;
+import reika.rotarycraft.auxiliary.recipemanagers.GrinderRecipe;
+import reika.rotarycraft.auxiliary.recipemanagers.ShapelessBlastFurnaceRecipe;
+import reika.rotarycraft.registry.RotaryBlocks;
+import reika.rotarycraft.registry.RotaryItems;
+
+/**
+ * Recipe datagen for the ore→fuel slice, transcribed FAITHFULLY from the 1.7.10
+ * {@code ReactorRecipes} (smelting/crafting) and the processor/centrifuge chemistry enums:
+ * <ul>
+ *   <li>Smelting: every ore block → its product (per-ore XP), every fluorite ore → its gem,
+ *       calcite → lime. ({@code ReactorRecipes.addSmelting})</li>
+ *   <li>Crafting: tank, canister part, control rod, empty fluid canister, and the 2×2
+ *       fuel-dust / depleted-dust compaction. ({@code addCrafting} / {@code addItems})</li>
+ *   <li>Processor / centrifuge: the {@code ProcessorRecipe.UF6} and {@code CentrifugeRecipe.UF6}
+ *       custom recipes, written as JSON so the values live in data not a hardcoded enum.</li>
+ *   <li>Cross-mod (RotaryCraft recipe types, emitted under the reactorcraft namespace because
+ *       RotaryCraft has no dependency on ReactorCraft): Cd+In+Ag alloy in the blast furnace,
+ *       coal-dust→graphite in the friction heater, uranium/emerald grinding.
+ *       ({@code ReactorRecipes.addRCInterface} / {@code addCrafting})</li>
+ * </ul>
+ * The processor/centrifuge machine block crafting recipes are deferred with their (not-yet-ported)
+ * {@code BlockReactorTile} blocks — those result items don't exist yet.
+ */
+public final class ReactorRecipeProvider extends RecipeProvider.Runner {
+
+    public ReactorRecipeProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
+        super(output, registries);
+    }
+
+    @Override
+    public String getName() {
+        return "ReactorCraft Recipes";
+    }
+
+    @Override
+    protected RecipeProvider createRecipeProvider(HolderLookup.Provider registries, RecipeOutput out) {
+        return new Recipes(registries, out);
+    }
+
+    private static final class Recipes extends RecipeProvider {
+        private final RecipeOutput out;
+
+        Recipes(HolderLookup.Provider registries, RecipeOutput out) {
+            super(registries, out);
+            this.out = out;
+        }
+
+        @Override
+        protected void buildRecipes() {
+            smelting();
+            crafting();
+            crossMod();
+        }
+
+        private void smelting() {
+            for (ReactorOreType ore : ReactorOreType.list) {
+                if (ore == ReactorOreType.FLUORITE)
+                    continue;
+                smelt("smelt_" + ore.featureName(), ore.getBlock().asItem(), ore.getProduct(), ore.xp);
+            }
+            for (FluoriteTypes f : FluoriteTypes.colorList) {
+                smelt("smelt_" + f.getOreBlockName(),
+                        reika.reactorcraft.registry.ReactorBlocks.fluoriteOre(f).asItem(),
+                        ReactorItems.fluorite(f), 0.4F);
+            }
+            smelt("smelt_calcite_to_lime", ReactorItems.CALCITE.get(), ReactorItems.LIME.get(), 0.2F);
+        }
+
+        private void smelt(String id, ItemLike input, ItemLike output, float xp) {
+            SimpleCookingRecipeBuilder.smelting(Ingredient.of(input), RecipeCategory.MISC,
+                            CookingBookCategory.MISC, output.asItem(), xp, 200)
+                    .unlockedBy("has_input", has(input))
+                    .save(out, ReactorCraft.MODID + ":" + id);
+        }
+
+        private void crafting() {
+            shaped(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.TANK))
+                    .define('O', RotaryBlocks.BLASTGLASS.get())
+                    .pattern("OOO").pattern("O O").pattern("OOO")
+                    .unlockedBy("has_blast_glass", has(RotaryBlocks.BLASTGLASS.get()))
+                    .save(out);
+
+            shaped(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.CANISTER))
+                    .define('S', ReactorItems.crafting(CraftingItems.ALLOY))
+                    .define('C', Items.CHEST)
+                    .pattern(" S ").pattern("SCS").pattern(" S ")
+                    .unlockedBy("has_alloy", has(ReactorItems.crafting(CraftingItems.ALLOY)))
+                    .save(out);
+
+            shaped(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.ROD))
+                    .define('S', RotaryItems.HSLA_STEEL_INGOT.get())
+                    .define('A', ReactorItems.crafting(CraftingItems.ALLOY))
+                    .define('C', ReactorItems.crafting(CraftingItems.GRAPHITE))
+                    .pattern("SAS").pattern("ACA").pattern("SAS")
+                    .unlockedBy("has_alloy", has(ReactorItems.crafting(CraftingItems.ALLOY)))
+                    .save(out, ReactorCraft.MODID + ":control_rod");
+
+            shaped(RecipeCategory.MISC, ReactorItems.CANISTER.get(), 16)
+                    .define('g', Items.GLASS)
+                    .define('i', Items.IRON_INGOT)
+                    .pattern(" i ").pattern("igi").pattern(" i ")
+                    .unlockedBy("has_iron", has(Items.IRON_INGOT))
+                    .save(out);
+
+            shaped(RecipeCategory.MISC, ReactorItems.FUEL_ROD.get(), 2)
+                    .define('d', ReactorItems.FUEL_DUST.get())
+                    .pattern("dd").pattern("dd")
+                    .unlockedBy("has_fuel_dust", has(ReactorItems.FUEL_DUST.get()))
+                    .save(out);
+
+            shaped(RecipeCategory.MISC, ReactorItems.DEPLETED_FUEL.get(), 2)
+                    .define('d', ReactorItems.DEPLETED_DUST.get())
+                    .pattern("dd").pattern("dd")
+                    .unlockedBy("has_depleted_dust", has(ReactorItems.DEPLETED_DUST.get()))
+                    .save(out);
+        }
+
+        // RotaryCraft-typed recipes referencing reactorcraft items (emitted in our namespace).
+        private void crossMod() {
+            List<Ingredient> alloyIns = new ArrayList<>();
+            alloyIns.add(Ingredient.of(ReactorItems.CADMIUM_INGOT.get()));
+            alloyIns.add(Ingredient.of(ReactorItems.INDIUM_INGOT.get()));
+            alloyIns.add(Ingredient.of(ReactorItems.SILVER_INGOT.get()));
+            accept("alloy", new ShapelessBlastFurnaceRecipe(
+                    alloyIns, List.of(),
+                    new ItemStackTemplate(ReactorItems.crafting(CraftingItems.ALLOY), 3),
+                    1600F, 0F, 1.0F, 0, 0, 0));
+
+            accept("graphite", new FrictionHeaterRecipe(
+                    Ingredient.of(RotaryItems.COAL_DUST.get()),
+                    new ItemStackTemplate(ReactorItems.crafting(CraftingItems.GRAPHITE)),
+                    400F, 100));
+
+            accept("grinder/uranium_to_udust", new GrinderRecipe(
+                    Ingredient.of(ReactorItems.URANIUM_INGOT.get()),
+                    new ItemStackTemplate(ReactorItems.crafting(CraftingItems.UDUST))));
+
+            accept("grinder/emerald_to_dust", new GrinderRecipe(
+                    Ingredient.of(Items.EMERALD),
+                    new ItemStackTemplate(ReactorItems.EMERALD_DUST.get())));
+        }
+
+        private void accept(String path, Recipe<?> recipe) {
+            ResourceKey<Recipe<?>> key = ResourceKey.create(Registries.RECIPE,
+                    Identifier.fromNamespaceAndPath(ReactorCraft.MODID, path));
+            out.accept(key, recipe, null);
+        }
+    }
+}

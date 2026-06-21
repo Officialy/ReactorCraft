@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "d": "reactorcraft:fuel_dust"
+  },
+  "pattern": [
+    "dd",
+    "dd"
+  ],
+  "result": {
+    "count": 2,
+    "id": "reactorcraft:fuel_rod"
+  }
+}

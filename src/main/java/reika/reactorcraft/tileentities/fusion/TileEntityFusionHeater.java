@@ -9,21 +9,24 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fusion;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.block.Block;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidHandler;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidRegistry;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.auxiliary.MultiBlockTile;
 import reika.reactorcraft.base.BlockReCMultiBlock;
 import reika.reactorcraft.base.TileEntityReactorBase;
@@ -37,6 +40,10 @@ import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
 public class TileEntityFusionHeater extends TileEntityReactorBase implements TemperatureTE, Laserable, IFluidHandler, PipeConnector, MultiBlockTile {
+	public TileEntityFusionHeater(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.HEATER.get(), pos, state);
+	}
+
 
 	public static final int PLASMA_TEMP = 150000000;
 
@@ -49,11 +56,11 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 	private final HybridTank h3 = new HybridTank("fusionheaterh3", 4000);
 
 	public boolean hasMultiBlock() {
-		return hasMultiBlock && !ReikaWorldHelper.isExposedToAir(worldObj, xCoord, yCoord, zCoord);
+		return hasMultiBlock && !ReikaWorldHelper.isExposedToAir(level, xCoord, yCoord, zCoord);
 	}
 
 	public void setHasMultiBlock(boolean has) {
-		hasMultiBlock = has && !ReikaWorldHelper.isExposedToAir(worldObj, xCoord, yCoord, zCoord);
+		hasMultiBlock = has && !ReikaWorldHelper.isExposedToAir(level, xCoord, yCoord, zCoord);
 	}
 
 	@Override
@@ -67,29 +74,29 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		this.updateTemperature(world, x, y, z, meta);
 
 		if (DragonAPICore.debugtest) {
 			temperature = 200000000;
 		}
 
-		//ReikaJavaLibrary.pConsole(temperature+": "+((float)temperature/PLASMA_TEMP), Side.SERVER);
-		//ReikaJavaLibrary.pConsole(h2, Side.SERVER);
+		//ReikaJavaLibrary.pConsole(temperature+": "+((float)temperature/PLASMA_TEMP), Dist.DEDICATED_SERVER);
+		//ReikaJavaLibrary.pConsole(h2, Dist.DEDICATED_SERVER);
 
 		if (this.canMake())
 			this.make();
 	}
 
 	private boolean canMake() {
-		return this.hasMultiBlock() && temperature >= PLASMA_TEMP && h2.getLevel() >= 50 && h3.getLevel() >= 50 && tank.canTakeIn(100);
+		return this.hasMultiBlock() && temperature >= PLASMA_TEMP && h2.getFluidLevel() >= 50 && h3.getFluidLevel() >= 50 && tank.canTakeIn(100);
 	}
 
 	private void make() {
 		ReactorAchievements.PLASMA.triggerAchievement(this.getPlacer());
 		h2.removeLiquid(50);
 		h3.removeLiquid(50);
-		tank.addLiquid(100, FluidRegistry.getFluid("rc fusion plasma"));
+		tank.addLiquid(100, ReactorFluids.getLegacyFluid("rc fusion plasma"));
 	}
 
 	public void updateTemperature(Level world, int x, int y, int z, int meta) {
@@ -105,14 +112,14 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
 	private boolean isHydrogen(Fluid f) {
-		if (f.equals(FluidRegistry.getFluid("rc deuterium")))
+		if (f.equals(ReactorFluids.getLegacyFluid("rc deuterium")))
 			return true;
-		if (f.equals(FluidRegistry.getFluid("rc tritium")))
+		if (f.equals(ReactorFluids.getLegacyFluid("rc tritium")))
 			return true;
 		return false;
 	}
@@ -164,38 +171,38 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 	}
 
 	@Override
-	public int fill(ForgeDirection from, FluidStack resource, boolean doFill) {
+	public int fill(Direction from, FluidStack resource, boolean doFill) {
 		if (!this.canFill(from, resource.getFluid()))
 			return 0;
-		if (resource.getFluid().equals(FluidRegistry.getFluid("rc deuterium")))
+		if (resource.getFluid().equals(ReactorFluids.getLegacyFluid("rc deuterium")))
 			return h2.fill(resource, doFill);
-		if (resource.getFluid().equals(FluidRegistry.getFluid("rc tritium")))
+		if (resource.getFluid().equals(ReactorFluids.getLegacyFluid("rc tritium")))
 			return h3.fill(resource, doFill);
 		return 0;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
 		return this.canDrain(from, resource.getFluid()) ? tank.drain(resource.amount, doDrain) : null;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
+	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
 		return this.canDrain(from, null) ? tank.drain(maxDrain, doDrain) : null;
 	}
 
 	@Override
-	public boolean canFill(ForgeDirection from, Fluid fluid) {
+	public boolean canFill(Direction from, Fluid fluid) {
 		return this.isHydrogen(fluid);
 	}
 
 	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
-		return from == ForgeDirection.UP && this.getAdjacentTileEntity(from) instanceof TileEntityMagneticPipe && ReikaFluidHelper.isFluidDrainableFromTank(fluid, tank);
+	public boolean canDrain(Direction from, Fluid fluid) {
+		return from == Direction.UP && this.getAdjacentTileEntity(from) instanceof TileEntityMagneticPipe && ReikaFluidHelper.isFluidDrainableFromTank(fluid, tank);
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(ForgeDirection from) {
+	public FluidTankInfo[] getTankInfo(Direction from) {
 		return new FluidTankInfo[]{h2.getInfo(), h3.getInfo(), tank.getInfo()};
 	}
 
@@ -205,17 +212,17 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 	}
 
 	@Override
-	public boolean canConnectToPipeOnSide(MachineRegistry p, ForgeDirection side) {
-		return p.isStandardPipe() && side != ForgeDirection.UP;
+	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
+		return p.isStandardPipe() && side != Direction.UP;
 	}
 
 	@Override
-	public Flow getFlowForSide(ForgeDirection side) {
-		return side == ForgeDirection.UP ? Flow.OUTPUT : Flow.INPUT;
+	public Flow getFlowForSide(Direction side) {
+		return side == Direction.UP ? Flow.OUTPUT : Flow.INPUT;
 	}
 
 	@Override
-	public int getTextureState(ForgeDirection side) {
+	public int getTextureState(Direction side) {
 		return 0;
 	}
 
@@ -235,15 +242,15 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 
 	@Override
 	public void breakBlock() {
-		if (!worldObj.isRemote) {
+		if (!level.isRemote) {
 			for (int i = 0; i < 6; i++) {
-				ForgeDirection dir = dirs[i];
+				Direction dir = dirs[i];
 				int dx = xCoord+dir.offsetX;
 				int dy = yCoord+dir.offsetY;
 				int dz = zCoord+dir.offsetZ;
-				Block b = worldObj.getBlock(dx, dy, dz);
+				Block b = level.getBlock(dx, dy, dz);
 				if (b instanceof BlockReCMultiBlock) {
-					((BlockReCMultiBlock)b).breakMultiBlock(worldObj, dx, dy, dz);
+					((BlockReCMultiBlock)b).breakMultiBlock(level, dx, dy, dz);
 				}
 			}
 		}

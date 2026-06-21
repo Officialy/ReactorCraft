@@ -1,0 +1,29 @@
+{
+  "type": "reactorcraft:processor",
+  "catalyst": [
+    "reactorcraft:blue_fluorite",
+    "reactorcraft:pink_fluorite",
+    "reactorcraft:orange_fluorite",
+    "reactorcraft:magenta_fluorite",
+    "reactorcraft:green_fluorite",
+    "reactorcraft:red_fluorite",
+    "reactorcraft:white_fluorite",
+    "reactorcraft:yellow_fluorite"
+  ],
+  "input_fluid": {
+    "amount": 250,
+    "id": "minecraft:water"
+  },
+  "input_item": "reactorcraft:uranium_ingot",
+  "intermediate_consumed": 125,
+  "intermediate_fluid": {
+    "amount": 250,
+    "id": "reactorcraft:hydrofluoric_acid"
+  },
+  "intermediate_time": 80,
+  "output_fluid": {
+    "amount": 1000,
+    "id": "reactorcraft:uranium_hexafluoride"
+  },
+  "output_time": 400
+}

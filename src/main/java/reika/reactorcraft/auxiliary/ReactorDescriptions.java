@@ -45,10 +45,6 @@ import reika.reactorcraft.tileentities.processing.TileEntityElectrolyzer;
 import reika.reactorcraft.tileentities.processing.TileEntitySynthesizer;
 import reika.reactorcraft.tileentities.processing.TileEntityWasteDecayer;
 
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public final class ReactorDescriptions {
 
@@ -79,10 +75,10 @@ public final class ReactorDescriptions {
 	}
 
 	private static String getParent(boolean locale) {
-		return locale && FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT ? getLocalizedParent() : "Resources/";
+		return locale && FMLEnvironment.dist == Dist.CLIENT ? getLocalizedParent() : "Resources/";
 	}
 
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	private static String getLocalizedParent() {
 		Language language = Minecraft.getMinecraft().getLanguageManager().getCurrentLanguage();
 		String lang = language.getLanguageCode();
@@ -91,11 +87,11 @@ public final class ReactorDescriptions {
 		return "Resources/";
 	}
 
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	private static boolean hasLocalizedFor(Language language) {
 		String lang = language.getLanguageCode();
 		try (InputStream o = ReactorCraft.class.getResourceAsStream("Resources/"+lang+"/categories.xml")) {
-			return o != null;
+			return o != ItemStack.EMPTY;
 		}
 		catch (IOException e) {
 			e.printStackTrace();

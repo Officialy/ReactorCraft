@@ -60,7 +60,7 @@ public class RadiationEffects {
 
 	public boolean applyEffects(LivingEntity e, RadiationIntensity ri) {
 		if (ri.causesHarm()) {
-			if (!e.hasEffect(ReactorCraft.radiation)) {
+			if (!e.hasEffect(ReactorCraft.radiation.get())) {
 				if (!this.isEntityImmuneToAll(e) && !ri.hasSufficientShielding(e)) {
 					e.addEffect(this.getRadiationEffect(ri));
 					return true;
@@ -76,7 +76,7 @@ public class RadiationEffects {
 	}
 
 	public void applyPulseEffects(LivingEntity e, RadiationIntensity ri) {
-		if (!e.hasEffect(ReactorCraft.radiation) && !this.isEntityImmuneToAll(e) && !ri.hasSufficientShielding(e))
+		if (!e.hasEffect(ReactorCraft.radiation.get()) && !this.isEntityImmuneToAll(e) && !ri.hasSufficientShielding(e))
 			e.addEffect(this.getRadiationEffect(20, ri));
 	}
 
@@ -175,7 +175,7 @@ public class RadiationEffects {
 	}
 
 	private MobEffectInstance getRadiationEffect(int duration, RadiationIntensity ri) {
-		return new MobEffectInstance(ReactorCraft.radiation, duration, ri.ordinal());
+		return new MobEffectInstance(ReactorCraft.radiation.get(), duration, ri.ordinal());
 	}
 
 	public void doOreIrradiation(Level world, int x, int y, int z, Player ep) {

@@ -9,11 +9,14 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.block.Block;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 import reika.reactorcraft.auxiliary.MultiBlockTile;
 import reika.reactorcraft.base.BlockReCMultiBlock;
@@ -26,13 +29,17 @@ import reika.rotarycraft.api.power.ShaftPowerReceiver;
 import reika.rotarycraft.auxiliary.ShaftPowerEmitter;
 
 public class TileEntityReactorFlywheel extends TileEntityReactorBase implements ShaftPowerEmitter, Screwdriverable, MultiBlockTile {
+	public TileEntityReactorFlywheel(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.FLYWHEEL.get(), pos, state);
+	}
+
 
 	private int iotick;
 	private long power;
 	private int omega;
 	private int torque;
 
-	private ForgeDirection facing;
+	private Direction facing;
 
 	private boolean hasMultiBlock = false;
 
@@ -49,8 +56,8 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 		hasMultiBlock = has;
 	}
 
-	public ForgeDirection getFacing() {
-		return facing != null ? facing : ForgeDirection.EAST;
+	public Direction getFacing() {
+		return facing != null ? facing : Direction.EAST;
 	}
 
 	@Override
@@ -59,14 +66,14 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		facing = this.setFacing(meta);
 		int dx = x+this.getFacing().offsetX;
 		int dy = y+this.getFacing().offsetY;
 		int dz = z+this.getFacing().offsetZ;
 		ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
 		if (r != null && r.isTurbine()) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getTileEntity(dx, dy, dz);
+			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(dx, dy, dz);
 			//if (te.getOmega() > omega && omega < MAXSPEED && te.getTorque() >= MINTORQUE) {
 			//	omega++;
 			//}
@@ -74,7 +81,7 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 			//	omega--;
 			//}
 			//torque = te.getTorque();
-			//ReikaJavaLibrary.pConsole(torque+"/"+te.getTorque()+":"+omega+"/"+te.getOmega(), Side.SERVER);
+			//ReikaJavaLibrary.pConsole(torque+"/"+te.getTorque()+":"+omega+"/"+te.getOmega(), Dist.DEDICATED_SERVER);
 			omega = te.getOmega();
 			torque = TileEntityReactorFlywheel.clampTorque(te);
 		}
@@ -100,29 +107,29 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 		return te instanceof TileEntityHiPTurbine ? te.getTorque() : Math.min(te.getTorque(), te.isAmmonia() ? MAXTORQUE_AMMONIA : MAXTORQUE);
 	}
 
-	private ForgeDirection setFacing(int meta) {
+	private Direction setFacing(int meta) {
 		switch(meta) {
 			case 0:
-				return ForgeDirection.EAST;
+				return Direction.EAST;
 			case 1:
-				return ForgeDirection.WEST;
+				return Direction.WEST;
 			case 2:
-				return ForgeDirection.SOUTH;
+				return Direction.SOUTH;
 			case 3:
-				return ForgeDirection.NORTH;
+				return Direction.NORTH;
 			default:
 				return null;
 		}
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 		int dx = x+this.getFacing().offsetX;
 		int dy = y+this.getFacing().offsetY;
 		int dz = z+this.getFacing().offsetZ;
 		ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
 		if (r != null && r.isTurbine()) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getTileEntity(dx, dy, dz);
+			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(dx, dy, dz);
 			phi = te.phi*6;
 		}
 		iotick -= 8;
@@ -164,8 +171,8 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 	}
 
 	@Override
-	public boolean canWriteTo(ForgeDirection from) {
-		ForgeDirection dir = this.getFacing().getOpposite();
+	public boolean canWriteTo(Direction from) {
+		Direction dir = this.getFacing().getOpposite();
 		return dir == from;
 	}
 
@@ -190,13 +197,13 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 	}
 
 	@Override
-	public boolean onShiftRightClick(Level world, int x, int y, int z, ForgeDirection side) {
+	public boolean onShiftRightClick(Level world, int x, int y, int z, Direction side) {
 		return false;
 	}
 
 	@Override
-	public boolean onRightClick(Level world, int x, int y, int z, ForgeDirection side) {
-		int meta = this.getBlockMetadata();
+	public boolean onRightClick(Level world, int x, int y, int z, Direction side) {
+		int meta = this;
 		if (this.hasMultiBlock()) {
 			this.setBlockMetadata((meta-meta%2)+(1-(meta%2)));
 		}
@@ -231,15 +238,15 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 
 	@Override
 	public void breakBlock() {
-		if (!worldObj.isRemote) {
+		if (!level.isRemote) {
 			for (int i = 0; i < 6; i++) {
-				ForgeDirection dir = dirs[i];
+				Direction dir = dirs[i];
 				int dx = xCoord+dir.offsetX;
 				int dy = yCoord+dir.offsetY;
 				int dz = zCoord+dir.offsetZ;
-				Block b = worldObj.getBlock(dx, dy, dz);
+				Block b = level.getBlock(dx, dy, dz);
 				if (b instanceof BlockReCMultiBlock) {
-					((BlockReCMultiBlock)b).breakMultiBlock(worldObj, dx, dy, dz);
+					((BlockReCMultiBlock)b).breakMultiBlock(level, dx, dy, dz);
 				}
 			}
 		}

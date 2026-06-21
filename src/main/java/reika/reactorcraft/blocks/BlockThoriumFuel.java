@@ -13,29 +13,27 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
 import net.minecraftforge.fluids.BlockFluidFinite;
 
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.RadiationEffects;
 import reika.reactorcraft.auxiliary.RadiationEffects.RadiationIntensity;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.rotarycraft.registry.BlockRegistry;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockThoriumFuel extends BlockFluidFinite {
 
@@ -47,7 +45,7 @@ public class BlockThoriumFuel extends BlockFluidFinite {
 		this.setHardness(100F);
 		this.setLightOpacity(100);
 		this.setResistance(500);
-		this.setCreativeTab(ReactorCraft.instance.isLocked() ? null : ReactorCraft.tabRctr);
+		this.setCreativeTab(ReactorCraft.getInstance().isLocked() ? null : ReactorCraft.tabRctr);
 
 		this.setQuantaPerBlock(8);
 	}
@@ -86,8 +84,8 @@ public class BlockThoriumFuel extends BlockFluidFinite {
 
 	private void tryAggressiveSpread(World world, int x, int y, int z, Random rand) {
 		for (int i = 0; i < 6; i++) {
-			ForgeDirection dir = ForgeDirection.VALID_DIRECTIONS[i];
-			if (dir != ForgeDirection.UP) {
+			Direction dir = Direction.VALID_DIRECTIONS[i];
+			if (dir != Direction.UP) {
 				int dx = x+dir.offsetX;
 				int dy = y+dir.offsetY;
 				int dz = z+dir.offsetZ;
@@ -143,8 +141,8 @@ public class BlockThoriumFuel extends BlockFluidFinite {
 			RadiationEffects.instance.contaminateArea(world, i, j+ReikaRandomHelper.getSafeRandomInt(2), k, 2, 0.25F, 0, false, RadiationIntensity.MODERATE);
 		//}
 
-		ForgeDirection iceside = ReikaWorldHelper.checkForAdjBlock(world, i, j, k, Blocks.ice);
-		ForgeDirection waterside = ReikaWorldHelper.checkForAdjMaterial(world, i, j, k, Material.water);
+		Direction iceside = ReikaWorldHelper.checkForAdjBlock(world, i, j, k, Blocks.ice);
+		Direction waterside = ReikaWorldHelper.checkForAdjMaterial(world, i, j, k, Material.water);
 		if (iceside != null || waterside != null) {
 			if (ReikaRandomHelper.doWithChance(15))
 				;//world.setBlock(i, j, k, ReactorBlocks.MATS.getBlock(), MatBlocks.SLAG.ordinal(), 3);
@@ -197,18 +195,18 @@ public class BlockThoriumFuel extends BlockFluidFinite {
 	}
 	 */
 	@Override
-	public boolean isReplaceable(IBlockAccess world, int i, int j, int k) {
+	public boolean isReplaceable(BlockGetter world, int i, int j, int k) {
 		return true;
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	public void registerBlockIcons(IIconRegister iconRegister) {
 		blockIcon = iconRegister.registerIcon("ReactorCraft:fluid/lifbe_fuel");//icon = new IIcon[]{this.getFluid().getStillIcon(), this.getFluid().getFlowingIcon()};
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	public IIcon getIcon(int s, int meta)
 	{
 		return blockIcon;//s != 0 && s != 1 ? icon[1] : icon[0];

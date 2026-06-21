@@ -9,12 +9,15 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidRegistry;
+import net.neoforged.neoforge.fluids.FluidStack;
 
 import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.reactorcraft.auxiliary.SteamTile;
@@ -25,6 +28,10 @@ import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
 public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine implements SteamTile {
+	public TileEntitySteamDiffuser(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.DIFFUSER.get(), pos, state);
+	}
+
 
 	public static final int RATIO = calculateConversionRatio();
 
@@ -38,18 +45,18 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 		return (int)Math.ceil(nuSATP/nuReact*efficiency); //80
 	}
 
-	public ForgeDirection getFacing() {
-		switch(this.getBlockMetadata()) {
+	public Direction getFacing() {
+		switch(this) {
 			case 0:
-				return ForgeDirection.WEST;
+				return Direction.WEST;
 			case 1:
-				return ForgeDirection.EAST;
+				return Direction.EAST;
 			case 2:
-				return ForgeDirection.NORTH;
+				return Direction.NORTH;
 			case 3:
-				return ForgeDirection.SOUTH;
+				return Direction.SOUTH;
 			default:
-				return ForgeDirection.UNKNOWN;
+				return Direction.UNKNOWN;
 		}
 	}
 
@@ -59,7 +66,7 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		this.getSteam(world, x, y, z);
 
 		this.convertSteam();
@@ -67,7 +74,7 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 
 	private void convertSteam() {
 		if (steam > 0) {
-			Fluid f = FluidRegistry.getFluid("steam");
+			Fluid f = ReactorFluids.getLegacyFluid("steam");
 			if (f != null) {
 				int amt = Math.min(1+steam/4, tank.getRemainingSpace()/RATIO);
 				tank.addLiquid(amt*RATIO*1000, f);
@@ -78,13 +85,13 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 
 	private void getSteam(Level world, int x, int y, int z) {
 		//for (int i = 0; i < 6; i++) {
-		ForgeDirection dir = this.getFacing();//dirs[i];
+		Direction dir = this.getFacing();//dirs[i];
 		int dx = x+dir.offsetX;
 		int dy = y+dir.offsetY;
 		int dz = z+dir.offsetZ;
 		ReactorTiles rt = ReactorTiles.getTE(world, dx, dy, dz);
 		if (rt == ReactorTiles.STEAMLINE) {
-			TileEntitySteamLine te = (TileEntitySteamLine)world.getTileEntity(dx, dy, dz);
+			TileEntitySteamLine te = (TileEntitySteamLine)world.getBlockEntity(dx, dy, dz);
 			int ds = te.getSteam()-steam;
 			if (ds > 0) {
 				int rm = ds/4+1;
@@ -96,7 +103,7 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
@@ -117,17 +124,17 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
 		return this.canDrain(from, resource.getFluid()) ? tank.drain(resource.amount, doDrain) : null;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
+	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
 		return this.canDrain(from, null) ? tank.drain(maxDrain, doDrain) : null;
 	}
 
 	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
+	public boolean canDrain(Direction from, Fluid fluid) {
 		return from == this.getFacing().getOpposite() && ReikaFluidHelper.isFluidDrainableFromTank(fluid, tank);
 	}
 
@@ -137,7 +144,7 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 	}
 
 	@Override
-	public boolean canConnectToPipeOnSide(MachineRegistry p, ForgeDirection side) {
+	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
 		return this.canConnectToPipe(p) && side == this.getFacing().getOpposite();
 	}
 
@@ -147,7 +154,7 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 	}
 
 	@Override
-	public boolean canReceiveFrom(ForgeDirection from) {
+	public boolean canReceiveFrom(Direction from) {
 		return false;
 	}
 
@@ -157,7 +164,7 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 	}
 
 	@Override
-	public Flow getFlowForSide(ForgeDirection side) {
+	public Flow getFlowForSide(Direction side) {
 		return side == this.getFacing().getOpposite() ? Flow.OUTPUT : Flow.NONE;
 	}
 

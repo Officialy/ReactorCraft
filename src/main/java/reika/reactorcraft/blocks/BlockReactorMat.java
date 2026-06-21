@@ -12,16 +12,16 @@ package reika.reactorcraft.blocks;
 import java.util.Locale;
 import java.util.Random;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.IIcon;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.util.Mth;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.reactorcraft.ReactorCraft;
@@ -42,7 +42,7 @@ public class BlockReactorMat extends Block implements NeutronBlock {
 		super(mat);
 		this.setHardness(1.5F);
 		this.setResistance(10F);
-		this.setCreativeTab(ReactorCraft.instance.isLocked() ? null : ReactorCraft.tabRctr);
+		this.setCreativeTab(ReactorCraft.getInstance().isLocked() ? null : ReactorCraft.tabRctr);
 		this.setTickRandomly(true);
 	}
 
@@ -67,11 +67,11 @@ public class BlockReactorMat extends Block implements NeutronBlock {
 
 	private void doLodestoneTick(World world, int x, int y, int z, Random rand, boolean forced) {
 		if (world.isBlockIndirectlyGettingPowered(x, y, z)) {
-			TileEntity te = world.getTileEntity(x, y+1, z);
+			TileEntity te = world.getBlockEntity(x, y+1, z);
 			if (te instanceof IEnergyReceiver) {
 				IEnergyReceiver ier = (IEnergyReceiver)te;
-				int amt = MathHelper.ceiling_float_int(ReactorOptions.LODESTONERFMULT.getFloat()*(!forced ? 2 : 1));
-				ier.receiveEnergy(ForgeDirection.DOWN, amt, false);
+				int amt = Mth.ceiling_float_int(ReactorOptions.LODESTONERFMULT.getFloat()*(!forced ? 2 : 1));
+				ier.receiveEnergy(Direction.DOWN, amt, false);
 			}
 		}
 	}
@@ -118,7 +118,7 @@ public class BlockReactorMat extends Block implements NeutronBlock {
 	}
 
 	@Override
-	public int getLightOpacity(IBlockAccess world, int x, int y, int z) {
+	public int getLightOpacity(BlockGetter world, int x, int y, int z) {
 		MatBlocks m = MatBlocks.matList[world.getBlockMetadata(x, y, z)];
 		if (m == MatBlocks.SCRUBBER)
 			return 0;
@@ -143,14 +143,14 @@ public class BlockReactorMat extends Block implements NeutronBlock {
 	}
 
 	@Override
-	public int getFlammability(IBlockAccess world, int x, int y, int z, ForgeDirection face) {
+	public int getFlammability(BlockGetter world, int x, int y, int z, Direction face) {
 		if (world.getBlockMetadata(x, y, z) == MatBlocks.GRAPHITE.ordinal())
 			return 70;
 		return 0;
 	}
 
 	@Override
-	public int getFireSpreadSpeed(IBlockAccess world, int x, int y, int z, ForgeDirection face) {
+	public int getFireSpreadSpeed(BlockGetter world, int x, int y, int z, Direction face) {
 		if (world.getBlockMetadata(x, y, z) == MatBlocks.GRAPHITE.ordinal())
 			return 7;
 		return 0;

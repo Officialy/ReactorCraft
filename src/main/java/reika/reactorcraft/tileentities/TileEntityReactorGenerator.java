@@ -9,6 +9,9 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import java.util.Collection;
 
 import net.minecraft.world.level.block.Block;
@@ -17,7 +20,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.ModList;
@@ -26,7 +29,7 @@ import reika.dragonapi.asm.dependentmethodstripper.ModDependent;
 import reika.dragonapi.instantiable.FlyingBlocksExplosion;
 import reika.dragonapi.instantiable.math.MovingAverage;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.dragonapi.modinteract.power.ReikaEUHelper;
 import reika.dragonapi.modinteract.power.ReikaRFHelper;
 import reika.dragonapi.modregistry.PowerTypes;
@@ -47,18 +50,20 @@ import reika.rotarycraft.auxiliary.interfaces.PowerSourceTracker;
 
 import cofh.api.energy.IEnergyHandler;
 import cofh.api.energy.IEnergyReceiver;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import ic2.api.energy.event.EnergyTileLoadEvent;
 import ic2.api.energy.event.EnergyTileUnloadEvent;
 import ic2.api.energy.tile.IEnergySink;
 import ic2.api.energy.tile.IEnergySource;
 
-@Strippable(value = {"cofh.api.energy.IEnergyHandler", "ic2.api.energy.tile.IEnergySource", "Reika.ElectriCraft.API.WrappableWireSource"})
+// @Strippable /*PORT*/(value = {"cofh.api.energy.IEnergyHandler", "ic2.api.energy.tile.IEnergySource", "Reika.ElectriCraft.API.WrappableWireSource"})
 public class TileEntityReactorGenerator extends TileEntityReactorBase implements IEnergyHandler, IEnergySource, Screwdriverable, MultiBlockTile,
 WrappableWireSource, PowerSourceTracker, EMPControl {
+	public TileEntityReactorGenerator(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.GENERATOR.get(), pos, state);
+	}
 
-	private ForgeDirection facingDir;
+
+	private Direction facingDir;
 
 	private long power;
 	private int torquein;
@@ -87,12 +92,12 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 
 	private void testBreakageFailure() {
 		if (omegain > 1024) {
-			this.fail(worldObj, xCoord, yCoord, zCoord);
+			this.fail(level, xCoord, yCoord, zCoord);
 		}
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		if ((world.getWorldTime()&127) == 0)
 			ReikaWorldHelper.causeAdjacentUpdates(world, x, y, z);
 
@@ -113,12 +118,12 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 
 		power = (long)omegain*(long)torquein;
 
-		//ReikaJavaLibrary.pConsole(power, Side.SERVER);
+		//ReikaJavaLibrary.pConsole(power, Dist.DEDICATED_SERVER);
 
 		if (power > 0) {
-			ForgeDirection write = this.getFacing().getOpposite();
+			Direction write = this.getFacing().getOpposite();
 			BlockEntity tile = this.getAdjacentTileEntity(write);
-			ReactorSounds rs = null;
+			ReactorSounds rs = ItemStack.EMPTY;
 			int len = 1;
 			switch(mode) {
 				case RF:
@@ -155,15 +160,15 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 			if (rs != null && this.getTicksExisted()%len == 0) {
 				rs.playSoundAtBlock(this, 2, 1);
 				int l = this.getGeneratorLength();
-				rs.playSoundAtBlock(worldObj, xCoord+this.getFacing().offsetX*l, yCoord, zCoord+this.getFacing().offsetZ*l, 2, 1);
-				rs.playSoundAtBlock(worldObj, xCoord+this.getFacing().offsetX*l/2, yCoord, zCoord+this.getFacing().offsetZ*l/2, 2, 1);
+				rs.playSoundAtBlock(level, xCoord+this.getFacing().offsetX*l, yCoord, zCoord+this.getFacing().offsetZ*l, 2, 1);
+				rs.playSoundAtBlock(level, xCoord+this.getFacing().offsetX*l/2, yCoord, zCoord+this.getFacing().offsetZ*l/2, 2, 1);
 			}
 		}
 	}
 
 	private void fail(Level world, int x, int y, int z) {
 		int l = this.getGeneratorLength()/2;
-		world.setBlockToAir(x, y, z);
+		world.removeBlock(x, y, z);
 		double dx = x+0.5+this.getFacing().offsetX*l;
 		double dz = z+0.5+this.getFacing().offsetZ*l;
 		new FlyingBlocksExplosion(world, dx, y+0.5, dz, 12).doExplosion();
@@ -199,14 +204,14 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 		int dz = z+this.getFacing().offsetZ*len;
 
 		ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
-		return r != null && r.isTurbine() ? (TileEntityTurbineCore)this.getTileEntity(dx, dy, dz) : null;
+		return r != null && r.isTurbine() ? (TileEntityTurbineCore)this.getBlockEntity(dx, dy, dz) : null;
 	}
 
-	public ForgeDirection getFacing() {
-		return facingDir != null ? facingDir : ForgeDirection.EAST;
+	public Direction getFacing() {
+		return facingDir != null ? facingDir : Direction.EAST;
 	}
 
-	public void setFacing(ForgeDirection dir) {
+	public void setFacing(Direction dir) {
 		facingDir = dir;
 	}
 
@@ -216,7 +221,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 		if (!this.isInWorld()) {
 			phi = 0;
 			return;
@@ -250,12 +255,12 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	public int receiveEnergy(ForgeDirection from, int maxReceive, boolean simulate) {
+	public int receiveEnergy(Direction from, int maxReceive, boolean simulate) {
 		return 0;
 	}
 
 	@Override
-	public int extractEnergy(ForgeDirection from, int maxExtract, boolean simulate) {
+	public int extractEnergy(Direction from, int maxExtract, boolean simulate) {
 		return this.getMode() == Modes.RF ? (int)this.getGenUnits() : 0;
 	}
 
@@ -268,22 +273,22 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	public boolean canConnectEnergy(ForgeDirection from) {
+	public boolean canConnectEnergy(Direction from) {
 		return from == this.getFacing().getOpposite();
 	}
 
 	@Override
-	public int getEnergyStored(ForgeDirection from) {
+	public int getEnergyStored(Direction from) {
 		return 0;
 	}
 
 	@Override
-	public int getMaxEnergyStored(ForgeDirection from) {
+	public int getMaxEnergyStored(Direction from) {
 		return Integer.MAX_VALUE;
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	public AABB getRenderBoundingBox()
 	{
 		int l = this.getGeneratorLength();
@@ -351,7 +356,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	public boolean emitsEnergyTo(BlockEntity receiver, ForgeDirection dir) {
+	public boolean emitsEnergyTo(BlockEntity receiver, Direction dir) {
 		return mode == Modes.EU;// && dir == this.getFacing().getOpposite();
 	}
 
@@ -372,7 +377,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 
 	@Override
 	public void onFirstTick(Level world, int x, int y, int z) {
-		if (!world.isRemote && ModList.IC2.isLoaded())
+		if (!world.isClientSide() && ModList.IC2.isLoaded())
 			this.addTileToNet();
 	}
 
@@ -383,7 +388,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 
 	@Override
 	protected void onInvalidateOrUnload(Level world, int x, int y, int z, boolean invalidate) {
-		if (!world.isRemote && ModList.IC2.isLoaded())
+		if (!world.isClientSide() && ModList.IC2.isLoaded())
 			this.removeTileFromNet();
 	}
 
@@ -393,13 +398,13 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	public boolean onShiftRightClick(Level world, int x, int y, int z, ForgeDirection side) {
+	public boolean onShiftRightClick(Level world, int x, int y, int z, Direction side) {
 		this.stepType();
 		return true;
 	}
 
 	@Override
-	public boolean onRightClick(Level world, int x, int y, int z, ForgeDirection side) {
+	public boolean onRightClick(Level world, int x, int y, int z, Direction side) {
 		if (side.offsetY == 0) {
 			this.setFacing(side);
 			return true;
@@ -409,22 +414,22 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 
 	@Override
 	public void breakBlock() {
-		if (!worldObj.isRemote) {
+		if (!level.isRemote) {
 			for (int i = 0; i < 6; i++) {
-				ForgeDirection dir = dirs[i];
+				Direction dir = dirs[i];
 				int dx = xCoord+dir.offsetX;
 				int dy = yCoord+dir.offsetY;
 				int dz = zCoord+dir.offsetZ;
-				Block b = worldObj.getBlock(dx, dy, dz);
+				Block b = level.getBlock(dx, dy, dz);
 				if (b instanceof BlockReCMultiBlock) {
-					((BlockReCMultiBlock)b).breakMultiBlock(worldObj, dx, dy, dz);
+					((BlockReCMultiBlock)b).breakMultiBlock(level, dx, dy, dz);
 				}
 			}
 		}
 	}
 
 	@Override
-	public boolean canConnectToSide(ForgeDirection dir) {
+	public boolean canConnectToSide(Direction dir) {
 		return dir == this.getFacing().getOpposite();
 	}
 
@@ -435,14 +440,14 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 
 	@Override
 	public int getOmega() {
-		TileEntityTurbineCore te = this.getTurbine(worldObj, xCoord, yCoord, zCoord);
+		TileEntityTurbineCore te = this.getTurbine(level, xCoord, yCoord, zCoord);
 		int lim = te instanceof TileEntityHiPTurbine ? TileEntityHiPTurbine.GEN_OMEGA : TileEntityTurbineCore.GEN_OMEGA;
 		return Math.min(omegain, (int)(lim*0.995));
 	}
 
 	@Override
 	public int getTorque() {
-		TileEntityTurbineCore te = this.getTurbine(worldObj, xCoord, yCoord, zCoord);
+		TileEntityTurbineCore te = this.getTurbine(level, xCoord, yCoord, zCoord);
 		if (te == null)
 			return 0;
 		double max = te.getTorque();
@@ -481,7 +486,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	public PowerSourceList getPowerSources(PowerSourceTracker io, ShaftMerger caller) {
 		PowerSourceList p = new PowerSourceList();
 		if (power > 0) {
-			TileEntityTurbineCore te = this.getTurbine(worldObj, xCoord, yCoord, zCoord);
+			TileEntityTurbineCore te = this.getTurbine(level, xCoord, yCoord, zCoord);
 			if (te != null) {
 				p.addSource(te);
 			}
@@ -490,13 +495,13 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	@Override
-	public void getAllOutputs(Collection<BlockEntity> c, ForgeDirection dir) {
+	public void getAllOutputs(Collection<BlockEntity> c, Direction dir) {
 		c.add(this.getAdjacentTileEntity(this.getFacing().getOpposite()));
 	}
 
 	@Override
 	public Level getWorld() {
-		return worldObj;
+		return level;
 	}
 
 	@Override
@@ -531,7 +536,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 
 	@Override
 	public void onHitWithEMP(BlockEntity te) {
-		this.fail(worldObj, xCoord, yCoord, zCoord);
+		this.fail(level, xCoord, yCoord, zCoord);
 	}
 
 }

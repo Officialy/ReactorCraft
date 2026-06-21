@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "experience": 0.4,
+  "ingredient": "reactorcraft:calcite_ore",
+  "result": {
+    "id": "reactorcraft:calcite"
+  }
+}

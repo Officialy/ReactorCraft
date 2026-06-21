@@ -13,12 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import reika.dragonapi.instantiable.gui.ImagedGuiButton;
 import reika.reactorcraft.auxiliary.ReactorBookData;
@@ -271,7 +271,7 @@ public enum ReactorBook implements HandbookEntry {
 	}
 
 	public boolean isMachine() {
-		return machine != null;
+		return machine != ItemStack.EMPTY;
 	}
 
 	public ReactorTiles getMachine() {
@@ -328,7 +328,7 @@ public enum ReactorBook implements HandbookEntry {
 	}
 
 	public ReactorBook getParent() {
-		ReactorBook parent = null;
+		ReactorBook parent = ItemStack.EMPTY;
 		for (int i = 0; i < tabList.length; i++) {
 			if (tabList[i].isParent) {
 				if (this.ordinal() >= tabList[i].ordinal()) {

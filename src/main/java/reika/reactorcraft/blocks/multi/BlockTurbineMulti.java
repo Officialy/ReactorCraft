@@ -11,12 +11,12 @@ package reika.reactorcraft.blocks.multi;
 
 import java.util.Set;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
 import reika.dragonapi.instantiable.data.blockstruct.SlicedBlockBlueprint;
@@ -183,7 +183,7 @@ public class BlockTurbineMulti extends BlockReCMultiBlock {
 	}
 
 	@Override
-	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, ForgeDirection dir, BlockMatchFailCallback call) {
+	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
 		StructuredBlockArray blocks = new StructuredBlockArray(world);
 		blocks.recursiveAddWithBounds(world, x, y, z, this, x-12, y-12, z-12, x+12, y+12, z+12);
 		int sx;
@@ -196,7 +196,7 @@ public class BlockTurbineMulti extends BlockReCMultiBlock {
 		return true;
 	}
 
-	private int checkForTurbines(World world, int x, int y, int z, ForgeDirection dir, StructuredBlockArray blocks) {
+	private int checkForTurbines(World world, int x, int y, int z, Direction dir, StructuredBlockArray blocks) {
 		int mx = blocks.getMinX()+blocks.getSizeX()/2;
 		int my = blocks.getMinY()+blocks.getSizeY()/2;
 		int mz = blocks.getMinZ()+blocks.getSizeZ()/2;
@@ -209,7 +209,7 @@ public class BlockTurbineMulti extends BlockReCMultiBlock {
 			ReactorTiles r = ReactorTiles.getTE(world, dx, my, dz);
 			if (r == ReactorTiles.BIGTURBINE) {
 				c++;
-				((TileEntityTurbineCore)world.getTileEntity(dx, my, dz)).markForMulti();
+				((TileEntityTurbineCore)world.getBlockEntity(dx, my, dz)).markForMulti();
 			}
 			else
 				return c;
@@ -217,7 +217,7 @@ public class BlockTurbineMulti extends BlockReCMultiBlock {
 		return c;
 	}
 
-	private boolean checkForShape(World world, int x, int y, int z, ForgeDirection dir, StructuredBlockArray blocks, int turbines, BlockMatchFailCallback call) {
+	private boolean checkForShape(World world, int x, int y, int z, Direction dir, StructuredBlockArray blocks, int turbines, BlockMatchFailCallback call) {
 		int start = setup.getLength()-turbines-1;
 		int mx = blocks.getMinX()+blocks.getSizeX()/2;
 		int my = blocks.getMinY()+blocks.getSizeY()/2;
@@ -250,8 +250,8 @@ public class BlockTurbineMulti extends BlockReCMultiBlock {
 					world.setBlockMetadataWithNotify(c.xCoord, c.yCoord, c.zCoord, meta-8, 3);
 				}
 			}
-			else if (b == tid && meta == ReactorTiles.BIGTURBINE.getBlockMetadata()) {
-				TileEntityTurbineCore te = (TileEntityTurbineCore)world.getTileEntity(c.xCoord, c.yCoord, c.zCoord);
+			else if (b == tid) {
+				TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(c.xCoord, c.yCoord, c.zCoord);
 				te.setHasMultiBlock(false);
 			}
 		}
@@ -273,7 +273,7 @@ public class BlockTurbineMulti extends BlockReCMultiBlock {
 				}
 			}
 			else if (b == tid) {
-				TileEntityTurbineCore te = (TileEntityTurbineCore)world.getTileEntity(c.xCoord, c.yCoord, c.zCoord);
+				TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(c.xCoord, c.yCoord, c.zCoord);
 				te.setHasMultiBlock(true);
 			}
 		}
@@ -290,7 +290,7 @@ public class BlockTurbineMulti extends BlockReCMultiBlock {
 	}
 
 	@Override
-	public int getTextureIndex(IBlockAccess world, int x, int y, int z, int side, int meta) {
+	public int getTextureIndex(BlockGetter world, int x, int y, int z, int side, int meta) {
 		return meta >= 8 ? 5 : meta;
 	}
 
@@ -311,7 +311,7 @@ public class BlockTurbineMulti extends BlockReCMultiBlock {
 		int mx = blocks.getMinX()+blocks.getSizeX()/2;
 		int my = blocks.getMinY()+blocks.getSizeY()/2;
 		int mz = blocks.getMinZ()+blocks.getSizeZ()/2;
-		return ReactorTiles.getTE(world, mx, my, mz) == ReactorTiles.BIGTURBINE ? world.getTileEntity(mx, my, mz) : null;
+		return ReactorTiles.getTE(world, mx, my, mz) == ReactorTiles.BIGTURBINE ? world.getBlockEntity(mx, my, mz) : null;
 	}
 
 	public SlicedBlockBlueprint getBlueprint() {

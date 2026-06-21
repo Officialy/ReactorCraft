@@ -9,10 +9,13 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidStack;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.neoforged.neoforge.fluids.FluidStack;
 
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.base.TankedReactorPowerReceiver;
@@ -23,22 +26,26 @@ import reika.rotarycraft.registry.MachineRegistry;
 
 
 public class TileEntitySolarExchanger extends TankedReactorPowerReceiver implements SodiumSolarOutput {
+	public TileEntitySolarExchanger(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.SOLAR.get(), pos, state);
+	}
+
 
 	public static final int MINPOWER = 65536;
 	public static final int MINSPEED = 2048;
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
 		return this.drain(from, resource.amount, doDrain);
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
+	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
 		return tank.drain(maxDrain, doDrain);
 	}
 
 	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
+	public boolean canDrain(Direction from, Fluid fluid) {
 		return from.offsetY == 0;
 	}
 
@@ -48,7 +55,7 @@ public class TileEntitySolarExchanger extends TankedReactorPowerReceiver impleme
 	}
 
 	@Override
-	public boolean canConnectToPipeOnSide(MachineRegistry p, ForgeDirection side) {
+	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
 		return this.canConnectToPipe(p);
 	}
 
@@ -58,7 +65,7 @@ public class TileEntitySolarExchanger extends TankedReactorPowerReceiver impleme
 	}
 
 	@Override
-	public boolean canReceiveFrom(ForgeDirection from) {
+	public boolean canReceiveFrom(Direction from) {
 		return false;
 	}
 
@@ -68,7 +75,7 @@ public class TileEntitySolarExchanger extends TankedReactorPowerReceiver impleme
 	}
 
 	@Override
-	public Flow getFlowForSide(ForgeDirection side) {
+	public Flow getFlowForSide(Direction side) {
 		return side.offsetY == 0 ? Flow.OUTPUT : Flow.NONE;
 	}
 
@@ -78,8 +85,8 @@ public class TileEntitySolarExchanger extends TankedReactorPowerReceiver impleme
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
-		super.updateEntity(world, x, y, z, meta);
+	public void updateEntity(Level world, BlockPos pos) {
+		super.updateEntity(world, pos);
 	}
 
 	@Override
@@ -110,8 +117,8 @@ public class TileEntitySolarExchanger extends TankedReactorPowerReceiver impleme
 	}
 
 	@Override
-	public boolean canReadFrom(ForgeDirection dir) {
-		return dir == ForgeDirection.DOWN;
+	public boolean canReadFrom(Direction dir) {
+		return dir == Direction.DOWN;
 	}
 
 	@Override

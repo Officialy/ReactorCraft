@@ -2,7 +2,7 @@ package reika.reactorcraft.auxiliary.structure;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.instantiable.data.blockstruct.FilledBlockArray;
 import reika.dragonapi.libraries.ReikaDirectionHelper;
@@ -25,7 +25,7 @@ public class GeneratorStructure extends ReactorStructureBase {
 		int dx = 0;
 		int dz = 0;
 
-		ForgeDirection left = ReikaDirectionHelper.getLeftBy90(dir);
+		Direction left = ReikaDirectionHelper.getLeftBy90(dir);
 		for (int i = 0; i < l; i++) {
 			int seekmeta = i < 2 ? 3 : 1;
 			dx = x+dir.offsetX*i;
@@ -106,7 +106,7 @@ public class GeneratorStructure extends ReactorStructureBase {
 
 		dx = x+dir.offsetX*l;
 		dz = z+dir.offsetZ*l;
-		array.setBlock(dx, y, dz, ReactorTiles.GENERATOR.getBlock(), ReactorTiles.GENERATOR.getBlockMetadata());
+		array.setBlock(dx, y, dz, ReactorTiles.GENERATOR.getBlock(), ReactorTiles.GENERATOR);
 
 		return array;
 	}

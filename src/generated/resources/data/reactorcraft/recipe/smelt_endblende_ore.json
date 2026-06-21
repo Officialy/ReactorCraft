@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "experience": 1.0,
+  "ingredient": "reactorcraft:end_pitchblende_ore",
+  "result": {
+    "id": "reactorcraft:uranium_ingot"
+  }
+}

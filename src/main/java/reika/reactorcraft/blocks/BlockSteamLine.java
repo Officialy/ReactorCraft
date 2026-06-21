@@ -11,16 +11,16 @@ package reika.reactorcraft.blocks;
 
 import java.util.Random;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.libraries.ReikaAABBHelper;
 import reika.reactorcraft.ReactorCraft;
@@ -30,8 +30,6 @@ import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.TileEntityHeatPipe;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockSteamLine extends BlockReactorTileModelled implements NeutronBlock {
 
@@ -96,13 +94,13 @@ public class BlockSteamLine extends BlockReactorTileModelled implements NeutronB
 	@Override
 	public void onNeighborBlockChange(World world, int x, int y, int z, Block id) {
 		super.onNeighborBlockChange(world, x, y, z, id);
-		TileEntityLine te = (TileEntityLine)world.getTileEntity(x, y, z);
+		TileEntityLine te = (TileEntityLine)world.getBlockEntity(x, y, z);
 		te.recomputeConnections(world, x, y, z);
 	}
 
 	@Override
 	public void onBlockAdded(World world, int x, int y, int z) {
-		TileEntityLine te = (TileEntityLine)world.getTileEntity(x, y, z);
+		TileEntityLine te = (TileEntityLine)world.getBlockEntity(x, y, z);
 		te.addToAdjacentConnections(world, x, y, z);
 		te.recomputeConnections(world, x, y, z);
 	}
@@ -122,7 +120,7 @@ public class BlockSteamLine extends BlockReactorTileModelled implements NeutronB
 
 	@Override
 	public void onEntityCollidedWithBlock(World world, int x, int y, int z, Entity e) {
-		TileEntityLine te = (TileEntityLine)world.getTileEntity(x, y, z);
+		TileEntityLine te = (TileEntityLine)world.getBlockEntity(x, y, z);
 		te.onEntityCollided(e);
 	}
 
@@ -132,10 +130,10 @@ public class BlockSteamLine extends BlockReactorTileModelled implements NeutronB
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
-	public int getMixedBrightnessForBlock(IBlockAccess iba, int x, int y, int z) {
+	@SideOnly(Dist.CLIENT)
+	public int getMixedBrightnessForBlock(BlockGetter iba, int x, int y, int z) {
 		if (ReactorTiles.getTE(iba, x, y, z) == ReactorTiles.HEATPIPE) {
-			TileEntityHeatPipe te = (TileEntityHeatPipe)iba.getTileEntity(x, y, z);
+			TileEntityHeatPipe te = (TileEntityHeatPipe)iba.getBlockEntity(x, y, z);
 			float f = te.getBrightness();
 			World world = Minecraft.getMinecraft().theWorld;
 			int i1 = world.getSkyBlockTypeBrightness(EnumSkyBlock.Sky, x, y, z);

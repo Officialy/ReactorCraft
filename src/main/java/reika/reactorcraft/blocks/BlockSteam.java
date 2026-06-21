@@ -12,29 +12,29 @@ package reika.reactorcraft.blocks;
 import java.util.ArrayList;
 import java.util.Random;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockLiquid;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BlockLiquid;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityXPOrb;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.IIcon;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
 import net.minecraftforge.fluids.BlockFluidBase;
 
 import reika.dragonapi.libraries.java.ReikaArrayHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.ClearSteamCommand;
 import reika.reactorcraft.registry.MatBlocks;
@@ -55,7 +55,7 @@ public class BlockSteam extends Block {
 
 	public BlockSteam(Material mat) {
 		super(mat);
-		this.setCreativeTab(ReactorCraft.instance.isLocked() ? null : ReactorCraft.tabRctr);
+		this.setCreativeTab(ReactorCraft.getInstance().isLocked() ? null : ReactorCraft.tabRctr);
 		this.setTickRandomly(true);
 		this.setResistance(3600000);
 		this.setLightOpacity(0);
@@ -91,22 +91,22 @@ public class BlockSteam extends Block {
 	}
 
 	private void directionalMovement(World world, int x, int y, int z, Random rand, int meta) {
-		ForgeDirection dir;
+		Direction dir;
 		switch(meta-4) {
 			case 0:
-				dir = ForgeDirection.EAST;
+				dir = Direction.EAST;
 				break;
 			case 1:
-				dir = ForgeDirection.WEST;
+				dir = Direction.WEST;
 				break;
 			case 2:
-				dir = ForgeDirection.SOUTH;
+				dir = Direction.SOUTH;
 				break;
 			case 3:
-				dir = ForgeDirection.NORTH;
+				dir = Direction.NORTH;
 				break;
 			default:
-				dir = ForgeDirection.UP;
+				dir = Direction.UP;
 				break;
 		}
 
@@ -130,8 +130,8 @@ public class BlockSteam extends Block {
 			return;
 		}
 		if (ReactorTiles.getTE(world, x, y+1, z) == ReactorTiles.TURBINECORE) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getTileEntity(x, y+1, z);
-			ForgeDirection dir = te.getSteamMovement();
+			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(x, y+1, z);
+			Direction dir = te.getSteamMovement();
 			int d = te.getNumberStagesTotal()-te.getStage();
 			int dx = x+dir.offsetX*d;
 			int dy = y+dir.offsetY;
@@ -183,8 +183,8 @@ public class BlockSteam extends Block {
 			return;
 		}/*
 		else if (ReactorTiles.getTE(world, x+1, y, z) == ReactorTiles.TURBINECORE) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getTileEntity(x+1, y, z);
-			ForgeDirection dir = te.getSteamMovement();
+			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(x+1, y, z);
+			Direction dir = te.getSteamMovement();
 			int dx = x+dir.offsetX;
 			int dy = y+dir.offsetY;
 			int dz = z+dir.offsetZ;
@@ -205,8 +205,8 @@ public class BlockSteam extends Block {
 			return;
 		}
 		else if (ReactorTiles.getTE(world, x-1, y, z) == ReactorTiles.TURBINECORE) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getTileEntity(x-1, y, z);
-			ForgeDirection dir = te.getSteamMovement();
+			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(x-1, y, z);
+			Direction dir = te.getSteamMovement();
 			int dx = x+dir.offsetX;
 			int dy = y+dir.offsetY;
 			int dz = z+dir.offsetZ;
@@ -227,8 +227,8 @@ public class BlockSteam extends Block {
 			return;
 		}
 		else if (ReactorTiles.getTE(world, x, y, z+1) == ReactorTiles.TURBINECORE) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getTileEntity(x, y, z+1);
-			ForgeDirection dir = te.getSteamMovement();
+			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(x, y, z+1);
+			Direction dir = te.getSteamMovement();
 			int dx = x+dir.offsetX;
 			int dy = y+dir.offsetY;
 			int dz = z+dir.offsetZ;
@@ -249,8 +249,8 @@ public class BlockSteam extends Block {
 			return;
 		}
 		else if (ReactorTiles.getTE(world, x, y, z-1) == ReactorTiles.TURBINECORE) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getTileEntity(x, y, z-1);
-			ForgeDirection dir = te.getSteamMovement();
+			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(x, y, z-1);
+			Direction dir = te.getSteamMovement();
 			int dx = x+dir.offsetX;
 			int dy = y+dir.offsetY;
 			int dz = z+dir.offsetZ;
@@ -271,9 +271,9 @@ public class BlockSteam extends Block {
 			return;
 		}*/
 		else if (this.canMoveInto(world, x, y+1, z)) {
-			//ReikaJavaLibrary.pConsole(meta+":"+this.getTransmittedMetadata(meta, ForgeDirection.UP), Side.SERVER);
+			//ReikaJavaLibrary.pConsole(meta+":"+this.getTransmittedMetadata(meta, Direction.UP), Dist.DEDICATED_SERVER);
 			if (((meta&1) != 0) || ReikaRandomHelper.doWithChance(80))
-				world.setBlock(x, y+1, z, this, this.getTransmittedMetadata(meta, ForgeDirection.UP), 2);
+				world.setBlock(x, y+1, z, this, this.getTransmittedMetadata(meta, Direction.UP), 2);
 			world.setBlock(x, y, z, Blocks.air, 0, 2);
 			world.markBlockForUpdate(x, y, z);
 			world.markBlockForUpdate(x, y+1, z);
@@ -282,7 +282,7 @@ public class BlockSteam extends Block {
 			return;
 		}
 		else {
-			ForgeDirection[] dir = new ForgeDirection[]{ForgeDirection.EAST, ForgeDirection.WEST, ForgeDirection.SOUTH, ForgeDirection.NORTH};
+			Direction[] dir = new Direction[]{Direction.EAST, Direction.WEST, Direction.SOUTH, Direction.NORTH};
 			ReikaArrayHelper.shuffleArray(dir);
 			for (int i = 0; i < dir.length; i++) {
 				int dx = x+dir[i].offsetX;
@@ -301,8 +301,8 @@ public class BlockSteam extends Block {
 		}
 	}
 
-	public int getTransmittedMetadata(int original_meta, ForgeDirection dir) {
-		if (dir == ForgeDirection.UP) {
+	public int getTransmittedMetadata(int original_meta, Direction dir) {
+		if (dir == Direction.UP) {
 			return (original_meta & 8) == 0 ? original_meta : 1+(original_meta&4);
 		}
 		return original_meta | 8;
@@ -326,7 +326,7 @@ public class BlockSteam extends Block {
 	}
 
 	@Override
-	public boolean isAir(IBlockAccess world, int x, int y, int z) {
+	public boolean isAir(BlockGetter world, int x, int y, int z) {
 		return true;
 	}
 
@@ -381,7 +381,7 @@ public class BlockSteam extends Block {
 		return null;
 	}
 
-	public IIcon getBlockTexture(IBlockAccess iba, int x, int y, int z) {
+	public IIcon getBlockTexture(BlockGetter iba, int x, int y, int z) {
 		return this.getIcon(0, 0);
 	}
 
@@ -397,8 +397,8 @@ public class BlockSteam extends Block {
 	}
 
 	@Override
-	public boolean shouldSideBeRendered(IBlockAccess iba, int x, int y, int z, int side) {
-		ForgeDirection dir = ForgeDirection.values()[side];
+	public boolean shouldSideBeRendered(BlockGetter iba, int x, int y, int z, int side) {
+		Direction dir = Direction.values()[side];
 		int dx = x+dir.offsetX;
 		int dy = y+dir.offsetY;
 		int dz = z+dir.offsetZ;
@@ -407,14 +407,14 @@ public class BlockSteam extends Block {
 	}
 
 	@Override
-	public boolean isReplaceable(IBlockAccess world, int x, int y, int z) {
+	public boolean isReplaceable(BlockGetter world, int x, int y, int z) {
 		return true;
 	}
 
 	@Override
 	public void onEntityCollidedWithBlock(World world, int x, int y, int z, Entity e) {
 		if (!(e instanceof EntityItem || e instanceof EntityXPOrb)) {
-			RotaryCraft.heatDamage.lastMachine = null;
+			RotaryCraft.heatDamage.lastMachine = ItemStack.EMPTY;
 			e.attackEntityFrom(RotaryCraft.heatDamage, 1);
 			int meta = world.getBlockMetadata(x, y, z);
 			if ((meta&4) != 0) {

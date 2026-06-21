@@ -9,12 +9,12 @@
  ******************************************************************************/
 package reika.reactorcraft.blocks.multi;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
 import reika.dragonapi.instantiable.data.blockstruct.StructuredBlockArray;
@@ -39,7 +39,7 @@ public class BlockSolenoidMulti extends BlockReCMultiBlock implements Transducer
 	}
 
 	@Override
-	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, ForgeDirection dir, BlockMatchFailCallback call) {
+	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
 		StructuredBlockArray blocks = new StructuredBlockArray(world);
 		blocks.recursiveAddWithBoundsRanged(world, x, y, z, this, x-20, y-3, z-20, x+20, y+3, z+20, 1);
 		int midX = blocks.getMinX()+blocks.getSizeX()/2;
@@ -67,7 +67,7 @@ public class BlockSolenoidMulti extends BlockReCMultiBlock implements Transducer
 		return true;
 	}
 
-	private boolean checkCore(World world, int x, int y, int z, int midX, int midY, int midZ, ForgeDirection dir, StructuredBlockArray blocks, BlockMatchFailCallback call) {
+	private boolean checkCore(World world, int x, int y, int z, int midX, int midY, int midZ, Direction dir, StructuredBlockArray blocks, BlockMatchFailCallback call) {
 		for (int i = -1; i <= 1; i++) {
 			for (int j = 0; j <= 1; j++) {
 				for (int k = -1; k <= 1; k++) {
@@ -86,7 +86,7 @@ public class BlockSolenoidMulti extends BlockReCMultiBlock implements Transducer
 		return true;
 	}
 
-	private boolean checkSpokes(World world, int x, int y, int z, int midX, int midY, int midZ, ForgeDirection dir, StructuredBlockArray blocks, BlockMatchFailCallback call) {
+	private boolean checkSpokes(World world, int x, int y, int z, int midX, int midY, int midZ, Direction dir, StructuredBlockArray blocks, BlockMatchFailCallback call) {
 		for (int i = 2; i <= 7; i++) {
 			Block id = world.getBlock(midX+i, midY, midZ);
 			int meta = world.getBlockMetadata(midX+i, midY, midZ);
@@ -159,7 +159,7 @@ public class BlockSolenoidMulti extends BlockReCMultiBlock implements Transducer
 		return true;
 	}
 
-	private boolean checkCorners(World world, int x, int y, int z, int midX, int midY, int midZ, ForgeDirection dir, StructuredBlockArray blocks, BlockMatchFailCallback call) {
+	private boolean checkCorners(World world, int x, int y, int z, int midX, int midY, int midZ, Direction dir, StructuredBlockArray blocks, BlockMatchFailCallback call) {
 		for (int i = 6; i <= 6; i++) {
 			Block id = world.getBlock(midX-i, midY+1, midZ-i);
 			int meta = world.getBlockMetadata(midX-i, midY+1, midZ-i);
@@ -180,7 +180,7 @@ public class BlockSolenoidMulti extends BlockReCMultiBlock implements Transducer
 		return true;
 	}
 
-	private boolean checkMiddle(World world, int x, int y, int z, int midX, int midY, int midZ, ForgeDirection dir, StructuredBlockArray blocks, BlockMatchFailCallback call) {
+	private boolean checkMiddle(World world, int x, int y, int z, int midX, int midY, int midZ, Direction dir, StructuredBlockArray blocks, BlockMatchFailCallback call) {
 		for (int i = -5; i <= 5; i++) {
 			int d = Math.abs(i) >= 4 ? 7 : 8;
 			int dx = midX-d;
@@ -227,7 +227,7 @@ public class BlockSolenoidMulti extends BlockReCMultiBlock implements Transducer
 		return true;
 	}
 
-	private boolean checkLower(World world, int x, int y, int z, int midX, int midY, int midZ, ForgeDirection dir, StructuredBlockArray blocks, BlockMatchFailCallback call) {
+	private boolean checkLower(World world, int x, int y, int z, int midX, int midY, int midZ, Direction dir, StructuredBlockArray blocks, BlockMatchFailCallback call) {
 		for (int i = -5; i <= 5; i++) {
 			int d = Math.abs(i) >= 4 ? 7 : 8;
 			int dx = midX-d;
@@ -274,7 +274,7 @@ public class BlockSolenoidMulti extends BlockReCMultiBlock implements Transducer
 		return true;
 	}
 
-	private boolean checkUpper(World world, int x, int y, int z, int midX, int midY, int midZ, ForgeDirection dir, StructuredBlockArray blocks, BlockMatchFailCallback call) {
+	private boolean checkUpper(World world, int x, int y, int z, int midX, int midY, int midZ, Direction dir, StructuredBlockArray blocks, BlockMatchFailCallback call) {
 		for (int i = -5; i <= 5; i++) {
 			int d = Math.abs(i) >= 4 ? 7 : 8;
 			int dx = midX-d;
@@ -342,7 +342,7 @@ public class BlockSolenoidMulti extends BlockReCMultiBlock implements Transducer
 		int midY = blocks.getMidY();
 		int midZ = blocks.getMidZ();
 		if (ReactorTiles.getTE(world, midX, midY, midZ) == ReactorTiles.SOLENOID) {
-			TileEntitySolenoidMagnet te = (TileEntitySolenoidMagnet)world.getTileEntity(midX, midY, midZ);
+			TileEntitySolenoidMagnet te = (TileEntitySolenoidMagnet)world.getBlockEntity(midX, midY, midZ);
 			te.setHasMultiBlock(false);
 		}
 	}
@@ -362,7 +362,7 @@ public class BlockSolenoidMulti extends BlockReCMultiBlock implements Transducer
 		int midY = blocks.getMidY();
 		int midZ = blocks.getMidZ();
 		if (ReactorTiles.getTE(world, midX, midY, midZ) == ReactorTiles.SOLENOID) {
-			TileEntitySolenoidMagnet te = (TileEntitySolenoidMagnet)world.getTileEntity(midX, midY, midZ);
+			TileEntitySolenoidMagnet te = (TileEntitySolenoidMagnet)world.getBlockEntity(midX, midY, midZ);
 			te.setHasMultiBlock(true);
 		}
 	}
@@ -378,7 +378,7 @@ public class BlockSolenoidMulti extends BlockReCMultiBlock implements Transducer
 	}
 
 	@Override
-	public int getTextureIndex(IBlockAccess world, int x, int y, int z, int side, int meta) {
+	public int getTextureIndex(BlockGetter world, int x, int y, int z, int side, int meta) {
 		if (meta >= 8)
 			return 10;
 		if (meta == 4) {
@@ -455,7 +455,7 @@ public class BlockSolenoidMulti extends BlockReCMultiBlock implements Transducer
 		int midZ = blocks.getMinZ()+blocks.getSizeZ()/2;
 		if (ReactorTiles.getTE(world, midX, midY, midZ) != ReactorTiles.SOLENOID)
 			return null;
-		return world.getTileEntity(midX, midY, midZ);
+		return world.getBlockEntity(midX, midY, midZ);
 	}
 
 }

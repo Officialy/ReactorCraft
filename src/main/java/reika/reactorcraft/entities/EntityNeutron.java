@@ -45,8 +45,8 @@ public class EntityNeutron extends ParticleEntity {
 
 	// MOD-PORT: Botania/ThaumicTinkerer "platform" transparency blocks — those mods are not in the
 	// 26.2 build, so neutrons treat them as opaque. Re-resolve via the block registry if they ship.
-	private static final Block botaniaPlatform = null;
-	private static final Block ttPlatform = null;
+	private static final Block botaniaPlatform = ItemStack.EMPTY;
+	private static final Block ttPlatform = ItemStack.EMPTY;
 
 	public EntityNeutron(EntityType<? extends Entity> type, Level world) {
 		super(type, world);

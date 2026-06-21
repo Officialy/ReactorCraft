@@ -9,11 +9,14 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fusion;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.block.Block;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.instantiable.FlyingBlocksExplosion;
@@ -32,6 +35,10 @@ import reika.reactorcraft.tileentities.fusion.TileEntityToroidMagnet.Aim;
 import reika.rotarycraft.api.power.PowerTransferHelper;
 
 public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements ReactorPowerReceiver, MultiBlockTile, NeutronTile {
+	public TileEntitySolenoidMagnet(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.SOLENOID.get(), pos, state);
+	}
+
 
 	private boolean hasMultiBlock = false;
 	private boolean checkForToroids = true;
@@ -64,18 +71,18 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 
 	private void testBreakageFailure() {
 		if (omega > 32) {
-			this.fail(worldObj, xCoord, yCoord, zCoord);
+			this.fail(level, xCoord, yCoord, zCoord);
 		}
 	}
 
 	private void fail(Level world, int x, int y, int z) {
-		world.setBlockToAir(x, y, z);
+		world.removeBlock(x, y, z);
 		new FlyingBlocksExplosion(this, 12).doExplosion();
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
-		if (!PowerTransferHelper.checkPowerFrom(this, ForgeDirection.DOWN)) {
+	public void updateEntity(Level world, BlockPos pos) {
+		if (!PowerTransferHelper.checkPowerFrom(this, Direction.DOWN)) {
 			this.noInputMachine();
 		}
 
@@ -98,11 +105,11 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 			power = (long)omega*(long)torque;
 		}
 
-		if (ReactorCraft.logger.shouldDebug()) {
-			if (world.isRemote)
-				ReactorCraft.logger.log("Clientside "+this+" receiving "+torque+" Nm @ "+omega+" rad/s. Phi="+phi);
+		if (ReactorCraft.LOGGER.shouldDebug()) {
+			if (world.isClientSide())
+				ReactorCraft.LOGGER.log("Clientside "+this+" receiving "+torque+" Nm @ "+omega+" rad/s. Phi="+phi);
 			else
-				ReactorCraft.logger.log("Serverside "+this+" receiving "+torque+" Nm @ "+omega+" rad/s.");
+				ReactorCraft.LOGGER.log("Serverside "+this+" receiving "+torque+" Nm @ "+omega+" rad/s.");
 		}
 
 		if (DragonAPICore.debugtest || hasMultiBlock && checkForToroids && this.arePowerReqsMet()) {
@@ -112,7 +119,7 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 			this.removeFromToroids();
 		}
 		if (hasMultiBlock && torque >= MINTORQUE && speed > MAX_SAFE_SPEED*4) { //violently fail
-			world.setBlockToAir(x, y, z);
+			world.removeBlock(x, y, z);
 			new FlyingBlocksExplosion(this, 16).doExplosion();
 		}
 	}
@@ -128,14 +135,14 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 		Block id = world.getBlock(x, y-1, z);
 		if (id == ReactorBlocks.SOLENOIDMULTI.getBlockInstance()) {
 			BlockSolenoidMulti b = (BlockSolenoidMulti)ReactorBlocks.SOLENOIDMULTI.getBlockInstance();
-			if (b.checkForFullMultiBlock(world, x, y-1, z, ForgeDirection.UNKNOWN, null)) {
+			if (b.checkForFullMultiBlock(world, x, y-1, z, Direction.UNKNOWN, null)) {
 				b.onCreateFullMultiBlock(world, x, y-1, z, true);
 			}
 		}
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 		if (hasMultiBlock) {
 			phi += speed;
 		}
@@ -191,7 +198,7 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 	}
 
 	public void addToToroids() {
-		Level world = worldObj;
+		Level world = level;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
@@ -204,21 +211,21 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 		Aim a = Aim.W;
 		while ((r == ReactorTiles.MAGNET || r == ReactorTiles.INJECTOR) && c <= 38) {
 			if (r == ReactorTiles.MAGNET) {
-				TileEntityToroidMagnet te = (TileEntityToroidMagnet)world.getTileEntity(x, y, z);
+				TileEntityToroidMagnet te = (TileEntityToroidMagnet)world.getBlockEntity(x, y, z);
 				te.hasSolenoid = true;
 				a = te.getAim();
 			}
 			x += a.xOffset;
 			z += a.zOffset;
 			r = ReactorTiles.getTE(world, x, y, z);
-			//ReikaJavaLibrary.pConsole(r+":"+a+":"+a.xOffset+":"+a.zOffset, Side.SERVER);
+			//ReikaJavaLibrary.pConsole(r+":"+a+":"+a.xOffset+":"+a.zOffset, Dist.DEDICATED_SERVER);
 			c++;
 		}
 		checkForToroids = false;
 	}
 
 	public void removeFromToroids() {
-		Level world = worldObj;
+		Level world = level;
 		int x = xCoord;
 		int y = yCoord;
 		int z = zCoord;
@@ -231,14 +238,14 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 		Aim a = Aim.W;
 		while ((r == ReactorTiles.MAGNET || r == ReactorTiles.INJECTOR) && c < 38) {
 			if (r == ReactorTiles.MAGNET) {
-				TileEntityToroidMagnet te = (TileEntityToroidMagnet)world.getTileEntity(x, y, z);
+				TileEntityToroidMagnet te = (TileEntityToroidMagnet)world.getBlockEntity(x, y, z);
 				te.hasSolenoid = false;
 				a = te.getAim();
 			}
 			x += a.xOffset;
 			z += a.zOffset;
 			r = ReactorTiles.getTE(world, x, y, z);
-			//ReikaJavaLibrary.pConsole(r+":"+a+":"+a.xOffset+":"+a.zOffset, Side.SERVER);
+			//ReikaJavaLibrary.pConsole(r+":"+a+":"+a.xOffset+":"+a.zOffset, Dist.DEDICATED_SERVER);
 			c++;
 		}
 		checkForToroids = true;
@@ -294,8 +301,8 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 	}
 
 	@Override
-	public boolean canReadFrom(ForgeDirection dir) {
-		return dir == ForgeDirection.DOWN;
+	public boolean canReadFrom(Direction dir) {
+		return dir == Direction.DOWN;
 	}
 
 	@Override
@@ -336,22 +343,22 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 
 	@Override
 	public void breakBlock() {
-		if (!worldObj.isRemote) {
+		if (!level.isRemote) {
 			for (int i = 0; i < 6; i++) {
-				ForgeDirection dir = dirs[i];
+				Direction dir = dirs[i];
 				int dx = xCoord+dir.offsetX;
 				int dy = yCoord+dir.offsetY;
 				int dz = zCoord+dir.offsetZ;
-				Block b = worldObj.getBlock(dx, dy, dz);
+				Block b = level.getBlock(dx, dy, dz);
 				if (b instanceof BlockReCMultiBlock) {
-					((BlockReCMultiBlock)b).breakMultiBlock(worldObj, dx, dy, dz);
+					((BlockReCMultiBlock)b).breakMultiBlock(level, dx, dy, dz);
 				}
 			}
 		}
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		return false;
 	}
 

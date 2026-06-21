@@ -2,7 +2,7 @@ package reika.reactorcraft.auxiliary.structure;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.instantiable.data.blockstruct.FilledBlockArray;
 import reika.dragonapi.libraries.ReikaDirectionHelper;
@@ -18,7 +18,7 @@ public class InjectorStructure extends ReactorStructureBase {
 		FilledBlockArray array = new FilledBlockArray(world);
 
 		Block b = ReactorBlocks.INJECTORMULTI.getBlockInstance();
-		ForgeDirection left = ReikaDirectionHelper.getLeftBy90(dir);
+		Direction left = ReikaDirectionHelper.getLeftBy90(dir);
 
 		for (int i = 0; i <= 4; i++) {
 			array.setBlock(x+dir.offsetX*i+left.offsetX, y+3, z+dir.offsetZ*i+left.offsetZ, b, 4);
@@ -90,9 +90,9 @@ public class InjectorStructure extends ReactorStructureBase {
 		}
 
 		for (int i = 3; i <= 8; i++) {
-			array.setBlock(x+dir.offsetX*i, y, z+dir.offsetZ*i, ReactorTiles.MAGNETPIPE.getBlock(), ReactorTiles.MAGNETPIPE.getBlockMetadata());
+			array.setBlock(x+dir.offsetX*i, y, z+dir.offsetZ*i, ReactorTiles.MAGNETPIPE.getBlock(), ReactorTiles.MAGNETPIPE);
 		}
-		array.setBlock(x+dir.offsetX*2, y, z+dir.offsetZ*2, ReactorTiles.INJECTOR.getBlock(), ReactorTiles.INJECTOR.getBlockMetadata());
+		array.setBlock(x+dir.offsetX*2, y, z+dir.offsetZ*2, ReactorTiles.INJECTOR.getBlock(), ReactorTiles.INJECTOR);
 
 		return array;
 	}

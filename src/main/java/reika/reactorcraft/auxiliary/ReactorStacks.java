@@ -1,8 +1,8 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
  * Distribution of the software in any form is only allowed with
  * explicit, prior permission from the owner.
@@ -10,8 +10,11 @@
 package reika.reactorcraft.auxiliary;
 
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.SimpleFluidContent;
 
-import reika.reactorcraft.registry.ReactorBlocks;
+import reika.reactorcraft.registry.ReactorDataComponents;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorItems;
 
 public class ReactorStacks {
@@ -24,29 +27,34 @@ public class ReactorStacks {
 	public static final ItemStack calcite = ReactorItems.RAW.getStackOfMetadata(5);
 	public static final ItemStack lodestone = ReactorItems.RAW.getStackOfMetadata(6);
 	public static final ItemStack thordust = ReactorItems.RAW.getStackOfMetadata(7);
-	public static final ItemStack emeralddust = ReactorItems.RAW.getStackOfMetadata(8);
+	public static final ItemStack emeralddust = ReactorItems.EMERALD_DUST.getDefaultInstance();
 	public static final ItemStack wastedust = ReactorItems.RAW.getStackOfMetadata(9);
 
-	public static final ItemStack emptycan = ReactorItems.CANISTER.getStackOfMetadata(0);
-	public static final ItemStack uf6can = ReactorItems.CANISTER.getStackOfMetadata(1);
-	public static final ItemStack hfcan = ReactorItems.CANISTER.getStackOfMetadata(2);
-	public static final ItemStack nh3can = ReactorItems.CANISTER.getStackOfMetadata(3);
-	public static final ItemStack nacan = ReactorItems.CANISTER.getStackOfMetadata(4);
-	public static final ItemStack h2can = ReactorItems.CANISTER.getStackOfMetadata(5);
-	public static final ItemStack h3can = ReactorItems.CANISTER.getStackOfMetadata(6);
-	public static final ItemStack clcan = ReactorItems.CANISTER.getStackOfMetadata(7);
-	public static final ItemStack ocan = ReactorItems.CANISTER.getStackOfMetadata(8);
-	public static final ItemStack co2can = ReactorItems.CANISTER.getStackOfMetadata(9);
-	public static final ItemStack hotco2can = ReactorItems.CANISTER.getStackOfMetadata(10);
-	public static final ItemStack hotnacan = ReactorItems.CANISTER.getStackOfMetadata(11);
-	public static final ItemStack lican = ReactorItems.CANISTER.getStackOfMetadata(12);
-	public static final ItemStack lifbecan = ReactorItems.CANISTER.getStackOfMetadata(13);
-	public static final ItemStack hotlifbecan = ReactorItems.CANISTER.getStackOfMetadata(14);
-	public static final ItemStack lifbefuelcan = ReactorItems.CANISTER.getStackOfMetadata(15);
+	public static final ItemStack emptycan = ReactorItems.CANISTER_REF.getStackOf();
+	public static final ItemStack uf6can = canister(ReactorFluids.UF6.get(), 1000);
+	public static final ItemStack hfcan = canister(ReactorFluids.HF.get(), 1000);
+	public static final ItemStack nh3can = canister(ReactorFluids.AMMONIA.get(), 1000);
+	public static final ItemStack nacan = canister(ReactorFluids.SODIUM.get(), 1000);
+	public static final ItemStack h2can = canister(ReactorFluids.DEUTERIUM.get(), 1000);
+	public static final ItemStack h3can = canister(ReactorFluids.TRITIUM.get(), 1000);
+	public static final ItemStack clcan = canister(ReactorFluids.CHLORINE.get(), 1000);
+	public static final ItemStack ocan = canister(ReactorFluids.OXYGEN.get(), 1000);
+	public static final ItemStack co2can = canister(ReactorFluids.CO2.get(), 1000);
+	public static final ItemStack hotco2can = canister(ReactorFluids.HOT_CO2.get(), 1000);
+	public static final ItemStack hotnacan = canister(ReactorFluids.HOT_SODIUM.get(), 1000);
+	public static final ItemStack lican = canister(ReactorFluids.LITHIUM.get(), 1000);
+	public static final ItemStack lifbecan = canister(ReactorFluids.LIFBE.get(), 1000);
+	public static final ItemStack hotlifbecan = canister(ReactorFluids.HOT_LIFBE.get(), 1000);
+	public static final ItemStack lifbefuelcan = canister(ReactorFluids.LIFBE_FUEL.get(), 1000);
 
-	public static final ItemStack maxMagnet = ReactorItems.MAGNET.getStackOfMetadata(ReactorItems.MAGNET.getNumberMetadatas()-1);
-	public static final ItemStack weakerMagnet = ReactorItems.MAGNET.getStackOfMetadata(ReactorItems.MAGNET.getNumberMetadatas()-2);
+	public static final ItemStack maxMagnet = ReactorItems.MAGNET.getStackOfMetadata(ReactorItems.MAGNET.getNumberMetadatas() - 1);
+	public static final ItemStack weakerMagnet = ReactorItems.MAGNET.getStackOfMetadata(ReactorItems.MAGNET.getNumberMetadatas() - 2);
 
-	public static final ItemStack insulCore = new ItemStack(ReactorBlocks.HEATERMULTI.getBlockInstance(), 1, 1);
+	private static ItemStack canister(net.minecraft.world.level.material.Fluid fluid, int amount) {
+		ItemStack s = ReactorItems.CANISTER_REF.getStackOf();
+		s.set(ReactorDataComponents.CANISTER_FLUID.get(), new SimpleFluidContent(new FluidStack(fluid, amount)));
+		return s;
+	}
 
+	private ReactorStacks() {}
 }

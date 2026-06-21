@@ -9,14 +9,17 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
-import net.minecraft.init.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.base.TileEntityReactorBase;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.auxiliary.interfaces.sodiumsolarupgrades.SodiumSolarReceiver;
@@ -25,6 +28,10 @@ import reika.rotarycraft.tileentities.production.TileEntitySolar;
 
 
 public class TileEntitySolarTop extends TileEntityReactorBase implements TemperatureTE, SodiumSolarReceiver {
+	public TileEntitySolarTop(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.SOLARTOP.get(), pos, state);
+	}
+
 
 	public static final int MAXTEMP = 1800;
 
@@ -32,7 +39,7 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 
 	@Override
 	public boolean isActive() {
-		return ReactorTiles.getTE(worldObj, xCoord, yCoord+1, zCoord) == this.getTile() && this.getAdjacentTileEntity(ForgeDirection.DOWN) instanceof TileEntitySolar;
+		return ReactorTiles.getTE(level, xCoord, yCoord+1, zCoord) == this.getTile() && this.getAdjacentTileEntity(Direction.DOWN) instanceof TileEntitySolar;
 	}
 
 	@Override
@@ -41,10 +48,10 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		if (this.isActive()) {
 			//tempTimer.update();
-			if (!world.isRemote && this.getTicksExisted()%8 == 0) {
+			if (!world.isClientSide() && this.getTicksExisted()%8 == 0) {
 				int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
 				int dT = Tamb-temperature;
 				if (dT != 0) {
@@ -59,7 +66,7 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
@@ -67,11 +74,11 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 	public int getTemperature() {
 		if (this.isActive())
 			return temperature;
-		BlockEntity te = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		BlockEntity te = this.getAdjacentTileEntity(Direction.DOWN);
 		if (te instanceof TileEntitySolarTop)
 			return ((TileEntitySolarTop)te).getTemperature();
 		else
-			return ReikaWorldHelper.getAmbientTemperatureAt(worldObj, xCoord, yCoord, zCoord);
+			return ReikaWorldHelper.getAmbientTemperatureAt(level, xCoord, yCoord, zCoord);
 	}
 
 	@Override
@@ -112,7 +119,7 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 
 	@Override
 	public void tick(int mirrorCount, float totalBrightness) {
-		if (!worldObj.isRemote) {
+		if (!level.isRemote) {
 			temperature += (0.0625*2*mirrorCount*totalBrightness);
 			temperature = Math.min(temperature, MAXTEMP);
 		}

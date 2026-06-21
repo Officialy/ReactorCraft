@@ -9,22 +9,25 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.processing;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import java.util.HashMap;
 
 import net.minecraft.block.material.Material;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.EnumHelper;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidContainerRegistry;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidHandler;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.fluids./*FLUIDCONTAINER-PORT*/ FluidContainerRegistry;
+import net.minecraft.world.level.material.FluidRegistry;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.asm.apistripper.Strippable;
 import reika.dragonapi.instantiable.HybridTank;
@@ -32,7 +35,7 @@ import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.instantiable.recipe.FlexibleIngredient;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.registry.ReikaItemHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.ReactorStacks;
 import reika.reactorcraft.base.TileEntityInventoriedReactorBase;
@@ -42,12 +45,11 @@ import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
 import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
-import buildcraft.api.tiles.IHasWork;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase implements IFluidHandler, ThermalMachine, PipeConnector {
+	public TileEntitySynthesizer(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.SYNTHESIZER.get(), pos, state);
+	}
 
-@Strippable("buildcraft.api.tiles.IHasWork")
-public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase implements IFluidHandler, ThermalMachine, PipeConnector, IHasWork {
 
 	private static final int WATER_PER_AMMONIA = 250;
 	private static final int AMMONIA_PER_STEP = 1000;
@@ -102,12 +104,12 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 			fluidMap.put(input, this);
 		}
 
-		@SideOnly(Side.CLIENT)
+		@SideOnly(Dist.CLIENT)
 		public ItemStack getAForDisplay() {
 			return itemA != null ? itemA.getItemForDisplay(true) : null;
 		}
 
-		@SideOnly(Side.CLIENT)
+		@SideOnly(Dist.CLIENT)
 		public ItemStack getBForDisplay() {
 			return itemB != null ? itemB.getItemForDisplay(true) : null;
 		}
@@ -117,7 +119,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 		}
 
 		private static FlexibleIngredient constructItemMatch(ItemStack is) {
-			return new FlexibleIngredient(is, 100, is.stackSize);
+			return new FlexibleIngredient(is, 100, is.getCount());
 		}
 
 		private static FlexibleIngredient constructItemMatch(String ore, int amt) {
@@ -148,12 +150,12 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		this.getWaterBuckets();
 		recipe = this.getRecipe();
 		if (recipe != null)
 			steptimer.setCap(recipe.getDuration(temperature));
-		if (recipe != null && water.getLevel() >= recipe.fluidConsumed && temperature >= recipe.minTemp && tank.canTakeIn(recipe.output, recipe.fluidProduced)) {
+		if (recipe != null && water.getFluidLevel() >= recipe.fluidConsumed && temperature >= recipe.minTemp && tank.canTakeIn(recipe.output, recipe.fluidProduced)) {
 			steptimer.update();
 			if (steptimer.checkCap())
 				this.make();
@@ -174,9 +176,9 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 		FluidSynthesis fr = fluidMap.get(water.getActualFluid());
 		if (fr == null)
 			return null;
-		if (!ReikaItemHelper.matchStacks(inv[1], fr.itemA)) //handles null
+		if (!ReikaItemHelper.matchStacks(itemHandler.getStackInSlot(1), fr.itemA)) //handles null
 			return null;
-		if (!ReikaItemHelper.matchStacks(inv[2], fr.itemB))
+		if (!ReikaItemHelper.matchStacks(itemHandler.getStackInSlot(2), fr.itemB))
 			return null;
 		return fr;
 	}
@@ -184,21 +186,21 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	public void updateTemperature(Level world, int x, int y, int z, int meta) {
 		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
 
-		ForgeDirection waterside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
+		Direction waterside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
 		if (waterside != null) {
 			Tamb /= 2;
 		}
-		ForgeDirection iceside = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.ice);
+		Direction iceside = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.ice);
 		if (iceside != null) {
 			if (Tamb > 0)
 				Tamb /= 4;
 			ReikaWorldHelper.changeAdjBlock(world, x, y, z, iceside, Blocks.flowing_water, 0);
 		}
-		ForgeDirection fireside = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.fire);
+		Direction fireside = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.fire);
 		if (fireside != null) {
 			Tamb += 200;
 		}
-		ForgeDirection lavaside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.lava);
+		Direction lavaside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.lava);
 		if (lavaside != null) {
 			Tamb += 600;
 		}
@@ -213,7 +215,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 		if (temperature > MAXTEMP)
 			temperature = MAXTEMP;
 		if (temperature > 100) {
-			ForgeDirection side = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.snow);
+			Direction side = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.snow);
 			if (side != null)
 				ReikaWorldHelper.changeAdjBlock(world, x, y, z, side, Blocks.air, 0);
 			side = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.ice);
@@ -232,11 +234,11 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	public int getWaterScaled(int px) {
-		return water.getLevel()*px/water.getCapacity();
+		return water.getFluidLevel()*px/water.getCapacity();
 	}
 
 	public int getAmmoniaScaled(int px) {
-		return tank.getLevel() * px / tank.getCapacity();
+		return tank.getFluidLevel() * px / tank.getCapacity();
 	}
 
 	public int getTimerScaled(int px) {
@@ -244,46 +246,46 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	private void getWaterBuckets() {
-		if (inv[0] != null && inv[0].stackSize == 1 && inv[0].getItem() == Items.water_bucket && water.canTakeIn(FluidRegistry.WATER, FluidContainerRegistry.BUCKET_VOLUME)) {
-			water.addLiquid(FluidContainerRegistry.BUCKET_VOLUME, FluidRegistry.WATER);
-			inv[0] = new ItemStack(Items.bucket);
+		if (itemHandler.getStackInSlot(0) != null && itemHandler.getStackInSlot(0).getCount() == 1 && itemHandler.getStackInSlot(0).getItem() == Items.water_bucket && water.canTakeIn(FluidRegistry.WATER, /*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME)) {
+			water.addLiquid(/*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME, FluidRegistry.WATER);
+			itemHandler.getStackInSlot(0) = new ItemStack(Items.bucket);
 		}
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
 		return this.canDrain(from, resource.getFluid()) ? tank.drain(resource.amount, doDrain) : null;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
+	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
 		return this.canDrain(from, null) ? tank.drain(maxDrain, doDrain) : null;
 	}
 
 	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
-		return true;//fluid.equals(FluidRegistry.getFluid("rc ammonia"));
+	public boolean canDrain(Direction from, Fluid fluid) {
+		return true;//fluid.equals(ReactorFluids.getLegacyFluid("rc ammonia"));
 	}
 
 	@Override
-	public int fill(ForgeDirection from, FluidStack resource, boolean doFill) {
+	public int fill(Direction from, FluidStack resource, boolean doFill) {
 		if (!this.canFill(from, resource.getFluid()))
 			return 0;
 		return water.fill(resource, doFill);
 	}
 
 	@Override
-	public boolean canFill(ForgeDirection from, Fluid fluid) {
-		return fluidMap.get(fluid) != null;
+	public boolean canFill(Direction from, Fluid fluid) {
+		return fluidMap.get(fluid) != ItemStack.EMPTY;
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(ForgeDirection from) {
+	public FluidTankInfo[] getTankInfo(Direction from) {
 		return new FluidTankInfo[]{water.getInfo(), tank.getInfo()};
 	}
 
@@ -293,7 +295,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		return 3;
 	}
 
@@ -379,12 +381,12 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	@Override
-	public boolean canItemEnterFromSide(ForgeDirection dir) {
+	public boolean canItemEnterFromSide(Direction dir) {
 		return true;
 	}
 
 	@Override
-	public boolean canItemExitToSide(ForgeDirection dir) {
+	public boolean canItemExitToSide(Direction dir) {
 		return true;
 	}
 
@@ -394,12 +396,12 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	@Override
-	public boolean canConnectToPipeOnSide(MachineRegistry m, ForgeDirection side) {
+	public boolean canConnectToPipeOnSide(MachineRegistry m, Direction side) {
 		return this.canConnectToPipe(m);
 	}
 
 	@Override
-	public Flow getFlowForSide(ForgeDirection side) {
+	public Flow getFlowForSide(Direction side) {
 		return side.offsetY == 0 ? Flow.INPUT : Flow.OUTPUT;
 	}
 

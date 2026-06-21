@@ -9,6 +9,9 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
@@ -23,9 +26,13 @@ import reika.reactorcraft.registry.ReactorType;
 import reika.reactorcraft.tileentities.fission.TileEntityWaterCell.LiquidStates;
 
 public class TileEntityFuelRod extends TileEntityNuclearCore {
+	public TileEntityFuelRod(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.FUEL.get(), pos, state);
+	}
+
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 	/*
@@ -41,7 +48,7 @@ public class TileEntityFuelRod extends TileEntityNuclearCore {
 
 	@Override
 	public boolean isItemValidForSlot(int i, ItemStack is) {
-		if (inv[i] != null)
+		if (itemHandler.getStackInSlot(i) != null)
 			return false;
 		if (this.isFuel(is))
 			return i < 4;
@@ -70,13 +77,13 @@ public class TileEntityFuelRod extends TileEntityNuclearCore {
 	}
 
 	private ReactorFuel getFuel() {
-		return ReactorFuel.getFrom(inv[3]);
+		return ReactorFuel.getFrom(itemHandler.getStackInSlot(3));
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		super.onNeutron(e, world, x, y, z);
-		if (!world.isRemote) {
+		if (!world.isClientSide()) {
 			if (e.getType().canTriggerFission() && ReikaRandomHelper.doWithChance(e.getNeutronSpeed().getInteractionMultiplier())) {
 				if (this.checkPoisonedChance())
 					return true;
@@ -85,9 +92,9 @@ public class TileEntityFuelRod extends TileEntityNuclearCore {
 					if (ReikaRandomHelper.doWithChance(f.fissionChance+f.voidCoefficient*(temperature-100))) {
 						ReactorAchievements.FISSION.triggerAchievement(this.getPlacer());
 						if (ReikaRandomHelper.doWithChance(f.consumeChance)) {
-							ItemStack is = inv[3];
-							inv[3] = f.getFissionProduct(is);
-							if (inv[3] != null && inv[3].getItem() != is.getItem())
+							ItemStack is = itemHandler.getStackInSlot(3);
+							itemHandler.getStackInSlot(3) = f.getFissionProduct(is);
+							if (itemHandler.getStackInSlot(3) != null && itemHandler.getStackInSlot(3).getItem() != is.getItem())
 								this.tryPushSpentFuel(3);
 							if (ReikaRandomHelper.doWithChance(f.wasteChance))
 								this.addWaste();
@@ -104,7 +111,7 @@ public class TileEntityFuelRod extends TileEntityNuclearCore {
 
 	@Override
 	public boolean isFissile() {
-		return this.getFuel() != null;
+		return this.getFuel() != ItemStack.EMPTY;
 	}
 
 	@Override

@@ -26,7 +26,6 @@ import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.RadiationEffects.RadiationIntensity;
 
-import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 
 public class PotionRadiation extends Potion implements PermaPotion {
 
@@ -38,7 +37,7 @@ public class PotionRadiation extends Potion implements PermaPotion {
 
 	@Override
 	public void performEffect(LivingEntity e, int level) {
-		boolean p = e.worldObj.difficultySetting == EnumDifficulty.PEACEFUL;
+		boolean p = e.level.difficultySetting == EnumDifficulty.PEACEFUL;
 		int c = p ? 75 : 50;
 		if (level >= RadiationIntensity.HIGHLEVEL.ordinal()) {
 			c *= 1.1;

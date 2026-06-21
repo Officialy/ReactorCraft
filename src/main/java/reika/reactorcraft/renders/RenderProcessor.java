@@ -91,7 +91,7 @@ public class RenderProcessor extends ReactorRenderBase
 	private void renderLiquids(TileEntityUProcessor tile, double par2, double par4, double par6) {
 
 		for (int i = 0; i < 3; i++) {
-			Fluid f = null;
+			Fluid f = ItemStack.EMPTY;
 			int amount = 0;
 			switch(i) {
 				case 0:

@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "experience": 0.8,
+  "ingredient": "reactorcraft:magnetite_ore",
+  "result": {
+    "id": "reactorcraft:lodestone"
+  }
+}

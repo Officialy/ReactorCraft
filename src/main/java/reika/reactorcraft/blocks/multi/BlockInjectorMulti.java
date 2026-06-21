@@ -9,13 +9,13 @@
  ******************************************************************************/
 package reika.reactorcraft.blocks.multi;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.init.Blocks;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
 import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
@@ -23,7 +23,7 @@ import reika.dragonapi.instantiable.data.blockstruct.StructuredBlockArray;
 import reika.dragonapi.instantiable.data.immutable.BlockKey;
 import reika.dragonapi.instantiable.data.immutable.Coordinate;
 import reika.dragonapi.libraries.ReikaDirectionHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.auxiliary.NeutronBlock;
 import reika.reactorcraft.base.BlockReCMultiBlock;
 import reika.reactorcraft.entities.EntityNeutron;
@@ -42,11 +42,11 @@ public class BlockInjectorMulti extends BlockReCMultiBlock implements NeutronBlo
 	}
 
 	@Override
-	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, ForgeDirection dir, BlockMatchFailCallback call) {
+	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
 		dir = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, this, 7);
 		if (dir == null)
 			return false;
-		ForgeDirection left = ReikaDirectionHelper.getLeftBy90(dir);
+		Direction left = ReikaDirectionHelper.getLeftBy90(dir);
 		StructuredBlockArray blocks = new StructuredBlockArray(world);
 		blocks.recursiveAddWithBounds(world, x, y, z, this, x-8, y-5, z-8, x+8, y+5, z+8);
 		while (world.getBlock(x, y-1, z) == this && world.getBlockMetadata(x, y-1, z) == 5)
@@ -81,7 +81,7 @@ public class BlockInjectorMulti extends BlockReCMultiBlock implements NeutronBlo
 		return true;
 	}
 
-	private boolean checkCorners(World world, int x, int y, int z, ForgeDirection dir, ForgeDirection left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
+	private boolean checkCorners(World world, int x, int y, int z, Direction dir, Direction left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
 		for (int i = 0; i <= 4; i++) {
 			if (!this.checkAt(world, x+dir.offsetX*i+left.offsetX, y+3, z+dir.offsetZ*i+left.offsetZ, 4, call)) {
 				return false;
@@ -144,7 +144,7 @@ public class BlockInjectorMulti extends BlockReCMultiBlock implements NeutronBlo
 		return true;
 	}
 
-	private boolean checkTop(World world, int x, int y, int z, ForgeDirection dir, ForgeDirection left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
+	private boolean checkTop(World world, int x, int y, int z, Direction dir, Direction left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
 		for (int i = 0; i <= 4; i++) {
 			if (!this.checkAt(world, x+dir.offsetX*i, y+3, z+dir.offsetZ*i, 3, call)) {
 				return false;
@@ -163,7 +163,7 @@ public class BlockInjectorMulti extends BlockReCMultiBlock implements NeutronBlo
 		return true;
 	}
 
-	private boolean checkBottom(World world, int x, int y, int z, ForgeDirection dir, ForgeDirection left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
+	private boolean checkBottom(World world, int x, int y, int z, Direction dir, Direction left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
 		for (int i = 0; i <= 8; i++) {
 			if (!this.checkAt(world, x+dir.offsetX*i, y-1, z+dir.offsetZ*i, 0, call))
 				return false;
@@ -171,7 +171,7 @@ public class BlockInjectorMulti extends BlockReCMultiBlock implements NeutronBlo
 		return true;
 	}
 
-	private boolean checkSides(World world, int x, int y, int z, ForgeDirection dir, ForgeDirection left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
+	private boolean checkSides(World world, int x, int y, int z, Direction dir, Direction left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
 		for (int i = 1; i <= 1; i++) {
 			if (!this.checkAt(world, x+dir.offsetX*i+left.offsetX, y, z+dir.offsetZ*i+left.offsetZ, 2, call))
 				return false;
@@ -213,7 +213,7 @@ public class BlockInjectorMulti extends BlockReCMultiBlock implements NeutronBlo
 		return true;
 	}
 
-	private boolean checkFiller(World world, int x, int y, int z, ForgeDirection dir, ForgeDirection left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
+	private boolean checkFiller(World world, int x, int y, int z, Direction dir, Direction left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
 		for (int i = 1; i <= 1; i++) {
 			if (!this.checkAt(world, x+dir.offsetX*i, y, z+dir.offsetZ*i, 7, call))
 				return false;
@@ -229,7 +229,7 @@ public class BlockInjectorMulti extends BlockReCMultiBlock implements NeutronBlo
 		return true;
 	}
 
-	private boolean checkPipes(World world, int x, int y, int z, ForgeDirection dir, ForgeDirection left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
+	private boolean checkPipes(World world, int x, int y, int z, Direction dir, Direction left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
 		for (int i = 3; i <= 8; i++) {
 			Block b = world.getBlock(x+dir.offsetX*i, y, z+dir.offsetZ*i);
 			int meta = world.getBlockMetadata(x+dir.offsetX*i, y, z+dir.offsetZ*i);
@@ -259,7 +259,7 @@ public class BlockInjectorMulti extends BlockReCMultiBlock implements NeutronBlo
 			}
 			if (meta == 0) {
 				if (ReactorTiles.getTE(world, c.xCoord, c.yCoord+1, c.zCoord) == ReactorTiles.INJECTOR) {
-					TileEntityFusionInjector te = (TileEntityFusionInjector)world.getTileEntity(c.xCoord, c.yCoord+1, c.zCoord);
+					TileEntityFusionInjector te = (TileEntityFusionInjector)world.getBlockEntity(c.xCoord, c.yCoord+1, c.zCoord);
 					te.setHasMultiBlock(true);
 				}
 			}
@@ -278,7 +278,7 @@ public class BlockInjectorMulti extends BlockReCMultiBlock implements NeutronBlo
 			}
 			if (meta == 8) {
 				if (ReactorTiles.getTE(world, c.xCoord, c.yCoord+1, c.zCoord) == ReactorTiles.INJECTOR) {
-					TileEntityFusionInjector te = (TileEntityFusionInjector)world.getTileEntity(c.xCoord, c.yCoord+1, c.zCoord);
+					TileEntityFusionInjector te = (TileEntityFusionInjector)world.getBlockEntity(c.xCoord, c.yCoord+1, c.zCoord);
 					te.setHasMultiBlock(false);
 				}
 			}
@@ -291,7 +291,7 @@ public class BlockInjectorMulti extends BlockReCMultiBlock implements NeutronBlo
 	}
 
 	@Override
-	public int getTextureIndex(IBlockAccess world, int x, int y, int z, int side, int meta) {
+	public int getTextureIndex(BlockGetter world, int x, int y, int z, int side, int meta) {
 		if (meta >= 8) {
 			if (meta == 13)
 				return 0;
@@ -336,7 +336,7 @@ public class BlockInjectorMulti extends BlockReCMultiBlock implements NeutronBlo
 				}
 				return 9;
 			case 2:
-				ForgeDirection dir = dirs[side];
+				Direction dir = dirs[side];
 				int dx = x+dir.offsetX;
 				int dy = y+dir.offsetY;
 				int dz = z+dir.offsetZ;
@@ -482,7 +482,7 @@ public class BlockInjectorMulti extends BlockReCMultiBlock implements NeutronBlo
 		for (int i = 0; i < blocks.getSize(); i++) {
 			Coordinate c = blocks.getNthBlock(i);
 			if (ReactorTiles.getTE(world, c.xCoord, c.yCoord+1, c.zCoord) == ReactorTiles.INJECTOR) {
-				TileEntityFusionInjector te = (TileEntityFusionInjector)world.getTileEntity(c.xCoord, c.yCoord+1, c.zCoord);
+				TileEntityFusionInjector te = (TileEntityFusionInjector)world.getBlockEntity(c.xCoord, c.yCoord+1, c.zCoord);
 				return te;
 			}
 		}

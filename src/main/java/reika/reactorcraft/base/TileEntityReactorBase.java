@@ -71,7 +71,7 @@ public abstract class TileEntityReactorBase extends BlockEntityBase implements T
 
 	@Override
 	protected boolean shouldRunUpdateCode() {
-		return !ReactorCraft.instance.isLocked() && this.isTickingTE();
+		return !ReactorCraft.getInstance().isLocked() && this.isTickingTE();
 	}
 
 	protected boolean isTickingTE() {

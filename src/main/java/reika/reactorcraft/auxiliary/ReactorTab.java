@@ -13,8 +13,6 @@ import net.minecraft.world.item.ItemStack;
 
 import reika.dragonapi.instantiable.gui.RegistryEnumCreativeTab;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class ReactorTab extends RegistryEnumCreativeTab {
 
@@ -25,7 +23,7 @@ public class ReactorTab extends RegistryEnumCreativeTab {
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	public ItemStack getIconItemStack() {
 		return icon;
 	}

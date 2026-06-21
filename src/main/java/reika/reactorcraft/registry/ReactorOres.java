@@ -15,14 +15,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
-import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.StatCollector;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
@@ -34,7 +34,7 @@ import reika.dragonapi.interfaces.registry.OreEnum;
 import reika.dragonapi.libraries.java.ReikaJavaLibrary;
 import reika.dragonapi.libraries.java.ReikaStringParser;
 import reika.dragonapi.libraries.registry.ReikaItemHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.dragonapi.modinteract.ReikaTwilightHelper;
 import reika.dragonapi.modinteract.itemhandlers.ExtraUtilsHandler;
 import reika.reactorcraft.auxiliary.ReactorStacks;
@@ -77,7 +77,7 @@ public enum ReactorOres implements OreEnum {
 		perChunk = Math.max(1, (int)(count*ReactorOptions.getOreMultiplier()));
 		shouldGen = gen;
 		dimensionID = dim;
-		oreName = StatCollector.translateToLocal(name);
+		oreName = I18n.get(name);
 		xpDropped = xp;
 		harvestLevel = level;
 	}
@@ -87,7 +87,7 @@ public enum ReactorOres implements OreEnum {
 		return this.name()+" "+perChunk+"x"+veinSize+" between "+minY+" and "+maxY;
 	}
 
-	public static ReactorOres getOre(IBlockAccess iba, int x, int y, int z) {
+	public static ReactorOres getOre(BlockGetter iba, int x, int y, int z) {
 		Block id = iba.getBlock(x, y, z);
 		int meta = iba.getBlockMetadata(x, y, z);
 		if (id == ReactorBlocks.FLUORITEORE.getBlockInstance())
@@ -141,7 +141,7 @@ public enum ReactorOres implements OreEnum {
 	}
 
 
-	public int getBlockMetadata() {
+	public int 0 {
 		if (this == FLUORITE)
 			return FluoriteTypes.WHITE.ordinal();
 		else
@@ -149,7 +149,7 @@ public enum ReactorOres implements OreEnum {
 	}
 
 	public ItemStack getOreBlock() {
-		return new ItemStack(this.getBlock(), 1, this.getBlockMetadata());
+		return new ItemStack(this.getBlock(), 1, this);
 	}
 
 	public ItemStack getProduct() {
@@ -194,9 +194,9 @@ public enum ReactorOres implements OreEnum {
 		switch(this) {
 			case PITCHBLENDE:
 			case ENDBLENDE:
-				return StatCollector.translateToLocal("item.uranium");
+				return I18n.get("item.uranium");
 			default:
-				return StatCollector.translateToLocal("item."+this.name().toLowerCase(Locale.ENGLISH));
+				return I18n.get("item."+this.name().toLowerCase(Locale.ENGLISH));
 		}
 	}
 
@@ -256,7 +256,7 @@ public enum ReactorOres implements OreEnum {
 	private boolean shouldGen() {
 		if (shouldGen)
 			return true;
-		if (ModList.CONDENSEDORES.isLoaded() && CondensedOreAPI.instance.doesBlockGenerate(this.getBlock(), this.getBlockMetadata()))
+		if (ModList.CONDENSEDORES.isLoaded() && CondensedOreAPI.instance.doesBlockGenerate(this.getBlock(), this))
 			return false;
 		return !this.hasEquivalents();
 	}
@@ -281,13 +281,13 @@ public enum ReactorOres implements OreEnum {
 
 	public boolean canGenAt(World world, int x, int y, int z) {
 		if (this == AMMONIUM)
-			return ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.lava) != null || ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.flowing_lava) != null;
+			return ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.lava) != null || ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.flowing_lava) != ItemStack.EMPTY;
 		return true;
 	}
 
 	public boolean dropsSelf(int meta) {
 		List<ItemStack> li = this.getOreDrop(meta);
-		return li.size() == 1 && li.get(0).getItem() == Item.getItemFromBlock(ReactorBlocks.ORE.getBlockInstance()) && li.get(0).getItemDamage() == meta;
+		return li.size() == 1 && li.get(0).getItem() == Item.getItemFromBlock(ReactorBlocks.ORE.getBlockInstance()) && li.get(0).getDamageValue() == meta;
 	}
 
 	@Override

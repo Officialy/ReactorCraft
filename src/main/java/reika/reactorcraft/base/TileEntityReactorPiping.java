@@ -215,13 +215,13 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 		String fluidIdStr = NBT.getStringOr("fluid_id", "");
 		Fluid f;
 		if (fluidIdStr.isEmpty()) {
-			f = null;
+			f = ItemStack.EMPTY;
 		}
 		else {
 			Identifier id = Identifier.tryParse(fluidIdStr);
 			f = id == null ? null : BuiltInRegistries.FLUID.getValue(id);
 			if (f == Fluids.EMPTY)
-				f = null;
+				f = ItemStack.EMPTY;
 		}
 		update = update || f != this.getFluidType();
 		this.setFluid(f);

@@ -14,8 +14,8 @@ import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.libraries.ReikaAABBHelper;
 import reika.dragonapi.libraries.java.ReikaJavaLibrary;
@@ -24,8 +24,6 @@ import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.fusion.TileEntityToroidMagnet;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockReactorTileModelled extends BlockReactorTile {
 
@@ -49,7 +47,7 @@ public class BlockReactorTileModelled extends BlockReactorTile {
 	}
 
 	@Override
-	public int getLightOpacity(IBlockAccess world, int x, int y, int z) {
+	public int getLightOpacity(BlockGetter world, int x, int y, int z) {
 		return 0;
 	}
 
@@ -59,14 +57,14 @@ public class BlockReactorTileModelled extends BlockReactorTile {
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	public final boolean addDestroyEffects(World world, int x, int y, int z, int meta, EffectRenderer eff)
 	{
 		return ReikaRenderHelper.addModelledBlockParticles("/Reika/ReactorCraft/Textures/TileEntity/", world, x, y, z, this, eff, ReikaJavaLibrary.makeListFrom(new double[]{0,0,1,1}), ReactorCraft.class);
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	public final boolean addHitEffects(World world, MovingObjectPosition tg, EffectRenderer eff)
 	{
 		return ReikaRenderHelper.addModelledBlockParticles("/Reika/ReactorCraft/Textures/TileEntity/", world, tg, this, eff, ReikaJavaLibrary.makeListFrom(new double[]{0,0,1,1}), ReactorCraft.class);
@@ -84,7 +82,7 @@ public class BlockReactorTileModelled extends BlockReactorTile {
 	{
 		ReactorTiles r = ReactorTiles.getTE(world, x, y, z);
 		if (r == ReactorTiles.MAGNET) {
-			TileEntityToroidMagnet te = (TileEntityToroidMagnet)world.getTileEntity(x, y, z);
+			TileEntityToroidMagnet te = (TileEntityToroidMagnet)world.getBlockEntity(x, y, z);
 			float ang = te.getAngle();
 			double a = 1.5*Math.abs(Math.cos(Math.toRadians(ang)));
 			double b = 1.5*Math.abs(Math.sin(Math.toRadians(ang)));

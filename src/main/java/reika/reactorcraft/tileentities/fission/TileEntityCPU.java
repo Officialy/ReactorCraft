@@ -9,6 +9,9 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -18,14 +21,14 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.instantiable.data.blockstruct.abstractsearch.PropagationCondition;
 import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
 import reika.dragonapi.instantiable.data.immutable.Coordinate;
 import reika.dragonapi.libraries.reikanbthelper.NBTTypes;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.auxiliary.LinkableReactorCore;
 import reika.reactorcraft.auxiliary.NeutronTile;
 import reika.reactorcraft.auxiliary.ReactorBlock;
@@ -43,6 +46,10 @@ import reika.reactorcraft.tileentities.fission.TileEntityWaterCell.LiquidStates;
 import reika.rotarycraft.api.power.PowerTransferHelper;
 
 public class TileEntityCPU extends TileEntityReactorBase implements ReactorPowerReceiver, TemperaturedReactorTyped, ReactorBlock, NeutronTile {
+	public TileEntityCPU(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.CPU.get(), pos, state);
+	}
+
 
 	private ReactorControlLayout layout;
 	private final BlockArray reactor = new BlockArray();
@@ -60,17 +67,17 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 
 		@Override
 		public boolean isValidLocation(Level world, int x, int y, int z, Coordinate from) {
-			return world.getTileEntity(x, y, z) instanceof ReactorBlock;
+			return world.getBlockEntity(x, y, z) instanceof ReactorBlock;
 		}
 
 	};
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
+	public void updateEntity(Level world, BlockPos pos) {
 		thermalTicker.update();
 		if (thermalTicker.checkCap())
 			this.updateTemperature(world, x, y, z);
-		if (!world.isRemote) {
+		if (!world.isClientSide()) {
 			if (world.getTotalWorldTime()%64 == 0)
 				reactor.clear();
 
@@ -85,8 +92,8 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 					int dz = c.zCoord;
 					Block idx = world.getBlock(dx, dy, dz);
 					int metax = world.getBlockMetadata(dx, dy, dz);
-					if (idx == ReactorTiles.CONTROL.getBlock() && metax == ReactorTiles.CONTROL.getBlockMetadata()) {
-						TileEntityControlRod rod = (TileEntityControlRod)world.getTileEntity(dx, dy, dz);
+					if (idx == ReactorTiles.CONTROL.getBlock() && metax == ReactorTiles.CONTROL) {
+						TileEntityControlRod rod = (TileEntityControlRod)world.getBlockEntity(dx, dy, dz);
 						layout.addControlRod(rod);
 					}
 				}
@@ -94,7 +101,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 			}
 		}
 
-		//TileEntity te = this.getAdjacentTileEntity(ForgeDirection.DOWN);
+		//TileEntity te = this.getAdjacentTileEntity(Direction.DOWN);
 		//if (te instanceof TileEntityCPU) {
 		//	power = ((TileEntityCPU)te).power;
 		//}
@@ -107,7 +114,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 			this.noInputMachine();
 		}
 
-		if (world.isRemote)
+		if (world.isClientSide())
 			return;
 
 		if (power < this.getMinPower() && this.getTicksExisted() > 20)
@@ -140,13 +147,13 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 		layout.SCRAM();
 		if (redstoneUpdate == 0)
 			redstoneUpdate = 7;
-		//TileEntity te = this.getAdjacentTileEntity(ForgeDirection.UP);
+		//TileEntity te = this.getAdjacentTileEntity(Direction.UP);
 		//if (te instanceof TileEntityCPU)
 		//	((TileEntityCPU)te).SCRAM();
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 
@@ -198,7 +205,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	}
 
 	@Override
-	public boolean canReadFrom(ForgeDirection dir) {
+	public boolean canReadFrom(Direction dir) {
 		return true;
 	}
 
@@ -238,7 +245,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 		for (TileEntityControlRod te : li) {
 			te.setActive(true, false);
 		}
-		ReactorSounds.CONTROL.playSoundAtBlock(worldObj, xCoord, yCoord, zCoord, 1, 1.3F);
+		ReactorSounds.CONTROL.playSoundAtBlock(level, xCoord, yCoord, zCoord, 1, 1.3F);
 		redstoneUpdate = 30;
 	}
 
@@ -247,7 +254,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 		for (TileEntityControlRod te : li) {
 			te.setActive(false, false);
 		}
-		ReactorSounds.CONTROL.playSoundAtBlock(worldObj, xCoord, yCoord, zCoord, 1, 1.3F);
+		ReactorSounds.CONTROL.playSoundAtBlock(level, xCoord, yCoord, zCoord, 1, 1.3F);
 		redstoneUpdate = 30;
 	}
 
@@ -269,7 +276,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	@Override
 	public long getMinPower() {
 		long base = layout != null ? layout.getMinPower() : 0;
-		//TileEntity te = this.getAdjacentTileEntity(ForgeDirection.UP);
+		//TileEntity te = this.getAdjacentTileEntity(Direction.UP);
 		//if (te instanceof TileEntityCPU)
 		//	base += ((TileEntityCPU)te).getMinPower();
 		return base;
@@ -309,30 +316,30 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	}
 
 	@Override
-	public void writeToNBT(CompoundTag NBT) {
-		super.writeToNBT(NBT);
+	public void saveAdditional(/*PORT*/CompoundTag NBT) {
+		super.saveAdditional(/*PORT*/NBT);
 
 		ListTag li = new ListTag();
 		for (TemperatureMonitor m : temperatureChecks) {
-			li.appendTag(m.writeToNBT());
+			li.add(m.writeTag());
 		}
 		NBT.setTag("checks", li);
 	}
 
 	@Override
-	public void readFromNBT(CompoundTag NBT) {
-		super.readFromNBT(NBT);
+	public void loadAdditional(/*PORT*/CompoundTag NBT) {
+		super.loadAdditional(/*PORT*/NBT);
 
 		temperatureChecks.clear();
 		ListTag li = NBT.getTagList("checks", NBTTypes.COMPOUND.ID);
 		for (Object o : li.tagList) {
 			CompoundTag tag = (CompoundTag)o;
-			temperatureChecks.add(TemperatureMonitor.readFromNBT(tag));
+			temperatureChecks.add(TemperatureMonitor.readTag(tag));
 		}
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		return false;
 	}
 
@@ -362,16 +369,16 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 			location = c;
 		}
 
-		public CompoundTag writeToNBT() {
+		public CompoundTag saveAdditional(/*PORT*/) {
 			return location.writeToTag();
 		}
 
-		public static TemperatureMonitor readFromNBT(CompoundTag tag) {
+		public static TemperatureMonitor readTag(CompoundTag tag) {
 			return new TemperatureMonitor(Coordinate.readTag(tag));
 		}
 
 		public int getTemperature(TileEntityCPU te) {
-			return ((LinkableReactorCore)location.getTileEntity(te.worldObj)).getTemperature();
+			return ((LinkableReactorCore)location.getBlockEntity(te.level)).getTemperature();
 		}
 
 		@Override

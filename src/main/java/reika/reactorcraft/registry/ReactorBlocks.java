@@ -1,258 +1,151 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
  * Distribution of the software in any form is only allowed with
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.registry;
 
-import java.util.HashMap;
+import java.util.EnumMap;
+import java.util.function.Supplier;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.StatCollector;
-import net.minecraftforge.fluids.Fluid;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.neoforged.neoforge.registries.DeferredBlock;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
-import reika.dragonapi.instantiable.MetadataItemBlock;
-import reika.dragonapi.interfaces.registry.BlockEnum;
-import reika.dragonapi.libraries.java.ReikaStringParser;
 import reika.reactorcraft.ReactorCraft;
-import reika.reactorcraft.blocks.BlockCoriumFlowing;
-import reika.reactorcraft.blocks.BlockDuct;
-import reika.reactorcraft.blocks.BlockFluorite;
-import reika.reactorcraft.blocks.BlockFluoriteOre;
-import reika.reactorcraft.blocks.BlockPoisonGas;
-import reika.reactorcraft.blocks.BlockReactorMat;
-import reika.reactorcraft.blocks.BlockReactorOre;
-import reika.reactorcraft.blocks.BlockReactorTile;
-import reika.reactorcraft.blocks.BlockReactorTileModelled;
-import reika.reactorcraft.blocks.BlockSteam;
-import reika.reactorcraft.blocks.BlockSteamLine;
-import reika.reactorcraft.blocks.BlockThoriumFuel;
-import reika.reactorcraft.blocks.BlockTritiumLamp;
-import reika.reactorcraft.blocks.multi.BlockFlywheelMulti;
-import reika.reactorcraft.blocks.multi.BlockGeneratorMulti;
-import reika.reactorcraft.blocks.multi.BlockHeaterMulti;
-import reika.reactorcraft.blocks.multi.BlockInjectorMulti;
-import reika.reactorcraft.blocks.multi.BlockSolenoidMulti;
-import reika.reactorcraft.blocks.multi.BlockTurbineMulti;
-import reika.reactorcraft.items.ItemBlockFluorite;
-import reika.reactorcraft.items.ItemBlockLampMulti;
-import reika.reactorcraft.items.ItemBlockMultiBlock;
-import reika.reactorcraft.items.ItemBlockReactorMat;
-import reika.reactorcraft.items.ItemBlockReactorOre;
 
-public enum ReactorBlocks implements BlockEnum {
+/**
+ * 26.2 block registry for the ore→fuel slice, replacing the 1.7.10 metadata block enum
+ * ({@code ReactorBlocks.ORE} held all ore types in metadata; {@code FLUORITEORE} held the eight
+ * colours). Here each ore type and each fluorite colour is its own block; drops and smelting are
+ * data-driven (loot tables + smelting recipes). The {@code setId} ThreadLocal mirrors
+ * {@code RotaryBlocks}, required because {@code BlockBehaviour.Properties} must be id-stamped before
+ * the {@code Block} constructor runs in 26.2.
+ */
+public final class ReactorBlocks {
 
-	REACTOR(		BlockReactorTile.class, 									"Reactor", 					false),
-	MATS(			BlockReactorMat.class, 			ItemBlockReactorMat.class, 	"Reactor Materials", 		false),
-	CORIUMFLOWING(	BlockCoriumFlowing.class, 									"Molten Corium (Flowing)", 	false),
-	MODELREACTOR(	BlockReactorTileModelled.class, 							"ReactorModelled", 			true),
-	MACHINE(		BlockReactorTile.class, 									"Machine", 					false),
-	MODELMACHINE(	BlockReactorTileModelled.class, 							"MachineModelled", 			true),
-	ORE(			BlockReactorOre.class, 			ItemBlockReactorOre.class,	"Ore", 						false),
-	FLUORITE(		BlockFluorite.class, 			ItemBlockFluorite.class,	"Fluorite",					false),
-	FLUORITEORE(	BlockFluoriteOre.class, 		ItemBlockFluorite.class,	"Fluorite Ore",				false),
-	STEAM(			BlockSteam.class,											"Steam",					false),
-	DUCT(			BlockDuct.class,											"Duct",						false),
-	LINE(			BlockSteamLine.class,										"Line",						false),
-	INJECTORMULTI(	BlockInjectorMulti.class, 		ItemBlockMultiBlock.class,	"multiblock.injector",		false),
-	HEATERMULTI(	BlockHeaterMulti.class, 		ItemBlockMultiBlock.class,	"multiblock.heater",		false),
-	SOLENOIDMULTI(	BlockSolenoidMulti.class,		ItemBlockMultiBlock.class,	"multiblock.solenoid",		false),
-	GENERATORMULTI(	BlockGeneratorMulti.class,		ItemBlockMultiBlock.class,	"multiblock.generator",		false),
-	TURBINEMULTI(	BlockTurbineMulti.class,		ItemBlockMultiBlock.class,	"multiblock.turbine",		false),
-	FLYWHEELMULTI(	BlockFlywheelMulti.class,		ItemBlockMultiBlock.class,	"multiblock.flywheel",		false),
-	LAMP(			BlockTritiumLamp.class,			ItemBlockLampMulti.class,	"reactor.lamp",				false),
-	THORIUM(		BlockThoriumFuel.class, 		MetadataItemBlock.class,	"Thorium Fuel", 			false),
-	CHLORINE(		BlockPoisonGas.class,										"Chlorine Gas",				false),
-	HF(				BlockPoisonGas.class,										"Fluorine Gas",				false);
+    public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(ReactorCraft.MODID);
+    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(ReactorCraft.MODID);
 
-	private Class blockClass;
-	private String blockName;
-	private Class itemBlock;
-	private boolean model;
+    private static final ThreadLocal<ResourceKey<Block>> CURRENT_BLOCK_KEY = new ThreadLocal<>();
 
-	public static final ReactorBlocks[] blockList = values();
+    public static BlockBehaviour.Properties blockProperties() {
+        BlockBehaviour.Properties p = BlockBehaviour.Properties.of();
+        ResourceKey<Block> k = CURRENT_BLOCK_KEY.get();
+        if (k != null) p.setId(k);
+        return p;
+    }
 
-	private static final HashMap<Block, ReactorBlocks> blockMap = new HashMap();
-	private static final HashMap<Item, ReactorBlocks> itemMap = new HashMap();
+    private static DeferredBlock<Block> register(String name, Supplier<Block> factory) {
+        DeferredBlock<Block> block = BLOCKS.register(name, rl -> {
+            CURRENT_BLOCK_KEY.set(ResourceKey.create(Registries.BLOCK, rl));
+            try {
+                return factory.get();
+            } finally {
+                CURRENT_BLOCK_KEY.remove();
+            }
+        });
+        ITEMS.registerSimpleBlockItem(block);
+        return block;
+    }
 
-	private ReactorBlocks(Class <? extends Block> cl, Class<? extends ItemBlock> ib, String n, boolean m) {
-		blockClass = cl;
-		blockName = n;
-		itemBlock = ib;
-		model = m;
-	}
+    private static Block ore() {
+        return new Block(blockProperties().strength(3.0F, 5.0F).requiresCorrectToolForDrops().sound(SoundType.STONE));
+    }
 
-	private ReactorBlocks(Class <? extends Block> cl, String n) {
-		this(cl, null, n, false);
-	}
+    private static Block storage() {
+        return new Block(blockProperties().strength(5.0F, 6.0F).requiresCorrectToolForDrops().sound(SoundType.METAL));
+    }
 
-	private ReactorBlocks(Class <? extends Block> cl, String n, boolean m) {
-		this(cl, null, n, m);
-	}
+    public static final DeferredBlock<Block> PITCHBLENDE_ORE = register("pitchblende_ore", ReactorBlocks::ore);
+    public static final DeferredBlock<Block> END_PITCHBLENDE_ORE = register("end_pitchblende_ore", ReactorBlocks::ore);
+    public static final DeferredBlock<Block> CADMIUM_ORE = register("cadmium_ore", ReactorBlocks::ore);
+    public static final DeferredBlock<Block> INDIUM_ORE = register("indium_ore", ReactorBlocks::ore);
+    public static final DeferredBlock<Block> SILVER_ORE = register("silver_ore", ReactorBlocks::ore);
+    public static final DeferredBlock<Block> AMMONIUM_ORE = register("ammonium_ore", ReactorBlocks::ore);
+    public static final DeferredBlock<Block> CALCITE_ORE = register("calcite_ore", ReactorBlocks::ore);
+    public static final DeferredBlock<Block> MAGNETITE_ORE = register("magnetite_ore", ReactorBlocks::ore);
+    public static final DeferredBlock<Block> THORIUM_ORE = register("thorium_ore", ReactorBlocks::ore);
 
-	public static ReactorBlocks getFromItem(ItemStack is) {
-		return itemMap.get(is.getItem());
-	}
+    public static final EnumMap<FluoriteTypes, DeferredBlock<Block>> FLUORITE_ORE = new EnumMap<>(FluoriteTypes.class);
+    static {
+        for (FluoriteTypes f : FluoriteTypes.colorList) {
+            FLUORITE_ORE.put(f, register(f.getOreBlockName(), ReactorBlocks::ore));
+        }
+    }
 
-	public static ReactorBlocks getBlock(Block b) {
-		return blockMap.get(b);
-	}
+    // Storage / decorative material blocks referenced by the crafting recipes.
+    public static final DeferredBlock<Block> GRAPHITE_BLOCK = register("graphite_block", ReactorBlocks::storage);
+    public static final DeferredBlock<Block> CALCITE_BLOCK = register("calcite_block", ReactorBlocks::storage);
+    public static final DeferredBlock<Block> LODESTONE_BLOCK = register("lodestone_block", ReactorBlocks::storage);
 
-	public Material getBlockMaterial() {
-		switch(this) {
-			case MATS:
-			case ORE:
-			case FLUORITE:
-			case FLUORITEORE:
-				return Material.rock;
-			case CORIUMFLOWING:
-				//case CORIUMSTILL:
-			case THORIUM:
-			case CHLORINE:
-			case HF:
-				return Material.lava;
-			case REACTOR:
-				return Material.iron;
-			case LAMP:
-				return Material.glass;
-			default:
-				return Material.iron;
-		}
-	}
+    public static Block fluoriteOre(FluoriteTypes f) {
+        return FLUORITE_ORE.get(f).get();
+    }
 
-	@Override
-	public Class[] getConstructorParamTypes() {
-		if (blockClass == BlockPoisonGas.class)
-			return new Class[]{Fluid.class, Material.class};
-		return new Class[]{Material.class};
-	}
+    private static BlockBehaviour.Properties machineProperties() {
+        return blockProperties().strength(4.0F, 15.0F).requiresCorrectToolForDrops().sound(SoundType.METAL);
+    }
 
-	@Override
-	public Object[] getConstructorParams() {
-		if (blockClass == BlockPoisonGas.class)
-			return new Object[]{this.getFluid(), this.getBlockMaterial()};
-		return new Object[]{this.getBlockMaterial()};
-	}
+    private static DeferredBlock<Block> registerMachine(String name, Supplier<Block> factory) {
+        return register(name, factory);
+    }
 
-	private Fluid getFluid() {
-		if (this == HF)
-			return ReactorCraft.HF;
-		if (this == CHLORINE)
-			return ReactorCraft.CL;
-		return null;
-	}
+    // --- Reactor machine blocks (one DeferredBlock per ReactorTiles constant) ---
+    public static final DeferredBlock<Block> FUEL = registerMachine("fuel_rod", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> CONTROL = registerMachine("control_rod", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> COOLANT = registerMachine("coolant_cell", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> CPU = registerMachine("reactor_cpu", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> TURBINECORE = registerMachine("turbine_core", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> CONDENSER = registerMachine("condenser", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> STEAMLINE = registerMachine("steam_line", () -> new reika.reactorcraft.blocks.BlockReactorLine(machineProperties()));
+    public static final DeferredBlock<Block> FLUIDEXTRACTOR = registerMachine("heavy_pump", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> CENTRIFUGE = registerMachine("isotope_centrifuge", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> PROCESSOR = registerMachine("uranium_processor", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> WASTECONTAINER = registerMachine("waste_container", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> BOILER = registerMachine("reactor_boiler", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> GRATE = registerMachine("steam_grate", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> PUMP = registerMachine("reactor_pump", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> SYNTHESIZER = registerMachine("synthesizer", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> MAGNET = registerMachine("toroid_magnet", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> ELECTROLYZER = registerMachine("electrolyzer", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> TRITIZER = registerMachine("tritizer", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> BREEDER = registerMachine("breeder_core", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> SODIUMBOILER = registerMachine("sodium_boiler", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> EXCHANGER = registerMachine("heat_exchanger", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> STORAGE = registerMachine("waste_storage", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> INJECTOR = registerMachine("fusion_injector", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> HEATER = registerMachine("fusion_heater", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> GASPIPE = registerMachine("gas_duct", () -> new reika.reactorcraft.blocks.BlockReactorDuct(machineProperties()));
+    public static final DeferredBlock<Block> MAGNETPIPE = registerMachine("magnetic_pipe", () -> new reika.reactorcraft.blocks.BlockReactorDuct(machineProperties()));
+    public static final DeferredBlock<Block> ABSORBER = registerMachine("neutron_absorber", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> SOLENOID = registerMachine("solenoid_magnet", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> COLLECTOR = registerMachine("gas_collector", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> PEBBLEBED = registerMachine("pebble_bed", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> CO2HEATER = registerMachine("co2_heater", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> FLYWHEEL = registerMachine("turbine_flywheel", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> REFLECTOR = registerMachine("neutron_reflector", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> GENERATOR = registerMachine("reactor_generator", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> MARKER = registerMachine("fusion_marker", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> TURBINEMETER = registerMachine("turbine_meter", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> BIGTURBINE = registerMachine("high_pressure_turbine", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> DIFFUSER = registerMachine("steam_diffuser", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> THORIUM = registerMachine("thorium_core", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> WASTEPIPE = registerMachine("waste_pipe", () -> new reika.reactorcraft.blocks.BlockReactorDuct(machineProperties()));
+    public static final DeferredBlock<Block> FUELDUMP = registerMachine("fuel_dump", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> SOLAR = registerMachine("solar_exchanger", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> SOLARTOP = registerMachine("solar_top", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> MINITURBINE = registerMachine("mini_turbine", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> HEATPIPE = registerMachine("heat_pipe", () -> new reika.reactorcraft.blocks.BlockReactorLine(machineProperties()));
+    public static final DeferredBlock<Block> WASTEDECAYER = registerMachine("waste_decayer", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
 
-	@Override
-	public String getUnlocalizedName() {
-		return ReikaStringParser.stripSpaces(blockName);
-	}
-
-	@Override
-	public Class getObjectClass() {
-		return blockClass;
-	}
-
-	@Override
-	public String getBasicName() {
-		return blockName;
-	}
-
-	@Override
-	public String getMultiValuedName(int meta) {
-		switch(this) {
-			case MATS:
-				return MatBlocks.matList[meta].getName();
-			case ORE:
-				return ReactorOres.oreList[meta].oreName;
-			case FLUORITE:
-				return FluoriteTypes.colorList[meta%8].getBlockName();
-			case FLUORITEORE:
-				return FluoriteTypes.colorList[meta%8].getOreName();
-			case LAMP:
-				return FluoriteTypes.colorList[meta].getName()+" "+StatCollector.translateToLocal(this.getBasicName());
-			default:
-				return this.getBasicName();
-		}
-	}
-
-	@Override
-	public boolean hasMultiValuedName() {
-		return true;
-	}
-
-	@Override
-	public int getNumberMetadatas() {
-		switch(this) {
-			case REACTOR:
-			case MODELREACTOR:
-			case MACHINE:
-			case MODELMACHINE:
-				return ReactorTiles.getTilesOfBlock(this).size();
-			case MATS:
-				return MatBlocks.matList.length;
-			case ORE:
-				return ReactorOres.oreList.length;
-			case FLUORITE:
-			case FLUORITEORE:
-				return FluoriteTypes.colorList.length;
-			default:
-				return 1;
-		}
-	}
-
-	@Override
-	public Class<? extends ItemBlock> getItemBlock() {
-		return itemBlock;
-	}
-
-	@Override
-	public boolean hasItemBlock() {
-		return itemBlock != null;
-	}
-
-	public boolean isDummiedOut() {
-		return blockClass == null;
-	}
-
-	public Block getBlockInstance() {
-		return ReactorCraft.blocks[this.ordinal()];
-	}
-
-	public boolean isModelled() {
-		return model;
-	}
-
-	public Item getItem() {
-		return Item.getItemFromBlock(this.getBlockInstance());
-	}
-
-	public boolean matchItem(ItemStack is) {
-		return is.getItem() == this.getItem();
-	}
-
-	public ItemStack getStackOfMetadata(int meta) {
-		return new ItemStack(this.getBlockInstance(), 1, meta);
-	}
-
-	public boolean isMachine() {
-		return BlockReactorTile.class.isAssignableFrom(blockClass);
-	}
-
-	public static void loadMappings() {
-		for (int i = 0; i < blockList.length; i++) {
-			ReactorBlocks r = blockList[i];
-			Block b = r.getBlockInstance();
-			blockMap.put(b, r);
-			itemMap.put(Item.getItemFromBlock(b), r);
-		}
-	}
-
+    private ReactorBlocks() {}
 }

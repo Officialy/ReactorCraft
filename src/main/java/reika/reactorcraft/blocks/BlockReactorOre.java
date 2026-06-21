@@ -12,19 +12,19 @@ package reika.reactorcraft.blocks;
 import java.util.ArrayList;
 import java.util.Random;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.boss.EntityDragon;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
+import net.minecraft.world.BlockGetter;
+import net.minecraft.world.level.Level;
 
 import reika.dragonapi.base.EnumOreBlock;
 import reika.dragonapi.instantiable.io.PacketTarget;
@@ -39,8 +39,6 @@ import reika.reactorcraft.registry.ReactorOptions;
 import reika.reactorcraft.registry.ReactorOres;
 import reika.reactorcraft.registry.ReactorPackets;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockReactorOre extends EnumOreBlock {
 
@@ -52,7 +50,7 @@ public class BlockReactorOre extends EnumOreBlock {
 		super(par2Material);
 		this.setResistance(5);
 		this.setHardness(2);
-		this.setCreativeTab(ReactorCraft.instance.isLocked() ? null : ReactorCraft.tabRctr);
+		this.setCreativeTab(ReactorCraft.getInstance().isLocked() ? null : ReactorCraft.tabRctr);
 	}
 
 	@Override
@@ -61,7 +59,7 @@ public class BlockReactorOre extends EnumOreBlock {
 	}
 
 	@Override
-	@SideOnly(Side.CLIENT)
+	@SideOnly(Dist.CLIENT)
 	public void randomDisplayTick(World world, int x, int y, int z, Random rand) {
 		if (ReactorOptions.RADIOORE.getState()) {
 			ReactorOres ore = ReactorOres.getOre(this, world.getBlockMetadata(x, y, z));
@@ -102,7 +100,7 @@ public class BlockReactorOre extends EnumOreBlock {
 	public ItemStack getPickBlock(MovingObjectPosition tgt, World world, int x, int y, int z)
 	{
 		ReactorOres ore = ReactorOres.getOre(world, x, y, z);
-		return new ItemStack(ReactorBlocks.ORE.getBlockInstance(), 1, ore.getBlockMetadata());
+		return new ItemStack(ReactorBlocks.ORE.getBlockInstance(), 1, ore);
 	}
 
 	@Override
@@ -119,7 +117,7 @@ public class BlockReactorOre extends EnumOreBlock {
 	}
 
 	@Override
-	public boolean canEntityDestroy(IBlockAccess world, int x, int y, int z, Entity e)
+	public boolean canEntityDestroy(BlockGetter world, int x, int y, int z, Entity e)
 	{
 		return ReactorOres.getOre(world, x, y, z) != ReactorOres.ENDBLENDE || !(e instanceof EntityDragon);
 	}

@@ -9,19 +9,27 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.block.Block;
-import net.minecraft.init.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.MinecraftForgeClient;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
 
 import reika.reactorcraft.base.TileEntityReactorPiping;
 import reika.reactorcraft.registry.ReactorTiles;
 
 public class TileEntityGasDuct extends TileEntityReactorPiping {
+	public TileEntityGasDuct(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.GASPIPE.get(), pos, state);
+	}
+
 
 	@Override
 	public ReactorTiles getTile() {
@@ -33,7 +41,7 @@ public class TileEntityGasDuct extends TileEntityReactorPiping {
 		return Blocks.hardened_clay.getIcon(1, 0);
 	}
 
-	public boolean isConnectedToNonSelf(ForgeDirection dir) {
+	public boolean isConnectedToNonSelf(Direction dir) {
 		if (!this.isConnectionValidForSide(dir))
 			return false;
 		if (dir.offsetX == 0 && MinecraftForgeClient.getRenderPass() != 1)
@@ -41,10 +49,10 @@ public class TileEntityGasDuct extends TileEntityReactorPiping {
 		int dx = xCoord+dir.offsetX;
 		int dy = yCoord+dir.offsetY;
 		int dz = zCoord+dir.offsetZ;
-		Level world = worldObj;
+		Level world = level;
 		Block id = world.getBlock(dx, dy, dz);
 		int meta = world.getBlockMetadata(dx, dy, dz);
-		return id != this.getTile().getBlock() || meta != this.getTile().getBlockMetadata();
+		return id != this.getTile().getBlock() || meta != this.getTile();
 	}
 
 	@Override

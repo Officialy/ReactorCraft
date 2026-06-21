@@ -9,15 +9,18 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import java.util.ArrayList;
 
 import net.minecraft.world.level.block.Block;
-import net.minecraft.init.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 
 // CHROMA-PORT: import reika.chromaticraft.api.interfaces.WorldRift;
 import reika.dragonapi.instantiable.data.Proportionality;
@@ -38,6 +41,10 @@ import reika.rotarycraft.registry.MachineRegistry;
 import reika.rotarycraft.tileentities.auxiliary.TileEntityPipePump;
 
 public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe, SteamTile, PressureTile {
+	public TileEntitySteamLine(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.STEAMLINE.get(), pos, state);
+	}
+
 
 	private int steam;
 
@@ -50,8 +57,8 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
-		super.updateEntity(world, x, y, z, meta);
+	public void updateEntity(Level world, BlockPos pos) {
+		super.updateEntity(world, pos);
 
 		this.drawFromBoiler(world, x, y, z);
 		this.getPipeSteam(world, x, y, z);
@@ -62,22 +69,22 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 		}
 		else if (this.getPressure() > this.getMaxPressure()) {
 			this.delete();
-			world.createExplosion(null, x+0.5, y+0.5, z+0.5, 2, true);
+			world.explode(/*PORT*/null, x+0.5, y+0.5, z+0.5, 2, true);
 		}
 	}
 
 	@Override
-	protected boolean canConnectToMachine(Block id, int meta, ForgeDirection dir, BlockEntity te) {
-		if (id == ReactorTiles.BOILER.getBlock() && meta == ReactorTiles.BOILER.getBlockMetadata() && dir == ForgeDirection.DOWN)
+	protected boolean canConnectToMachine(Block id, int meta, Direction dir, BlockEntity te) {
+		if (id == ReactorTiles.BOILER.getBlock() && dir == Direction.DOWN)
 			return true;
-		if (id == ReactorTiles.GRATE.getBlock() && meta == ReactorTiles.GRATE.getBlockMetadata())
+		if (id == ReactorTiles.GRATE.getBlock())
 			return true;
-		if (id == ReactorTiles.BIGTURBINE.getBlock() && meta == ReactorTiles.BIGTURBINE.getBlockMetadata())
+		if (id == ReactorTiles.BIGTURBINE.getBlock())
 			return true;
-		if (id == ReactorTiles.DIFFUSER.getBlock() && meta == ReactorTiles.DIFFUSER.getBlockMetadata()) {
+		if (id == ReactorTiles.DIFFUSER.getBlock()) {
 			return ((TileEntitySteamDiffuser)this.getAdjacentTileEntity(dir)).getFacing().getOpposite() == dir;
 		}
-		if (id == MachineRegistry.PIPEPUMP.getBlock() && meta == MachineRegistry.PIPEPUMP.getBlockMetadata()) {
+		if (id == MachineRegistry.PIPEPUMP.getBlock()) {
 			return ((TileEntityPipePump)this.getAdjacentTileEntity(dir)).canConnectToPipeOnSide(dir);
 		}
 		return false;
@@ -86,7 +93,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	private void drawFromBoiler(Level world, int x, int y, int z) {
 		ReactorTiles r = ReactorTiles.getTE(world, x, y-1, z);
 		if (r == ReactorTiles.BOILER) {
-			TileEntityReactorBoiler te = (TileEntityReactorBoiler)world.getTileEntity(x, y-1, z);
+			TileEntityReactorBoiler te = (TileEntityReactorBoiler)world.getBlockEntity(x, y-1, z);
 			if (te.getTileEntityAge() > 5 && this.canTakeInWorkingFluid(te.getWorkingFluid())) {
 				fluid = te.getWorkingFluid();
 				int s = te.removeSteam();
@@ -121,7 +128,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 				if (this.canTakeInWorkingFluid(tile.fluid))
 					this.readPipe(tile);
 			}
-			else if (te instanceof WorldRift && !world.isRemote) {
+			else if (te instanceof WorldRift && !world.isClientSide()) {
 				WorldRift wr = (WorldRift)te;
 				BlockEntity tile = wr.getTileEntityFrom(dirs[i]);
 				if (tile instanceof TileEntitySteamLine) {
@@ -174,21 +181,21 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	}
 
 	@Override
-	public void readFromNBT(CompoundTag NBT) {
-		super.readFromNBT(NBT);
+	public void loadAdditional(/*PORT*/CompoundTag NBT) {
+		super.loadAdditional(/*PORT*/NBT);
 
-		source.readFromNBT(NBT.getCompoundTag("sources"), (NBTIO<ReactorType>)ReikaNBTHelper.getEnumConverter(ReactorType.class));
+		source.readFromTag(NBT.getCompoundTag("sources"), (NBTIO<ReactorType>)ReikaNBTHelper.getEnumConverter(ReactorType.class));
 		if (source.removeValue(null) > 0) {
-			ReactorCraft.logger.logError(this+" loaded null-containing steam type map from NBT: "+NBT);
+			ReactorCraft.LOGGER.logError(this+" loaded null-containing steam type map from NBT: "+NBT);
 		}
 	}
 
 	@Override
-	public void writeToNBT(CompoundTag NBT) {
-		super.writeToNBT(NBT);
+	public void saveAdditional(/*PORT*/CompoundTag NBT) {
+		super.saveAdditional(/*PORT*/NBT);
 
 		CompoundTag tag = new CompoundTag();
-		source.writeToNBT(tag, (NBTIO<ReactorType>)ReikaNBTHelper.getEnumConverter(ReactorType.class));
+		source.writeToTag(tag, (NBTIO<ReactorType>)ReikaNBTHelper.getEnumConverter(ReactorType.class));
 		NBT.setTag("sources", tag);
 	}
 
@@ -197,7 +204,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	}
 
 	@Override
-	public boolean canTransferTo(PumpablePipe p, ForgeDirection dir) {
+	public boolean canTransferTo(PumpablePipe p, Direction dir) {
 		if (p instanceof TileEntitySteamLine) {
 			WorkingFluid f = ((TileEntitySteamLine)p).fluid;
 			return f != WorkingFluid.EMPTY ? f == fluid : true;

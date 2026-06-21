@@ -9,22 +9,25 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.processing;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
 import net.minecraft.block.material.Material;
-import net.minecraft.init.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.EnumHelper;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidHandler;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidRegistry;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.asm.apistripper.Strippable;
 import reika.dragonapi.instantiable.HybridTank;
@@ -32,7 +35,7 @@ import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.instantiable.data.KeyedItemStack;
 import reika.dragonapi.instantiable.recipe.ItemMatch;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.base.TileEntityInventoriedReactorBase;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.api.interfaces.Shockable;
@@ -43,11 +46,12 @@ import reika.rotarycraft.auxiliary.interfaces.TemperatureTE;
 import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
-import buildcraft.api.tiles.IHasWork;
-
-@Strippable("buildcraft.api.tiles.IHasWork")
 public class TileEntityElectrolyzer extends TileEntityInventoriedReactorBase implements IFluidHandler,
-PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
+PipeConnector, TemperatureTE, ThermalMachine, Shockable {
+	public TileEntityElectrolyzer(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.ELECTROLYZER.get(), pos, state);
+	}
+
 
 	public static final int SODIUM_MELT = 98;
 
@@ -88,11 +92,11 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	public int getHLevel() {
-		return tankH.getLevel();
+		return tankH.getFluidLevel();
 	}
 
 	public int getLLevel() {
-		return tankL.getLevel();
+		return tankL.getFluidLevel();
 	}
 
 	public int getTime() {
@@ -104,7 +108,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {/*
+	public void updateEntity(Level world, BlockPos pos) {/*
 		if (iotick > 0)
 			iotick -= 8;
 
@@ -117,13 +121,13 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 			this.updateTemperature(world, x, y, z, meta);
 		if (recipe == null)
 			recipe = this.findRecipe();
-		if (!world.isRemote) {
+		if (!world.isClientSide()) {
 			if (recipe != null && recipe.requirementsMet(this)) {
 				if (timer.checkCap())
 					recipe.run(this);
 			}
 			else {
-				recipe = null;
+				recipe = ItemStack.EMPTY;
 				timer.reset();
 			}
 			time = timer.getTick();
@@ -143,7 +147,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	@Override
-	protected void animateWithTick(Level world, int x, int y, int z) {
+	protected void animateWithTick(Level world, BlockPos pos) {
 
 	}
 	/*
@@ -178,43 +182,43 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	@Override
-	public boolean canConnectToPipeOnSide(MachineRegistry p, ForgeDirection side) {
+	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
 		return this.canConnectToPipe(p);
 	}
 
 	@Override
-	public Flow getFlowForSide(ForgeDirection side) {
+	public Flow getFlowForSide(Direction side) {
 		return side.offsetY != 0 ? Flow.OUTPUT : Flow.INPUT;
 	}
 
 	@Override
-	public int fill(ForgeDirection from, FluidStack resource, boolean doFill) {
+	public int fill(Direction from, FluidStack resource, boolean doFill) {
 		if (!this.canFill(from, resource.getFluid()))
 			return 0;
 		return input.fill(resource, doFill);
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
 		int maxDrain = resource.amount;
-		if (from == ForgeDirection.DOWN && resource.getFluid() == tankH.getActualFluid())
+		if (from == Direction.DOWN && resource.getFluid() == tankH.getActualFluid())
 			return tankH.drain(maxDrain, doDrain);
-		if (from == ForgeDirection.UP && resource.getFluid() == tankL.getActualFluid())
+		if (from == Direction.UP && resource.getFluid() == tankL.getActualFluid())
 			return tankL.drain(maxDrain, doDrain);
 		return null;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
-		if (from == ForgeDirection.DOWN)
+	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
+		if (from == Direction.DOWN)
 			return tankH.drain(maxDrain, doDrain);
-		if (from == ForgeDirection.UP)
+		if (from == Direction.UP)
 			return tankL.drain(maxDrain, doDrain);
 		return null;
 	}
 
 	@Override
-	public boolean canFill(ForgeDirection from, Fluid fluid) {
+	public boolean canFill(Direction from, Fluid fluid) {
 		if (from.offsetY != 0)
 			return false;
 		for (Electrolysis e : Electrolysis.recipes) {
@@ -225,12 +229,12 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
+	public boolean canDrain(Direction from, Fluid fluid) {
 		return from.offsetY != 0;
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(ForgeDirection from) {
+	public FluidTankInfo[] getTankInfo(Direction from) {
 		return new FluidTankInfo[]{tankH.getInfo(), tankL.getInfo(), input.getInfo()};
 	}
 	/*
@@ -250,7 +254,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	@Override
-	public boolean canReadFrom(ForgeDirection dir) {
+	public boolean canReadFrom(Direction dir) {
 		return true;
 	}
 
@@ -272,7 +276,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	@Override
-	public int getSizeInventory() {
+	public int getContainerSize() {
 		return 1;
 	}
 
@@ -289,21 +293,21 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	public void updateTemperature(Level world, int x, int y, int z, int meta) {
 		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
 
-		ForgeDirection waterside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
+		Direction waterside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
 		if (waterside != null) {
 			Tamb /= 2;
 		}
-		ForgeDirection iceside = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.ice);
+		Direction iceside = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.ice);
 		if (iceside != null) {
 			if (Tamb > 0)
 				Tamb /= 4;
 			ReikaWorldHelper.changeAdjBlock(world, x, y, z, iceside, Blocks.flowing_water, 0);
 		}
-		ForgeDirection fireside = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.fire);
+		Direction fireside = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.fire);
 		if (fireside != null) {
 			Tamb += 200;
 		}
-		ForgeDirection lavaside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.lava);
+		Direction lavaside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.lava);
 		if (lavaside != null) {
 			Tamb += 600;
 		}
@@ -318,7 +322,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 		if (temperature > MAXTEMP)
 			temperature = MAXTEMP;
 		if (temperature > 100) {
-			ForgeDirection side = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.snow);
+			Direction side = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.snow);
 			if (side != null)
 				ReikaWorldHelper.changeAdjBlock(world, x, y, z, side, Blocks.air, 0);
 			side = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.ice);
@@ -344,7 +348,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 
 	@Override
 	public void overheat(Level world, int x, int y, int z) {
-		world.setBlockToAir(x, y, z);
+		world.removeBlock(x, y, z);
 		world.newExplosion(null, x+0.5, y+0.5, z+0.5, 3F, true, true);
 	}
 
@@ -425,19 +429,19 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 
 	public boolean addHeavyWater(int amt) {
 		if (input.canTakeIn(amt)) {
-			input.addLiquid(amt, FluidRegistry.getFluid("rc heavy water"));
+			input.addLiquid(amt, ReactorFluids.getLegacyFluid("rc heavy water"));
 			return true;
 		}
 		return false;
 	}
 
 	@Override
-	public boolean canItemEnterFromSide(ForgeDirection dir) {
+	public boolean canItemEnterFromSide(Direction dir) {
 		return true;
 	}
 
 	@Override
-	public boolean canItemExitToSide(ForgeDirection dir) {
+	public boolean canItemExitToSide(Direction dir) {
 		return false;
 	}
 
@@ -457,7 +461,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	public int getInputLevel() {
-		return input.getLevel();
+		return input.getFluidLevel();
 	}
 	/*
 	@Override
@@ -507,8 +511,8 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 	}
 
 	public static enum Electrolysis {
-		SALT(new ItemMatch("salt/dustSalt").addItem(new KeyedItemStack(ItemStacks.salt)), false, FluidRegistry.getFluid("rc chlorine"), 100, FluidRegistry.getFluid("rc sodium"), 100, SALT_MELT),
-		HEAVYWATER(FluidRegistry.getFluid("rc heavy water"), 100, null, false, FluidRegistry.getFluid("rc deuterium"), 100, FluidRegistry.getFluid("rc oxygen"), 50);
+		SALT(new ItemMatch("salt/dustSalt").addItem(new KeyedItemStack(ItemStacks.salt)), false, ReactorFluids.getLegacyFluid("rc chlorine"), 100, ReactorFluids.getLegacyFluid("rc sodium"), 100, SALT_MELT),
+		HEAVYWATER(ReactorFluids.getLegacyFluid("rc heavy water"), 100, null, false, ReactorFluids.getLegacyFluid("rc deuterium"), 100, ReactorFluids.getLegacyFluid("rc oxygen"), 50);
 
 		public final FluidStack requiredFluid;
 		private final ItemMatch requiredItem;
@@ -542,11 +546,11 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 
 		public boolean requirementsMet(TileEntityElectrolyzer te) {
 			if (requiredFluid != null) {
-				if (te.input.getActualFluid() != requiredFluid.getFluid() || te.input.getLevel() < requiredFluid.amount)
+				if (te.input.getActualFluid() != requiredFluid.getFluid() || te.input.getFluidLevel() < requiredFluid.amount)
 					return false;
 			}
 			if (requiredItem != null) {
-				if (te.inv[0] == null || !requiredItem.match(te.inv[0]))
+				if (te.itemHandler.getStackInSlot(0) == null || !requiredItem.match(te.itemHandler.getStackInSlot(0)))
 					return false;
 			}
 			if (upperOutput != null) {
@@ -592,7 +596,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable, IHasWork {
 		}
 
 		public boolean hasItemRequirement() {
-			return requiredItem != null;
+			return requiredItem != ItemStack.EMPTY;
 		}
 
 		public Collection<ItemStack> getItemListForDisplay() {

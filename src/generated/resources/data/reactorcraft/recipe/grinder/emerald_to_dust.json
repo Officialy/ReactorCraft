@@ -1,0 +1,7 @@
+{
+  "type": "rotarycraft:grinder",
+  "input": "minecraft:emerald",
+  "output": {
+    "id": "reactorcraft:emerald_dust"
+  }
+}

@@ -5,9 +5,27 @@ ext {
     mod_description = "ReactorCraft adds realistic nuclear fission, fusion and breeder reactors powered by RotaryCraft."
 }
 
+// Headless JUnit harness: NeoForge moddev loads the mod (and its registries) into the test
+// JVM via the FML JUnit launcher, so registry/recipe/serializer/fluid integrity can be asserted
+// without launching a client. Run with `gradlew :ReactorCraft:test`.
+neoForge {
+    unitTest {
+        enable()
+        testedMod = mods.named(project.mod_id).get()
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation project(":DragonAPI")
     implementation project(":RotaryCraft")
+
+    testImplementation platform("org.junit:junit-bom:5.11.4")
+    testImplementation "org.junit.jupiter:junit-jupiter"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 // PORT-IN-PROGRESS allowlist (see PORTING.md). The sources are still mostly original 1.7.10 and
@@ -29,4 +47,123 @@ sourceSets.main.java {
     include 'reika/reactorcraft/items/ItemHeavyBucket.java'
     include 'reika/reactorcraft/items/ItemRadiationGoggles.java'
     include 'reika/reactorcraft/items/ItemCanister.java'
+
+    // Content slice (26.2): main class + DeferredRegister registries + custom recipe type system.
+    include 'reika/reactorcraft/ReactorCraft.java'
+    include 'reika/reactorcraft/registry/ReactorDataComponents.java'
+    include 'reika/reactorcraft/registry/ReactorFluids.java'
+    include 'reika/reactorcraft/registry/FluoriteTypes.java'
+    include 'reika/reactorcraft/registry/CraftingItems.java'
+    include 'reika/reactorcraft/registry/ReactorItems.java'
+    include 'reika/reactorcraft/registry/ReactorBlocks.java'
+    include 'reika/reactorcraft/registry/ReactorOreType.java'
+    include 'reika/reactorcraft/registry/ReactorRecipeTypes.java'
+    include 'reika/reactorcraft/registry/ReactorRecipeSerializers.java'
+    include 'reika/reactorcraft/registry/ReactorTabs.java'
+    include 'reika/reactorcraft/auxiliary/recipe/ProcessorRecipe.java'
+    include 'reika/reactorcraft/auxiliary/recipe/CentrifugeRecipe.java'
+    include 'reika/reactorcraft/client/ReactorFluidModels.java'
+
+    // Worldgen (26.2 custom ore feature + config; configured/placed features & biome modifiers via datagen)
+    include 'reika/reactorcraft/registry/ReactorFeatures.java'
+    include 'reika/reactorcraft/world/ReactorOreConfig.java'
+    include 'reika/reactorcraft/world/ReactorOreFeature.java'
+
+    // Datagen (client: lang + models; server: loot, worldgen registry set, biome modifiers, recipes)
+    include 'reika/reactorcraft/data/ReactorDataProviders.java'
+    include 'reika/reactorcraft/data/ReactorLang.java'
+    include 'reika/reactorcraft/data/ReactorModelProvider.java'
+    include 'reika/reactorcraft/data/ReactorLootProvider.java'
+    include 'reika/reactorcraft/data/ReactorWorldGenProvider.java'
+    include 'reika/reactorcraft/data/ReactorBiomeModifierProvider.java'
+    include 'reika/reactorcraft/data/ReactorRecipeProvider.java'
+    include 'reika/reactorcraft/data/ReactorMachineRecipeProvider.java'
+
+// TE cluster batch (curated — grow as files port green)
+    include 'reika/reactorcraft/registry/ReactorTiles.java'
+    include 'reika/reactorcraft/registry/ReactorBlockEntities.java'
+    include 'reika/reactorcraft/registry/ReactorEntities.java'
+    include 'reika/reactorcraft/registry/ReactorType.java'
+    include 'reika/reactorcraft/registry/WorkingFluid.java'
+    include 'reika/reactorcraft/registry/ReactorFuel.java'
+    include 'reika/reactorcraft/registry/ReactorOptions.java'
+    include 'reika/reactorcraft/registry/ReactorAchievements.java'
+    include 'reika/reactorcraft/blocks/BlockReactorMachine.java'
+    include 'reika/reactorcraft/blocks/BlockReactorMachineModelled.java'
+    include 'reika/reactorcraft/blocks/BlockReactorDuct.java'
+    include 'reika/reactorcraft/blocks/BlockReactorLine.java'
+    include 'reika/reactorcraft/base/TileEntityReactorBase.java'
+    include 'reika/reactorcraft/base/TileEntityInventoriedReactorBase.java'
+    include 'reika/reactorcraft/base/TileEntityTankedReactorMachine.java'
+    include 'reika/reactorcraft/base/TankedReactorPowerReceiver.java'
+    include 'reika/reactorcraft/base/TileEntityNuclearBoiler.java'
+    include 'reika/reactorcraft/base/TileEntityIntermediateBoiler.java'
+    include 'reika/reactorcraft/base/TileEntityWasteUnit.java'
+    include 'reika/reactorcraft/base/TileEntityLine.java'
+    include 'reika/reactorcraft/base/TileEntityNuclearCore.java'
+    include 'reika/reactorcraft/base/TileEntityReactorPiping.java'
+    include 'reika/reactorcraft/auxiliary/ReactorStacks.java'
+    include 'reika/reactorcraft/auxiliary/WasteManager.java'
+    include 'reika/reactorcraft/auxiliary/RadiationEffects.java'
+    include 'reika/reactorcraft/auxiliary/HydrogenExplosion.java'
+    include 'reika/reactorcraft/auxiliary/NeutronTile.java'
+    include 'reika/reactorcraft/auxiliary/NeutronBlock.java'
+    include 'reika/reactorcraft/auxiliary/Temperatured.java'
+    include 'reika/reactorcraft/auxiliary/TemperaturedReactorTyped.java'
+    include 'reika/reactorcraft/auxiliary/TypedReactorCoreTE.java'
+    include 'reika/reactorcraft/auxiliary/ReactorTyped.java'
+    include 'reika/reactorcraft/auxiliary/ReactorCoreTE.java'
+    include 'reika/reactorcraft/auxiliary/LinkableReactorCore.java'
+    include 'reika/reactorcraft/event/ReactorMeltdownEvent.java'
+    include 'reika/reactorcraft/entities/EntityNeutron.java'
+    include 'reika/reactorcraft/registry/RadiationShield.java'
+    include 'reika/reactorcraft/tileentities/fission/breeder/TileEntityBreederCore.java'
+    include 'reika/reactorcraft/tileentities/fission/breeder/TileEntitySodiumHeater.java'
+    include 'reika/reactorcraft/tileentities/fission/thorium/TileEntityFuelDump.java'
+    include 'reika/reactorcraft/tileentities/fission/thorium/TileEntityThoriumCore.java'
+    include 'reika/reactorcraft/tileentities/fission/TileEntityControlRod.java'
+    include 'reika/reactorcraft/tileentities/fission/TileEntityCPU.java'
+    include 'reika/reactorcraft/tileentities/fission/TileEntityFuelRod.java'
+    include 'reika/reactorcraft/tileentities/fission/TileEntityReactorBoiler.java'
+    include 'reika/reactorcraft/tileentities/fission/TileEntityWaterCell.java'
+    include 'reika/reactorcraft/tileentities/fusion/TileEntityFusionHeater.java'
+    include 'reika/reactorcraft/tileentities/fusion/TileEntityFusionInjector.java'
+    include 'reika/reactorcraft/tileentities/fusion/TileEntityNeutronAbsorber.java'
+    include 'reika/reactorcraft/tileentities/fusion/TileEntitySolenoidMagnet.java'
+    include 'reika/reactorcraft/tileentities/fusion/TileEntityToroidMagnet.java'
+    include 'reika/reactorcraft/tileentities/htgr/TileEntityCO2Heater.java'
+    include 'reika/reactorcraft/tileentities/htgr/TileEntityPebbleBed.java'
+    include 'reika/reactorcraft/tileentities/powergen/TileEntityCentrifugalTurbine.java'
+    include 'reika/reactorcraft/tileentities/powergen/TileEntityCondenser.java'
+    include 'reika/reactorcraft/tileentities/powergen/TileEntityHeatExchanger.java'
+    include 'reika/reactorcraft/tileentities/powergen/TileEntityHiPTurbine.java'
+    include 'reika/reactorcraft/tileentities/powergen/TileEntityReactorPump.java'
+    include 'reika/reactorcraft/tileentities/powergen/TileEntitySolarExchanger.java'
+    include 'reika/reactorcraft/tileentities/powergen/TileEntitySteamGrate.java'
+    include 'reika/reactorcraft/tileentities/powergen/TileEntitySteamInjector.java'
+    include 'reika/reactorcraft/tileentities/powergen/TileEntitySteamLine.java'
+    include 'reika/reactorcraft/tileentities/powergen/TileEntityTurbineCore.java'
+    include 'reika/reactorcraft/tileentities/processing/TileEntityCentrifuge.java'
+    include 'reika/reactorcraft/tileentities/processing/TileEntityElectrolyzer.java'
+    include 'reika/reactorcraft/tileentities/processing/TileEntitySynthesizer.java'
+    include 'reika/reactorcraft/tileentities/processing/TileEntityTritizer.java'
+    include 'reika/reactorcraft/tileentities/processing/TileEntityUProcessor.java'
+    include 'reika/reactorcraft/tileentities/processing/TileEntityWasteDecayer.java'
+    include 'reika/reactorcraft/tileentities/TileEntityFusionMarker.java'
+    include 'reika/reactorcraft/tileentities/TileEntityGasCollector.java'
+    include 'reika/reactorcraft/tileentities/TileEntityGasDuct.java'
+    include 'reika/reactorcraft/tileentities/TileEntityHeatPipe.java'
+    include 'reika/reactorcraft/tileentities/TileEntityHeavyPump.java'
+    include 'reika/reactorcraft/tileentities/TileEntityMagneticPipe.java'
+    include 'reika/reactorcraft/tileentities/TileEntityNeutronReflector.java'
+    include 'reika/reactorcraft/tileentities/TileEntityReactorFlywheel.java'
+    include 'reika/reactorcraft/tileentities/TileEntityReactorGenerator.java'
+    include 'reika/reactorcraft/tileentities/TileEntitySolarTop.java'
+    include 'reika/reactorcraft/tileentities/TileEntitySteamDiffuser.java'
+    include 'reika/reactorcraft/tileentities/TileEntityTurbineMeter.java'
+    include 'reika/reactorcraft/tileentities/waste/TileEntityWasteContainer.java'
+    include 'reika/reactorcraft/tileentities/waste/TileEntityWastePipe.java'
+    include 'reika/reactorcraft/tileentities/waste/TileEntityWasteStorage.java'
+
+
 }

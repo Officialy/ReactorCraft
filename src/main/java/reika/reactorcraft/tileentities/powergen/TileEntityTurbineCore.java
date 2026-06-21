@@ -9,11 +9,14 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import java.util.Collection;
 import java.util.List;
 
 import net.minecraft.world.level.block.Block;
-import net.minecraft.block.BlockLiquid;
+import net.minecraft.world.level.block.BlockLiquid;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -24,13 +27,13 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.core.Direction;
 import net.minecraftforge.fluids.BlockFluidBase;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidHandler;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidRegistry;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.DragonAPICore;
 import reika.dragonapi.instantiable.HybridTank;
@@ -45,7 +48,7 @@ import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
 import reika.dragonapi.libraries.registry.ReikaItemHelper;
 import reika.dragonapi.libraries.registry.ReikaParticleHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.MultiBlockTile;
 import reika.reactorcraft.base.TileEntityReactorBase;
@@ -67,6 +70,10 @@ import reika.rotarycraft.registry.MachineRegistry;
 
 public class TileEntityTurbineCore extends TileEntityReactorBase implements ShaftPowerEmitter, Screwdriverable, IFluidHandler, PipeConnector,
 MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
+	public TileEntityTurbineCore(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.TURBINECORE.get(), pos, state);
+	}
+
 
 	protected int steam;
 
@@ -89,7 +96,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 
 	protected final HybridTank tank = new HybridTank("turbine", this.getLubricantCapacity());
 
-	private Interference inter = null;
+	private Interference inter = ItemStack.EMPTY;
 
 	private BlockArray contact = new BlockArray();
 
@@ -137,7 +144,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	@Override
-	public final void updateEntity(Level world, int x, int y, int z, int meta) {
+	public final void updateEntity(Level world, BlockPos pos) {
 		this.getIOSides(world, x, y, z, meta);
 
 		if (!hasMultiBlock) {
@@ -150,11 +157,11 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 			//}
 		}
 
-		if (ReactorCraft.logger.shouldDebug()) {
-			if (world.isRemote)
-				ReactorCraft.logger.log("Clientside "+this+" has "+steam+" steam, spinning @ "+omega+" rad/s. Phi="+phi);
+		if (ReactorCraft.LOGGER.shouldDebug()) {
+			if (world.isClientSide())
+				ReactorCraft.LOGGER.log("Clientside "+this+" has "+steam+" steam, spinning @ "+omega+" rad/s. Phi="+phi);
 			else
-				ReactorCraft.logger.log("Serverside "+this+" has "+steam+" steam, spinning @ "+omega+" rad/s.");
+				ReactorCraft.LOGGER.log("Serverside "+this+" has "+steam+" steam, spinning @ "+omega+" rad/s.");
 		}
 
 		thermalTicker.update();
@@ -170,7 +177,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 
 		readyForMultiBlock = false;
 
-		//ReikaJavaLibrary.pConsole(steam, stage == 6 && this.getSide() == Side.SERVER);
+		//ReikaJavaLibrary.pConsole(steam, stage == 6 && this.getSide() == Dist.DEDICATED_SERVER);
 		if (steam > 0) {
 			this.dumpSteam(world, x, y, z, meta);
 			if (thermalTicker.checkCap()) {
@@ -193,7 +200,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 				}
 			}
 			lubeTimer.update();
-			if (!tank.isEmpty() && !world.isRemote && lubeTimer.checkCap())
+			if (!tank.isEmpty() && !world.isClientSide() && lubeTimer.checkCap())
 				tank.removeLiquid(this.getConsumedLubricant());
 		}
 
@@ -203,7 +210,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 			ReactorAchievements.GIGATURBINE.triggerAchievement(this.getPlacer());
 		}
 
-		BlockEntity tg = this.getTileEntity(writex, writey, writez);
+		BlockEntity tg = this.getBlockEntity(writex, writey, writez);
 		if (tg instanceof ShaftPowerReceiver) {
 			ShaftPowerReceiver rec = (ShaftPowerReceiver)tg;
 			rec.setOmega(this.getOmega());
@@ -221,18 +228,18 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	private void distributeLubricant(Level world, int x, int y, int z, int meta) {
-		ForgeDirection dir = this.getSteamMovement().getOpposite();
+		Direction dir = this.getSteamMovement().getOpposite();
 		int dx = x+dir.offsetX;
 		int dy = y+dir.offsetY;
 		int dz = z+dir.offsetZ;
 		ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
 		if (r == this.getTile()) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getTileEntity(dx, dy, dz);
+			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(dx, dy, dz);
 			int max = Math.min(tank.getRemainingSpace(), 1000);
-			int dl = te.tank.getLevel()-tank.getLevel();
+			int dl = te.tank.getFluidLevel()-tank.getFluidLevel();
 			if (dl > 1) {
 				int rem = Math.min(dl/2, max);
-				tank.addLiquid(rem, FluidRegistry.getFluid("rc lubricant"));
+				tank.addLiquid(rem, ReactorFluids.getLegacyFluid("rc lubricant"));
 				te.tank.removeLiquid(rem);
 			}
 		}
@@ -254,18 +261,18 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		return steam/32+1;
 	}
 
-	public ForgeDirection getSteamMovement() {
-		switch(this.getBlockMetadata()) {
+	public Direction getSteamMovement() {
+		switch(this) {
 			case 0:
-				return ForgeDirection.WEST;
+				return Direction.WEST;
 			case 1:
-				return ForgeDirection.EAST;
+				return Direction.EAST;
 			case 2:
-				return ForgeDirection.NORTH;
+				return Direction.NORTH;
 			case 3:
-				return ForgeDirection.SOUTH;
+				return Direction.SOUTH;
 			default:
-				return ForgeDirection.DOWN;
+				return Direction.DOWN;
 		}
 	}
 
@@ -351,8 +358,8 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	public final boolean isAtEndOFLine() {
-		if (ReactorTiles.getTE(worldObj, readx, ready, readz) == this.getTile()) {
-			TileEntityTurbineCore tile = (TileEntityTurbineCore)worldObj.getTileEntity(readx, ready, readz);
+		if (ReactorTiles.getTE(level, readx, ready, readz) == this.getTile()) {
+			TileEntityTurbineCore tile = (TileEntityTurbineCore)level.getBlockEntity(readx, ready, readz);
 			if (tile.writex == xCoord && tile.writey == yCoord && tile.writez == zCoord) {
 				return false;
 			}
@@ -404,8 +411,8 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	private final int calcStage() {
-		if (ReactorTiles.getTE(worldObj, readx, ready, readz) == this.getTile()) {
-			TileEntityTurbineCore tile = (TileEntityTurbineCore)worldObj.getTileEntity(readx, ready, readz);
+		if (ReactorTiles.getTE(level, readx, ready, readz) == this.getTile()) {
+			TileEntityTurbineCore tile = (TileEntityTurbineCore)level.getBlockEntity(readx, ready, readz);
 			if (tile.writex == xCoord && tile.writey == yCoord && tile.writez == zCoord) {
 				int stage = tile.calcStage();
 				if (stage == this.getMaxStage())
@@ -452,10 +459,10 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 				canAccel = true;
 			}
 		}
-		if (canAccel && world.isRemote && world.getClosestPlayer(x+0.5, y+0.5, z+0.5, 64) != null) {
-			ForgeDirection dir = this.getSteamMovement();
+		if (canAccel && world.isClientSide() && world.getClosestPlayer(x+0.5, y+0.5, z+0.5, 64) != null) {
+			Direction dir = this.getSteamMovement();
 			for (int i = 0; i < this.getNumberStagesTotal(); i++) {
-				BlockEntity te = world.getTileEntity(x+dir.offsetX, y, z+dir.offsetZ);
+				BlockEntity te = world.getBlockEntity(x+dir.offsetX, y, z+dir.offsetZ);
 				if (!(te instanceof TileEntityTurbineCore))
 					break;
 				double r = ((TileEntityTurbineCore)te).getRadius()*2.4-2;
@@ -488,7 +495,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 			if (contact.isEmpty()) {
 				this.fillSurroundings(world, x, y, z, meta);
 			}
-			inter = null;
+			inter = ItemStack.EMPTY;
 			for (int i = 0; i < contact.getSize(); i++) {
 				Coordinate c = contact.getNthBlock(i);
 				if (ReikaMathLibrary.py3d(x-c.xCoord, y-c.yCoord, z-c.zCoord) <= this.getRadius()) {
@@ -509,7 +516,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		}
 		if (this.getStage() == 0) {
 			boolean accel = this.enabled(world, x, y, z) && this.intakeSteam(world, x, y, z, meta);
-			if (!world.isRemote)
+			if (!world.isClientSide())
 				this.updateSpeed(accel);
 		}
 	}
@@ -559,8 +566,8 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		for (LivingEntity e : li) {
 			if (this.getOmega() > 0 && ReikaMathLibrary.py3d(e.posX-x-0.5, e.posY-y-0.5, e.posZ-z-0.5) < r) {
 				if (this.canDamageTurbine(e)) {
-					if (!world.isRemote) {
-						Explosion exp = world.createExplosion(null, e.posX, e.posY+e.getEyeHeight()/1F, e.posZ, 2, false);
+					if (!world.isClientSide()) {
+						Explosion exp = world.explode(/*PORT*/null, e.posX, e.posY+e.getEyeHeight()/1F, e.posZ, 2, false);
 						e.attackEntityFrom(DamageSource.setExplosionSource(exp), 2);
 						this.breakTurbine();
 					}
@@ -592,8 +599,8 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	public final int getNumberStagesTotal() {
 		if (this.needsMultiblock() && !this.hasMultiBlock())
 			return 0;
-		if (ReactorTiles.getTE(worldObj, writex, writey, writez) == this.getTile()) {
-			TileEntityTurbineCore tile = (TileEntityTurbineCore)worldObj.getTileEntity(writex, writey, writez);
+		if (ReactorTiles.getTE(level, writex, writey, writez) == this.getTile()) {
+			TileEntityTurbineCore tile = (TileEntityTurbineCore)level.getBlockEntity(writex, writey, writez);
 			if (tile.readx == xCoord && tile.ready == yCoord && tile.readz == zCoord) {
 				if (tile.hasMultiBlock() || !tile.needsMultiblock())
 					return tile.getNumberStagesTotal();
@@ -603,14 +610,14 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	private void followHead(Level world, int x, int y, int z, int meta) {
-		if (ReactorTiles.getTE(worldObj, readx, ready, readz) == this.getTile()) {
-			TileEntityTurbineCore tile = (TileEntityTurbineCore)world.getTileEntity(readx, ready, readz);
+		if (ReactorTiles.getTE(level, readx, ready, readz) == this.getTile()) {
+			TileEntityTurbineCore tile = (TileEntityTurbineCore)world.getBlockEntity(readx, ready, readz);
 			if (tile.writex == x && tile.writey == y && tile.writez == z) {
 				this.copyDataFrom(tile);
 			}
 		}
-		if (ReactorTiles.getTE(worldObj, writex, writey, writez) == this.getTile()) {
-			TileEntityTurbineCore tile = (TileEntityTurbineCore)worldObj.getTileEntity(writex, writey, writez); //write!
+		if (ReactorTiles.getTE(level, writex, writey, writez) == this.getTile()) {
+			TileEntityTurbineCore tile = (TileEntityTurbineCore)level.getBlockEntity(writex, writey, writez); //write!
 			if (tile.readx == x && tile.ready == y && tile.readz == z) {
 				if (tile.inter != null)
 					inter = tile.inter;
@@ -627,7 +634,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	@Override
-	protected final void animateWithTick(Level world, int x, int y, int z) {
+	protected final void animateWithTick(Level world, BlockPos pos) {
 		iotick -= 8;
 		if (!this.isInWorld()) {
 			phi = 0;
@@ -666,7 +673,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	@Override
-	public final boolean canWriteTo(ForgeDirection from) {
+	public final boolean canWriteTo(Direction from) {
 		return xCoord+from.offsetX == writex && yCoord+from.offsetY == writey && zCoord+from.offsetZ == writez;
 	}
 
@@ -776,13 +783,13 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	@Override
-	public final boolean onShiftRightClick(Level world, int x, int y, int z, ForgeDirection side) {
+	public final boolean onShiftRightClick(Level world, int x, int y, int z, Direction side) {
 		return false;
 	}
 
 	@Override
-	public final boolean onRightClick(Level world, int x, int y, int z, ForgeDirection side) {
-		int meta = this.getBlockMetadata();
+	public final boolean onRightClick(Level world, int x, int y, int z, Direction side) {
+		int meta = this;
 		this.setBlockMetadata(meta < (this.canOrientVertically() ? 5 : 3) ? meta+1 : 0);
 		return true;
 	}
@@ -802,59 +809,59 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	@Override
-	public final boolean canConnectToPipeOnSide(MachineRegistry p, ForgeDirection side) {
+	public final boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
 		return this.canConnectToPipe(p);
 	}
 
 	@Override
-	public final Flow getFlowForSide(ForgeDirection side) {
+	public final Flow getFlowForSide(Direction side) {
 		return side == this.getSteamMovement().getOpposite() ? Flow.INPUT : Flow.NONE;
 	}
 
 	@Override
-	public final int fill(ForgeDirection from, FluidStack resource, boolean doFill) {
+	public final int fill(Direction from, FluidStack resource, boolean doFill) {
 		return this.canFill(from, resource.getFluid()) ? tank.fill(resource, doFill) : 0;
 	}
 
 	@Override
-	public final FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public final FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
 		return null;
 	}
 
 	@Override
-	public final FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
+	public final FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
 		return null;
 	}
 
 	@Override
-	public final boolean canFill(ForgeDirection from, Fluid fluid) {
-		return from == this.getSteamMovement().getOpposite() && fluid.equals(FluidRegistry.getFluid("rc lubricant"));
+	public final boolean canFill(Direction from, Fluid fluid) {
+		return from == this.getSteamMovement().getOpposite() && fluid.equals(ReactorFluids.getLegacyFluid("rc lubricant"));
 	}
 
 	@Override
-	public final boolean canDrain(ForgeDirection from, Fluid fluid) {
+	public final boolean canDrain(Direction from, Fluid fluid) {
 		return false;
 	}
 
 	@Override
-	public final FluidTankInfo[] getTankInfo(ForgeDirection from) {
+	public final FluidTankInfo[] getTankInfo(Direction from) {
 		return new FluidTankInfo[]{tank.getInfo()};
 	}
 
 	public final int getLubricant() {
-		return tank.getLevel();
+		return tank.getFluidLevel();
 	}
 
 	public int getLubricantToDrop() {
-		return Math.abs(forcedlube-tank.getLevel()) < 25 ? forcedlube : tank.getLevel();
+		return Math.abs(forcedlube-tank.getFluidLevel()) < 25 ? forcedlube : tank.getFluidLevel();
 	}
 
 	public void breakBlock() {
-		ForgeDirection dir = this.getSteamMovement();
+		Direction dir = this.getSteamMovement();
 		int dx = xCoord+dir.offsetX;
 		int dy = yCoord+dir.offsetY;
 		int dz = zCoord+dir.offsetZ;
-		ReactorTiles m = ReactorTiles.getTE(worldObj, dx, dy, dz);
+		ReactorTiles m = ReactorTiles.getTE(level, dx, dy, dz);
 		if (m == this.getTile()) {
 			TileEntityTurbineCore te = (TileEntityTurbineCore)this.getAdjacentTileEntity(dir);
 			te.forcedlube = this.getLubricantToDrop();
@@ -863,7 +870,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		dx = xCoord+dir.offsetX;
 		dy = yCoord+dir.offsetY;
 		dz = zCoord+dir.offsetZ;
-		m = ReactorTiles.getTE(worldObj, dx, dy, dz);
+		m = ReactorTiles.getTE(level, dx, dy, dz);
 		if (m == this.getTile()) {
 			TileEntityTurbineCore te = (TileEntityTurbineCore)this.getAdjacentTileEntity(dir);
 			te.forcedlube = this.getLubricantToDrop();
@@ -874,13 +881,13 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		if (ReikaItemHelper.matchStacks(this.getTile().getCraftedProduct(), is)) {
 			if (is.stackTagCompound != null) {
 				int lube = is.stackTagCompound.getInteger("lube");
-				tank.setContents(lube, FluidRegistry.getFluid("rc lubricant"));
+				tank.setContents(lube, ReactorFluids.getLegacyFluid("rc lubricant"));
 			}
 		}
 	}
 
 	public final void addLubricant(int amt) {
-		tank.addLiquid(amt, FluidRegistry.getFluid("rc lubricant"));
+		tank.addLiquid(amt, ReactorFluids.getLegacyFluid("rc lubricant"));
 	}
 
 	public final boolean canAcceptLubricant(int amt) {
@@ -908,13 +915,13 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 	}
 
 	@Override
-	public void getAllOutputs(Collection<BlockEntity> c, ForgeDirection dir) {
+	public void getAllOutputs(Collection<BlockEntity> c, Direction dir) {
 		c.add(this.getAdjacentTileEntity(this.getSteamMovement()));
 	}
 
 	@Override
 	public Level getWorld() {
-		return worldObj;
+		return level;
 	}
 
 	@Override

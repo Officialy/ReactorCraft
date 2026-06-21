@@ -1,29 +1,20 @@
-/*******************************************************************************
- * @author Reika Kalseki
- *
- * Copyright 2017
- *
- * All rights reserved.
- * Distribution of the software in any form is only allowed with
- * explicit, prior permission from the owner.
- ******************************************************************************/
 package reika.reactorcraft.registry;
 
-import java.util.ArrayList;
+import java.util.Locale;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.util.StatCollector;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraftforge.oredict.ShapedOreRecipe;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.registries.DeferredBlock;
 
 import reika.dragonapi.exception.RegistrationException;
 import reika.dragonapi.instantiable.data.maps.BlockMap;
 import reika.dragonapi.interfaces.registry.TileEnum;
-import reika.dragonapi.libraries.registry.ReikaItemHelper;
-import reika.dragonapi.modregistry.PowerTypes;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.LinkableReactorCore;
 import reika.reactorcraft.auxiliary.MultiBlockTile;
@@ -75,354 +66,119 @@ import reika.reactorcraft.tileentities.processing.TileEntityWasteDecayer;
 import reika.reactorcraft.tileentities.waste.TileEntityWasteContainer;
 import reika.reactorcraft.tileentities.waste.TileEntityWastePipe;
 import reika.reactorcraft.tileentities.waste.TileEntityWasteStorage;
-import reika.rotarycraft.auxiliary.recipemanagers.recipehandler.RecipeLevel;
-import reika.rotarycraft.auxiliary.recipemanagers.WorktableRecipes;
-import reika.rotarycraft.registry.ConfigRegistry;
-
-import cpw.mods.fml.common.registry.GameRegistry;
 
 public enum ReactorTiles implements TileEnum {
 
-	FUEL("machine.fuel", 						ReactorBlocks.REACTOR,			TileEntityFuelRod.class, 		0),
-	CONTROL("machine.control", 					ReactorBlocks.MODELREACTOR,		TileEntityControlRod.class, 	6, "RenderControl"),
-	COOLANT("machine.coolant", 					ReactorBlocks.REACTOR,			TileEntityWaterCell.class, 		2),
-	CPU("machine.cpu", 							ReactorBlocks.MACHINE,			TileEntityCPU.class, 			0),
-	TURBINECORE("machine.turbine", 				ReactorBlocks.MODELREACTOR,		TileEntityTurbineCore.class, 	0, "RenderTurbine"),
-	CONDENSER("machine.condenser", 				ReactorBlocks.MODELREACTOR,		TileEntityCondenser.class, 		1, "RenderCondenser"),
-	STEAMLINE("machine.steamline", 				ReactorBlocks.LINE,				TileEntitySteamLine.class, 		2, "RenderWaterLine"),
-	FLUIDEXTRACTOR("machine.heavypump", 		ReactorBlocks.MODELMACHINE,		TileEntityHeavyPump.class, 		0, "RenderHeavyPump"),
-	CENTRIFUGE("machine.isocentrifuge", 		ReactorBlocks.MODELMACHINE,		TileEntityCentrifuge.class, 	1, "RenderCentrifuge"),
-	PROCESSOR("machine.processor", 				ReactorBlocks.MODELMACHINE,		TileEntityUProcessor.class, 	2, "RenderProcessor"),
-	WASTECONTAINER("machine.wastecontainer", 	ReactorBlocks.MACHINE,			TileEntityWasteContainer.class, 2),
-	BOILER("machine.reactorboiler", 			ReactorBlocks.REACTOR,			TileEntityReactorBoiler.class, 	3),
-	GRATE("machine.grate", 						ReactorBlocks.MODELREACTOR,		TileEntitySteamGrate.class, 	3, "RenderSteamGrate"),
-	PUMP("machine.reactorpump", 				ReactorBlocks.MODELREACTOR,		TileEntityReactorPump.class, 	4, "RenderReactorPump"),
-	SYNTHESIZER("machine.synthesizer", 			ReactorBlocks.MACHINE,			TileEntitySynthesizer.class, 	1),
-	MAGNET("machine.magnet", 					ReactorBlocks.MODELREACTOR,		TileEntityToroidMagnet.class, 	5, "RenderMagnet"),
-	ELECTROLYZER("machine.electrolyzer", 		ReactorBlocks.MODELMACHINE,		TileEntityElectrolyzer.class, 	5, "RenderElectrolyzer"),
-	TRITIZER("machine.tritizer", 				ReactorBlocks.REACTOR,			TileEntityTritizer.class, 		4),
-	BREEDER("machine.breedercore", 				ReactorBlocks.REACTOR,			TileEntityBreederCore.class, 	5),
-	SODIUMBOILER("machine.sodiumboiler", 		ReactorBlocks.REACTOR,			TileEntitySodiumHeater.class, 	6),
-	EXCHANGER("machine.exchanger", 				ReactorBlocks.MODELMACHINE,		TileEntityHeatExchanger.class, 	4, "RenderExchanger"),
-	STORAGE("machine.storage", 					ReactorBlocks.MODELMACHINE,		TileEntityWasteStorage.class,	3, "RenderWasteStorage"),
-	INJECTOR("machine.injector", 				ReactorBlocks.REACTOR,			TileEntityFusionInjector.class, 7),
-	HEATER("machine.fusionheater", 				ReactorBlocks.REACTOR,			TileEntityFusionHeater.class, 	8),
-	GASPIPE("machine.gasduct", 					ReactorBlocks.DUCT,				TileEntityGasDuct.class, 		0, "DuctRenderer"),
-	MAGNETPIPE("machine.magnetpipe", 			ReactorBlocks.DUCT,				TileEntityMagneticPipe.class, 	1, "DuctRenderer"),
-	ABSORBER("machine.absorber",				ReactorBlocks.REACTOR,			TileEntityNeutronAbsorber.class,1),
-	SOLENOID("machine.solenoid",				ReactorBlocks.MODELREACTOR,		TileEntitySolenoidMagnet.class,	9, "RenderSolenoid"),
-	COLLECTOR("machine.collector",				ReactorBlocks.MODELMACHINE,		TileEntityGasCollector.class,	6, "RenderGasCollector"),
-	PEBBLEBED("machine.pebblebed",				ReactorBlocks.REACTOR,			TileEntityPebbleBed.class,		9),
-	CO2HEATER("machine.co2heater",				ReactorBlocks.REACTOR,			TileEntityCO2Heater.class,		10),
-	FLYWHEEL("machine.turbinewheel",			ReactorBlocks.MODELMACHINE,		TileEntityReactorFlywheel.class,7, "RenderTurbineWheel"),
-	REFLECTOR("machine.reflector",				ReactorBlocks.REACTOR,			TileEntityNeutronReflector.class,11),
-	GENERATOR("machine.reactorgenerator",		ReactorBlocks.MODELMACHINE,		TileEntityReactorGenerator.class,8, "RenderGenerator"),
-	MARKER("machine.fusionmarker",				ReactorBlocks.MODELMACHINE,		TileEntityFusionMarker.class,	9,	"RenderFusionMarker"),
-	TURBINEMETER("machine.turbinemeter",		ReactorBlocks.MACHINE,			TileEntityTurbineMeter.class,	3),
-	BIGTURBINE("machine.bigturbine", 			ReactorBlocks.MODELREACTOR,		TileEntityHiPTurbine.class,		7, "RenderBigTurbine"),
-	DIFFUSER("machine.steamdiffuser",			ReactorBlocks.MODELMACHINE,		TileEntitySteamDiffuser.class,	10, "RenderSteamDiffuser"),
-	THORIUM("machine.thorium",					ReactorBlocks.REACTOR,			TileEntityThoriumCore.class,	12),
-	WASTEPIPE("machine.wastepipe",				ReactorBlocks.DUCT,				TileEntityWastePipe.class,		2),
-	FUELDUMP("machine.fueldump",				ReactorBlocks.REACTOR,			TileEntityFuelDump.class,		13),
-	SOLAR("machine.solarexchange",				ReactorBlocks.MODELMACHINE,		TileEntitySolarExchanger.class,	11, "RenderSolarExchanger"),
-	SOLARTOP("machine.solartop",				ReactorBlocks.MODELMACHINE,		TileEntitySolarTop.class,		12, "RenderSolarTop"),
-	MINITURBINE("machine.miniturbine", 			ReactorBlocks.MODELREACTOR,		TileEntityCentrifugalTurbine.class,	8, "RenderMiniTurbine"),
-	HEATPIPE("machine.heatpipe", 				ReactorBlocks.LINE,				TileEntityHeatPipe.class, 		3, "RenderWaterLine"),
-	WASTEDECAYER("machine.wastedecayer",		ReactorBlocks.REACTOR,			TileEntityWasteDecayer.class,	14);
+	FUEL("machine.fuel", ReactorBlocks.FUEL, TileEntityFuelRod.class),
+	CONTROL("machine.control", ReactorBlocks.CONTROL, TileEntityControlRod.class),
+	COOLANT("machine.coolant", ReactorBlocks.COOLANT, TileEntityWaterCell.class),
+	CPU("machine.cpu", ReactorBlocks.CPU, TileEntityCPU.class),
+	TURBINECORE("machine.turbine", ReactorBlocks.TURBINECORE, TileEntityTurbineCore.class),
+	CONDENSER("machine.condenser", ReactorBlocks.CONDENSER, TileEntityCondenser.class),
+	STEAMLINE("machine.steamline", ReactorBlocks.STEAMLINE, TileEntitySteamLine.class),
+	FLUIDEXTRACTOR("machine.heavypump", ReactorBlocks.FLUIDEXTRACTOR, TileEntityHeavyPump.class),
+	CENTRIFUGE("machine.isocentrifuge", ReactorBlocks.CENTRIFUGE, TileEntityCentrifuge.class),
+	PROCESSOR("machine.processor", ReactorBlocks.PROCESSOR, TileEntityUProcessor.class),
+	WASTECONTAINER("machine.wastecontainer", ReactorBlocks.WASTECONTAINER, TileEntityWasteContainer.class),
+	BOILER("machine.reactorboiler", ReactorBlocks.BOILER, TileEntityReactorBoiler.class),
+	GRATE("machine.grate", ReactorBlocks.GRATE, TileEntitySteamGrate.class),
+	PUMP("machine.reactorpump", ReactorBlocks.PUMP, TileEntityReactorPump.class),
+	SYNTHESIZER("machine.synthesizer", ReactorBlocks.SYNTHESIZER, TileEntitySynthesizer.class),
+	MAGNET("machine.magnet", ReactorBlocks.MAGNET, TileEntityToroidMagnet.class),
+	ELECTROLYZER("machine.electrolyzer", ReactorBlocks.ELECTROLYZER, TileEntityElectrolyzer.class),
+	TRITIZER("machine.tritizer", ReactorBlocks.TRITIZER, TileEntityTritizer.class),
+	BREEDER("machine.breedercore", ReactorBlocks.BREEDER, TileEntityBreederCore.class),
+	SODIUMBOILER("machine.sodiumboiler", ReactorBlocks.SODIUMBOILER, TileEntitySodiumHeater.class),
+	EXCHANGER("machine.exchanger", ReactorBlocks.EXCHANGER, TileEntityHeatExchanger.class),
+	STORAGE("machine.storage", ReactorBlocks.STORAGE, TileEntityWasteStorage.class),
+	INJECTOR("machine.injector", ReactorBlocks.INJECTOR, TileEntityFusionInjector.class),
+	HEATER("machine.fusionheater", ReactorBlocks.HEATER, TileEntityFusionHeater.class),
+	GASPIPE("machine.gasduct", ReactorBlocks.GASPIPE, TileEntityGasDuct.class),
+	MAGNETPIPE("machine.magnetpipe", ReactorBlocks.MAGNETPIPE, TileEntityMagneticPipe.class),
+	ABSORBER("machine.absorber", ReactorBlocks.ABSORBER, TileEntityNeutronAbsorber.class),
+	SOLENOID("machine.solenoid", ReactorBlocks.SOLENOID, TileEntitySolenoidMagnet.class),
+	COLLECTOR("machine.collector", ReactorBlocks.COLLECTOR, TileEntityGasCollector.class),
+	PEBBLEBED("machine.pebblebed", ReactorBlocks.PEBBLEBED, TileEntityPebbleBed.class),
+	CO2HEATER("machine.co2heater", ReactorBlocks.CO2HEATER, TileEntityCO2Heater.class),
+	FLYWHEEL("machine.turbinewheel", ReactorBlocks.FLYWHEEL, TileEntityReactorFlywheel.class),
+	REFLECTOR("machine.reflector", ReactorBlocks.REFLECTOR, TileEntityNeutronReflector.class),
+	GENERATOR("machine.reactorgenerator", ReactorBlocks.GENERATOR, TileEntityReactorGenerator.class),
+	MARKER("machine.fusionmarker", ReactorBlocks.MARKER, TileEntityFusionMarker.class),
+	TURBINEMETER("machine.turbinemeter", ReactorBlocks.TURBINEMETER, TileEntityTurbineMeter.class),
+	BIGTURBINE("machine.bigturbine", ReactorBlocks.BIGTURBINE, TileEntityHiPTurbine.class),
+	DIFFUSER("machine.steamdiffuser", ReactorBlocks.DIFFUSER, TileEntitySteamDiffuser.class),
+	THORIUM("machine.thorium", ReactorBlocks.THORIUM, TileEntityThoriumCore.class),
+	WASTEPIPE("machine.wastepipe", ReactorBlocks.WASTEPIPE, TileEntityWastePipe.class),
+	FUELDUMP("machine.fueldump", ReactorBlocks.FUELDUMP, TileEntityFuelDump.class),
+	SOLAR("machine.solarexchange", ReactorBlocks.SOLAR, TileEntitySolarExchanger.class),
+	SOLARTOP("machine.solartop", ReactorBlocks.SOLARTOP, TileEntitySolarTop.class),
+	MINITURBINE("machine.miniturbine", ReactorBlocks.MINITURBINE, TileEntityCentrifugalTurbine.class),
+	HEATPIPE("machine.heatpipe", ReactorBlocks.HEATPIPE, TileEntityHeatPipe.class),
+	WASTEDECAYER("machine.wastedecayer", ReactorBlocks.WASTEDECAYER, TileEntityWasteDecayer.class);
 
-	private final String name;
-	private final Class teClass;
-	private final int meta;
-	private String render;
-	private final ReactorBlocks blockInstance;
-	private BlockEntity renderInstance;
-
-	private static final BlockMap<ReactorTiles> reactorMappings = new BlockMap();
+	private final String nameKey;
+	private final DeferredBlock<Block> block;
+	private final Class<? extends BlockEntity> teClass;
 
 	public static final ReactorTiles[] TEList = values();
+	private static final BlockMap<ReactorTiles> reactorMappings = new BlockMap<>();
 
-	private ReactorTiles(String n, ReactorBlocks block, Class<? extends BlockEntity> tile, int m) {
-		this(n, block, tile, m, null);
+	ReactorTiles(String nameKey, DeferredBlock<Block> block, Class<? extends BlockEntity> teClass) {
+		this.nameKey = nameKey;
+		this.block = block;
+		this.teClass = teClass;
 	}
 
-	private ReactorTiles(String n, ReactorBlocks block, Class<? extends BlockEntity> tile, int m, String r) {
-		teClass = tile;
-		name = n;
-		render = r;
-		meta = m;
-		blockInstance = block;
-	}
-
+	@Override
 	public String getName() {
-		return StatCollector.translateToLocal(name);
+		return I18n.get(nameKey);
 	}
 
-	public Class getTEClass() {
+	@Override
+	public Class<? extends BlockEntity> getTEClass() {
 		return teClass;
 	}
 
-	public static ArrayList<ReactorTiles> getTilesOfBlock(ReactorBlocks b) {
-		ArrayList li = new ArrayList();
-		for (int i = 0; i < TEList.length; i++) {
-			if (TEList[i].blockInstance == b)
-				li.add(TEList[i]);
-		}
-		return li;
-	}
-
-	public static BlockEntity createTEFromIDAndMetadata(Block id, int meta) {
-		ReactorTiles index = getMachineFromIDandMetadata(id, meta);
-		if (index == null) {
-			ReactorCraft.logger.logError("ID "+id+" and metadata "+meta+" are not a valid machine identification pair!");
-			return null;
-		}
-		Class TEClass = index.teClass;
-		try {
-			return (BlockEntity)TEClass.newInstance();
-		}
-		catch (InstantiationException e) {
-			e.printStackTrace();
-			throw new RegistrationException(ReactorCraft.instance, "ID "+id+" and Metadata "+meta+" failed to instantiate its BlockEntity of "+TEClass);
-		}
-		catch (IllegalAccessException e) {
-			e.printStackTrace();
-			throw new RegistrationException(ReactorCraft.instance, "ID "+id+" and Metadata "+meta+" failed illegally accessed its BlockEntity of "+TEClass);
-		}
-	}
-
-	public static ReactorTiles getMachineFromIDandMetadata(Block id, int meta) {
-		return reactorMappings.get(id, meta);
-	}
-
-	public boolean isAvailableInCreativeInventory() {
-		if (this == GENERATOR)
-			return PowerTypes.RF.isLoaded();
-		return true;
-	}
-
-	public static ReactorTiles getTE(BlockGetter iba, int x, int y, int z) {
-		Block id = iba.getBlock(x, y, z);
-		int meta = iba.getBlockMetadata(x, y, z);
-		return getMachineFromIDandMetadata(id, meta);
-	}
-
-	public ItemStack getCraftedProduct() {
-		return new ItemStack(ReactorItems.PLACER.getItemInstance(), 1, this.ordinal());
-	}
-
-	public BlockEntity createTEInstanceForRender() {
-		if (renderInstance == null) {
-			try {
-				renderInstance = (BlockEntity)teClass.newInstance();
-			}
-			catch (InstantiationException e) {
-				e.printStackTrace();
-				throw new RegistrationException(ReactorCraft.instance, "Could not create TE instance to render "+this);
-			}
-			catch (IllegalAccessException e) {
-				e.printStackTrace();
-				throw new RegistrationException(ReactorCraft.instance, "Could not create TE instance to render "+this);
-			}
-		}
-		return renderInstance;
-	}
-
-	public boolean hasRender() {
-		return render != null;
-	}
-
-	public String getRenderer() {
-		if (!this.hasRender())
-			throw new RuntimeException("Machine "+name+" has no render to call!");
-		return "Reika.ReactorCraft.Renders."+render;
-	}
-
-	public int getTextureStates() {
-		switch(this) {
-			case COOLANT:
-				return TileEntityWaterCell.LiquidStates.list.length;
-			case BOILER:
-			case SODIUMBOILER:
-			case CO2HEATER:
-				return 4;
-			case PEBBLEBED:
-			case FUEL:
-			case BREEDER:
-			case TRITIZER:
-			case THORIUM:
-			case WASTEDECAYER:
-				return 5;
-			case INJECTOR:
-				return 3;
-			case TURBINEMETER:
-				return 3;
-			default:
-				return 1;
-		}
-	}
-
-	public boolean hasSidedTextures() {
-		return false;
-	}
-
-	public boolean isEndTextured() {
-		switch(this) {
-			//case FUEL:
-			case CONTROL:
-			case WASTECONTAINER:
-			case SYNTHESIZER:
-			case FUELDUMP:
-				//case BREEDER:
-				//case TRITIZER:
-				return true;
-			default:
-				return false;
-		}
-	}
-
-	public boolean isTopSameTextureAsBottom() {
-		switch(this) {
-			case FUELDUMP:
-				return false;
-			default:
-				return true;
-		}
-	}
-
-	public boolean hasTextureStates() {
-		return this.getTextureStates() > 1;
+	@Override
+	public BlockState getBlockState() {
+		return block.get().defaultBlockState();
 	}
 
 	public Block getBlock() {
-		return this.getBlockInstance();
+		return block.get();
 	}
 
-	public Block getBlockInstance() {
-		return blockInstance.getBlockInstance();
-	}
-
-	public int getBlockMetadata() {
-		return meta%16;
-	}
-
-	public boolean renderInPass1() {
-		switch(this) {
-			case PROCESSOR:
-			case MAGNET:
-			case GASPIPE:
-			case MAGNETPIPE:
-			case COLLECTOR:
-			case SOLARTOP:
-				return true;
-			default:
-				return false;
+	public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+		try {
+			return teClass.getConstructor(BlockPos.class, BlockState.class).newInstance(pos, state);
+		} catch (ReflectiveOperationException e) {
+			throw new RegistrationException(ReactorCraft.getInstance(),
+					"Failed to instantiate " + teClass + " for " + this, e);
 		}
 	}
 
-	public boolean isDummiedOut() {
-		return false;
+	public static ReactorTiles getMachine(Level level, BlockPos pos) {
+		Block b = level.getBlockState(pos).getBlock();
+		if (b == Blocks.AIR)
+			return null;
+		return getMachineMapping(b);
 	}
 
-	public void addRecipe(IRecipe ir) {
-		if (!this.isDummiedOut()) {
-			WorktableRecipes.getInstance().addRecipe(ir, RecipeLevel.CORE);
-			if (ConfigRegistry.TABLEMACHINES.getState()) {
-				GameRegistry.addRecipe(ir);
-			}
-		}
+	public static ReactorTiles getMachineMapping(Block block) {
+		return reactorMappings.get(block);
 	}
 
-	public void addRecipe(ItemStack is, Object... obj) {
-		if (!this.isDummiedOut()) {
-			WorktableRecipes.getInstance().addRecipe(is, RecipeLevel.CORE, obj);
-			if (ConfigRegistry.TABLEMACHINES.getState()) {
-				GameRegistry.addRecipe(is, obj);
-			}
-		}
-	}
-
-	public void addCrafting(Object... obj) {
-		if (!this.isDummiedOut()) {
-			WorktableRecipes.getInstance().addRecipe(this.getCraftedProduct(), RecipeLevel.CORE, obj);
-			if (ConfigRegistry.TABLEMACHINES.getState()) {
-				GameRegistry.addRecipe(this.getCraftedProduct(), obj);
-			}
-		}
-	}
-
-	public void addSizedCrafting(int num, Object... obj) {
-		if (!this.isDummiedOut()) {
-			WorktableRecipes.getInstance().addRecipe(ReikaItemHelper.getSizedItemStack(this.getCraftedProduct(), num), RecipeLevel.CORE, obj);
-			if (ConfigRegistry.TABLEMACHINES.getState()) {
-				GameRegistry.addRecipe(ReikaItemHelper.getSizedItemStack(this.getCraftedProduct(), num), obj);
-			}
-		}
-	}
-
-	public void addSizedOreCrafting(int num, Object... obj) {
-		if (!this.isDummiedOut()) {
-			WorktableRecipes.getInstance().addRecipe(new ShapedOreRecipe(ReikaItemHelper.getSizedItemStack(this.getCraftedProduct(), num), obj), RecipeLevel.CORE);
-			if (ConfigRegistry.TABLEMACHINES.getState()) {
-				GameRegistry.addRecipe(new ShapedOreRecipe(ReikaItemHelper.getSizedItemStack(this.getCraftedProduct(), num), obj));
-			}
-		}
+	public static ReactorTiles getTE(BlockGetter level, BlockPos pos) {
+		return getMachine((Level) level, pos);
 	}
 
 	public static void loadMappings() {
-		for (int i = 0; i < ReactorTiles.TEList.length; i++) {
-			ReactorTiles r = ReactorTiles.TEList[i];
+		for (ReactorTiles r : TEList) {
 			Block id = r.getBlock();
-			int meta = r.getBlockMetadata();
-			reactorMappings.put(id, meta, r);
+			if (reactorMappings.containsKey(id))
+				throw new RegistrationException(ReactorCraft.getInstance(), "Block conflict: " + id);
+			reactorMappings.put(id, r);
 		}
-	}
-
-	public boolean isPipe() {
-		return this == GASPIPE || this == MAGNETPIPE;
-	}
-	/*
-	public ReactorType getReactorType() {
-		switch (this) {
-			case ABSORBER:
-			case HEATER:
-			case INJECTOR:
-			case MAGNET:
-			case MAGNETPIPE:
-			case SOLENOID:
-				return ReactorType.FUSION;
-			case BOILER:
-			case CONTROL:
-			case COOLANT:
-			case CPU:
-			case FUEL:
-				return ReactorType.FISSION;
-			case BREEDER:
-			case SODIUMBOILER:
-				return ReactorType.BREEDER;
-			case CO2HEATER:
-			case PEBBLEBED:
-				return ReactorType.HTGR;
-			case THORIUM:
-			case FUELDUMP:
-				return ReactorType.THORIUM;
-			case SOLAR:
-			case SOLARTOP:
-				return ReactorType.SOLAR;
-			default:
-				return null;
-		}
-	}*/
-
-	public boolean isTurbine() {
-		return TileEntityTurbineCore.class.isAssignableFrom(teClass);
-	}
-
-	public boolean isPowerReceiver() {
-		return ReactorPowerReceiver.class.isAssignableFrom(teClass);
-	}
-
-	public boolean isMultiblock() {
-		return MultiBlockTile.class.isAssignableFrom(teClass);
 	}
 
 	public boolean isReactorCore() {
@@ -433,18 +189,24 @@ public enum ReactorTiles implements TileEnum {
 		return LinkableReactorCore.class.isAssignableFrom(teClass);
 	}
 
-	public ItemStack getCraftedProduct(BlockEntity te) {
-		return this.getCraftedProduct();
+	public boolean isPowerReceiver() {
+		return ReactorPowerReceiver.class.isAssignableFrom(teClass);
+	}
+
+	public boolean isMultiblock() {
+		return MultiBlockTile.class.isAssignableFrom(teClass);
 	}
 
 	public boolean allowTickAcceleration() {
-		switch(this) {
-			case PROCESSOR:
-				return true;
-			default:
-				return false;
-		}
+		return this == PROCESSOR;
 	}
 
+	public boolean isPipe() {
+		return this == GASPIPE || this == MAGNETPIPE || this == WASTEPIPE;
+	}
+
+	public static BlockEntityType<?> blockEntityType(ReactorTiles tile) {
+		return ReactorBlockEntities.getType(tile);
+	}
 
 }

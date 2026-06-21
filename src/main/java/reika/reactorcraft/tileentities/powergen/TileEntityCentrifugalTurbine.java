@@ -9,6 +9,10 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.Level;
 
 import reika.reactorcraft.registry.ReactorTiles;
@@ -19,6 +23,10 @@ import reika.reactorcraft.registry.ReactorTiles;
 //Handles any fluid identically (easy to use, no bonuses from ammonia; can also handle hot CO2
 //maybe need housing blocks
 public class TileEntityCentrifugalTurbine extends TileEntityTurbineCore {
+	public TileEntityCentrifugalTurbine(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.MINITURBINE.get(), pos, state);
+	}
+
 
 	@Override
 	protected void intakeLubricant(Level world, int x, int y, int z, int meta) {

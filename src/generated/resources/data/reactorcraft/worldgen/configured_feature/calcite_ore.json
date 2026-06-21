@@ -1,0 +1,13 @@
+{
+  "type": "reactorcraft:ore",
+  "config": {
+    "count": 12,
+    "dim_type": 0,
+    "max_y": 60,
+    "min_y": 32,
+    "needs_lava": false,
+    "ore": "reactorcraft:calcite_ore",
+    "random_fluorite": false,
+    "size": 4
+  }
+}

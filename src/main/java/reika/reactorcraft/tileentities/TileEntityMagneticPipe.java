@@ -9,23 +9,26 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
 
+import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+
 import net.minecraft.world.level.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.init.Blocks;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidRegistry;
 
 // CHROMA-PORT: import reika.chromaticraft.api.interfaces.WorldRift;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.instantiable.data.immutable.WorldLocation;
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
 import reika.dragonapi.libraries.registry.ReikaParticleHelper;
-import reika.dragonapi.libraries.world.ReikaWorldHelper;
+import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.NeutronTile;
 import reika.reactorcraft.base.TileEntityReactorPiping;
@@ -40,6 +43,10 @@ import reika.rotarycraft.entities.EntityDischarge;
 import reika.rotarycraft.registry.BlockRegistry;
 
 public class TileEntityMagneticPipe extends TileEntityReactorPiping implements Shockable, NeutronTile {
+	public TileEntityMagneticPipe(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.MAGNETPIPE.get(), pos, state);
+	}
+
 
 	private int charge;
 
@@ -61,13 +68,13 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 	}
 
 	@Override
-	public boolean isConnectedToNonSelf(ForgeDirection dir) {
+	public boolean isConnectedToNonSelf(Direction dir) {
 		return false;
 	}
 
 	@Override
 	public boolean isValidFluid(Fluid f) {
-		return f != null && f.equals(FluidRegistry.getFluid("rc fusion plasma"));
+		return f != null && f.equals(ReactorFluids.getLegacyFluid("rc fusion plasma"));
 	}
 
 	@Override
@@ -81,14 +88,14 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 	}
 
 	@Override
-	public void updateEntity(Level world, int x, int y, int z, int meta) {
-		super.updateEntity(world, x, y, z, meta);
+	public void updateEntity(Level world, BlockPos pos) {
+		super.updateEntity(world, pos);
 
 		this.distributeCharge(world, x, y, z);
 		this.updateCharge(world, x, y, z);
 
-		if (charge <= 0 && !world.isRemote) {
-			ReactorCraft.logger.debug("Melting magnetic pipe "+this+" with charge "+charge);
+		if (charge <= 0 && !world.isClientSide()) {
+			ReactorCraft.LOGGER.debug("Melting magnetic pipe "+this+" with charge "+charge);
 			charge = 0;
 			if (fluid != null && fluid.getTemperature(world, x, y, z) > 5000) {
 				world.setBlock(x, y, z, Blocks.flowing_lava);
@@ -101,11 +108,11 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 
 	private void distributeCharge(Level world, int x, int y, int z) {
 		for (int i = 0; i < 6; i++) {
-			ForgeDirection dir = dirs[i];
+			Direction dir = dirs[i];
 			int dx = x+dir.offsetX;
 			int dy = y+dir.offsetY;
 			int dz = z+dir.offsetZ;
-			BlockEntity te = world.getTileEntity(dx, dy, dz);
+			BlockEntity te = world.getBlockEntity(dx, dy, dz);
 
 			if (te instanceof WorldRift) {
 				WorldLocation loc = ((WorldRift)te).getLinkTarget();
@@ -116,13 +123,13 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 					dx = te.xCoord;
 					dy = te.yCoord;
 					dz = te.zCoord;
-					world = te.worldObj;
+					world = te.level;
 				}
 			}
 
 			ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
 			if (r == ReactorTiles.MAGNETPIPE) {
-				TileEntityMagneticPipe tile = (TileEntityMagneticPipe)world.getTileEntity(dx, dy, dz);
+				TileEntityMagneticPipe tile = (TileEntityMagneticPipe)world.getBlockEntity(dx, dy, dz);
 				int dq = charge - tile.charge;
 				if (dq > 0) {
 					tile.charge += dq/4;
@@ -133,10 +140,10 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 	}
 
 	private void updateCharge(Level world, int x, int y, int z) {
-		ForgeDirection dir = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
+		Direction dir = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
 		if (dir != null) {
 			EntityDischarge e = new EntityDischarge(world, x+0.5, y+0.5, z+0.5, charge, x+0.5+dir.offsetX, y+0.5+dir.offsetY, z+0.5+dir.offsetZ);
-			if (!world.isRemote)
+			if (!world.isClientSide())
 				world.spawnEntityInWorld(e);
 			charge = 0;
 		}
@@ -213,7 +220,7 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 	}
 
 	@Override
-	public boolean onNeutron(EntityNeutron e, Level world, int x, int y, int z) {
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		return false;
 	}
 

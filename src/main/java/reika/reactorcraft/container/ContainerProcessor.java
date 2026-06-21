@@ -9,7 +9,7 @@
  ******************************************************************************/
 package reika.reactorcraft.container;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.Slot;
 
