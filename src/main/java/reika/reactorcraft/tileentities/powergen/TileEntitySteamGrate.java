@@ -17,7 +17,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.modinteract.AtmosphereHandler;
 import reika.reactorcraft.auxiliary.SteamTile;
 import reika.reactorcraft.base.TileEntityReactorBase;
@@ -56,7 +56,7 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 			fluid = WorkingFluid.EMPTY;
 		}
 
-		if (DragonAPICore.debugtest)
+		if (DragonAPI.debugtest)
 			steam = 3;
 		//fluid = WorkingFluid.AMMONIA;
 		//ReikaJavaLibrary.pConsole(steam, Dist.DEDICATED_SERVER);

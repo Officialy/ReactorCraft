@@ -17,7 +17,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
@@ -43,7 +43,7 @@ public class TileEntityBreederCore extends TileEntityNuclearCore {
 
 		//ReikaJavaLibrary.pConsole(temperature+":"+this, temperature > 700);
 
-		if (DragonAPICore.debugtest) {
+		if (DragonAPI.debugtest) {
 			ReikaInventoryHelper.clearInventory(this);
 			ReikaInventoryHelper.addToIInv(ReactorItems.BREEDERFUEL.getStackOf(), this);
 		}

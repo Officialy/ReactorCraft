@@ -17,7 +17,7 @@ import java.util.Random;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.data.immutable.WorldLocation;
 import reika.dragonapi.instantiable.data.maps.TileEntityCache;
 import reika.reactorcraft.tileentities.fission.TileEntityCPU;
@@ -143,7 +143,7 @@ public class ReactorControlLayout {
 	}
 
 	public long getMinPower() {
-		return DragonAPICore.debugtest ? 0 : this.getPowerPerRod()*controls.size();
+		return DragonAPI.debugtest ? 0 : this.getPowerPerRod()*controls.size();
 	}
 
 	private long getPowerPerRod() {

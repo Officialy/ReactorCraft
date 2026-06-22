@@ -21,7 +21,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.interfaces.blockentity.BreakAction;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
@@ -73,7 +73,7 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 		if (!world.isClientSide() && this.isFissile() && ReikaRandomHelper.doWithChance(this.getFissionChance()/100D))
 			this.runDecayCycle();
 
-		if (DragonAPICore.debugtest) {
+		if (DragonAPI.debugtest) {
 			ReikaInventoryHelper.clearInventory(this);
 			ReikaInventoryHelper.addToIInv(ReactorItems.PELLET.getStackOf(), this);
 		}

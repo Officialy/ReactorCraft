@@ -23,7 +23,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraft.core.Direction;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.ModList;
 import reika.dragonapi.asm.apistripper.Strippable;
 import reika.dragonapi.asm.dependentmethodstripper.ModDependent;
@@ -82,7 +82,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	private double lastAverage;
 
 	public boolean hasMultiBlock() {
-		return hasMultiblock || DragonAPICore.debugtest;
+		return hasMultiblock || DragonAPI.debugtest;
 	}
 
 	public void setHasMultiBlock(boolean has) {
@@ -105,7 +105,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 		lastomegain = omegain;
 		lasttorquein = torquein;
 
-		if (hasMultiblock || DragonAPICore.debugtest)
+		if (hasMultiblock || DragonAPI.debugtest)
 			this.getPower(world, x, y, z, meta);
 		else {
 			omegain = torquein = 0;

@@ -24,7 +24,7 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.minecraft.world.level.material.FluidTankInfo;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
@@ -57,7 +57,7 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
-		if (DragonAPICore.debugtest) {
+		if (DragonAPI.debugtest) {
 			input.addLiquid(100, ReactorCraft.H2);
 			if (output.getFluidLevel() > CAPACITY/2)
 				output.empty();

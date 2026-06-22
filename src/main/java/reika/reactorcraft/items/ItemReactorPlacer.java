@@ -31,7 +31,7 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.ModList;
 import reika.dragonapi.asm.apistripper.Strippable;
 import reika.dragonapi.asm.dependentmethodstripper.ModDependent;
@@ -116,7 +116,7 @@ public class ItemReactorPlacer extends Item implements ISize {
 		if (m == ReactorTiles.GENERATOR) {
 			((TileEntityReactorGenerator)te).setFacing(ReikaEntityHelper.getDirectionFromEntityLook(ep, false));
 		}
-		if (m == ReactorTiles.MARKER && DragonAPICore.debugtest && ep.capabilities.isCreativeMode) {
+		if (m == ReactorTiles.MARKER && DragonAPI.debugtest && ep.capabilities.isCreativeMode) {
 			this.placeFusionReactor(world, x, y, z, ep);
 		}
 		if (m.isTurbine()) {

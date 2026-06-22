@@ -22,7 +22,7 @@ import net.minecraft.world.level.material.FluidRegistry;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.FlyingBlocksExplosion;
 import reika.dragonapi.instantiable.data.Proportionality;
 import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
@@ -90,7 +90,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 
 	@Override
 	public boolean needsMultiblock() {
-		return !DragonAPICore.debugtest;
+		return !DragonAPI.debugtest;
 	}
 
 	@Override
@@ -281,7 +281,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 
 	@Override
 	protected boolean enabled(Level world, int x, int y, int z) {
-		if (!DragonAPICore.debugtest && tank.isEmpty())
+		if (!DragonAPI.debugtest && tank.isEmpty())
 			return false;
 		if (this.isRedstoned(world, x, y, z))
 			return false;
@@ -315,7 +315,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 
 		boolean flag = false;
 
-		if (DragonAPICore.debugtest) {
+		if (DragonAPI.debugtest) {
 			steam = 5000;
 			fluid = WorkingFluid.WATER;
 			dripBuffer = 5000;

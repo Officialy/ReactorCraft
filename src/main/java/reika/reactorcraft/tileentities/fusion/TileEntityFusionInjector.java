@@ -24,7 +24,7 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.minecraft.world.level.material.FluidTankInfo;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.rendering.StructureRenderer;
 import reika.dragonapi.interfaces.blockentity.ToggleTile;
@@ -67,7 +67,7 @@ ToggleTile, NeutronTile {
 
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
-		if (DragonAPICore.debugtest) {
+		if (DragonAPI.debugtest) {
 			tank.addLiquid(1000, ReactorFluids.getLegacyFluid("rc fusion plasma"));
 			hasMultiBlock = true;
 		}

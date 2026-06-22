@@ -25,7 +25,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.NeoForge;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.data.immutable.WorldLocation;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
@@ -82,7 +82,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		if (!world.isClientSide() && this.isFissile() && rand.nextInt(this.getDecayNeutronChance()) == 0)
 			world.addFreshEntity(new EntityNeutron(world, pos, this.getRandomDirection(false), NeutronType.DECAY));
 
-		if (DragonAPICore.debugtest) {
+		if (DragonAPI.debugtest) {
 			ReikaInventoryHelper.clearInventory(this);
 			ReikaInventoryHelper.addToIInv(ReactorItems.FUEL.getStackOf(), this);
 		}

@@ -24,7 +24,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraft.core.Direction;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.data.blockstruct.abstractsearch.PropagationCondition;
 import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
 import reika.dragonapi.instantiable.data.immutable.Coordinate;
@@ -106,7 +106,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 		//if (te instanceof TileEntityCPU) {
 		//	power = ((TileEntityCPU)te).power;
 		//}
-		if (DragonAPICore.debugtest) {
+		if (DragonAPI.debugtest) {
 			omega = 1024;
 			torque = 1024;
 			power = omega*torque;

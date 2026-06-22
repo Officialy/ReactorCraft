@@ -24,7 +24,7 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.minecraft.world.level.material.FluidTankInfo;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.ModList;
 import reika.dragonapi.asm.apistripper.Strippable;
 import reika.dragonapi.asm.dependentmethodstripper.ModDependent;
@@ -80,7 +80,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 
 		//ReikaJavaLibrary.pConsole(temperature+":"+this, temperature > 700);
 
-		if (DragonAPICore.debugtest) {
+		if (DragonAPI.debugtest) {
 			ReikaInventoryHelper.clearInventory(this);
 			fuelTank.addLiquid(100, ReactorCraft.LIFBe_fuel);
 			if (fuelTankOut.getFluidLevel() >= fuelTankOut.getCapacity()/2)

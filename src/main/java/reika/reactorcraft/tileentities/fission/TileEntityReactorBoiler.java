@@ -23,7 +23,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidRegistry;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
 import reika.dragonapi.instantiable.data.immutable.Coordinate;
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
@@ -77,7 +77,7 @@ public class TileEntityReactorBoiler extends TileEntityNuclearBoiler implements 
 			temperature -= 5;
 		}
 
-		if (DragonAPICore.debugtest) {
+		if (DragonAPI.debugtest) {
 			tank.addLiquid(2500, FluidRegistry.WATER);
 			temperature = 120;
 		}

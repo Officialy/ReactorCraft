@@ -19,7 +19,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.FlyingBlocksExplosion;
 import reika.dragonapi.libraries.ReikaAABBHelper;
 import reika.reactorcraft.ReactorCraft;
@@ -99,7 +99,7 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 			speed = Math.max(0, speed-v);
 		}
 
-		if (DragonAPICore.debugtest) {
+		if (DragonAPI.debugtest) {
 			hasMultiBlock = true;
 			torque = MINTORQUE*8;
 			omega = 4096;
@@ -113,7 +113,7 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 				ReactorCraft.LOGGER.log("Serverside "+this+" receiving "+torque+" Nm @ "+omega+" rad/s.");
 		}
 
-		if (DragonAPICore.debugtest || hasMultiBlock && checkForToroids && this.arePowerReqsMet()) {
+		if (DragonAPI.debugtest || hasMultiBlock && checkForToroids && this.arePowerReqsMet()) {
 			this.addToToroids();
 		}
 		if (!hasMultiBlock || !this.arePowerReqsMet()) {

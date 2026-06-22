@@ -21,7 +21,7 @@ import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.reactorcraft.auxiliary.TemperaturedReactorTyped;
@@ -69,7 +69,7 @@ public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoil
 				this.heat();
 		}
 
-		if (DragonAPICore.debugtest)
+		if (DragonAPI.debugtest)
 			this.addLiquid(1000);
 
 		this.transferFluid(world, pos);

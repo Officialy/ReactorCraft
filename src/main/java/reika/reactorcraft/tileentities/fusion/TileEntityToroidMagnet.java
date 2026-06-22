@@ -27,7 +27,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidRegistry;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.auxiliary.ChunkManager;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.StepTimer;
@@ -106,7 +106,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		if (alpha > 0)
 			alpha -= 8;
 
-		if (DragonAPICore.debugtest) {
+		if (DragonAPI.debugtest) {
 			tank.addLiquid(1000, RotaryCraft.nitrogenFluid);
 			charge = 250000;
 		}

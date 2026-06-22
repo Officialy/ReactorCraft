@@ -23,7 +23,7 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.minecraft.world.level.material.FluidTankInfo;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
-import reika.dragonapi.DragonAPICore;
+import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
@@ -78,7 +78,7 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 	public void updateEntity(Level world, BlockPos pos) {
 		this.updateTemperature(world, x, y, z, meta);
 
-		if (DragonAPICore.debugtest) {
+		if (DragonAPI.debugtest) {
 			temperature = 200000000;
 		}
 
