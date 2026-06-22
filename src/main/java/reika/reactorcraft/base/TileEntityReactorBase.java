@@ -81,6 +81,15 @@ public abstract class TileEntityReactorBase extends BlockEntityBase implements T
 	public abstract ReactorTiles getTile();
 
 	@Override
+	protected String getTEName() {
+		return this.getTile().getName();
+	}
+
+	public int getAmbientTemperature() {
+		return ReikaWorldHelper.getAmbientTemperatureAt(level, this.getBlockPos());
+	}
+
+	@Override
 	public Block getBlockEntityBlockID() {
 		return this.getTile().getBlockState().getBlock();
 	}

@@ -47,7 +47,7 @@ public class ReactorCraft {
     public static final DeferredHolder<MobEffect, MobEffect> radiation = MOB_EFFECTS.register("radiation",
             () -> new MobEffect(MobEffectCategory.HARMFUL, 0x7FFF00));
 
-    private static ReactorCraft instance;
+    public static ReactorCraft instance;
 
     public ReactorCraft(IEventBus modEventBus, ModContainer modContainer) {
         instance = this;

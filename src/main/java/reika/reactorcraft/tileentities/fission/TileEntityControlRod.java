@@ -19,8 +19,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
 
-import reika.dragonapi.instantiable.data.immutable.Coordinate;
-import reika.dragonapi.libraries.ReikaAABBHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.reactorcraft.auxiliary.LinkableReactorCore;
 import reika.reactorcraft.base.TileEntityReactorBase;
@@ -44,10 +42,10 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 
 	private int rodOffset = MINOFFSET;
 
-	private Coordinate CPU;
+	private BlockPos CPU;
 
 	public void link(TileEntityCPU te) {
-		CPU = new Coordinate(te);
+		CPU = te.getBlockPos();
 	}
 
 	@Override
@@ -55,7 +53,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 		this.moveRods();
 		thermalTicker.update();
 		if (thermalTicker.checkCap())
-			this.updateTemperature(world, x, y, z);
+			this.updateTemperature(world, pos);
 	}
 
 	private void moveRods() {
@@ -63,7 +61,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 			rodOffset += motion.stepHeight;
 		}
 		if (rodOffset <= MINOFFSET || rodOffset >= MAXOFFSET) {
-			motion = ItemStack.EMPTY;
+			motion = null;
 			rodOffset = Math.max(MINOFFSET, rodOffset);
 			rodOffset = Math.min(MAXOFFSET, rodOffset);
 			lowered = rodOffset == MINOFFSET;
@@ -89,34 +87,34 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 		}
 
 		if (spread) {
-			BlockEntity te = this.getAdjacentTileEntity(Direction.UP);
+			BlockEntity te = this.getAdjacentBlockEntity(Direction.UP);
 			while (te instanceof TileEntityControlRod) {
 				TileEntityControlRod tc = (TileEntityControlRod)te;
 				tc.toggle(false, false);
-				te = tc.getAdjacentTileEntity(Direction.UP);
+				te = tc.getAdjacentBlockEntity(Direction.UP);
 			}
-			te = this.getAdjacentTileEntity(Direction.DOWN);
+			te = this.getAdjacentBlockEntity(Direction.DOWN);
 			while (te instanceof TileEntityControlRod) {
 				TileEntityControlRod tc = (TileEntityControlRod)te;
 				tc.toggle(false, false);
-				te = tc.getAdjacentTileEntity(Direction.DOWN);
+				te = tc.getAdjacentBlockEntity(Direction.DOWN);
 			}
 		}
 
 		if (sound)
-			ReactorSounds.CONTROL.playSoundAtBlock(level, xCoord, yCoord, zCoord, 1, 1.3F);
+			ReactorSounds.CONTROL.playSoundAtBlock(level, this.getBlockPos(), 1, 1.3F);
 	}
 
 	public void setActive(boolean active, boolean sound) {
 		motion = active ? Motions.LOWERING : Motions.RAISING;
 		if (sound)
-			ReactorSounds.CONTROL.playSoundAtBlock(level, xCoord, yCoord, zCoord, 1, 1.3F);
+			ReactorSounds.CONTROL.playSoundAtBlock(level, this.getBlockPos(), 1, 1.3F);
 	}
 
 	public void drop(boolean sound) {
 		if (sound)
 			if (rodOffset > MINOFFSET && motion != Motions.SCRAM)
-				ReactorSounds.SCRAM.playSoundAtBlock(level, xCoord, yCoord, zCoord, 1, 1F);
+				ReactorSounds.SCRAM.playSoundAtBlock(level, this.getBlockPos(), 1, 1F);
 		motion = Motions.SCRAM;
 	}
 
@@ -152,7 +150,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 		NBT.putInt("rodoffset", rodOffset);
 
 		if (CPU != null)
-			CPU.saveAdditional("cpu", NBT);
+			NBT.putLong("cpu", CPU.asLong());
 	}
 
 	@Override
@@ -162,12 +160,12 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 
 		lowered = NBT.getBooleanOr("down", false);
 
-		if (NBT.hasKey("motion"))
+		if (NBT.contains("motion"))
 			motion = Motions.values()[NBT.getIntOr("motion", 0)];
 
 		rodOffset = NBT.getIntOr("rodoffset", 0);
 
-		CPU = Coordinate.load("cpu", NBT);
+		CPU = NBT.contains("cpu") ? BlockPos.of(NBT.getLongOr("cpu", 0L)) : null;
 	}
 
 	@Override
@@ -196,7 +194,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	@Override
 	public void breakBlock() {
 		if (CPU != null) {
-			BlockEntity te = CPU.getBlockEntity(level);
+			BlockEntity te = level.getBlockEntity(CPU);
 			if (te instanceof TileEntityCPU) {
 				((TileEntityCPU)te).getLayout().removeControlRod(this);
 				((TileEntityCPU)te).removeTemperatureCheck(this);
@@ -209,9 +207,9 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 		return ReactorType.FISSION;
 	}
 
-	@Override
+	// 1.21.5: BlockEntity.getRenderBoundingBox was removed; kept as a helper for the renderer's bounds.
 	public AABB getRenderBoundingBox() {
-		return ReikaAABBHelper.getBlockAABB(this).addCoord(0, 2, 0);
+		return new AABB(this.getBlockPos()).expandTowards(0, 2, 0);
 	}
 
 	private static enum Motions {
