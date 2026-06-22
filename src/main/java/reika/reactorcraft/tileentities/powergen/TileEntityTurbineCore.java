@@ -23,6 +23,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.phys.AABB;
@@ -67,7 +68,11 @@ public class TileEntityTurbineCore extends TileEntityReactorBase implements Shaf
 MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 
 	public TileEntityTurbineCore(BlockPos pos, BlockState state) {
-		super(ReactorBlockEntities.TURBINECORE.get(), pos, state);
+		this(ReactorBlockEntities.TURBINECORE.get(), pos, state);
+	}
+
+	protected TileEntityTurbineCore(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+		super(type, pos, state);
 	}
 
 	// Orientation comes from the block's FACING blockstate (the direction the steam flows toward).

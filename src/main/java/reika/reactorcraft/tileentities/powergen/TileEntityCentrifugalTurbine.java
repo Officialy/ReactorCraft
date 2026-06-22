@@ -29,17 +29,17 @@ public class TileEntityCentrifugalTurbine extends TileEntityTurbineCore {
 
 
 	@Override
-	protected void intakeLubricant(Level world, int x, int y, int z, int meta) {
+	protected void intakeLubricant(Level world, BlockPos pos) {
 
 	}
 
 	@Override
-	protected boolean intakeSteam(Level world, int x, int y, int z, int meta) {
+	protected boolean intakeSteam(Level world, BlockPos pos) {
 		return false;
 	}
 
 	@Override
-	protected void dumpSteam(Level world, int x, int y, int z, int meta) {
+	protected void dumpSteam(Level world, BlockPos pos) {
 
 	}
 
