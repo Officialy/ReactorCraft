@@ -8,6 +8,7 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.auxiliary;
+import net.minecraft.core.BlockPos;
 
 import net.minecraft.world.level.Level;
 

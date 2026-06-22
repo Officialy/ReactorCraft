@@ -8,6 +8,7 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
+import net.minecraft.core.BlockPos;
 
 import net.minecraft.world.level.block.state.BlockState;
 import reika.reactorcraft.registry.ReactorBlockEntities;
