@@ -9,16 +9,18 @@
  ******************************************************************************/
 package reika.reactorcraft.blocks.multi;
 
-import net.minecraft.block.material.Material;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.BlockGetter;
-import net.minecraft.world.level.Level;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 
-import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
+import reika.dragonapi.base.BlockMultiBlock;
 import reika.dragonapi.instantiable.data.blockstruct.StructuredBlockArray;
+import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
 import reika.dragonapi.instantiable.data.immutable.BlockKey;
-import reika.dragonapi.instantiable.data.immutable.Coordinate;
 import reika.dragonapi.libraries.ReikaDirectionHelper;
 import reika.reactorcraft.base.BlockReCMultiBlock;
 import reika.reactorcraft.registry.ReactorTiles;
@@ -26,8 +28,25 @@ import reika.reactorcraft.tileentities.TileEntityReactorFlywheel;
 
 public class BlockFlywheelMulti extends BlockReCMultiBlock {
 
-	public BlockFlywheelMulti(Material par2Material) {
-		super(par2Material);
+	public BlockFlywheelMulti(BlockBehaviour.Properties properties) {
+		super(properties);
+	}
+
+	// --- legacy-metadata helpers, backed by the VARIANT/ACTIVE blockstate on BlockMultiBlock ---
+	private Block blockAt(BlockGetter world, int x, int y, int z) {
+		return world.getBlockState(new BlockPos(x, y, z)).getBlock();
+	}
+
+	private int metaAt(BlockGetter world, int x, int y, int z) {
+		return BlockMultiBlock.getLegacyMeta(world, new BlockPos(x, y, z));
+	}
+
+	private void setMeta(Level world, BlockPos pos, int meta) {
+		world.setBlock(pos, BlockMultiBlock.withLegacyMeta(world.getBlockState(pos), meta), 3);
+	}
+
+	private BlockKey casing(int meta) {
+		return new BlockKey(BlockMultiBlock.withLegacyMeta(this.defaultBlockState(), meta));
 	}
 
 	@Override
@@ -36,122 +55,122 @@ public class BlockFlywheelMulti extends BlockReCMultiBlock {
 	}
 
 	@Override
-	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
+	public Boolean checkForFullMultiBlock(Level world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
 		StructuredBlockArray blocks = new StructuredBlockArray(world);
-		blocks.recursiveAddWithBoundsRanged(world, x, y, z, this, x-6, y-6, z-6, x+6, y+6, z+6, 1);
+		blocks.recursiveAddWithBoundsRanged(world, x, y, z, this, x - 6, y - 6, z - 6, x + 6, y + 6, z + 6, 1);
 		if (blocks.getSize() != 20)
 			return false;
-		int midX = blocks.getMinX()+blocks.getSizeX()/2;
-		int midY = blocks.getMinY()+blocks.getSizeY()/2;
-		int midZ = blocks.getMinZ()+blocks.getSizeZ()/2;
-		if (ReactorTiles.getTE(world, midX, midY, midZ) != ReactorTiles.FLYWHEEL) {
+		int midX = blocks.getMinX() + blocks.getSizeX() / 2;
+		int midY = blocks.getMinY() + blocks.getSizeY() / 2;
+		int midZ = blocks.getMinZ() + blocks.getSizeZ() / 2;
+		if (ReactorTiles.getTE(world, new BlockPos(midX, midY, midZ)) != ReactorTiles.FLYWHEEL) {
 			if (call != null)
 				call.onBlockFailure(world, midX, midY, midZ, new BlockKey(ReactorTiles.FLYWHEEL));
 			return false;
 		}
-		TileEntityReactorFlywheel te = (TileEntityReactorFlywheel)world.getBlockEntity(midX, midY, midZ);
+		TileEntityReactorFlywheel te = (TileEntityReactorFlywheel) world.getBlockEntity(new BlockPos(midX, midY, midZ));
 		Direction left = ReikaDirectionHelper.getLeftBy90(te.getFacing());
 
 		for (int i = 1; i <= 2; i++) {
-			int dx = midX+left.offsetX*i;
-			int dz = midZ+left.offsetZ*i;
+			int dx = midX + left.getStepX() * i;
+			int dz = midZ + left.getStepZ() * i;
 			int m = i == 1 ? 0 : 2;
-			if (world.getBlock(dx, midY, dz) != this || world.getBlockMetadata(dx, midY, dz) != m) {
+			if (this.blockAt(world, dx, midY, dz) != this || this.metaAt(world, dx, midY, dz) != m) {
 				if (call != null)
-					call.onBlockFailure(world, dx, midY, dz, new BlockKey(this, m));
+					call.onBlockFailure(world, dx, midY, dz, this.casing(m));
 				return false;
 			}
-			dx = midX-left.offsetX*i;
-			dz = midZ-left.offsetZ*i;
-			if (world.getBlock(dx, midY, dz) != this || world.getBlockMetadata(dx, midY, dz) != m) {
+			dx = midX - left.getStepX() * i;
+			dz = midZ - left.getStepZ() * i;
+			if (this.blockAt(world, dx, midY, dz) != this || this.metaAt(world, dx, midY, dz) != m) {
 				if (call != null)
-					call.onBlockFailure(world, dx, midY, dz, new BlockKey(this, m));
+					call.onBlockFailure(world, dx, midY, dz, this.casing(m));
 				return false;
 			}
-			if (world.getBlock(midX, midY-i, midZ) != this || world.getBlockMetadata(midX, midY-i, midZ) != m) {
+			if (this.blockAt(world, midX, midY - i, midZ) != this || this.metaAt(world, midX, midY - i, midZ) != m) {
 				if (call != null)
-					call.onBlockFailure(world, midX, midY-i, midZ, new BlockKey(this, m));
+					call.onBlockFailure(world, midX, midY - i, midZ, this.casing(m));
 				return false;
 			}
-			if (world.getBlock(midX, midY+i, midZ) != this || world.getBlockMetadata(midX, midY+i, midZ) != m) {
+			if (this.blockAt(world, midX, midY + i, midZ) != this || this.metaAt(world, midX, midY + i, midZ) != m) {
 				if (call != null)
-					call.onBlockFailure(world, midX, midY-i, midZ, new BlockKey(this, m));
+					call.onBlockFailure(world, midX, midY - i, midZ, this.casing(m));
 				return false;
 			}
 		}
 
-		int dx = midX+left.offsetX;
-		int dz = midZ+left.offsetZ;
-		if (world.getBlock(dx, midY+1, dz) != this || world.getBlockMetadata(dx, midY+1, dz) != 1) {
+		int dx = midX + left.getStepX();
+		int dz = midZ + left.getStepZ();
+		if (this.blockAt(world, dx, midY + 1, dz) != this || this.metaAt(world, dx, midY + 1, dz) != 1) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY+1, dz, new BlockKey(this, 1));
+				call.onBlockFailure(world, dx, midY + 1, dz, this.casing(1));
 			return false;
 		}
-		if (world.getBlock(dx, midY-1, dz) != this || world.getBlockMetadata(dx, midY-1, dz) != 1) {
+		if (this.blockAt(world, dx, midY - 1, dz) != this || this.metaAt(world, dx, midY - 1, dz) != 1) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY-1, dz, new BlockKey(this, 1));
+				call.onBlockFailure(world, dx, midY - 1, dz, this.casing(1));
 			return false;
 		}
-		dx = midX-left.offsetX;
-		dz = midZ-left.offsetZ;
-		if (world.getBlock(dx, midY+1, dz) != this || world.getBlockMetadata(dx, midY+1, dz) != 1) {
+		dx = midX - left.getStepX();
+		dz = midZ - left.getStepZ();
+		if (this.blockAt(world, dx, midY + 1, dz) != this || this.metaAt(world, dx, midY + 1, dz) != 1) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY+1, dz, new BlockKey(this, 1));
+				call.onBlockFailure(world, dx, midY + 1, dz, this.casing(1));
 			return false;
 		}
-		if (world.getBlock(dx, midY-1, dz) != this || world.getBlockMetadata(dx, midY-1, dz) != 1) {
+		if (this.blockAt(world, dx, midY - 1, dz) != this || this.metaAt(world, dx, midY - 1, dz) != 1) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY-1, dz, new BlockKey(this, 1));
-			return false;
-		}
-
-		dx = midX+left.offsetX;
-		dz = midZ+left.offsetZ;
-		if (world.getBlock(dx, midY+2, dz) != this || world.getBlockMetadata(dx, midY+2, dz) != 2) {
-			if (call != null)
-				call.onBlockFailure(world, dx, midY+2, dz, new BlockKey(this, 2));
-			return false;
-		}
-		if (world.getBlock(dx, midY-2, dz) != this || world.getBlockMetadata(dx, midY-2, dz) != 2) {
-			if (call != null)
-				call.onBlockFailure(world, dx, midY-2, dz, new BlockKey(this, 2));
-			return false;
-		}
-		dx = midX-left.offsetX;
-		dz = midZ-left.offsetZ;
-		if (world.getBlock(dx, midY+2, dz) != this || world.getBlockMetadata(dx, midY+2, dz) != 2) {
-			if (call != null)
-				call.onBlockFailure(world, dx, midY+2, dz, new BlockKey(this, 2));
-			return false;
-		}
-		if (world.getBlock(dx, midY-2, dz) != this || world.getBlockMetadata(dx, midY-2, dz) != 2) {
-			if (call != null)
-				call.onBlockFailure(world, dx, midY-2, dz, new BlockKey(this, 2));
+				call.onBlockFailure(world, dx, midY - 1, dz, this.casing(1));
 			return false;
 		}
 
-		dx = midX+left.offsetX*2;
-		dz = midZ+left.offsetZ*2;
-		if (world.getBlock(dx, midY+1, dz) != this || world.getBlockMetadata(dx, midY+1, dz) != 2) {
+		dx = midX + left.getStepX();
+		dz = midZ + left.getStepZ();
+		if (this.blockAt(world, dx, midY + 2, dz) != this || this.metaAt(world, dx, midY + 2, dz) != 2) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY+1, dz, new BlockKey(this, 2));
+				call.onBlockFailure(world, dx, midY + 2, dz, this.casing(2));
 			return false;
 		}
-		if (world.getBlock(dx, midY-1, dz) != this || world.getBlockMetadata(dx, midY-1, dz) != 2) {
+		if (this.blockAt(world, dx, midY - 2, dz) != this || this.metaAt(world, dx, midY - 2, dz) != 2) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY-1, dz, new BlockKey(this, 2));
+				call.onBlockFailure(world, dx, midY - 2, dz, this.casing(2));
 			return false;
 		}
-		dx = midX-left.offsetX*2;
-		dz = midZ-left.offsetZ*2;
-		if (world.getBlock(dx, midY+1, dz) != this || world.getBlockMetadata(dx, midY+1, dz) != 2) {
+		dx = midX - left.getStepX();
+		dz = midZ - left.getStepZ();
+		if (this.blockAt(world, dx, midY + 2, dz) != this || this.metaAt(world, dx, midY + 2, dz) != 2) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY+1, dz, new BlockKey(this, 2));
+				call.onBlockFailure(world, dx, midY + 2, dz, this.casing(2));
 			return false;
 		}
-		if (world.getBlock(dx, midY-1, dz) != this || world.getBlockMetadata(dx, midY-1, dz) != 2) {
+		if (this.blockAt(world, dx, midY - 2, dz) != this || this.metaAt(world, dx, midY - 2, dz) != 2) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY-1, dz, new BlockKey(this, 2));
+				call.onBlockFailure(world, dx, midY - 2, dz, this.casing(2));
+			return false;
+		}
+
+		dx = midX + left.getStepX() * 2;
+		dz = midZ + left.getStepZ() * 2;
+		if (this.blockAt(world, dx, midY + 1, dz) != this || this.metaAt(world, dx, midY + 1, dz) != 2) {
+			if (call != null)
+				call.onBlockFailure(world, dx, midY + 1, dz, this.casing(2));
+			return false;
+		}
+		if (this.blockAt(world, dx, midY - 1, dz) != this || this.metaAt(world, dx, midY - 1, dz) != 2) {
+			if (call != null)
+				call.onBlockFailure(world, dx, midY - 1, dz, this.casing(2));
+			return false;
+		}
+		dx = midX - left.getStepX() * 2;
+		dz = midZ - left.getStepZ() * 2;
+		if (this.blockAt(world, dx, midY + 1, dz) != this || this.metaAt(world, dx, midY + 1, dz) != 2) {
+			if (call != null)
+				call.onBlockFailure(world, dx, midY + 1, dz, this.casing(2));
+			return false;
+		}
+		if (this.blockAt(world, dx, midY - 1, dz) != this || this.metaAt(world, dx, midY - 1, dz) != 2) {
+			if (call != null)
+				call.onBlockFailure(world, dx, midY - 1, dz, this.casing(2));
 			return false;
 		}
 
@@ -159,47 +178,47 @@ public class BlockFlywheelMulti extends BlockReCMultiBlock {
 	}
 
 	@Override
-	public void breakMultiBlock(World world, int x, int y, int z) {
+	public void breakMultiBlock(Level world, int x, int y, int z) {
 		StructuredBlockArray blocks = new StructuredBlockArray(world);
-		blocks.recursiveAddWithBoundsRanged(world, x, y, z, this, x-6, y-6, z-6, x+6, y+6, z+6, 1);
-		blocks.recursiveAddWithBoundsRanged(world, x+1, y, z, this, x-6, y-6, z-6, x+6, y+6, z+6, 1);
-		blocks.recursiveAddWithBoundsRanged(world, x-1, y, z, this, x-6, y-6, z-6, x+6, y+6, z+6, 1);
-		blocks.recursiveAddWithBoundsRanged(world, x, y+1, z, this, x-6, y-6, z-6, x+6, y+6, z+6, 1);
-		blocks.recursiveAddWithBoundsRanged(world, x, y-1, z, this, x-6, y-6, z-6, x+6, y+6, z+6, 1);
-		blocks.recursiveAddWithBoundsRanged(world, x, y, z+1, this, x-6, y-6, z-6, x+6, y+6, z+6, 1);
-		blocks.recursiveAddWithBoundsRanged(world, x, y, z-1, this, x-6, y-6, z-6, x+6, y+6, z+6, 1);
+		blocks.recursiveAddWithBoundsRanged(world, x, y, z, this, x - 6, y - 6, z - 6, x + 6, y + 6, z + 6, 1);
+		blocks.recursiveAddWithBoundsRanged(world, x + 1, y, z, this, x - 6, y - 6, z - 6, x + 6, y + 6, z + 6, 1);
+		blocks.recursiveAddWithBoundsRanged(world, x - 1, y, z, this, x - 6, y - 6, z - 6, x + 6, y + 6, z + 6, 1);
+		blocks.recursiveAddWithBoundsRanged(world, x, y + 1, z, this, x - 6, y - 6, z - 6, x + 6, y + 6, z + 6, 1);
+		blocks.recursiveAddWithBoundsRanged(world, x, y - 1, z, this, x - 6, y - 6, z - 6, x + 6, y + 6, z + 6, 1);
+		blocks.recursiveAddWithBoundsRanged(world, x, y, z + 1, this, x - 6, y - 6, z - 6, x + 6, y + 6, z + 6, 1);
+		blocks.recursiveAddWithBoundsRanged(world, x, y, z - 1, this, x - 6, y - 6, z - 6, x + 6, y + 6, z + 6, 1);
 		for (int i = 0; i < blocks.getSize(); i++) {
-			Coordinate c = blocks.getNthBlock(i);
-			int meta = c.getBlockMetadata(world);
+			BlockPos c = blocks.getNthBlock(i);
+			int meta = BlockMultiBlock.getLegacyMeta(world, c);
 			if (meta >= 8) {
-				world.setBlockMetadataWithNotify(c.xCoord, c.yCoord, c.zCoord, meta-8, 3);
+				this.setMeta(world, c, meta - 8);
 			}
 		}
 		int midX = blocks.getMidX();
 		int midY = blocks.getMidY();
 		int midZ = blocks.getMidZ();
-		if (ReactorTiles.getTE(world, midX, midY, midZ) == ReactorTiles.FLYWHEEL) {
-			TileEntityReactorFlywheel te = (TileEntityReactorFlywheel)world.getBlockEntity(midX, midY, midZ);
+		if (ReactorTiles.getTE(world, new BlockPos(midX, midY, midZ)) == ReactorTiles.FLYWHEEL) {
+			TileEntityReactorFlywheel te = (TileEntityReactorFlywheel) world.getBlockEntity(new BlockPos(midX, midY, midZ));
 			te.setHasMultiBlock(false);
 		}
 	}
 
 	@Override
-	protected void onCreateFullMultiBlock(World world, int x, int y, int z, Boolean complete) {
+	protected void onCreateFullMultiBlock(Level world, int x, int y, int z, Boolean complete) {
 		StructuredBlockArray blocks = new StructuredBlockArray(world);
-		blocks.recursiveAddWithBoundsRanged(world, x, y, z, this, x-6, y-6, z-6, x+6, y+6, z+6, 1);
+		blocks.recursiveAddWithBoundsRanged(world, x, y, z, this, x - 6, y - 6, z - 6, x + 6, y + 6, z + 6, 1);
 		for (int i = 0; i < blocks.getSize(); i++) {
-			Coordinate c = blocks.getNthBlock(i);
-			int meta = c.getBlockMetadata(world);
+			BlockPos c = blocks.getNthBlock(i);
+			int meta = BlockMultiBlock.getLegacyMeta(world, c);
 			if (meta < 8) {
-				world.setBlockMetadataWithNotify(c.xCoord, c.yCoord, c.zCoord, meta+8, 3);
+				this.setMeta(world, c, meta + 8);
 			}
 		}
 		int midX = blocks.getMidX();
 		int midY = blocks.getMidY();
 		int midZ = blocks.getMidZ();
-		if (ReactorTiles.getTE(world, midX, midY, midZ) == ReactorTiles.FLYWHEEL) {
-			TileEntityReactorFlywheel te = (TileEntityReactorFlywheel)world.getBlockEntity(midX, midY, midZ);
+		if (ReactorTiles.getTE(world, new BlockPos(midX, midY, midZ)) == ReactorTiles.FLYWHEEL) {
+			TileEntityReactorFlywheel te = (TileEntityReactorFlywheel) world.getBlockEntity(new BlockPos(midX, midY, midZ));
 			te.setHasMultiBlock(true);
 		}
 	}
@@ -221,24 +240,24 @@ public class BlockFlywheelMulti extends BlockReCMultiBlock {
 
 	@Override
 	public int getItemTextureIndex(int meta, int side) {
-		return meta&7;
+		return meta & 7;
 	}
 
 	@Override
-	public boolean canTriggerMultiBlockCheck(World world, int x, int y, int z, int meta) {
+	public boolean canTriggerMultiBlockCheck(Level world, int x, int y, int z, int meta) {
 		return true;
 	}
 
 	@Override
-	protected TileEntity getTileEntityForPosition(World world, int x, int y, int z) {
+	protected BlockEntity getTileEntityForPosition(Level world, int x, int y, int z) {
 		StructuredBlockArray blocks = new StructuredBlockArray(world);
-		blocks.recursiveAddWithBoundsRanged(world, x, y, z, this, x-6, y-6, z-6, x+6, y+6, z+6, 1);
-		int midX = blocks.getMinX()+blocks.getSizeX()/2;
-		int midY = blocks.getMinY()+blocks.getSizeY()/2;
-		int midZ = blocks.getMinZ()+blocks.getSizeZ()/2;
-		if (ReactorTiles.getTE(world, midX, midY, midZ) != ReactorTiles.FLYWHEEL)
+		blocks.recursiveAddWithBoundsRanged(world, x, y, z, this, x - 6, y - 6, z - 6, x + 6, y + 6, z + 6, 1);
+		int midX = blocks.getMinX() + blocks.getSizeX() / 2;
+		int midY = blocks.getMinY() + blocks.getSizeY() / 2;
+		int midZ = blocks.getMinZ() + blocks.getSizeZ() / 2;
+		if (ReactorTiles.getTE(world, new BlockPos(midX, midY, midZ)) != ReactorTiles.FLYWHEEL)
 			return null;
-		return world.getBlockEntity(midX, midY, midZ);
+		return world.getBlockEntity(new BlockPos(midX, midY, midZ));
 	}
 
 }
