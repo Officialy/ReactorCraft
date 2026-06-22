@@ -26,7 +26,7 @@ import reika.dragonapi.instantiable.io.CustomRecipeList;
 import reika.dragonapi.instantiable.io.LuaBlock;
 import reika.dragonapi.instantiable.recipe.FlexibleIngredient;
 import reika.dragonapi.instantiable.recipe.fluidinputrecipe.ShapelessFluidInputRecipe;
-import reika.dragonapi.instantiable.recipe.ItemMatch;
+import reika.dragonapi.instantiable.ItemMatch;
 import reika.dragonapi.libraries.ReikaRecipeHelper;
 import reika.dragonapi.libraries.java.ReikaStringParser;
 import reika.dragonapi.libraries.mathsci.isotopes.ElementGroup;

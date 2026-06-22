@@ -118,6 +118,8 @@ sourceSets.main.java {
     include 'reika/reactorcraft/event/ReactorMeltdownEvent.java'
     include 'reika/reactorcraft/entities/EntityNeutron.java'
     include 'reika/reactorcraft/entities/EntityRadiation.java'
+    include 'reika/reactorcraft/entities/EntityPlasma.java'
+    include 'reika/reactorcraft/auxiliary/FusionReactorToroidPart.java'
     include 'reika/reactorcraft/registry/RadiationShield.java'
     include 'reika/reactorcraft/tileentities/fission/breeder/TileEntityBreederCore.java'
     include 'reika/reactorcraft/tileentities/fission/breeder/TileEntitySodiumHeater.java'
