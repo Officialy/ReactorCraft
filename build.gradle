@@ -93,6 +93,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/blocks/BlockReactorMachineModelled.java'
     include 'reika/reactorcraft/blocks/BlockReactorDuct.java'
     include 'reika/reactorcraft/blocks/BlockReactorLine.java'
+    include 'reika/reactorcraft/base/BlockReCMultiBlock.java'
     include 'reika/reactorcraft/base/TileEntityReactorBase.java'
     include 'reika/reactorcraft/base/TileEntityInventoriedReactorBase.java'
     include 'reika/reactorcraft/base/TileEntityTankedReactorMachine.java'
