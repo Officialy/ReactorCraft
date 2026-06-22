@@ -205,6 +205,10 @@ public enum ReactorTiles implements TileEnum {
 		return this == GASPIPE || this == MAGNETPIPE || this == WASTEPIPE;
 	}
 
+	public boolean isTurbine() {
+		return TileEntityTurbineCore.class.isAssignableFrom(teClass);
+	}
+
 	public static BlockEntityType<?> blockEntityType(ReactorTiles tile) {
 		return ReactorBlockEntities.getType(tile);
 	}
