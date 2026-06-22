@@ -81,6 +81,7 @@ sourceSets.main.java {
 
 // TE cluster batch (curated — grow as files port green)
     include 'reika/reactorcraft/registry/ReactorTiles.java'
+    include 'reika/reactorcraft/registry/ReactorSounds.java'
     include 'reika/reactorcraft/registry/ReactorBlockEntities.java'
     include 'reika/reactorcraft/registry/ReactorEntities.java'
     include 'reika/reactorcraft/registry/ReactorType.java'

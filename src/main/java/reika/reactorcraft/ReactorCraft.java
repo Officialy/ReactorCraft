@@ -30,6 +30,7 @@ import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorItems;
 import reika.reactorcraft.registry.ReactorRecipeSerializers;
 import reika.reactorcraft.registry.ReactorRecipeTypes;
+import reika.reactorcraft.registry.ReactorSounds;
 import reika.reactorcraft.registry.ReactorTabs;
 import reika.reactorcraft.registry.ReactorTiles;
 
@@ -68,6 +69,8 @@ public class ReactorCraft {
         ReactorEntities.ENTITIES.register(modEventBus);
 
         ReactorTabs.CREATIVE_MODE_TABS.register(modEventBus);
+
+        ReactorSounds.SOUND_EVENTS.register(modEventBus);
 
         MOB_EFFECTS.register(modEventBus);
 
