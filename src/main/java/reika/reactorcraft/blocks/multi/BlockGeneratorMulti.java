@@ -9,17 +9,21 @@
  ******************************************************************************/
 package reika.reactorcraft.blocks.multi;
 
+import java.util.Locale;
 import java.util.Set;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 
-import reika.dragonapi.base.BlockMultiBlock;
 import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
 import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
 import reika.dragonapi.instantiable.data.immutable.BlockKey;
@@ -31,30 +35,40 @@ import reika.reactorcraft.tileentities.TileEntityReactorGenerator;
 
 public class BlockGeneratorMulti extends BlockReCMultiBlock {
 
+	/** The named casing parts of the generator multiblock (legacy variants 0..3). */
+	public enum GeneratorPart implements StringRepresentable {
+		CORE,     // 0: the central rotor axis line (placing this triggers the assembly scan)
+		WINDING,  // 1: the outer winding rings
+		HOUSING,  // 2: the outer shell + end cap
+		COIL;     // 3: the inner field coil (the steam-routing face BlockSteam queries)
+
+		@Override
+		public String getSerializedName() {
+			return this.name().toLowerCase(Locale.ROOT);
+		}
+	}
+
+	public static final EnumProperty<GeneratorPart> PART = EnumProperty.create("part", GeneratorPart.class);
+
 	public BlockGeneratorMulti(BlockBehaviour.Properties properties) {
 		super(properties);
-	}
-
-	// --- legacy-metadata helpers, now backed by the VARIANT/ACTIVE blockstate on BlockMultiBlock ---
-	private Block blockAt(BlockGetter world, int x, int y, int z) {
-		return world.getBlockState(new BlockPos(x, y, z)).getBlock();
-	}
-
-	private int metaAt(BlockGetter world, int x, int y, int z) {
-		return BlockMultiBlock.getLegacyMeta(world, new BlockPos(x, y, z));
-	}
-
-	private void setMeta(Level world, BlockPos pos, int meta) {
-		world.setBlock(pos, BlockMultiBlock.withLegacyMeta(world.getBlockState(pos), meta), 3);
-	}
-
-	private BlockKey casing(int meta) {
-		return new BlockKey(BlockMultiBlock.withLegacyMeta(this.defaultBlockState(), meta));
+		this.registerDefaultState(this.stateDefinition.any().setValue(PART, GeneratorPart.CORE).setValue(FORMED, false));
 	}
 
 	@Override
-	public int getNumberTextures() {
-		return 13;
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+		super.createBlockStateDefinition(builder);
+		builder.add(PART);
+	}
+
+	/** True iff the casing at (x,y,z) is this block with the given part. */
+	private boolean isPart(BlockGetter world, int x, int y, int z, GeneratorPart p) {
+		BlockState s = world.getBlockState(new BlockPos(x, y, z));
+		return s.is(this) && s.getValue(PART) == p;
+	}
+
+	private BlockKey casing(GeneratorPart p) {
+		return new BlockKey(this.defaultBlockState().setValue(PART, p));
 	}
 
 	@Override
@@ -76,11 +90,9 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 		for (int i = 0; i < l; i++) {
 			int dx = x + dir.getStepX() * i;
 			int dz = z + dir.getStepZ() * i;
-			Block b = this.blockAt(world, dx, y, dz);
-			int meta = this.metaAt(world, dx, y, dz);
-			if (b != this || meta != 0) {
+			if (!this.isPart(world, dx, y, dz, GeneratorPart.CORE)) {
 				if (call != null)
-					call.onBlockFailure(world, dx, y, dz, this.casing(0));
+					call.onBlockFailure(world, dx, y, dz, this.casing(GeneratorPart.CORE));
 				return false;
 			}
 		}
@@ -99,7 +111,7 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 		int l = TileEntityReactorGenerator.getGeneratorLength() - 1;
 		Direction left = ReikaDirectionHelper.getLeftBy90(dir);
 		for (int i = 0; i < l; i++) {
-			int seekmeta = i < 2 ? 3 : 1;
+			GeneratorPart seek = i < 2 ? GeneratorPart.COIL : GeneratorPart.WINDING;
 			int dx = x + dir.getStepX() * i;
 			int dz = z + dir.getStepZ() * i;
 			int ddx = dx + left.getStepX();
@@ -108,26 +120,20 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 			int ddz2 = dz - left.getStepZ();
 			for (int k = -1; k <= 1; k++) {
 				int dy = y + k;
-				Block id = this.blockAt(world, ddx, dy, ddz);
-				int meta = this.metaAt(world, ddx, dy, ddz);
-				Block id2 = this.blockAt(world, ddx2, dy, ddz2);
-				int meta2 = this.metaAt(world, ddx2, dy, ddz2);
-				Block id3 = this.blockAt(world, dx, dy, dz);
-				int meta3 = this.metaAt(world, dx, dy, dz);
-				if (id != this || meta != seekmeta) {
+				if (!this.isPart(world, ddx, dy, ddz, seek)) {
 					if (call != null)
-						call.onBlockFailure(world, ddx, dy, ddz, this.casing(seekmeta));
+						call.onBlockFailure(world, ddx, dy, ddz, this.casing(seek));
 					return false;
 				}
-				if (id2 != this || meta2 != seekmeta) {
+				if (!this.isPart(world, ddx2, dy, ddz2, seek)) {
 					if (call != null)
-						call.onBlockFailure(world, ddx2, dy, ddz2, this.casing(seekmeta));
+						call.onBlockFailure(world, ddx2, dy, ddz2, this.casing(seek));
 					return false;
 				}
 				if (k != 0) {
-					if (id3 != this || meta3 != seekmeta) {
+					if (!this.isPart(world, dx, dy, dz, seek)) {
 						if (call != null)
-							call.onBlockFailure(world, dx, dy, dz, this.casing(seekmeta));
+							call.onBlockFailure(world, dx, dy, dz, this.casing(seek));
 						return false;
 					}
 				}
@@ -147,30 +153,24 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 			int ddx2 = dx - left.getStepX();
 			int ddz = dz + left.getStepZ();
 			int ddz2 = dz - left.getStepZ();
-			int seekmeta = 2;
+			GeneratorPart seekCenter = GeneratorPart.HOUSING;
 			for (int k = -2; k <= 2; k += 4) {
 				int dy = y + k;
-				Block id = this.blockAt(world, ddx, dy, ddz);
-				int meta = this.metaAt(world, ddx, dy, ddz);
-				Block id2 = this.blockAt(world, ddx2, dy, ddz2);
-				int meta2 = this.metaAt(world, ddx2, dy, ddz2);
-				Block id3 = this.blockAt(world, dx, dy, dz);
-				int meta3 = this.metaAt(world, dx, dy, dz);
 				if (i == 1 && k == 2)
-					seekmeta = 3;
-				if (id != this || meta != 2) {
+					seekCenter = GeneratorPart.COIL;
+				if (!this.isPart(world, ddx, dy, ddz, GeneratorPart.HOUSING)) {
 					if (call != null)
-						call.onBlockFailure(world, ddx, dy, ddz, this.casing(2));
+						call.onBlockFailure(world, ddx, dy, ddz, this.casing(GeneratorPart.HOUSING));
 					return false;
 				}
-				if (id2 != this || meta2 != 2) {
+				if (!this.isPart(world, ddx2, dy, ddz2, GeneratorPart.HOUSING)) {
 					if (call != null)
-						call.onBlockFailure(world, ddx2, dy, ddz2, this.casing(2));
+						call.onBlockFailure(world, ddx2, dy, ddz2, this.casing(GeneratorPart.HOUSING));
 					return false;
 				}
-				if (id3 != this || meta3 != seekmeta) {
+				if (!this.isPart(world, dx, dy, dz, seekCenter)) {
 					if (call != null)
-						call.onBlockFailure(world, dx, dy, dz, this.casing(seekmeta));
+						call.onBlockFailure(world, dx, dy, dz, this.casing(seekCenter));
 					return false;
 				}
 			}
@@ -182,18 +182,14 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 
 			for (int k = -1; k <= 1; k++) {
 				int dy = y + k;
-				Block id = this.blockAt(world, ddx, dy, ddz);
-				int meta = this.metaAt(world, ddx, dy, ddz);
-				Block id2 = this.blockAt(world, ddx2, dy, ddz2);
-				int meta2 = this.metaAt(world, ddx2, dy, ddz2);
-				if (id != this || meta != 2) {
+				if (!this.isPart(world, ddx, dy, ddz, GeneratorPart.HOUSING)) {
 					if (call != null)
-						call.onBlockFailure(world, ddx, dy, ddz, this.casing(2));
+						call.onBlockFailure(world, ddx, dy, ddz, this.casing(GeneratorPart.HOUSING));
 					return false;
 				}
-				if (id2 != this || meta2 != 2) {
+				if (!this.isPart(world, ddx2, dy, ddz2, GeneratorPart.HOUSING)) {
 					if (call != null)
-						call.onBlockFailure(world, ddx2, dy, ddz2, this.casing(2));
+						call.onBlockFailure(world, ddx2, dy, ddz2, this.casing(GeneratorPart.HOUSING));
 					return false;
 				}
 			}
@@ -213,11 +209,9 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 				if ((Math.abs(k) != 2 || Math.abs(m) != 2) && (k != 0 || m != 0)) {
 					int ddx = dx + left.getStepX() * m;
 					int ddz = dz + left.getStepZ() * m;
-					Block id = this.blockAt(world, ddx, dy, ddz);
-					int meta = this.metaAt(world, ddx, dy, ddz);
-					if (id != this || meta != 2) {
+					if (!this.isPart(world, ddx, dy, ddz, GeneratorPart.HOUSING)) {
 						if (call != null)
-							call.onBlockFailure(world, ddx, dy, ddz, this.casing(2));
+							call.onBlockFailure(world, ddx, dy, ddz, this.casing(GeneratorPart.HOUSING));
 						return false;
 					}
 				}
@@ -231,33 +225,24 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 			int ddz = dz + left.getStepZ() * 2;
 			int ddx2 = dx - left.getStepX() * 2;
 			int ddz2 = dz - left.getStepZ() * 2;
-			Block id = this.blockAt(world, ddx, y + 2, ddz);
-			int meta = this.metaAt(world, ddx, y + 2, ddz);
-			Block id2 = this.blockAt(world, ddx2, y + 2, ddz2);
-			int meta2 = this.metaAt(world, ddx2, y + 2, ddz2);
-			if (id != this || meta != 2) {
+			if (!this.isPart(world, ddx, y + 2, ddz, GeneratorPart.HOUSING)) {
 				if (call != null)
-					call.onBlockFailure(world, ddx, y + 2, ddz, this.casing(2));
+					call.onBlockFailure(world, ddx, y + 2, ddz, this.casing(GeneratorPart.HOUSING));
 				return false;
 			}
-			if (id2 != this || meta2 != 2) {
+			if (!this.isPart(world, ddx2, y + 2, ddz2, GeneratorPart.HOUSING)) {
 				if (call != null)
-					call.onBlockFailure(world, ddx2, y + 2, ddz2, this.casing(2));
+					call.onBlockFailure(world, ddx2, y + 2, ddz2, this.casing(GeneratorPart.HOUSING));
 				return false;
 			}
-
-			id = this.blockAt(world, ddx, y - 2, ddz);
-			meta = this.metaAt(world, ddx, y - 2, ddz);
-			id2 = this.blockAt(world, ddx2, y - 2, ddz2);
-			meta2 = this.metaAt(world, ddx2, y - 2, ddz2);
-			if (id != this || meta != 2) {
+			if (!this.isPart(world, ddx, y - 2, ddz, GeneratorPart.HOUSING)) {
 				if (call != null)
-					call.onBlockFailure(world, ddx, y - 2, ddz, this.casing(2));
+					call.onBlockFailure(world, ddx, y - 2, ddz, this.casing(GeneratorPart.HOUSING));
 				return false;
 			}
-			if (id2 != this || meta2 != 2) {
+			if (!this.isPart(world, ddx2, y - 2, ddz2, GeneratorPart.HOUSING)) {
 				if (call != null)
-					call.onBlockFailure(world, ddx2, y - 2, ddz2, this.casing(2));
+					call.onBlockFailure(world, ddx2, y - 2, ddz2, this.casing(GeneratorPart.HOUSING));
 				return false;
 			}
 		}
@@ -271,13 +256,14 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 		blocks.recursiveAddMultipleWithBounds(world, x, y, z, set, x - 12, y - 4, z - 12, x + 12, y + 4, z + 12);
 		for (int i = 0; i < blocks.getSize(); i++) {
 			BlockPos c = blocks.getNthBlock(i);
-			int meta = BlockMultiBlock.getLegacyMeta(world, c);
 			if (ReactorTiles.getTE(world, c) == ReactorTiles.GENERATOR) {
 				TileEntityReactorGenerator te = (TileEntityReactorGenerator) world.getBlockEntity(c);
 				te.setHasMultiBlock(false);
 			}
-			else if (meta >= 8) {
-				this.setMeta(world, c, meta - 8);
+			else {
+				BlockState cs = world.getBlockState(c);
+				if (cs.is(this) && cs.getValue(FORMED))
+					world.setBlock(c, cs.setValue(FORMED, false), 3);
 			}
 		}
 	}
@@ -289,52 +275,21 @@ public class BlockGeneratorMulti extends BlockReCMultiBlock {
 		blocks.recursiveAddMultipleWithBounds(world, x, y, z, set, x - 12, y - 4, z - 12, x + 12, y + 4, z + 12);
 		for (int i = 0; i < blocks.getSize(); i++) {
 			BlockPos c = blocks.getNthBlock(i);
-			int meta = BlockMultiBlock.getLegacyMeta(world, c);
 			if (ReactorTiles.getTE(world, c) == ReactorTiles.GENERATOR) {
 				TileEntityReactorGenerator te = (TileEntityReactorGenerator) world.getBlockEntity(c);
 				te.setHasMultiBlock(true);
 			}
-			else if (meta < 8) {
-				this.setMeta(world, c, meta + 8);
+			else {
+				BlockState cs = world.getBlockState(c);
+				if (cs.is(this) && !cs.getValue(FORMED))
+					world.setBlock(c, cs.setValue(FORMED, true), 3);
 			}
 		}
 	}
 
 	@Override
-	public int getNumberVariants() {
-		return 4;
-	}
-
-	@Override
-	protected String getIconBaseName() {
-		return "generator";
-	}
-
-	@Override
-	public int getTextureIndex(BlockGetter world, int x, int y, int z, int side, int meta) {
-		if (meta >= 8)
-			return 9;
-		if (meta == 3)
-			return 5;
-		if (meta == 4)
-			return 2;
-		return meta;
-	}
-
-	@Override
-	public int getItemTextureIndex(int meta, int side) {
-		if (meta < 0)
-			return 9 - meta;
-		if (meta >= 8)
-			return 9;
-		if (meta == 3)
-			return 5;
-		return meta;
-	}
-
-	@Override
-	public boolean canTriggerMultiBlockCheck(Level world, int x, int y, int z, int meta) {
-		return meta == 0;
+	public boolean canTriggerMultiBlockCheck(Level world, BlockPos pos, BlockState state) {
+		return state.getValue(PART) == GeneratorPart.CORE && !state.getValue(FORMED);
 	}
 
 	@Override

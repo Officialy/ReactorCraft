@@ -9,15 +9,20 @@
  ******************************************************************************/
 package reika.reactorcraft.blocks.multi;
 
+import java.util.Locale;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 
-import reika.dragonapi.base.BlockMultiBlock;
 import reika.dragonapi.instantiable.data.blockstruct.StructuredBlockArray;
 import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
 import reika.dragonapi.instantiable.data.immutable.BlockKey;
@@ -28,30 +33,38 @@ import reika.reactorcraft.tileentities.TileEntityReactorFlywheel;
 
 public class BlockFlywheelMulti extends BlockReCMultiBlock {
 
+	/** The named casing parts of the flywheel multiblock (legacy variants 0..2). */
+	public enum FlywheelPart implements StringRepresentable {
+		HUB,   // 0: the inner ring adjacent to the flywheel core
+		SPOKE, // 1: the diagonal connectors
+		RIM;   // 2: the outer ring
+
+		@Override
+		public String getSerializedName() {
+			return this.name().toLowerCase(Locale.ROOT);
+		}
+	}
+
+	public static final EnumProperty<FlywheelPart> PART = EnumProperty.create("part", FlywheelPart.class);
+
 	public BlockFlywheelMulti(BlockBehaviour.Properties properties) {
 		super(properties);
-	}
-
-	// --- legacy-metadata helpers, backed by the VARIANT/ACTIVE blockstate on BlockMultiBlock ---
-	private Block blockAt(BlockGetter world, int x, int y, int z) {
-		return world.getBlockState(new BlockPos(x, y, z)).getBlock();
-	}
-
-	private int metaAt(BlockGetter world, int x, int y, int z) {
-		return BlockMultiBlock.getLegacyMeta(world, new BlockPos(x, y, z));
-	}
-
-	private void setMeta(Level world, BlockPos pos, int meta) {
-		world.setBlock(pos, BlockMultiBlock.withLegacyMeta(world.getBlockState(pos), meta), 3);
-	}
-
-	private BlockKey casing(int meta) {
-		return new BlockKey(BlockMultiBlock.withLegacyMeta(this.defaultBlockState(), meta));
+		this.registerDefaultState(this.stateDefinition.any().setValue(PART, FlywheelPart.HUB).setValue(FORMED, false));
 	}
 
 	@Override
-	public int getNumberTextures() {
-		return 4;
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+		super.createBlockStateDefinition(builder);
+		builder.add(PART);
+	}
+
+	private boolean isPart(BlockGetter world, int x, int y, int z, FlywheelPart p) {
+		BlockState s = world.getBlockState(new BlockPos(x, y, z));
+		return s.is(this) && s.getValue(PART) == p;
+	}
+
+	private BlockKey casing(FlywheelPart p) {
+		return new BlockKey(this.defaultBlockState().setValue(PART, p));
 	}
 
 	@Override
@@ -74,103 +87,103 @@ public class BlockFlywheelMulti extends BlockReCMultiBlock {
 		for (int i = 1; i <= 2; i++) {
 			int dx = midX + left.getStepX() * i;
 			int dz = midZ + left.getStepZ() * i;
-			int m = i == 1 ? 0 : 2;
-			if (this.blockAt(world, dx, midY, dz) != this || this.metaAt(world, dx, midY, dz) != m) {
+			FlywheelPart seek = i == 1 ? FlywheelPart.HUB : FlywheelPart.RIM;
+			if (!this.isPart(world, dx, midY, dz, seek)) {
 				if (call != null)
-					call.onBlockFailure(world, dx, midY, dz, this.casing(m));
+					call.onBlockFailure(world, dx, midY, dz, this.casing(seek));
 				return false;
 			}
 			dx = midX - left.getStepX() * i;
 			dz = midZ - left.getStepZ() * i;
-			if (this.blockAt(world, dx, midY, dz) != this || this.metaAt(world, dx, midY, dz) != m) {
+			if (!this.isPart(world, dx, midY, dz, seek)) {
 				if (call != null)
-					call.onBlockFailure(world, dx, midY, dz, this.casing(m));
+					call.onBlockFailure(world, dx, midY, dz, this.casing(seek));
 				return false;
 			}
-			if (this.blockAt(world, midX, midY - i, midZ) != this || this.metaAt(world, midX, midY - i, midZ) != m) {
+			if (!this.isPart(world, midX, midY - i, midZ, seek)) {
 				if (call != null)
-					call.onBlockFailure(world, midX, midY - i, midZ, this.casing(m));
+					call.onBlockFailure(world, midX, midY - i, midZ, this.casing(seek));
 				return false;
 			}
-			if (this.blockAt(world, midX, midY + i, midZ) != this || this.metaAt(world, midX, midY + i, midZ) != m) {
+			if (!this.isPart(world, midX, midY + i, midZ, seek)) {
 				if (call != null)
-					call.onBlockFailure(world, midX, midY - i, midZ, this.casing(m));
+					call.onBlockFailure(world, midX, midY - i, midZ, this.casing(seek));
 				return false;
 			}
 		}
 
 		int dx = midX + left.getStepX();
 		int dz = midZ + left.getStepZ();
-		if (this.blockAt(world, dx, midY + 1, dz) != this || this.metaAt(world, dx, midY + 1, dz) != 1) {
+		if (!this.isPart(world, dx, midY + 1, dz, FlywheelPart.SPOKE)) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY + 1, dz, this.casing(1));
+				call.onBlockFailure(world, dx, midY + 1, dz, this.casing(FlywheelPart.SPOKE));
 			return false;
 		}
-		if (this.blockAt(world, dx, midY - 1, dz) != this || this.metaAt(world, dx, midY - 1, dz) != 1) {
+		if (!this.isPart(world, dx, midY - 1, dz, FlywheelPart.SPOKE)) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY - 1, dz, this.casing(1));
+				call.onBlockFailure(world, dx, midY - 1, dz, this.casing(FlywheelPart.SPOKE));
 			return false;
 		}
 		dx = midX - left.getStepX();
 		dz = midZ - left.getStepZ();
-		if (this.blockAt(world, dx, midY + 1, dz) != this || this.metaAt(world, dx, midY + 1, dz) != 1) {
+		if (!this.isPart(world, dx, midY + 1, dz, FlywheelPart.SPOKE)) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY + 1, dz, this.casing(1));
+				call.onBlockFailure(world, dx, midY + 1, dz, this.casing(FlywheelPart.SPOKE));
 			return false;
 		}
-		if (this.blockAt(world, dx, midY - 1, dz) != this || this.metaAt(world, dx, midY - 1, dz) != 1) {
+		if (!this.isPart(world, dx, midY - 1, dz, FlywheelPart.SPOKE)) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY - 1, dz, this.casing(1));
+				call.onBlockFailure(world, dx, midY - 1, dz, this.casing(FlywheelPart.SPOKE));
 			return false;
 		}
 
 		dx = midX + left.getStepX();
 		dz = midZ + left.getStepZ();
-		if (this.blockAt(world, dx, midY + 2, dz) != this || this.metaAt(world, dx, midY + 2, dz) != 2) {
+		if (!this.isPart(world, dx, midY + 2, dz, FlywheelPart.RIM)) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY + 2, dz, this.casing(2));
+				call.onBlockFailure(world, dx, midY + 2, dz, this.casing(FlywheelPart.RIM));
 			return false;
 		}
-		if (this.blockAt(world, dx, midY - 2, dz) != this || this.metaAt(world, dx, midY - 2, dz) != 2) {
+		if (!this.isPart(world, dx, midY - 2, dz, FlywheelPart.RIM)) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY - 2, dz, this.casing(2));
+				call.onBlockFailure(world, dx, midY - 2, dz, this.casing(FlywheelPart.RIM));
 			return false;
 		}
 		dx = midX - left.getStepX();
 		dz = midZ - left.getStepZ();
-		if (this.blockAt(world, dx, midY + 2, dz) != this || this.metaAt(world, dx, midY + 2, dz) != 2) {
+		if (!this.isPart(world, dx, midY + 2, dz, FlywheelPart.RIM)) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY + 2, dz, this.casing(2));
+				call.onBlockFailure(world, dx, midY + 2, dz, this.casing(FlywheelPart.RIM));
 			return false;
 		}
-		if (this.blockAt(world, dx, midY - 2, dz) != this || this.metaAt(world, dx, midY - 2, dz) != 2) {
+		if (!this.isPart(world, dx, midY - 2, dz, FlywheelPart.RIM)) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY - 2, dz, this.casing(2));
+				call.onBlockFailure(world, dx, midY - 2, dz, this.casing(FlywheelPart.RIM));
 			return false;
 		}
 
 		dx = midX + left.getStepX() * 2;
 		dz = midZ + left.getStepZ() * 2;
-		if (this.blockAt(world, dx, midY + 1, dz) != this || this.metaAt(world, dx, midY + 1, dz) != 2) {
+		if (!this.isPart(world, dx, midY + 1, dz, FlywheelPart.RIM)) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY + 1, dz, this.casing(2));
+				call.onBlockFailure(world, dx, midY + 1, dz, this.casing(FlywheelPart.RIM));
 			return false;
 		}
-		if (this.blockAt(world, dx, midY - 1, dz) != this || this.metaAt(world, dx, midY - 1, dz) != 2) {
+		if (!this.isPart(world, dx, midY - 1, dz, FlywheelPart.RIM)) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY - 1, dz, this.casing(2));
+				call.onBlockFailure(world, dx, midY - 1, dz, this.casing(FlywheelPart.RIM));
 			return false;
 		}
 		dx = midX - left.getStepX() * 2;
 		dz = midZ - left.getStepZ() * 2;
-		if (this.blockAt(world, dx, midY + 1, dz) != this || this.metaAt(world, dx, midY + 1, dz) != 2) {
+		if (!this.isPart(world, dx, midY + 1, dz, FlywheelPart.RIM)) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY + 1, dz, this.casing(2));
+				call.onBlockFailure(world, dx, midY + 1, dz, this.casing(FlywheelPart.RIM));
 			return false;
 		}
-		if (this.blockAt(world, dx, midY - 1, dz) != this || this.metaAt(world, dx, midY - 1, dz) != 2) {
+		if (!this.isPart(world, dx, midY - 1, dz, FlywheelPart.RIM)) {
 			if (call != null)
-				call.onBlockFailure(world, dx, midY - 1, dz, this.casing(2));
+				call.onBlockFailure(world, dx, midY - 1, dz, this.casing(FlywheelPart.RIM));
 			return false;
 		}
 
@@ -189,10 +202,9 @@ public class BlockFlywheelMulti extends BlockReCMultiBlock {
 		blocks.recursiveAddWithBoundsRanged(world, x, y, z - 1, this, x - 6, y - 6, z - 6, x + 6, y + 6, z + 6, 1);
 		for (int i = 0; i < blocks.getSize(); i++) {
 			BlockPos c = blocks.getNthBlock(i);
-			int meta = BlockMultiBlock.getLegacyMeta(world, c);
-			if (meta >= 8) {
-				this.setMeta(world, c, meta - 8);
-			}
+			BlockState cs = world.getBlockState(c);
+			if (cs.is(this) && cs.getValue(FORMED))
+				world.setBlock(c, cs.setValue(FORMED, false), 3);
 		}
 		int midX = blocks.getMidX();
 		int midY = blocks.getMidY();
@@ -209,10 +221,9 @@ public class BlockFlywheelMulti extends BlockReCMultiBlock {
 		blocks.recursiveAddWithBoundsRanged(world, x, y, z, this, x - 6, y - 6, z - 6, x + 6, y + 6, z + 6, 1);
 		for (int i = 0; i < blocks.getSize(); i++) {
 			BlockPos c = blocks.getNthBlock(i);
-			int meta = BlockMultiBlock.getLegacyMeta(world, c);
-			if (meta < 8) {
-				this.setMeta(world, c, meta + 8);
-			}
+			BlockState cs = world.getBlockState(c);
+			if (cs.is(this) && !cs.getValue(FORMED))
+				world.setBlock(c, cs.setValue(FORMED, true), 3);
 		}
 		int midX = blocks.getMidX();
 		int midY = blocks.getMidY();
@@ -224,27 +235,7 @@ public class BlockFlywheelMulti extends BlockReCMultiBlock {
 	}
 
 	@Override
-	public int getNumberVariants() {
-		return 3;
-	}
-
-	@Override
-	protected String getIconBaseName() {
-		return "flywheel";
-	}
-
-	@Override
-	public int getTextureIndex(BlockGetter world, int x, int y, int z, int side, int meta) {
-		return meta >= 8 ? 3 : meta;
-	}
-
-	@Override
-	public int getItemTextureIndex(int meta, int side) {
-		return meta & 7;
-	}
-
-	@Override
-	public boolean canTriggerMultiBlockCheck(Level world, int x, int y, int z, int meta) {
+	public boolean canTriggerMultiBlockCheck(Level world, BlockPos pos, BlockState state) {
 		return true;
 	}
 
