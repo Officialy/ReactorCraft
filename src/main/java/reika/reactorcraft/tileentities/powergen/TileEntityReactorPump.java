@@ -64,10 +64,10 @@ public class TileEntityReactorPump extends TankedReactorPowerReceiver {
 			return true;
 		if (output.isFull())
 			return false;
-		if (tank.getActualFluid().equals(ReactorFluids.getLegacyFluid("rc lowpwater")))
-			return output.getActualFluid().equals(Fluids.WATER);
-		if (tank.getActualFluid().equals(ReactorFluids.getLegacyFluid("rc lowpammonia")))
-			return output.getActualFluid().equals(ReactorFluids.getLegacyFluid("rc ammonia"));
+		if (tank.getActualFluid().getFluid().equals(ReactorFluids.getLegacyFluid("rc lowpwater")))
+			return output.getActualFluid().getFluid().equals(Fluids.WATER);
+		if (tank.getActualFluid().getFluid().equals(ReactorFluids.getLegacyFluid("rc lowpammonia")))
+			return output.getActualFluid().getFluid().equals(ReactorFluids.getLegacyFluid("rc ammonia"));
 		return false;
 	}
 
@@ -92,10 +92,10 @@ public class TileEntityReactorPump extends TankedReactorPowerReceiver {
 		int amt = Math.min(tank.getFluidLevel(), output.getRemainingSpace());
 		if (amt <= 0)
 			return;
-		if (tank.getActualFluid().equals(ReactorFluids.getLegacyFluid("rc lowpwater"))) {
+		if (tank.getActualFluid().getFluid().equals(ReactorFluids.getLegacyFluid("rc lowpwater"))) {
 			output.addLiquid(amt, Fluids.WATER);
 		}
-		else if (tank.getActualFluid().equals(ReactorFluids.getLegacyFluid("rc lowpammonia"))) {
+		else if (tank.getActualFluid().getFluid().equals(ReactorFluids.getLegacyFluid("rc lowpammonia"))) {
 			output.addLiquid(amt, ReactorFluids.getLegacyFluid("rc ammonia"));
 		}
 		tank.removeLiquid(amt);
