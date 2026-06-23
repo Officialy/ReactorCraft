@@ -13,6 +13,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.Level;
 
@@ -44,12 +45,12 @@ public class TileEntityNeutronAbsorber extends TileEntityReactorBase implements 
 	public void updateEntity(Level world, BlockPos pos) {
 		tempTimer.update();
 		if (tempTimer.checkCap()) {
-			this.updateTemperature(world, x, y, z);
+			this.updateTemperature(world, pos);
 
 			if (!world.isClientSide()) {
 				if (temperature >= this.getMaxTemperature()) {
-					world.setBlock(x, y, z, Blocks.flowing_lava);
-					ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.fizz");
+					world.setBlockAndUpdate(pos, Blocks.LAVA.defaultBlockState());
+					ReikaSoundHelper.playSoundAtBlock(world, pos, SoundEvents.FIRE_EXTINGUISH);
 				}
 			}
 		}
