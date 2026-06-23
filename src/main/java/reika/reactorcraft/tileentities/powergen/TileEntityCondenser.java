@@ -8,33 +8,31 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidRegistry;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
-import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.reactorcraft.base.TileEntityTankedReactorMachine;
+import reika.reactorcraft.blocks.BlockSteam;
+import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorBlocks;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.fission.TileEntityReactorBoiler;
-import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
+import reika.rotarycraft.base.blockentity.BlockEntityPiping;
 import reika.rotarycraft.registry.MachineRegistry;
 
-import buildcraft.api.transport.IPipeTile.PipeType;
-
 public class TileEntityCondenser extends TileEntityTankedReactorMachine {
+
 	public TileEntityCondenser(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.CONDENSER.get(), pos, state);
 	}
-
 
 	@Override
 	public ReactorTiles getTile() {
@@ -44,41 +42,35 @@ public class TileEntityCondenser extends TileEntityTankedReactorMachine {
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
 		thermalTicker.update();
-		//this.getSteam(world, x, y, z);
-		if (world.getBlock(x, y-1, z) == ReactorBlocks.STEAM.getBlockInstance() && !tank.isFull() && temperature < 100 && !world.isClientSide()) {
-			int smeta = world.getBlockMetadata(x, y-1, z);
-			Fluid f = this.getFluidFromSteamMetadata(smeta);
-			//ReikaJavaLibrary.pConsole(f.getName());
-			if (tank.isEmpty() || tank.getActualFluid().equals(f)) {
-				world.removeBlock(x, y-1, z);
+		BlockPos below = pos.below();
+		BlockState bs = world.getBlockState(below);
+		if (bs.getBlock() == ReactorBlocks.STEAM.get() && !tank.isFull() && temperature < 100 && !world.isClientSide()) {
+			Fluid f = this.getFluidFromSteam(bs);
+			if (tank.isEmpty() || tank.getActualFluid().getFluid().equals(f)) {
+				world.removeBlock(below, false);
 				tank.addLiquid(TileEntityReactorBoiler.WATER_PER_STEAM, f);
 			}
 		}
 
-		this.balance(world, x, y, z);
-		//tank.addLiquid(100, ReactorCraft.H2O_lo);
+		this.balance(world, pos);
 	}
 
-	private Fluid getFluidFromSteamMetadata(int smeta) {
-		//ReikaJavaLibrary.pConsole(String.format("%4s", Integer.toBinaryString(smeta)).replace(" ", "0"), Dist.DEDICATED_SERVER);
-		if ((smeta&4) == 4)
-			return ReactorFluids.getLegacyFluid("rc lowpammonia");
-		return ReactorFluids.getLegacyFluid("rc lowpwater");
+	/** The low-pressure fluid the given steam blockstate condenses into. */
+	private Fluid getFluidFromSteam(BlockState steam) {
+		return steam.getValue(BlockSteam.AMMONIA)
+				? ReactorFluids.getLegacyFluid("rc lowpammonia")
+				: ReactorFluids.getLegacyFluid("rc lowpwater");
 	}
 
-	private void balance(Level world, int x, int y, int z) {
-		for (int i = 0; i < 6; i++) {
-			Direction dir = dirs[i];
-			int dx = x+dir.offsetX;
-			int dy = y+dir.offsetY;
-			int dz = z+dir.offsetZ;
-			ReactorTiles rt = ReactorTiles.getTE(world, dx, dy, dz);
-			if (rt == ReactorTiles.CONDENSER) {
-				TileEntityCondenser te = (TileEntityCondenser)world.getBlockEntity(dx, dy, dz);
+	private void balance(Level world, BlockPos pos) {
+		for (Direction dir : dirs) {
+			BlockPos npos = pos.relative(dir);
+			if (ReactorTiles.getTE(world, npos) == ReactorTiles.CONDENSER) {
+				TileEntityCondenser te = (TileEntityCondenser) world.getBlockEntity(npos);
 				int dL = te.tank.getFluidLevel() - tank.getFluidLevel();
-				if (dL/4 > 0) {
-					tank.addLiquid(dL/4, te.tank.getActualFluid());
-					te.tank.removeLiquid(dL/4);
+				if (dL / 4 > 0) {
+					tank.addLiquid(dL / 4, te.tank.getActualFluid().getFluid());
+					te.tank.removeLiquid(dL / 4);
 				}
 			}
 		}
@@ -89,28 +81,25 @@ public class TileEntityCondenser extends TileEntityTankedReactorMachine {
 
 	}
 
+	// The condensed water is pulled out of the top by an adjacent pipe.
 	@Override
-	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
-		return this.canDrain(from, resource.getFluid()) ? tank.drain(resource.amount, doDrain) : null;
+	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
+		return from == Direction.UP ? tank.drain(maxDrain, doDrain) : FluidStack.EMPTY;
 	}
 
 	@Override
-	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
-		//ReikaJavaLibrary.pConsole(from, Dist.DEDICATED_SERVER);
-		if (this.canDrain(from, null)) {
-			return tank.drain(maxDrain, doDrain);
-		}
-		return null;
-	}
-
-	@Override
-	public boolean canDrain(Direction from, Fluid fluid) {
-		return from == Direction.UP && ReikaFluidHelper.isFluidDrainableFromTank(fluid, tank);
+	public BlockEntityPiping.Flow getFlowForSide(Direction side) {
+		return side == Direction.UP ? BlockEntityPiping.Flow.OUTPUT : BlockEntityPiping.Flow.NONE;
 	}
 
 	@Override
 	public boolean canConnectToPipe(MachineRegistry m) {
 		return m.isStandardPipe();
+	}
+
+	@Override
+	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
+		return side == Direction.UP && this.canConnectToPipe(p);
 	}
 
 	@Override
@@ -129,37 +118,20 @@ public class TileEntityCondenser extends TileEntityTankedReactorMachine {
 	}
 
 	@Override
+	public boolean isValidFluid(Fluid f) {
+		return false;
+	}
+
+	@Override
 	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
-
 		tank.readFromNBT(NBT);
 	}
 
 	@Override
 	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
-
 		tank.writeToNBT(NBT);
-	}
-
-	@Override
-	public boolean isValidFluid(Fluid f) {
-		return false;//WorkingFluid.getWorkingFluid(f) != ItemStack.EMPTY;
-	}
-
-	@Override
-	public ConnectOverride overridePipeConnection(PipeType type, Direction with) {
-		return type == PipeType.FLUID ? (with == Direction.UP ? ConnectOverride.CONNECT : ConnectOverride.DISCONNECT) : ConnectOverride.DEFAULT;
-	}
-
-	@Override
-	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
-		return side == Direction.UP && this.canConnectToPipe(p);
-	}
-
-	@Override
-	public Flow getFlowForSide(Direction side) {
-		return side == Direction.UP ? Flow.OUTPUT : Flow.NONE;
 	}
 
 }
