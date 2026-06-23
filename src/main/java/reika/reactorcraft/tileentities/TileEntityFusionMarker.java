@@ -92,9 +92,10 @@ public class TileEntityFusionMarker extends TileEntityReactorBase {
 		return li;
 	}
 
-	@Override
+	// 1.21.5: BlockEntity.getRenderBoundingBox was removed; kept as a helper for the renderer's bounds.
+	// Aim lines span the whole tokamak, so render bounds are infinite.
 	public AABB getRenderBoundingBox() {
-		return INFINITE_EXTENT_AABB;
+		return AABB.INFINITE;
 	}
 
 }
