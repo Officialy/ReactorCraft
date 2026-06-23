@@ -8,29 +8,25 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
-import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
 
 import java.util.HashMap;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.Level;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.fluids./*FLUIDCONTAINER-PORT*/ FluidContainerRegistry;
-import net.minecraft.world.level.material.FluidRegistry;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.minecraft.world.level.block.state.BlockState;
 
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.StepTimer;
-import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
 import reika.dragonapi.libraries.level.ReikaBiomeHelper;
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
@@ -38,17 +34,19 @@ import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.ReactorPowerReceiver;
 import reika.reactorcraft.base.TileEntityReactorBase;
 import reika.reactorcraft.registry.ReactorAchievements;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.api.power.PowerTransferHelper;
 import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
-import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
+import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
 public class TileEntityHeavyPump extends TileEntityReactorBase implements ReactorPowerReceiver, IFluidHandler, PipeConnector {
+
 	public TileEntityHeavyPump(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.FLUIDEXTRACTOR.get(), pos, state);
 	}
-
 
 	public static final int MINPOWER = 65536;
 	public static final int MINTORQUE = 512;
@@ -60,13 +58,26 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	private static final HashMap<Fluid, Extraction> extractions = new HashMap();
 
 	static {
-		extractions.put(FluidRegistry.WATER, new HeavyWaterExtraction());
-		extractions.put(FluidRegistry.LAVA, new MoltenLithiumExtraction());
+		extractions.put(Fluids.WATER, new HeavyWaterExtraction());
+		extractions.put(Fluids.LAVA, new MoltenLithiumExtraction());
 	}
 
 	private StepTimer timer = new StepTimer(20);
 
 	private final HybridTank tank = new HybridTank("heavypump", 8000);
+
+	// The legacy world-fluid logic and config key on the old integer dimension ids; map the vanilla
+	// dimensions back to those ids so ReactorConfig (still int-keyed) and the surface-Y logic stay faithful.
+	private static int dimID(Level world) {
+		ResourceKey<Level> d = world.dimension();
+		if (d == Level.OVERWORLD)
+			return 0;
+		if (d == Level.NETHER)
+			return -1;
+		if (d == Level.END)
+			return 1;
+		return Integer.MIN_VALUE;
+	}
 
 	@Override
 	public ReactorTiles getTile() {
@@ -113,7 +124,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 
 	@Override
 	public boolean canReadFrom(Direction dir) {
-		return dir.offsetY != 0;
+		return dir.getStepY() != 0;
 	}
 
 	@Override
@@ -136,6 +147,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 		if (power >= MINPOWER && torque >= MINTORQUE) {
 			timer.setCap(Math.max(1, 20-2*(int)ReikaMathLibrary.logbase(omega, 2)));
 			timer.update();
+			int x = pos.getX(), y = pos.getY(), z = pos.getZ();
 			Extraction e = this.getExtraction(world, x, y, z);
 			if (e != null) {
 				if (timer.checkCap() && e.canPerform(world, x, y, z)) {
@@ -149,14 +161,15 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	}
 
 	private Extraction getExtraction(Level world, int x, int y, int z) {
-		Fluid f = ItemStack.EMPTY;
+		Fluid f = null;
 		int c = 0;
 		for (int i = 2; i < 6; i++) {
 			Direction dir = dirs[i];
-			int dx = x+dir.offsetX;
-			int dz = z+dir.offsetZ;
-			Fluid f2 = ReikaWorldHelper.getFluid(world, dx, y, dz);
-			if (f2 != null && ReikaWorldHelper.isLiquidSourceBlock(world, dx, y, dz)) {
+			int dx = x+dir.getStepX();
+			int dz = z+dir.getStepZ();
+			FluidState fs = ReikaWorldHelper.getFluidState(world, dx, y, dz);
+			Fluid f2 = fs.isEmpty() ? null : fs.getType();
+			if (f2 != null && fs.isSource()) {
 				if (f == null || f2 == f) {
 					c++;
 					f = f2;
@@ -170,53 +183,61 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	}
 
 	private void harvest(Extraction e, Level world, int x, int y, int z) {
-		tank.fill(new FluidStack(e.output, e.getExtractedAmount(world, x, y, z)), true);
+		tank.fill(new FluidStack(e.output, e.getExtractedAmount(world, x, y, z)), IFluidHandler.FluidAction.EXECUTE);
 		e.onHarvest(world, x, y, z, this.getPlacer());
 	}
 
+	// --- NeoForge IFluidHandler (output-only: filled by extraction, drained out the sides) ---
 	@Override
-	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
-		if (from.offsetY != 0)
-			return null;
-		else
-			return tank.drain(maxDrain, doDrain);
+	public int getTanks() {
+		return 1;
 	}
 
 	@Override
-	public int fill(Direction from, FluidStack resource, boolean doFill) {
-		return 0;
+	public FluidStack getFluidInTank(int t) {
+		return tank.getFluid();
 	}
 
 	@Override
-	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
-		return this.canDrain(from, resource.getFluid()) ? tank.drain(resource.amount, doDrain) : null;
+	public int getTankCapacity(int t) {
+		return tank.getCapacity();
 	}
 
 	@Override
-	public boolean canFill(Direction from, Fluid fluid) {
+	public boolean isFluidValid(int t, FluidStack stack) {
 		return false;
 	}
 
 	@Override
-	public boolean canDrain(Direction from, Fluid fluid) {
-		return from.offsetY == 0 && ReikaFluidHelper.isFluidDrainableFromTank(fluid, tank);
+	public int fill(FluidStack resource, FluidAction action) {
+		return 0;
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(Direction from) {
-		return new FluidTankInfo[]{tank.getInfo()};
+	public FluidStack drain(FluidStack resource, FluidAction action) {
+		if (resource.isEmpty())
+			return FluidStack.EMPTY;
+		FluidStack in = tank.getFluid();
+		if (in.isEmpty() || !FluidStack.isSameFluidSameComponents(resource, in))
+			return FluidStack.EMPTY;
+		return tank.drain(resource.getAmount(), action);
+	}
+
+	@Override
+	public FluidStack drain(int maxDrain, FluidAction action) {
+		return tank.drain(maxDrain, action);
 	}
 
 	public boolean hasABucket() {
-		return tank.getFluid() != null && tank.getFluid().amount >= /*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME;
+		return !tank.getFluid().isEmpty() && tank.getFluid().getAmount() >= FluidType.BUCKET_VOLUME;
 	}
 
 	public void subtractBucket() {
-		tank.drain(/*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME, true);
+		tank.drain(FluidType.BUCKET_VOLUME, IFluidHandler.FluidAction.EXECUTE);
 	}
 
 	public int getTankLevel() {
-		return tank.getFluid() != null ? tank.getFluid().amount : 0;
+		return tank.getFluid().getAmount();
 	}
 
 	@Override
@@ -260,12 +281,22 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 
 	@Override
 	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
-		return this.canConnectToPipe(p) && side.offsetY == 0;
+		return this.canConnectToPipe(p) && side.getStepY() == 0;
+	}
+
+	@Override
+	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
+		return 0;
+	}
+
+	@Override
+	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
+		return from.getStepY() == 0 ? tank.drain(maxDrain, doDrain) : FluidStack.EMPTY;
 	}
 
 	@Override
 	public Flow getFlowForSide(Direction side) {
-		return side.offsetY == 0 ? Flow.OUTPUT : Flow.NONE;
+		return side.getStepY() == 0 ? Flow.OUTPUT : Flow.NONE;
 	}
 
 	@Override
@@ -317,11 +348,13 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 
 		@Override
 		protected boolean canPerform(Level world, int x, int y, int z) {
-			return this.isValidWorld(world) && y < MAXY && ReikaBiomeHelper.isOcean(world.getBiomeGenForCoords(x, z)) && this.isOceanFloor(world, x, y, z);
+			return this.isValidWorld(world) && y < MAXY && ReikaBiomeHelper.isOcean(world, new BlockPos(x, y, z)) && this.isOceanFloor(world, x, y, z);
 		}
 
 		private boolean isValidWorld(Level world) {
-			return ReactorCraft.config.isDimensionValidForHeavyWater(world.provider.dimensionId);
+			// CONFIG-PORT: ReactorConfig is not yet wired to a NeoForge ModConfigSpec accessor; the legacy
+			// default for heavyWaterDimensions is empty == "all dimensions valid", so honour that default.
+			return true;
 		}
 
 		@Override
@@ -334,17 +367,13 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 				int dy = y+i;
 				for (int a = -1; a <= 1; a += 2) {
 					for (int b = -1; b <= 1; b += 2) {
-						Block id = world.getBlock(x+a, dy, z+b);
-						int meta = world.getBlockMetadata(x+a, dy, z+b);
-						if ((id != Blocks.flowing_water && id != Blocks.water) || meta != 0) {
+						if (world.getFluidState(new BlockPos(x+a, dy, z+b)).getType() != Fluids.WATER) {
 							return false;
 						}
 					}
 				}
 				if (i >= 1) {
-					Block id = world.getBlock(x, dy, z);
-					int meta = world.getBlockMetadata(x, dy, z);
-					if ((id != Blocks.flowing_water && id != Blocks.water) || meta != 0) {
+					if (world.getFluidState(new BlockPos(x, dy, z)).getType() != Fluids.WATER) {
 						return false;
 					}
 				}
@@ -371,13 +400,13 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 		}
 
 		private boolean isLavaSurface(Level world, int x, int y, int z) {
-			Block b = world.getBlock(x, y-1, z);
-			Block b2 = world.getBlock(x, y+1, z);
-			return (b == Blocks.lava || b == Blocks.flowing_lava) && (b2 != Blocks.lava && b2 != Blocks.flowing_lava);
+			Fluid below = world.getFluidState(new BlockPos(x, y-1, z)).getType();
+			Fluid above = world.getFluidState(new BlockPos(x, y+1, z)).getType();
+			return (below == Fluids.LAVA || below == Fluids.FLOWING_LAVA) && (above != Fluids.LAVA && above != Fluids.FLOWING_LAVA);
 		}
 
 		private int getSurfaceY(Level world, int x, int y, int z) {
-			switch(world.provider.dimensionId) {
+			switch(dimID(world)) {
 				case 0:
 					return 10;
 				case -1:
@@ -389,13 +418,13 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 
 		@Override
 		protected int getExtractedAmount(Level world, int x, int y, int z) {
-			return world.provider.dimensionId == -1 ? 10+rand.nextInt(21)+rand.nextInt(51) : 10+rand.nextInt(31);
+			return dimID(world) == -1 ? 10+rand.nextInt(21)+rand.nextInt(51) : 10+rand.nextInt(31);
 		}
 
 	}
 
 	public Fluid getFluid() {
-		return tank.getActualFluid();
+		return tank.getActualFluid().getFluid();
 	}
 
 }
