@@ -8,44 +8,39 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
-import net.minecraft.block.material.Material;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidRegistry;
+import net.minecraft.world.level.material.MapColor;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.StepTimer;
-import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.dragonapi.libraries.mathsci.ReikaThermoHelper;
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
-import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.base.TankedReactorPowerReceiver;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.registry.ReactorType;
 import reika.reactorcraft.tileentities.fission.TileEntityReactorBoiler;
 import reika.reactorcraft.tileentities.htgr.TileEntityPebbleBed;
 import reika.rotarycraft.auxiliary.interfaces.TemperatureTE;
-import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
+import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.ConfigRegistry;
 import reika.rotarycraft.registry.MachineRegistry;
 
-import buildcraft.api.transport.IPipeTile.PipeType;
-
 public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implements TemperatureTE {
+
 	public TileEntityHeatExchanger(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.EXCHANGER.get(), pos, state);
 	}
-
 
 	public static final int CAPACITY = 2000;
 
@@ -64,11 +59,6 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 	private Exchange currentRecipe;
 
 	@Override
-	public final FluidTankInfo[] getTankInfo(Direction from) {
-		return new FluidTankInfo[]{tank.getInfo(), output.getInfo()};
-	}
-
-	@Override
 	public ReactorTiles getTile() {
 		return ReactorTiles.EXCHANGER;
 	}
@@ -82,8 +72,8 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 			this.cool();
 		temp.update();
 		if (temp.checkCap()) {
-			this.distributeHeat(world, x, y, z);
-			this.updateTemperature(world, x, y, z, meta);
+			this.distributeHeat(world, pos.getX(), pos.getY(), pos.getZ());
+			this.updateTemperature(world, pos);
 		}
 	}
 
@@ -94,12 +84,10 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 	private void distributeHeat(Level world, int x, int y, int z) {
 		for (int i = 2; i < 6; i++) {
 			Direction dir = dirs[i];
-			int dx = x+dir.offsetX;
-			int dy = y+dir.offsetY;
-			int dz = z+dir.offsetZ;
-			ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
+			BlockPos p = new BlockPos(x+dir.getStepX(), y+dir.getStepY(), z+dir.getStepZ());
+			ReactorTiles r = ReactorTiles.getTE(world, p);
 			if (r == ReactorTiles.BOILER) {
-				TileEntityReactorBoiler te = (TileEntityReactorBoiler)world.getBlockEntity(dx, dy, dz);
+				TileEntityReactorBoiler te = (TileEntityReactorBoiler)world.getBlockEntity(p);
 				int dT = temperature - te.getTemperature();
 				if (dT > 0) {
 					temperature -= dT/4;
@@ -127,7 +115,7 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 		for (int i = 0; i < Exchange.list.length; i++) {
 			Exchange e = Exchange.list[i];
 			Fluid in = e.hotFluid;
-			if (in != null && in.equals(tank.getActualFluid()))
+			if (in != null && in.equals(tank.getActualFluid().getFluid()))
 				return e;
 		}
 		return null;
@@ -148,24 +136,27 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 		if (!this.sufficientPower())
 			return false;
 
-		return temperature < currentRecipe.maxTemperature && tank.getFluidLevel() >= COOL_AMOUNT && output.getRemainingSpace() >= COOL_AMOUNT*currentRecipe.expansionRatio && this.canCoolFluid(tank.getActualFluid());
+		return temperature < currentRecipe.maxTemperature && tank.getFluidLevel() >= COOL_AMOUNT && output.getRemainingSpace() >= COOL_AMOUNT*currentRecipe.expansionRatio && this.canCoolFluid(tank.getActualFluid().getFluid());
 	}
 
 	@Override
-	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
-		return this.canDrain(from, resource.getFluid()) ? tank.drain(resource.amount, doDrain) : null;
+	public FluidStack drain(FluidStack resource, FluidAction action) {
+		if (resource.isEmpty())
+			return FluidStack.EMPTY;
+		FluidStack out = output.getFluid();
+		if (out.isEmpty() || !FluidStack.isSameFluidSameComponents(resource, out))
+			return FluidStack.EMPTY;
+		return output.drain(resource.getAmount(), action);
 	}
 
 	@Override
-	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
-		if (!this.canDrain(from, null))
-			return null;
-		return output.drain(maxDrain, doDrain);
+	public FluidStack drain(int maxDrain, FluidAction action) {
+		return output.drain(maxDrain, action);
 	}
 
 	@Override
-	public boolean canDrain(Direction from, Fluid fluid) {
-		return from.offsetY == 0 && ReikaFluidHelper.isFluidDrainableFromTank(fluid, tank);
+	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction action) {
+		return from != Direction.DOWN ? output.drain(maxDrain, action) : FluidStack.EMPTY;
 	}
 
 	@Override
@@ -205,11 +196,11 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 
 	//Add API to allow others to add fluids
 	public static enum Exchange {
-		SODIUM(ReactorCraft.NA_hot, ReactorCraft.NA, ReikaThermoHelper.SODIUM_HEAT, 600, ReactorType.BREEDER),
+		SODIUM(ReactorFluids.HOT_SODIUM.get(), ReactorFluids.SODIUM.get(), ReikaThermoHelper.SODIUM_HEAT, 600, ReactorType.BREEDER),
 		CO2("rc hot co2", "rc co2", ReikaThermoHelper.CO2_HEAT, TileEntityPebbleBed.MINTEMP, ReactorType.HTGR),
 		LIFBE("rc hot lifbe", "rc lifbe", ReikaThermoHelper.LIFBE_HEAT, 1000, ReactorType.THORIUM),
 		OXYGEN("rc liquid oxygen", "rc oxygen", 4, -ReikaThermoHelper.OXYGEN_HEAT-ReikaThermoHelper.OXYGEN_BOIL_ENTHALPY, 500, ReactorType.NONE),
-		SOLARSODIUM(ReactorCraft.NA_warm, ReactorCraft.NA, ReikaThermoHelper.SODIUM_HEAT*0.375F, 400, ReactorType.SOLAR),
+		SOLARSODIUM(ReactorFluids.WARM_SODIUM.get(), ReactorFluids.SODIUM.get(), ReikaThermoHelper.SODIUM_HEAT*0.375F, 400, ReactorType.SOLAR),
 		NITROGEN("rc liquid nitrogen", "nitrogen", 12, -ReikaThermoHelper.NITROGEN_HEAT-ReikaThermoHelper.NITROGEN_BOIL_ENTHALPY, 500, ReactorType.NONE);
 
 		public final Fluid hotFluid;
@@ -243,37 +234,39 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 		}
 	}
 
-	public void updateTemperature(Level world, int x, int y, int z, int meta) {
-		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
+	@Override
+	public void updateTemperature(Level world, BlockPos pos) {
+		int x = pos.getX(), y = pos.getY(), z = pos.getZ();
+		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, pos);
 
-		Direction waterside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
+		Direction waterside = ReikaWorldHelper.checkForAdjMaterial(world, pos, MapColor.WATER);
 		if (waterside != null) {
 			Tamb /= 2;
 		}
-		Direction iceside = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.ice);
+		Direction iceside = ReikaWorldHelper.checkForAdjBlock(world, pos, Blocks.ICE);
 		if (iceside != null) {
 			if (Tamb > 0)
 				Tamb /= 4;
-			ReikaWorldHelper.changeAdjBlock(world, x, y, z, iceside, Blocks.flowing_water, 0);
+			ReikaWorldHelper.changeAdjBlock(world, pos, iceside, Blocks.WATER.defaultBlockState());
 		}
-		Direction fireside = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.fire);
+		Direction fireside = ReikaWorldHelper.checkForAdjBlock(world, pos, Blocks.FIRE);
 		if (fireside != null) {
 			Tamb += 200;
 			if (temperature < 100)
-				ReikaWorldHelper.changeAdjBlock(world, x, y, z, fireside, Blocks.air, 0);
+				ReikaWorldHelper.changeAdjBlock(world, pos, fireside, Blocks.AIR.defaultBlockState());
 			else {
-				world.removeBlock(x, y, z);
-				world.explode(/*PORT*/null, x+0.5, y+0.5, z+0.5, 6, ConfigRegistry.BLOCKDAMAGE.getState());
+				world.removeBlock(pos, false);
+				world.explode(null, x+0.5, y+0.5, z+0.5, 6, ConfigRegistry.BLOCKDAMAGE.getState() ? Level.ExplosionInteraction.BLOCK : Level.ExplosionInteraction.NONE);
 			}
 		}
-		Direction lavaside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.lava);
+		Direction lavaside = ReikaWorldHelper.checkForAdjMaterial(world, pos, MapColor.FIRE);
 		if (lavaside != null) {
 			Tamb += 600;
 			if (temperature < 100)
-				ReikaWorldHelper.changeAdjBlock(world, x, y, z, lavaside, Blocks.stone, 0);
+				ReikaWorldHelper.changeAdjBlock(world, pos, lavaside, Blocks.STONE.defaultBlockState());
 			else {
-				world.removeBlock(x, y, z);
-				world.explode(/*PORT*/null, x+0.5, y+0.5, z+0.5, 6, ConfigRegistry.BLOCKDAMAGE.getState());
+				world.removeBlock(pos, false);
+				world.explode(null, x+0.5, y+0.5, z+0.5, 6, ConfigRegistry.BLOCKDAMAGE.getState() ? Level.ExplosionInteraction.BLOCK : Level.ExplosionInteraction.NONE);
 			}
 		}
 		if (temperature > Tamb)
@@ -289,12 +282,12 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 		if (temperature < MINTEMP)
 			temperature = MINTEMP;
 		if (temperature > 100) {
-			Direction side = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.snow);
+			Direction side = ReikaWorldHelper.checkForAdjBlock(world, pos, Blocks.SNOW);
 			if (side != null)
-				ReikaWorldHelper.changeAdjBlock(world, x, y, z, side, Blocks.air, 0);
-			side = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.ice);
+				ReikaWorldHelper.changeAdjBlock(world, pos, side, Blocks.AIR.defaultBlockState());
+			side = ReikaWorldHelper.checkForAdjBlock(world, pos, Blocks.ICE);
 			if (side != null)
-				ReikaWorldHelper.changeAdjBlock(world, x, y, z, side, Blocks.flowing_water, 0);
+				ReikaWorldHelper.changeAdjBlock(world, pos, side, Blocks.WATER.defaultBlockState());
 		}
 	}
 
@@ -314,7 +307,7 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 	}
 
 	@Override
-	public void overheat(Level world, int x, int y, int z) {
+	public void overheat(Level world, BlockPos pos) {
 
 	}
 
@@ -328,11 +321,6 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 	@Override
 	public boolean canReadFrom(Direction dir) {
 		return dir == Direction.DOWN;
-	}
-
-	@Override
-	public ConnectOverride overridePipeConnection(PipeType type, Direction side) {
-		return type == PipeType.FLUID && side != Direction.DOWN ? ConnectOverride.CONNECT : ConnectOverride.DISCONNECT;
 	}
 
 	@Override
@@ -388,6 +376,16 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 	@Override
 	public int getMaxTemperature() {
 		return MAXTEMP;
+	}
+
+	@Override
+	public boolean hasATank() {
+		return true;
+	}
+
+	@Override
+	public boolean hasAnInventory() {
+		return false;
 	}
 
 }

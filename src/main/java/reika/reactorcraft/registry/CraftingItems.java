@@ -50,16 +50,9 @@ public enum CraftingItems {
     }
 
     public boolean isGating() {
-        switch (this) {
-            case WIRE:
-            case COOLANT:
-            case UDUST:
-            case FABRIC:
-            case HYSTERESIS:
-            case HYSTERESISRING:
-                return false;
-            default:
-                return true;
-        }
+        return switch (this) {
+            case WIRE, COOLANT, UDUST, FABRIC, HYSTERESIS, HYSTERESISRING -> false;
+            default -> true;
+        };
     }
 }

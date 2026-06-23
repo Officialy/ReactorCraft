@@ -29,20 +29,20 @@ public final class ReactorWorldGenProvider {
 
     /** 26.2-remapped [minY, maxY] per ore (plan Y-range table); falls back to the original band. */
     static int[] yBand(ReactorOreType ore) {
-        switch (ore) {
-            case INDIUM:    return new int[]{-32, 16};
-            case THORIUM:   return new int[]{-48, 32};
-            case MAGNETITE: return new int[]{60, 192};
-            default:        return new int[]{ore.minY, ore.maxY};
-        }
+        return switch (ore) {
+            case INDIUM -> new int[]{-32, 16};
+            case THORIUM -> new int[]{-48, 32};
+            case MAGNETITE -> new int[]{60, 292};
+            default -> new int[]{ore.minY, ore.maxY};
+        };
     }
 
     static int dimType(ReactorOreType ore) {
-        switch (ore.dimension) {
-            case NETHER: return 1;
-            case END:    return 2;
-            default:     return 0;
-        }
+        return switch (ore.dimension) {
+            case NETHER -> 1;
+            case END -> 2;
+            default -> 0;
+        };
     }
 
     static ReactorOreConfig config(ReactorOreType ore) {
