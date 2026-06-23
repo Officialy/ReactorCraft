@@ -8,28 +8,22 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
-import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
 
 import java.util.ArrayList;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.util.IIcon;
-import net.minecraft.world.level.Level;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 
-// CHROMA-PORT: import reika.chromaticraft.api.interfaces.WorldRift;
 import reika.dragonapi.instantiable.data.Proportionality;
-import reika.dragonapi.libraries.ReikaNBTHelper;
-import reika.dragonapi.libraries.reikanbthelper.NBTIO;
-import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.SteamTile;
 import reika.reactorcraft.base.TileEntityLine;
+import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorOptions;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.registry.ReactorType;
@@ -39,18 +33,18 @@ import reika.reactorcraft.tileentities.fission.TileEntityReactorBoiler;
 import reika.rotarycraft.api.interfaces.PressureTile;
 import reika.rotarycraft.auxiliary.interfaces.PumpablePipe;
 import reika.rotarycraft.registry.MachineRegistry;
-import reika.rotarycraft.tileentities.auxiliary.TileEntityPipePump;
 
 public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe, SteamTile, PressureTile {
+
 	public TileEntitySteamLine(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.STEAMLINE.get(), pos, state);
 	}
 
-
 	private int steam;
 
 	private WorkingFluid fluid = WorkingFluid.EMPTY;
-	private Proportionality<ReactorType> source = new Proportionality();
+	// Per-reactor-type contribution breakdown (display only; rebuilds from boiler draws, not persisted).
+	private Proportionality<ReactorType> source = new Proportionality<>();
 
 	@Override
 	public ReactorTiles getTile() {
@@ -58,11 +52,21 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	}
 
 	@Override
+	public boolean hasATank() {
+		return false;
+	}
+
+	@Override
+	public boolean hasAnInventory() {
+		return false;
+	}
+
+	@Override
 	public void updateEntity(Level world, BlockPos pos) {
 		super.updateEntity(world, pos);
 
-		this.drawFromBoiler(world, x, y, z);
-		this.getPipeSteam(world, x, y, z);
+		this.drawFromBoiler(world, pos);
+		this.getPipeSteam(world, pos);
 
 		if (steam <= 0) {
 			fluid = WorkingFluid.EMPTY;
@@ -70,12 +74,12 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 		}
 		else if (this.getPressure() > this.getMaxPressure()) {
 			this.delete();
-			world.explode(/*PORT*/null, x+0.5, y+0.5, z+0.5, 2, true);
+			world.explode(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 2, Level.ExplosionInteraction.BLOCK);
 		}
 	}
 
 	@Override
-	protected boolean canConnectToMachine(Block id, int meta, Direction dir, BlockEntity te) {
+	protected boolean canConnectToMachine(Block id, Direction dir, BlockEntity te) {
 		if (id == ReactorTiles.BOILER.getBlock() && dir == Direction.DOWN)
 			return true;
 		if (id == ReactorTiles.GRATE.getBlock())
@@ -83,19 +87,16 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 		if (id == ReactorTiles.BIGTURBINE.getBlock())
 			return true;
 		if (id == ReactorTiles.DIFFUSER.getBlock()) {
-			return ((TileEntitySteamDiffuser)this.getAdjacentTileEntity(dir)).getFacing().getOpposite() == dir;
+			return ((TileEntitySteamDiffuser) this.getAdjacentBlockEntity(dir)).getFacing().getOpposite() == dir;
 		}
-		if (id == MachineRegistry.PIPEPUMP.getBlock()) {
-			return ((TileEntityPipePump)this.getAdjacentTileEntity(dir)).canConnectToPipeOnSide(dir);
-		}
+		// MOD-PORT: RotaryCraft PipePump connection gated out (BlockEntityPipePump/MachineRegistry.PIPEPUMP not ported).
 		return false;
 	}
 
-	private void drawFromBoiler(Level world, int x, int y, int z) {
-		ReactorTiles r = ReactorTiles.getTE(world, x, y-1, z);
-		if (r == ReactorTiles.BOILER) {
-			TileEntityReactorBoiler te = (TileEntityReactorBoiler)world.getBlockEntity(x, y-1, z);
-			if (te.getTileEntityAge() > 5 && this.canTakeInWorkingFluid(te.getWorkingFluid())) {
+	private void drawFromBoiler(Level world, BlockPos pos) {
+		if (ReactorTiles.getTE(world, pos.below()) == ReactorTiles.BOILER) {
+			TileEntityReactorBoiler te = (TileEntityReactorBoiler) world.getBlockEntity(pos.below());
+			if (te.getTicksExisted() > 5 && this.canTakeInWorkingFluid(te.getWorkingFluid())) {
 				fluid = te.getWorkingFluid();
 				int s = te.removeSteam();
 				steam += s;
@@ -105,7 +106,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 						rt = te.getReactorType();
 					if (rt == null || rt == ReactorType.NONE)
 						rt = te.getDefaultReactorType();
-					source.addValue(rt, s*f);
+					source.addValue(rt, s * f);
 				}
 			}
 		}
@@ -116,37 +117,25 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 			return false;
 		if (fluid == WorkingFluid.EMPTY)
 			return true;
-		if (fluid == f)
-			return true;
-		return false;
+		return fluid == f;
 	}
 
-	private void getPipeSteam(Level world, int x, int y, int z) {
-		for (int i = 0; i < 6; i++) {
-			BlockEntity te = this.getAdjacentTileEntity(dirs[i]);
-			if (te instanceof TileEntitySteamLine) {
-				TileEntitySteamLine tile = (TileEntitySteamLine)te;
+	private void getPipeSteam(Level world, BlockPos pos) {
+		for (Direction dir : dirs) {
+			BlockEntity te = this.getAdjacentBlockEntity(dir);
+			if (te instanceof TileEntitySteamLine tile) {
 				if (this.canTakeInWorkingFluid(tile.fluid))
 					this.readPipe(tile);
 			}
-			else if (te instanceof WorldRift && !world.isClientSide()) {
-				WorldRift wr = (WorldRift)te;
-				BlockEntity tile = wr.getTileEntityFrom(dirs[i]);
-				if (tile instanceof TileEntitySteamLine) {
-					TileEntitySteamLine ts = (TileEntitySteamLine)tile;
-					if (this.canTakeInWorkingFluid(ts.fluid))
-						this.readPipe(ts);
-				}
-			}
+			// CHROMA-PORT: ChromatiCraft WorldRift cross-dimension steam transfer gated out (mod not in build).
 		}
 	}
 
 	private void readPipe(TileEntitySteamLine te) {
-		int dS = te.steam-steam;
+		int dS = te.steam - steam;
 		if (dS > 0) {
-			//ReikaJavaLibrary.pConsole(steam+":"+te.steam);
-			int amt = dS/2+1;
-			float frac = amt/(float)te.steam;
+			int amt = dS / 2 + 1;
+			float frac = amt / (float) te.steam;
 			steam += amt;
 			te.steam -= amt;
 			fluid = te.fluid;
@@ -181,25 +170,6 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 		fluid.saveToNBT(NBT);
 	}
 
-	@Override
-	public void loadAdditional(/*PORT*/CompoundTag NBT) {
-		super.loadAdditional(/*PORT*/NBT);
-
-		source.readFromTag(NBT.getCompoundTag("sources"), (NBTIO<ReactorType>)ReikaNBTHelper.getEnumConverter(ReactorType.class));
-		if (source.removeValue(null) > 0) {
-			ReactorCraft.LOGGER.logError(this+" loaded null-containing steam type map from NBT: "+NBT);
-		}
-	}
-
-	@Override
-	public void saveAdditional(/*PORT*/CompoundTag NBT) {
-		super.saveAdditional(/*PORT*/NBT);
-
-		CompoundTag tag = new CompoundTag();
-		source.writeToTag(tag, (NBTIO<ReactorType>)ReikaNBTHelper.getEnumConverter(ReactorType.class));
-		NBT.setTag("sources", tag);
-	}
-
 	public WorkingFluid getWorkingFluid() {
 		return fluid;
 	}
@@ -207,7 +177,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	@Override
 	public boolean canTransferTo(PumpablePipe p, Direction dir) {
 		if (p instanceof TileEntitySteamLine) {
-			WorkingFluid f = ((TileEntitySteamLine)p).fluid;
+			WorkingFluid f = ((TileEntitySteamLine) p).fluid;
 			return f != WorkingFluid.EMPTY ? f == fluid : true;
 		}
 		return false;
@@ -220,18 +190,18 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 
 	@Override
 	public void transferFrom(PumpablePipe from, int amt) {
-		float frac = (float)amt/((TileEntitySteamLine)from).steam;
-		((TileEntitySteamLine)from).steam -= amt;
-		fluid = ((TileEntitySteamLine)from).fluid;
+		float frac = (float) amt / ((TileEntitySteamLine) from).steam;
+		((TileEntitySteamLine) from).steam -= amt;
+		fluid = ((TileEntitySteamLine) from).fluid;
 		steam += amt;
-		this.addSources((TileEntitySteamLine)from, frac);
+		this.addSources((TileEntitySteamLine) from, frac);
 	}
 
 	private void addSources(TileEntitySteamLine from, float frac) {
 		for (ReactorType r : new ArrayList<ReactorType>(from.source.getElements())) {
 			if (r == null)
 				continue;
-			double val = from.source.getValue(r)*frac;
+			double val = from.source.getValue(r) * frac;
 			if (Double.isNaN(val) || Double.isInfinite(val))
 				continue;
 			source.addValue(r, val);
@@ -244,8 +214,8 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	}
 
 	@Override
-	public IIcon getTexture() {
-		return Blocks.wool.getIcon(0, this.isInWorld() ? 15 : 7);
+	public Identifier getTexture() {
+		return Identifier.fromNamespaceAndPath("reactorcraft", "block/steam_line");
 	}
 
 	@Override

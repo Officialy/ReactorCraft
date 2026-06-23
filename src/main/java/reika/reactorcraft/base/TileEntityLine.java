@@ -12,7 +12,7 @@ package reika.reactorcraft.base;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -137,7 +137,7 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 		return 4*super.getPacketDelay();
 	}
 
-	public abstract ResourceLocation getTexture();
+	public abstract Identifier getTexture();
 
 	public void onEntityCollided(Entity e) {
 
