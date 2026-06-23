@@ -8,49 +8,39 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission.thorium;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidRegistry;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.minecraft.world.level.material.FluidTankInfo;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.DragonAPI;
-import reika.dragonapi.ModList;
-import reika.dragonapi.asm.apistripper.Strippable;
-import reika.dragonapi.asm.dependentmethodstripper.ModDependent;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.interfaces.blockentity.InertIInv;
-import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
-import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.TemperaturedReactorTyped;
 import reika.reactorcraft.base.TileEntityNuclearCore;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.entities.EntityNeutron.NeutronType;
 import reika.reactorcraft.registry.ReactorAchievements;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.registry.ReactorType;
 import reika.reactorcraft.tileentities.fission.TileEntityWaterCell.LiquidStates;
 import reika.reactorcraft.tileentities.waste.TileEntityWastePipe;
 import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
-import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
+import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
-
-import buildcraft.api.transport.IPipeConnection;
-import buildcraft.api.transport.IPipeTile.PipeType;
 
 //Liquid Fueled
 //Secondary Loop
@@ -58,12 +48,11 @@ import buildcraft.api.transport.IPipeTile.PipeType;
 //Cannot overheat (negative void coefficient)
 //If gets over some temp, dumps fuel on ground
 //Liquid waste
-// @Strippable /*PORT*/(value={"buildcraft.api.transport.IPipeConnection"})
-public class TileEntityThoriumCore extends TileEntityNuclearCore implements InertIInv, IFluidHandler, PipeConnector, IPipeConnection {
+public class TileEntityThoriumCore extends TileEntityNuclearCore implements InertIInv, IFluidHandler, PipeConnector {
+
 	public TileEntityThoriumCore(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.THORIUM.get(), pos, state);
 	}
-
 
 	private static final int CYCLE_AMOUNT = 100;
 	public static final int FUEL_DUMP_TEMPERATURE = 1100;
@@ -74,20 +63,20 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 
 	private StepTimer timer2 = new StepTimer(5);
 
+	private boolean isFuel(Fluid f) {
+		return f == ReactorFluids.LIFBE_FUEL.get() || f == ReactorFluids.LIFBE_FUEL_PREHEAT.get();
+	}
+
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
 		super.updateEntity(world, pos);
 
-		//ReikaJavaLibrary.pConsole(temperature+":"+this, temperature > 700);
-
 		if (DragonAPI.debugtest) {
 			ReikaInventoryHelper.clearInventory(this);
-			fuelTank.addLiquid(100, ReactorCraft.LIFBe_fuel);
+			fuelTank.addLiquid(100, ReactorFluids.LIFBE_FUEL.get());
 			if (fuelTankOut.getFluidLevel() >= fuelTankOut.getCapacity()/2)
 				fuelTankOut.empty();
 			wasteTank.empty();
-
-			//temperature = 400;
 		}
 
 		if (!world.isClientSide()) {
@@ -96,22 +85,10 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 			if (timer2.checkCap()) {
 				for (int i = 2; i < 6; i++) {
 					Direction dir = dirs[i];
-					int dx = x+dir.offsetX;
-					int dy = y+dir.offsetY;
-					int dz = z+dir.offsetZ;
-					ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
-					/*
-				if (r == ReactorTiles.SODIUMBOILER) {
-					TileEntitySodiumHeater te = (TileEntitySodiumHeater)world.getBlockEntity(dx, dy, dz);
-					int dTemp = temperature-te.getTemperature();
-					if (dTemp > 0) {
-						temperature -= dTemp/16;
-						te.setTemperature(te.getTemperature()+dTemp/16);
-					}
-				}
-					 */
+					BlockPos p = pos.relative(dir);
+					ReactorTiles r = ReactorTiles.getTE(world, p);
 					if (r == this.getTile()) {
-						this.balanceLiquidsWith((TileEntityThoriumCore)this.getAdjacentTileEntity(dir));
+						this.balanceLiquidsWith((TileEntityThoriumCore)this.getAdjacentBlockEntity(dir));
 					}
 				}
 			}
@@ -122,8 +99,8 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	}
 
 	@Override
-	protected int getRestingTemperature(Level world, int x, int y, int z) {
-		return fuelTank.getActualFluid() == ReactorCraft.LIFBe_fuel_preheat ? 250 : super.getRestingTemperature(world, x, y, z);
+	protected int getRestingTemperature(Level world, BlockPos pos) {
+		return fuelTank.getActualFluid().getFluid() == ReactorFluids.LIFBE_FUEL_PREHEAT.get() ? 250 : super.getRestingTemperature(world, pos);
 	}
 
 	private void balanceLiquidsWith(TileEntityThoriumCore te) {
@@ -133,13 +110,13 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	}
 
 	private void balanceTanks(HybridTank from, HybridTank to) {
-		if (to.getActualFluid() != null && to.getActualFluid() != from.getActualFluid())
+		if (!to.getActualFluid().isEmpty() && to.getActualFluid().getFluid() != from.getActualFluid().getFluid())
 			return;
-		int dl = from.getLevel()-to.getLevel();
+		int dl = from.getFluidLevel()-to.getFluidLevel();
 		if (dl > 1) {
-			int amt = Math.min(from.getLevel()/4, Math.max(1, dl/8+1));
+			int amt = Math.min(from.getFluidLevel()/4, Math.max(1, dl/8+1));
 			if (amt > 0) {
-				to.addLiquid(amt, from.getActualFluid());
+				to.addLiquid(amt, from.getActualFluid().getFluid());
 				from.removeLiquid(amt);
 			}
 		}
@@ -156,16 +133,14 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	}
 
 	@Override
-	protected int getAmbientHeatLossFactor(Level world, int x, int y, int z, int base, int Tamb) {
+	protected int getAmbientHeatLossFactor(Level world, BlockPos pos, int base, int Tamb) {
 		return Tamb < temperature ? base*4 : base/2;
 	}
 
 	@Override
 	protected float getHeatConductionThroughput(TemperaturedReactorTyped other) {
-		//if (this.getRestingTemperature(level, xCoord, yCoord, zCoord) > 100) {
 		if (other.getReactorType() != ReactorType.THORIUM)
 			return 0.25F;
-		//}
 		return super.getHeatConductionThroughput(other);
 	}
 
@@ -180,7 +155,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 
 	@Override
 	protected float getHeatConductionEfficiency(TemperaturedReactorTyped other) {
-		boolean rest = temperature-this.getRestingTemperature(level, xCoord, yCoord, zCoord) < 50;
+		boolean rest = temperature-this.getRestingTemperature(level, this.getBlockPos()) < 50;
 		switch(other.getTile()) {
 			case BOILER:
 				return rest ? 0.125F : 0.75F;
@@ -192,11 +167,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	}
 
 	private void feedFluid() {
-		Level world = level;
-		int x = xCoord;
-		int y = yCoord;
-		int z = zCoord;
-		BlockEntity tile = this.getAdjacentTileEntity(Direction.DOWN);
+		BlockEntity tile = this.getAdjacentBlockEntity(Direction.DOWN);
 		if (tile instanceof TileEntityThoriumCore) {
 			int amt = ((TileEntityThoriumCore)tile).feedFluidIn(fuelTank.getFluid(), 0);
 			if (amt > 0) {
@@ -216,9 +187,9 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	}
 
 	private int feedFluidIn(FluidStack is, int tankType) {
-		if (is == null)
+		if (is.isEmpty())
 			return 0;
-		HybridTank tank = ItemStack.EMPTY;
+		HybridTank tank = null;
 		switch(tankType) {
 			case 0:
 				tank = fuelTank;
@@ -233,23 +204,16 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 		if (tank == null)
 			return 0;
 		Fluid f = is.getFluid();
-		if (tank.getActualFluid() != null && tank.getActualFluid() != f)
+		if (!tank.getActualFluid().isEmpty() && tank.getActualFluid().getFluid() != f)
 			return 0;
 		else {
-			int add = Math.min(tank.getRemainingSpace(), is.amount);
+			int add = Math.min(tank.getRemainingSpace(), is.getAmount());
 			tank.addLiquid(add, f);
 			return add;
 		}
 	}
 
 	int dumpFuel(TileEntityFuelDump te, int max) {
-		/*
-		int n = Mth.ceiling_double_int(fuelTank.getFluidLevel()/1000D);
-		for (int i = 0; i < n; i++) {
-			world.setBlock(x, y-1-i, z, ReactorBlocks.THORIUM.getBlockInstance());
-		}
-		fuelTank.empty();
-		 */
 		int amt = Math.min(max, fuelTank.getFluidLevel());
 		if (amt > 0) {
 			fuelTank.removeLiquid(amt);
@@ -270,7 +234,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 
 	@Override
 	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
-		super.onNeutron(e, world, x, y, z);
+		super.onNeutron(e, world, pos);
 		if (!world.isClientSide()) {
 			if (e.getType().canTriggerFission() && ReikaRandomHelper.doWithChance(e.getNeutronSpeed().getInteractionMultiplier()) && e.getType() != NeutronType.BREEDER && ReikaRandomHelper.doWithChance(this.getNeutronInteractionChance())) {
 				if (this.checkPoisonedChance())
@@ -279,7 +243,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 					fuelTank.removeLiquid(CYCLE_AMOUNT);
 					fuelTankOut.addLiquid(CYCLE_AMOUNT, ReactorFluids.getLegacyFluid("rc hot lifbe"));
 					temperature += 50;
-					this.spawnNeutronBurst(world, x, y, z);
+					this.spawnNeutronBurst(world, pos);
 
 					if (ReikaRandomHelper.doWithChance(5)) {
 						this.addWaste();
@@ -345,50 +309,51 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 
 	}
 
+	// --- NeoForge IFluidHandler (0=fuel in, 1=fuel out, 2=waste) ---
 	@Override
-	public int fill(Direction from, FluidStack resource, boolean doFill) {
-		return this.canFill(from, resource.getFluid()) ? fuelTank.fill(resource, doFill) : 0;
+	public int getTanks() {
+		return 3;
 	}
 
 	@Override
-	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
-		if (this.canDrain(from, resource.getFluid())) {
-			return from.offsetY == 0 ? this.isWastePipe(from) ? wasteTank.drain(resource.amount, doDrain) : null : fuelTankOut.drain(resource.amount, doDrain);
-		}
-		return null;
+	public FluidStack getFluidInTank(int t) {
+		return t == 0 ? fuelTank.getFluid() : t == 1 ? fuelTankOut.getFluid() : wasteTank.getFluid();
 	}
 
 	@Override
-	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
-		if (this.canDrain(from, null)) {
-			return from.offsetY == 0 ? this.isWastePipe(from) ? wasteTank.drain(maxDrain, doDrain) : null : fuelTankOut.drain(maxDrain, doDrain);
-		}
-		return null;
+	public int getTankCapacity(int t) {
+		return t == 2 ? 1000 : 4000;
+	}
+
+	@Override
+	public boolean isFluidValid(int t, FluidStack stack) {
+		return t == 0 && this.isFuel(stack.getFluid());
+	}
+
+	@Override
+	public int fill(FluidStack resource, FluidAction action) {
+		if (resource.isEmpty() || !this.isFuel(resource.getFluid()))
+			return 0;
+		return fuelTank.fill(resource, action);
+	}
+
+	@Override
+	public FluidStack drain(FluidStack resource, FluidAction action) {
+		if (resource.isEmpty())
+			return FluidStack.EMPTY;
+		FluidStack out = fuelTankOut.getFluid();
+		if (!out.isEmpty() && FluidStack.isSameFluidSameComponents(resource, out))
+			return fuelTankOut.drain(resource.getAmount(), action);
+		return FluidStack.EMPTY;
+	}
+
+	@Override
+	public FluidStack drain(int maxDrain, FluidAction action) {
+		return fuelTankOut.drain(maxDrain, action);
 	}
 
 	private boolean isWastePipe(Direction from) {
-		return this.getAdjacentTileEntity(from) instanceof TileEntityWastePipe;
-	}
-
-	@Override
-	public boolean canFill(Direction from, Fluid fluid) {
-		return from == Direction.UP && (fluid == ReactorCraft.LIFBe_fuel || fluid == ReactorCraft.LIFBe_fuel_preheat);
-	}
-
-	@Override
-	public boolean canDrain(Direction from, Fluid fluid) {
-		return from != Direction.UP && (ReikaFluidHelper.isFluidDrainableFromTank(fluid, wasteTank) || ReikaFluidHelper.isFluidDrainableFromTank(fluid, fuelTankOut));
-	}
-
-	@Override
-	public FluidTankInfo[] getTankInfo(Direction from) {
-		return new FluidTankInfo[]{fuelTank.getInfo(), fuelTankOut.getInfo(), wasteTank.getInfo()};
-	}
-
-	@Override
-	@ModDependent(ModList.BCTRANSPORT)
-	public ConnectOverride overridePipeConnection(PipeType type, Direction with) {
-		return type == PipeType.FLUID ? ConnectOverride.CONNECT : ConnectOverride.DISCONNECT;
+		return this.getAdjacentBlockEntity(from) instanceof TileEntityWastePipe;
 	}
 
 	@Override
@@ -399,6 +364,20 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	@Override
 	public boolean canConnectToPipeOnSide(MachineRegistry m, Direction side) {
 		return side == Direction.UP ? m == MachineRegistry.FUELLINE : m.isStandardPipe();
+	}
+
+	@Override
+	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
+		return from == Direction.UP && !resource.isEmpty() && this.isFuel(resource.getFluid()) ? fuelTank.fill(resource, action) : 0;
+	}
+
+	@Override
+	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction action) {
+		if (from == Direction.UP)
+			return FluidStack.EMPTY;
+		if (this.isWastePipe(from))
+			return wasteTank.drain(maxDrain, action);
+		return fuelTankOut.drain(maxDrain, action);
 	}
 
 	@Override
