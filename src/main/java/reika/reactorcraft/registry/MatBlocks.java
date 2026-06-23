@@ -9,17 +9,17 @@
  ******************************************************************************/
 package reika.reactorcraft.registry;
 
+import java.util.Locale;
+
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.util.IIcon;
-import net.minecraft.client.resources.language.I18n;
-import net.minecraft.world.level.Level;
 
-import reika.dragonapi.exception.RegistrationException;
-import reika.dragonapi.instantiable.data.immutable.BlockKey;
-import reika.reactorcraft.ReactorCraft;
-
-public enum MatBlocks {
+/**
+ * The variants of the reactor "material" block ({@code ReactorBlocks.MATS} / BlockReactorMat).
+ * Modelled as an {@code EnumProperty<MatBlocks>} on the block; none of them carry a block entity.
+ */
+public enum MatBlocks implements StringRepresentable {
 
 	CONCRETE("block.concrete"),
 	SLAG("block.slag"),
@@ -28,59 +28,35 @@ public enum MatBlocks {
 	LODESTONE("block.lodestone"),
 	GRAPHITE("block.graphite");
 
-	private String name;
-	public final Class tileClass;
+	private final String translationKey;
 
 	public static final MatBlocks[] matList = values();
 
 	private MatBlocks(String n) {
-		this(n, null);
-	}
-
-	private MatBlocks(String n, Class<? extends TileEntity> c) {
-		name = n;
-		tileClass = c;
+		translationKey = n;
 	}
 
 	public String getName() {
-		return I18n.get(name);
+		return Component.translatable(translationKey).getString();
 	}
 
 	public boolean isMultiSidedTexture() {
-		if (this == SCRUBBER)
-			return true;
-		return false;
+		return this == SCRUBBER;
 	}
 
 	public ItemStack getStackOf() {
-		return new ItemStack(ReactorBlocks.MATS.getBlockInstance(), 1, this.ordinal());
+		return this.getStackOf(1);
 	}
 
 	public ItemStack getStackOf(int size) {
-		return new ItemStack(ReactorBlocks.MATS.getBlockInstance(), size, this.ordinal());
+		// VARIANT-ITEM-PORT: the 6 mats currently share one block-item; the variant is set on the
+		// placed blockstate. Split into per-variant items / data components when the item layer lands.
+		return new ItemStack(ReactorBlocks.MATS.get(), size);
 	}
 
-	public BlockKey getBlock() {
-		return new BlockKey(ReactorBlocks.MATS.getBlockInstance(), this.ordinal());
-	}
-
-	public IIcon getIcon() {
-		return ReactorBlocks.MATS.getBlockInstance().getIcon(0, this.ordinal());
-	}
-
-	public TileEntity createTile(World world) {
-		if (tileClass == null)
-			return null;
-		try {
-			return (TileEntity)tileClass.newInstance();
-		}
-		catch (Exception e) {
-			throw new RegistrationException(ReactorCraft.getInstance(), "Could not create TileEntity for MatBlock "+this+"!", e);
-		}
-	}
-
-	public boolean hasTile() {
-		return tileClass != ItemStack.EMPTY;
+	@Override
+	public String getSerializedName() {
+		return this.name().toLowerCase(Locale.ROOT);
 	}
 
 }

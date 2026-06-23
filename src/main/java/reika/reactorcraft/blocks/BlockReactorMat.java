@@ -9,22 +9,29 @@
  ******************************************************************************/
 package reika.reactorcraft.blocks;
 
-import java.util.Locale;
-import java.util.Random;
+import javax.annotation.Nullable;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.IIcon;
-import net.minecraft.util.Mth;
-import net.minecraft.world.BlockGetter;
-import net.minecraft.world.level.Level;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.redstone.Orientation;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.transfer.energy.EnergyHandler;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
-import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.NeutronBlock;
 import reika.reactorcraft.auxiliary.RadiationEffects;
 import reika.reactorcraft.auxiliary.RadiationEffects.RadiationIntensity;
@@ -32,128 +39,74 @@ import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.registry.MatBlocks;
 import reika.reactorcraft.registry.ReactorOptions;
 
-import cofh.api.energy.IEnergyReceiver;
-
 public class BlockReactorMat extends Block implements NeutronBlock {
 
-	private IIcon[][] icons = new IIcon[16][6];
+	public static final EnumProperty<MatBlocks> VARIANT = EnumProperty.create("variant", MatBlocks.class);
 
-	public BlockReactorMat(Material mat) {
-		super(mat);
-		this.setHardness(1.5F);
-		this.setResistance(10F);
-		this.setCreativeTab(ReactorCraft.getInstance().isLocked() ? null : ReactorCraft.tabRctr);
-		this.setTickRandomly(true);
+	public BlockReactorMat(BlockBehaviour.Properties properties) {
+		super(properties);
+		this.registerDefaultState(this.stateDefinition.any().setValue(VARIANT, MatBlocks.CONCRETE));
 	}
 
 	@Override
-	public void updateTick(World world, int x, int y, int z, Random rand) {
-		int m = world.getBlockMetadata(x, y, z);
-		if (m == MatBlocks.SLAG.ordinal()) {
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+		builder.add(VARIANT);
+	}
+
+	@Override
+	protected void randomTick(BlockState state, ServerLevel world, BlockPos pos, RandomSource rand) {
+		MatBlocks m = state.getValue(VARIANT);
+		if (m == MatBlocks.SLAG) {
 			if (ReikaRandomHelper.doWithChance(7.5)) {
-				RadiationEffects.instance.contaminateArea(world, x, y, z, 4, 0.5F, 0.05, false, RadiationIntensity.HIGHLEVEL);
+				RadiationEffects.instance.contaminateArea(world, pos.getX(), pos.getY(), pos.getZ(), 4, 0.5F, 0.05, false, RadiationIntensity.HIGHLEVEL);
 			}
 		}
-		else if (m == MatBlocks.LODESTONE.ordinal()) {
-			this.doLodestoneTick(world, x, y, z, rand, false);
-		}
-	}
-
-	@Override
-	public void onNeighborBlockChange(World world, int x, int y, int z, Block b) {
-		if (world.getBlockMetadata(x, y, z) == MatBlocks.LODESTONE.ordinal())
-			this.doLodestoneTick(world, x, y, z, world.rand, true);
-	}
-
-	private void doLodestoneTick(World world, int x, int y, int z, Random rand, boolean forced) {
-		if (world.isBlockIndirectlyGettingPowered(x, y, z)) {
-			TileEntity te = world.getBlockEntity(x, y+1, z);
-			if (te instanceof IEnergyReceiver) {
-				IEnergyReceiver ier = (IEnergyReceiver)te;
-				int amt = Mth.ceiling_float_int(ReactorOptions.LODESTONERFMULT.getFloat()*(!forced ? 2 : 1));
-				ier.receiveEnergy(Direction.DOWN, amt, false);
-			}
+		else if (m == MatBlocks.LODESTONE) {
+			this.doLodestoneTick(world, pos, false);
 		}
 	}
 
 	@Override
-	public TileEntity createTileEntity(World world, int meta) {
-		return MatBlocks.matList[meta].createTile(world);
+	protected void neighborChanged(BlockState state, Level world, BlockPos pos, Block block, @Nullable Orientation orientation, boolean movedByPiston) {
+		if (state.getValue(VARIANT) == MatBlocks.LODESTONE)
+			this.doLodestoneTick(world, pos, true);
 	}
 
-	@Override
-	public boolean hasTileEntity(int meta) {
-		return MatBlocks.matList[meta].hasTile();
-	}
-
-	@Override
-	public void registerBlockIcons(IIconRegister ico) {
-		for (int i = 0; i < MatBlocks.matList.length; i++) {
-			if (MatBlocks.matList[i].isMultiSidedTexture()){
-				for (int j = 0; j < 6; j++) {
-					icons[i][j] = ico.registerIcon("ReactorCraft:mat/"+MatBlocks.matList[i].name().toLowerCase(Locale.ENGLISH)+"_"+j);
-				}
-			}
-			else {
-				for (int j = 0; j < 6; j++) {
-					icons[i][j] = ico.registerIcon("ReactorCraft:mat/"+MatBlocks.matList[i].name().toLowerCase(Locale.ENGLISH));
+	private void doLodestoneTick(Level world, BlockPos pos, boolean forced) {
+		if (world.hasNeighborSignal(pos)) {
+			// CoFH IEnergyReceiver gone — push to the block above via the NeoForge transfer-API energy cap.
+			EnergyHandler eh = world.getCapability(Capabilities.Energy.BLOCK, pos.above(), Direction.DOWN);
+			if (eh != null) {
+				int amt = Mth.ceil(ReactorOptions.LODESTONERFMULT.getFloat() * (!forced ? 2 : 1));
+				try (Transaction tx = Transaction.openRoot()) {
+					eh.insert(amt, tx);
+					tx.commit();
 				}
 			}
 		}
 	}
 
 	@Override
-	public AxisAlignedBB getCollisionBoundingBoxFromPool(World world, int x, int y, int z) {
-		if (world.getBlock(x, y, z) != this) //because MC is retarded
-			return super.getCollisionBoundingBoxFromPool(world, x, y, z);
-		MatBlocks m = MatBlocks.matList[world.getBlockMetadata(x, y, z)];
-		if (m == MatBlocks.SCRUBBER)
-			return null;
-		return super.getCollisionBoundingBoxFromPool(world, x, y, z);
-	}
-
-	@Override
-	public boolean isOpaqueCube() {
-		return false;
-	}
-
-	@Override
-	public int getLightOpacity(BlockGetter world, int x, int y, int z) {
-		MatBlocks m = MatBlocks.matList[world.getBlockMetadata(x, y, z)];
-		if (m == MatBlocks.SCRUBBER)
-			return 0;
-		return 255;
-	}
-
-	@Override
-	public IIcon getIcon(int s, int meta) {
-		return icons[meta][s];
-	}
-
-	@Override
-	public int damageDropped(int meta) {
-		return meta;
-	}
-
-	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
-		if (world.getBlockMetadata(x, y, z) == MatBlocks.GRAPHITE.ordinal())
+	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
+		if (world.getBlockState(pos).getValue(VARIANT) == MatBlocks.GRAPHITE)
 			e.moderate();
 		return false;
 	}
 
 	@Override
-	public int getFlammability(BlockGetter world, int x, int y, int z, Direction face) {
-		if (world.getBlockMetadata(x, y, z) == MatBlocks.GRAPHITE.ordinal())
-			return 70;
-		return 0;
+	public int getFlammability(BlockState state, BlockGetter world, BlockPos pos, Direction face) {
+		return state.getValue(VARIANT) == MatBlocks.GRAPHITE ? 70 : 0;
 	}
 
 	@Override
-	public int getFireSpreadSpeed(BlockGetter world, int x, int y, int z, Direction face) {
-		if (world.getBlockMetadata(x, y, z) == MatBlocks.GRAPHITE.ordinal())
-			return 7;
-		return 0;
+	public int getFireSpreadSpeed(BlockState state, BlockGetter world, BlockPos pos, Direction face) {
+		return state.getValue(VARIANT) == MatBlocks.GRAPHITE ? 7 : 0;
+	}
+
+	@Override
+	protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+		// The scrubber is a permeable mesh — no collision (steam passes up through it).
+		return state.getValue(VARIANT) == MatBlocks.SCRUBBER ? Shapes.empty() : Shapes.block();
 	}
 
 }

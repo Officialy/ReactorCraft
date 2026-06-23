@@ -38,6 +38,7 @@ import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.blocks.multi.BlockGeneratorMulti;
 import reika.reactorcraft.blocks.multi.BlockGeneratorMulti.GeneratorPart;
+import reika.reactorcraft.registry.MatBlocks;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.powergen.TileEntityTurbineCore;
@@ -111,9 +112,8 @@ public class BlockSteam extends Block {
 		BlockPos above = pos.above();
 		BlockState aboveState = world.getBlockState(above);
 
-		// BLOCK-PORT: scrub when the mat block above is the SCRUBBER variant (read its blockstate once
-		// BlockReactorMat is ported); for now any MATS block above scrubs the steam.
-		if (aboveState.getBlock() == ReactorBlocks.MATS.get()) {
+		// A scrubber block directly above absorbs the steam.
+		if (aboveState.getBlock() == ReactorBlocks.MATS.get() && aboveState.getValue(BlockReactorMat.VARIANT) == MatBlocks.SCRUBBER) {
 			world.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
 			return;
 		}
