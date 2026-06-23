@@ -8,43 +8,41 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntityFurnace;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidRegistry;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.minecraft.world.level.material.FluidTankInfo;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.auxiliary.trackers.ItemMaterialController;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.ItemMaterial;
-import reika.dragonapi.libraries.ReikaAABBHelper;
-import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.reactorcraft.base.TileEntityReactorBase;
+import reika.reactorcraft.blocks.BlockReactorMachine;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.api.interfaces.RefrigeratorAttachment;
 import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
-import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
+import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
+import reika.rotarycraft.blockentities.production.BlockEntityRefrigerator;
 import reika.rotarycraft.registry.MachineRegistry;
-import reika.rotarycraft.tileentities.production.TileEntityRefrigerator;
 
 public class TileEntityGasCollector extends TileEntityReactorBase implements IFluidHandler, PipeConnector, RefrigeratorAttachment {
+
 	public TileEntityGasCollector(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.COLLECTOR.get(), pos, state);
 	}
-
 
 	private final HybridTank tank = new HybridTank("co2collector", 1000);
 
@@ -57,22 +55,25 @@ public class TileEntityGasCollector extends TileEntityReactorBase implements IFl
 		if (ticks > 0)
 			ticks -= 8;
 
-		readDir = dirs[meta].getOpposite();
-		Block id = this.getAdjacentLocation(readDir).getBlock(world);
-		if (id == Blocks.lit_furnace) {
-			TileEntityFurnace te = (TileEntityFurnace)this.getAdjacentTileEntity(readDir);
-			ItemStack fuel = te.getStackInSlot(1);
-			if (fuel != null && te.isBurning() && te.currentItemBurnTime > 0) {
-				ItemMaterial mat = ItemMaterialController.instance.getMaterial(fuel);
-				if (mat == ItemMaterial.COAL || mat == ItemMaterial.WOOD)
-					tank.addLiquid(10, ReactorFluids.getLegacyFluid("rc co2"));
+		readDir = this.getBlockState().getValue(BlockReactorMachine.FACING).getOpposite();
+		BlockPos tgt = pos.relative(readDir);
+		BlockState bs = world.getBlockState(tgt);
+		if (bs.is(Blocks.FURNACE) && bs.getValue(BlockStateProperties.LIT)) {
+			BlockEntity be = world.getBlockEntity(tgt);
+			if (be instanceof AbstractFurnaceBlockEntity furnace) {
+				ItemStack fuel = furnace.getItem(1);
+				if (!fuel.isEmpty()) {
+					ItemMaterial mat = ItemMaterialController.instance.getMaterial(fuel);
+					if (mat == ItemMaterial.COAL || mat == ItemMaterial.WOOD)
+						tank.addLiquid(10, ReactorFluids.getLegacyFluid("rc co2"));
+				}
 			}
 		}
-		else if (id == MachineRegistry.REFRIGERATOR.getBlock() && this.getAdjacentLocation(readDir).getBlockMetadata(world) == MachineRegistry.REFRIGERATOR) {
-			TileEntityRefrigerator te = (TileEntityRefrigerator)this.getAdjacentTileEntity(readDir);
-			te.addAttachment(this, readDir.getOpposite());
+		else if (MachineRegistry.getMachine(world, tgt) == MachineRegistry.REFRIGERATOR) {
+			BlockEntity be = world.getBlockEntity(tgt);
+			if (be instanceof BlockEntityRefrigerator fridge)
+				fridge.addAttachment(this, readDir.getOpposite());
 		}
-		//ReikaJavaLibrary.pConsole(id+":"+tank, Dist.DEDICATED_SERVER);
 	}
 
 	public Direction getReadDirection() {
@@ -80,38 +81,50 @@ public class TileEntityGasCollector extends TileEntityReactorBase implements IFl
 	}
 
 	public boolean hasFurnace() {
-		Block id = this.getAdjacentLocation(readDir).getBlock(level);
-		return id == Blocks.furnace || id == Blocks.lit_furnace || id == MachineRegistry.REFRIGERATOR.getBlock() && this.getAdjacentLocation(readDir).getBlockMetadata(level) == MachineRegistry.REFRIGERATOR;
+		BlockPos tgt = this.getBlockPos().relative(readDir);
+		BlockState bs = level.getBlockState(tgt);
+		return bs.is(Blocks.FURNACE) || MachineRegistry.getMachine(level, tgt) == MachineRegistry.REFRIGERATOR;
+	}
+
+	// --- NeoForge IFluidHandler (output-only: filled internally via addLiquid, drained out via pipe) ---
+	@Override
+	public int getTanks() {
+		return 1;
 	}
 
 	@Override
-	public int fill(Direction from, FluidStack resource, boolean doFill) {
-		return 0;
+	public FluidStack getFluidInTank(int tank) {
+		return this.tank.getFluid();
 	}
 
 	@Override
-	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
-		return this.canDrain(from, resource.getFluid()) ? tank.drain(resource.amount, doDrain) : null;
+	public int getTankCapacity(int tank) {
+		return this.tank.getCapacity();
 	}
 
 	@Override
-	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
-		return this.canDrain(from, null) ? tank.drain(maxDrain, doDrain) : null;
-	}
-
-	@Override
-	public boolean canFill(Direction from, Fluid fluid) {
+	public boolean isFluidValid(int tank, FluidStack stack) {
 		return false;
 	}
 
 	@Override
-	public boolean canDrain(Direction from, Fluid fluid) {
-		return from == readDir.getOpposite() && ReikaFluidHelper.isFluidDrainableFromTank(fluid, tank);
+	public int fill(FluidStack resource, FluidAction action) {
+		return 0;
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(Direction from) {
-		return new FluidTankInfo[]{tank.getInfo()};
+	public FluidStack drain(FluidStack resource, FluidAction action) {
+		if (resource.isEmpty())
+			return FluidStack.EMPTY;
+		FluidStack in = tank.getFluid();
+		if (in.isEmpty() || !FluidStack.isSameFluidSameComponents(resource, in))
+			return FluidStack.EMPTY;
+		return tank.drain(resource.getAmount(), action);
+	}
+
+	@Override
+	public FluidStack drain(int maxDrain, FluidAction action) {
+		return tank.drain(maxDrain, action);
 	}
 
 	@Override
@@ -138,16 +151,17 @@ public class TileEntityGasCollector extends TileEntityReactorBase implements IFl
 		tank.writeToNBT(NBT);
 	}
 
-	@Override
+	// 1.21.5: BlockEntity.getRenderBoundingBox was removed; kept as a helper for the renderer's bounds.
 	public AABB getRenderBoundingBox() {
-		return ReikaAABBHelper.getBlockAABB(this).expand(0.5, 0.5, 0.5);
+		return new AABB(this.getBlockPos()).inflate(0.5, 0.5, 0.5);
 	}
 
 	@Override
 	public void onCompleteCycle(int ln2) {
-		tank.addLiquid(ln2*2/7, ReactorFluids.getLegacyFluid("rc liquid oxygen"));
+		tank.addLiquid(ln2 * 2 / 7, ReactorFluids.getLegacyFluid("rc liquid oxygen"));
 	}
 
+	// --- RC pipe protocol ---
 	@Override
 	public boolean canConnectToPipe(MachineRegistry m) {
 		return m.isStandardPipe();
@@ -156,6 +170,16 @@ public class TileEntityGasCollector extends TileEntityReactorBase implements IFl
 	@Override
 	public boolean canConnectToPipeOnSide(MachineRegistry m, Direction side) {
 		return this.canConnectToPipe(m) && this.getFlowForSide(side) != Flow.NONE;
+	}
+
+	@Override
+	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
+		return 0;
+	}
+
+	@Override
+	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
+		return from == readDir.getOpposite() ? tank.drain(maxDrain, doDrain) : FluidStack.EMPTY;
 	}
 
 	@Override
