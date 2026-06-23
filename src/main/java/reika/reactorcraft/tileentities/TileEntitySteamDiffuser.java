@@ -8,31 +8,31 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidRegistry;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
-import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.reactorcraft.auxiliary.SteamTile;
 import reika.reactorcraft.base.TileEntityTankedReactorMachine;
+import reika.reactorcraft.blocks.BlockReactorMachine;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.powergen.TileEntitySteamLine;
-import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
+import reika.rotarycraft.base.blockentity.BlockEntityPiping;
 import reika.rotarycraft.registry.MachineRegistry;
 
 public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine implements SteamTile {
+
 	public TileEntitySteamDiffuser(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.DIFFUSER.get(), pos, state);
 	}
-
 
 	public static final int RATIO = calculateConversionRatio();
 
@@ -43,22 +43,11 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 		double nuReact = 0.01272;
 		double nuSATP = 1.696;
 		double efficiency = 0.6;
-		return (int)Math.ceil(nuSATP/nuReact*efficiency); //80
+		return (int) Math.ceil(nuSATP / nuReact * efficiency); //80
 	}
 
 	public Direction getFacing() {
-		switch(this) {
-			case 0:
-				return Direction.WEST;
-			case 1:
-				return Direction.EAST;
-			case 2:
-				return Direction.NORTH;
-			case 3:
-				return Direction.SOUTH;
-			default:
-				return Direction.UNKNOWN;
-		}
+		return this.getBlockState().getValue(BlockReactorMachine.FACING);
 	}
 
 	@Override
@@ -68,8 +57,7 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
-		this.getSteam(world, x, y, z);
-
+		this.getSteam(world, pos);
 		this.convertSteam();
 	}
 
@@ -77,30 +65,24 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 		if (steam > 0) {
 			Fluid f = ReactorFluids.getLegacyFluid("steam");
 			if (f != null) {
-				int amt = Math.min(1+steam/4, tank.getRemainingSpace()/RATIO);
-				tank.addLiquid(amt*RATIO*1000, f);
+				int amt = Math.min(1 + steam / 4, tank.getRemainingSpace() / RATIO);
+				tank.addLiquid(amt * RATIO * 1000, f);
 				steam -= amt;
 			}
 		}
 	}
 
-	private void getSteam(Level world, int x, int y, int z) {
-		//for (int i = 0; i < 6; i++) {
-		Direction dir = this.getFacing();//dirs[i];
-		int dx = x+dir.offsetX;
-		int dy = y+dir.offsetY;
-		int dz = z+dir.offsetZ;
-		ReactorTiles rt = ReactorTiles.getTE(world, dx, dy, dz);
-		if (rt == ReactorTiles.STEAMLINE) {
-			TileEntitySteamLine te = (TileEntitySteamLine)world.getBlockEntity(dx, dy, dz);
-			int ds = te.getSteam()-steam;
+	private void getSteam(Level world, BlockPos pos) {
+		BlockPos npos = pos.relative(this.getFacing());
+		if (ReactorTiles.getTE(world, npos) == ReactorTiles.STEAMLINE) {
+			TileEntitySteamLine te = (TileEntitySteamLine) world.getBlockEntity(npos);
+			int ds = te.getSteam() - steam;
 			if (ds > 0) {
-				int rm = ds/4+1;
-				steam += rm*te.getWorkingFluid().efficiency;
+				int rm = ds / 4 + 1;
+				steam += rm * te.getWorkingFluid().efficiency;
 				te.removeSteam(rm);
 			}
 		}
-		//}
 	}
 
 	@Override
@@ -109,34 +91,26 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 	}
 
 	@Override
-	protected void readSyncTag(CompoundTag NBT)
-	{
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
-
 		steam = NBT.getIntOr("energy", 0);
 	}
 
 	@Override
-	protected void writeSyncTag(CompoundTag NBT)
-	{
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
-
 		NBT.putInt("energy", steam);
 	}
 
+	// The condensed working fluid is drained out of the face opposite the steam intake.
 	@Override
-	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
-		return this.canDrain(from, resource.getFluid()) ? tank.drain(resource.amount, doDrain) : null;
+	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
+		return from == this.getFacing().getOpposite() ? tank.drain(maxDrain, doDrain) : FluidStack.EMPTY;
 	}
 
 	@Override
-	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
-		return this.canDrain(from, null) ? tank.drain(maxDrain, doDrain) : null;
-	}
-
-	@Override
-	public boolean canDrain(Direction from, Fluid fluid) {
-		return from == this.getFacing().getOpposite() && ReikaFluidHelper.isFluidDrainableFromTank(fluid, tank);
+	public BlockEntityPiping.Flow getFlowForSide(Direction side) {
+		return side == this.getFacing().getOpposite() ? BlockEntityPiping.Flow.OUTPUT : BlockEntityPiping.Flow.NONE;
 	}
 
 	@Override
@@ -162,11 +136,6 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 	@Override
 	public Fluid getInputFluid() {
 		return null;
-	}
-
-	@Override
-	public Flow getFlowForSide(Direction side) {
-		return side == this.getFacing().getOpposite() ? Flow.OUTPUT : Flow.NONE;
 	}
 
 	@Override
