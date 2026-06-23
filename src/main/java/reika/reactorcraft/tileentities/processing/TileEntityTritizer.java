@@ -8,42 +8,39 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.processing;
+
+import java.util.ArrayList;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.EnumHelper;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidRegistry;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.minecraft.world.level.material.FluidTankInfo;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.HybridTank;
-import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
-import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.ReactorCoreTE;
 import reika.reactorcraft.base.TileEntityReactorBase;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.entities.EntityNeutron.NeutronType;
 import reika.reactorcraft.registry.ReactorAchievements;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
-import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
+import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
 public class TileEntityTritizer extends TileEntityReactorBase implements ReactorCoreTE, PipeConnector, IFluidHandler {
+
 	public TileEntityTritizer(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.TRITIZER.get(), pos, state);
 	}
-
 
 	public static final int CAPACITY = 1000;
 
@@ -58,11 +55,10 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
 		if (DragonAPI.debugtest) {
-			input.addLiquid(100, ReactorCraft.H2);
+			input.addLiquid(100, ReactorFluids.DEUTERIUM.get());
 			if (output.getFluidLevel() > CAPACITY/2)
 				output.empty();
 		}
-		//this.onNeutron(null, world, x, y, z);
 
 		if (!world.isClientSide()) {
 			this.feed();
@@ -70,16 +66,12 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 
 		thermalTicker.update();
 		if (thermalTicker.checkCap()) {
-			this.updateTemperature(world, x, y, z);
+			this.updateTemperature(world, pos);
 		}
 	}
 
 	private void feed() {
-		Level world = level;
-		int x = xCoord;
-		int y = yCoord;
-		int z = zCoord;
-		BlockEntity tile = this.getAdjacentTileEntity(Direction.DOWN);
+		BlockEntity tile = this.getAdjacentBlockEntity(Direction.DOWN);
 		if (tile instanceof TileEntityTritizer) {
 			int amt = ((TileEntityTritizer)tile).feedIn(input.getFluid(), false);
 			if (amt > 0) {
@@ -94,16 +86,16 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	}
 
 	private int feedIn(FluidStack is, boolean out) {
-		if (is == null)
+		if (is.isEmpty())
 			return 0;
 		HybridTank tank = out ? output : input;
 		Fluid f = is.getFluid();
 		if (!out && Reactions.getReactionFrom(f) == null)
 			return 0;
-		else if (tank.getActualFluid() != null && tank.getActualFluid() != f)
+		else if (!tank.getActualFluid().isEmpty() && tank.getActualFluid().getFluid() != f)
 			return 0;
 		else {
-			int add = Math.min(tank.getRemainingSpace(), is.amount);
+			int add = Math.min(tank.getRemainingSpace(), is.getAmount());
 			tank.addLiquid(add, f);
 			return add;
 		}
@@ -136,7 +128,7 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 			return false;
 		NeutronType type = e.getType();
 		if (type.canIrradiateMaterials()) {
-			Reactions r = Reactions.getReactionFrom(input.getActualFluid());
+			Reactions r = Reactions.getReactionFrom(input.getActualFluid().getFluid());
 			if (!world.isClientSide() && this.canMake(r) && ReikaRandomHelper.doWithChance(r.chance)) {
 				this.make(r);
 				return true;
@@ -149,23 +141,27 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 		int amt = r.amount;
 		input.removeLiquid(amt);
 		output.addLiquid(amt, r.output);
+		r.onPerform(this);
 	}
 
 	private boolean canMake(Reactions r) {
+		if (r == null)
+			return false;
 		int amt = r.amount;
-		return input.getFluidLevel() >= amt && output.canTakeIn(amt) && input.getActualFluid().equals(r.input);
+		return input.getFluidLevel() >= amt && output.canTakeIn(amt) && input.getActualFluid().getFluid().equals(r.input);
 	}
 
-	public static enum Reactions {
-		TRITIUM("rc deuterium", "rc tritium", 75, 25),
-		D20("water", "rc heavy water", 25, 100);
+	public static final class Reactions {
+
+		public static final ArrayList<Reactions> reactionList = new ArrayList<>();
+
+		public static final Reactions TRITIUM = new Reactions("rc deuterium", "rc tritium", 75, 25);
+		public static final Reactions D20 = new Reactions("water", "rc heavy water", 25, 100);
 
 		public final Fluid input;
 		public final Fluid output;
 		public final int chance;
 		public final int amount;
-
-		private static Reactions[] reactionList = values();
 
 		private Reactions(String in, String out, int chance, int amt) {
 			this(ReactorFluids.getLegacyFluid(in), ReactorFluids.getLegacyFluid(out), chance, amt);
@@ -176,21 +172,17 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 			amount = amt;
 			input = in;
 			output = out;
+			reactionList.add(this);
 		}
 
 		private void onPerform(TileEntityTritizer te) {
-			switch(this) {
-				case D20:
-					ReactorAchievements.HEAVYWATER.triggerAchievement(te.getPlacer());
-					break;
-				default:
-					break;
+			if (this == D20) {
+				ReactorAchievements.HEAVYWATER.triggerAchievement(te.getPlacer());
 			}
 		}
 
 		public static Reactions getReactionFrom(Fluid in) {
-			for (int i = 0; i < reactionList.length; i++) {
-				Reactions r = reactionList[i];
+			for (Reactions r : reactionList) {
 				if (r.input.equals(in))
 					return r;
 			}
@@ -199,37 +191,50 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 	}
 
 	public static void addRecipe(String name, Fluid in, Fluid out, int chance, int amt) {
-		Class[] types = new Class[]{Fluid.class, Fluid.class, int.class, int.class};
-		Object[] args = new Object[]{in, out, chance, amt};
-		Reactions c = EnumHelper.addEnum(Reactions.class, name.toUpperCase(), types, args);
-		Reactions.reactionList = Reactions.values();
+		new Reactions(in, out, chance, amt);
+	}
+
+	// --- NeoForge IFluidHandler (tank 0 = input from top, tank 1 = output drained from bottom) ---
+	@Override
+	public int getTanks() {
+		return 2;
 	}
 
 	@Override
-	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
-		return this.canDrain(from, resource.getFluid()) ? output.drain(resource.amount, doDrain) : null;
+	public FluidStack getFluidInTank(int t) {
+		return t == 0 ? input.getFluid() : output.getFluid();
 	}
 
 	@Override
-	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
-		if (!this.canDrain(from, null))
-			return null;
-		return output.drain(maxDrain, doDrain);
+	public int getTankCapacity(int t) {
+		return CAPACITY;
 	}
 
 	@Override
-	public boolean canFill(Direction from, Fluid fluid) {
-		return from == Direction.UP && Reactions.getReactionFrom(fluid) != ItemStack.EMPTY;
+	public boolean isFluidValid(int t, FluidStack stack) {
+		return t == 0 && Reactions.getReactionFrom(stack.getFluid()) != null;
 	}
 
 	@Override
-	public boolean canDrain(Direction from, Fluid fluid) {
-		return from == Direction.DOWN && ReikaFluidHelper.isFluidDrainableFromTank(fluid, output);
+	public int fill(FluidStack resource, FluidAction action) {
+		if (resource.isEmpty() || Reactions.getReactionFrom(resource.getFluid()) == null)
+			return 0;
+		return input.fill(resource, action);
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(Direction from) {
-		return new FluidTankInfo[]{input.getInfo(), output.getInfo()};
+	public FluidStack drain(FluidStack resource, FluidAction action) {
+		if (resource.isEmpty())
+			return FluidStack.EMPTY;
+		FluidStack out = output.getFluid();
+		if (out.isEmpty() || !FluidStack.isSameFluidSameComponents(resource, out))
+			return FluidStack.EMPTY;
+		return output.drain(resource.getAmount(), action);
+	}
+
+	@Override
+	public FluidStack drain(int maxDrain, FluidAction action) {
+		return output.drain(maxDrain, action);
 	}
 
 	@Override
@@ -239,14 +244,17 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 
 	@Override
 	public boolean canConnectToPipeOnSide(MachineRegistry p, Direction side) {
-		return this.canConnectToPipe(p) && side.offsetY != 0;
+		return this.canConnectToPipe(p) && side.getStepY() != 0;
 	}
 
 	@Override
-	public int fill(Direction from, FluidStack resource, boolean doFill) {
-		if (!this.canFill(from, resource.getFluid()))
-			return 0;
-		return input.fill(resource, doFill);
+	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
+		return from == Direction.UP && !resource.isEmpty() && Reactions.getReactionFrom(resource.getFluid()) != null ? input.fill(resource, action) : 0;
+	}
+
+	@Override
+	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
+		return from == Direction.DOWN ? output.drain(maxDrain, doDrain) : FluidStack.EMPTY;
 	}
 
 	@Override
@@ -260,15 +268,11 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 
 	@Override
 	public final int getTextureState(Direction side) {
-		if (side.offsetY != 0)
+		if (side.getStepY() != 0)
 			return 4;
-		Level world = level;
-		int x = xCoord;
-		int y = yCoord;
-		int z = zCoord;
 		ReactorTiles src = this.getTile();
-		ReactorTiles r = ReactorTiles.getTE(world, x, y-1, z);
-		ReactorTiles r2 = ReactorTiles.getTE(world, x, y+1, z);
+		ReactorTiles r = ReactorTiles.getTE(level, this.getBlockPos().below());
+		ReactorTiles r2 = ReactorTiles.getTE(level, this.getBlockPos().above());
 		if (r2 == src && r == src)
 			return 2;
 		else if (r2 == src)
