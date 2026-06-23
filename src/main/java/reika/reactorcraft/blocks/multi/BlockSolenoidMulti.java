@@ -72,6 +72,16 @@ public class BlockSolenoidMulti extends BlockReCMultiBlock implements Transducer
 		return new BlockKey(this.defaultBlockState().setValue(PART, p));
 	}
 
+	/** Public entry point for a TE to (re)assemble the multiblock on load (onCreateFullMultiBlock is protected). */
+	public boolean tryAssemble(Level world, int x, int y, int z, BlockMatchFailCallback call) {
+		Boolean ret = this.checkForFullMultiBlock(world, x, y, z, null, call);
+		if (Boolean.TRUE.equals(ret)) {
+			this.onCreateFullMultiBlock(world, x, y, z, ret);
+			return true;
+		}
+		return false;
+	}
+
 	@Override
 	public Boolean checkForFullMultiBlock(Level world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
 		StructuredBlockArray blocks = new StructuredBlockArray(world);
