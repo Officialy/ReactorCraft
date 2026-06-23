@@ -8,30 +8,28 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.state.BlockState;
 
 import reika.dragonapi.DragonAPI;
-import reika.dragonapi.modinteract.AtmosphereHandler;
 import reika.reactorcraft.auxiliary.SteamTile;
 import reika.reactorcraft.base.TileEntityReactorBase;
 import reika.reactorcraft.blocks.BlockSteam;
+import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.registry.WorkingFluid;
 import reika.rotarycraft.api.interfaces.Screwdriverable;
 
 public class TileEntitySteamGrate extends TileEntityReactorBase implements Screwdriverable, SteamTile {
+
 	public TileEntitySteamGrate(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.GRATE.get(), pos, state);
 	}
-
 
 	private int steam;
 	private boolean requireRedstone;
@@ -45,11 +43,11 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
-		this.getSteam(world, x, y, z);
+		this.getSteam(world, pos);
 
-		if (!world.isClientSide() && this.canMakeSteam(world, x, y, z)) {
+		if (!world.isClientSide() && this.canMakeSteam(world, pos)) {
 			steam--;
-			world.setBlock(x, y+1, z, ReactorBlocks.STEAM.getBlockInstance(), this.getSteamMetadata(), 3);
+			world.setBlock(pos.above(), this.getSteamState(), 3);
 		}
 
 		if (steam <= 0) {
@@ -58,39 +56,23 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 
 		if (DragonAPI.debugtest)
 			steam = 3;
-		//fluid = WorkingFluid.AMMONIA;
-		//ReikaJavaLibrary.pConsole(steam, Dist.DEDICATED_SERVER);
 	}
 
-	private boolean canMakeSteam(Level world, int x, int y, int z) {
+	private boolean canMakeSteam(Level world, BlockPos pos) {
 		if (steam <= 0)
 			return false;
 		if (this.hasRedstoneSignal() != requireRedstone)
 			return false;
-		if (AtmosphereHandler.isNoAtmo(world, x, y+1, z, blockType, false))
-			return false;
-		return ((BlockSteam)ReactorBlocks.STEAM.getBlockInstance()).canMoveInto(world, x, y+1, z);
+		// DRAGONAPI-PORT: AtmosphereHandler.isNoAtmo (Galacticraft vacuum check) gone — assume atmosphere.
+		return ((BlockSteam) ReactorBlocks.STEAM.get()).canMoveInto(world, pos.above());
 	}
 
-	private Direction getFacing(int meta) {
-		switch(meta) {
-			case 0:
-				return Direction.EAST;
-			case 1:
-				return Direction.WEST;
-			case 2:
-				return Direction.SOUTH;
-			case 3:
-				return Direction.NORTH;
-			default:
-				return Direction.UNKNOWN;
-		}
-	}
-
-	private int getSteamMetadata() {
-		if (fluid == WorkingFluid.AMMONIA)
-			return 7;
-		return 3;
+	/** Freshly produced steam: no-decay + turbine-capable, ammonia flag from the working fluid. */
+	private BlockState getSteamState() {
+		return ReactorBlocks.STEAM.get().defaultBlockState()
+				.setValue(BlockSteam.NO_DECAY, true)
+				.setValue(BlockSteam.POWERED, true)
+				.setValue(BlockSteam.AMMONIA, fluid == WorkingFluid.AMMONIA);
 	}
 
 	private boolean canTakeInWorkingFluid(WorkingFluid f) {
@@ -98,25 +80,19 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 			return false;
 		if (fluid == WorkingFluid.EMPTY)
 			return true;
-		if (fluid == f)
-			return true;
-		return false;
+		return fluid == f;
 	}
 
-	private void getSteam(Level world, int x, int y, int z) {
-		for (int i = 0; i < 6; i++) {
-			Direction dir = dirs[i];
-			int dx = x+dir.offsetX;
-			int dy = y+dir.offsetY;
-			int dz = z+dir.offsetZ;
-			ReactorTiles rt = ReactorTiles.getTE(world, dx, dy, dz);
-			if (rt == ReactorTiles.STEAMLINE) {
-				TileEntitySteamLine te = (TileEntitySteamLine)world.getBlockEntity(dx, dy, dz);
+	private void getSteam(Level world, BlockPos pos) {
+		for (Direction dir : dirs) {
+			BlockPos npos = pos.relative(dir);
+			if (ReactorTiles.getTE(world, npos) == ReactorTiles.STEAMLINE) {
+				TileEntitySteamLine te = (TileEntitySteamLine) world.getBlockEntity(npos);
 				if (this.canTakeInWorkingFluid(te.getWorkingFluid())) {
 					fluid = te.getWorkingFluid();
-					int ds = te.getSteam()-steam;
+					int ds = te.getSteam() - steam;
 					if (ds > 0) {
-						int rm = ds/4+1;
+						int rm = ds / 4 + 1;
 						steam += rm;
 						te.removeSteam(rm);
 					}
@@ -131,8 +107,7 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 	}
 
 	@Override
-	protected void readSyncTag(CompoundTag NBT)
-	{
+	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
 		steam = NBT.getIntOr("energy", 0);
@@ -143,8 +118,7 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 	}
 
 	@Override
-	protected void writeSyncTag(CompoundTag NBT)
-	{
+	protected void writeSyncTag(CompoundTag NBT) {
 		super.writeSyncTag(NBT);
 
 		NBT.putInt("energy", steam);
@@ -155,12 +129,12 @@ public class TileEntitySteamGrate extends TileEntityReactorBase implements Screw
 	}
 
 	@Override
-	public boolean onShiftRightClick(Level world, int x, int y, int z, Direction side) {
+	public boolean onShiftRightClick(Level world, BlockPos pos, Direction side) {
 		return requireRedstone = !requireRedstone;
 	}
 
 	@Override
-	public boolean onRightClick(Level world, int x, int y, int z, Direction side) {
+	public boolean onRightClick(Level world, BlockPos pos, Direction side) {
 		return false;
 	}
 

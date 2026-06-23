@@ -82,7 +82,7 @@ public class BlockSteam extends Block {
 		return state.setValue(MOVED, true);
 	}
 
-	private boolean canMoveInto(Level world, BlockPos pos) {
+	public boolean canMoveInto(Level world, BlockPos pos) {
 		BlockState s = world.getBlockState(pos);
 		if (s.isAir())
 			return true;
