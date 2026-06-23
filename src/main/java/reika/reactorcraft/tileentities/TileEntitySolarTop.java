@@ -13,6 +13,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
@@ -23,9 +24,9 @@ import reika.dragonapi.libraries.io.ReikaSoundHelper;
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.base.TileEntityReactorBase;
 import reika.reactorcraft.registry.ReactorTiles;
-import reika.rotarycraft.auxiliary.interfaces.sodiumsolarupgrades.SodiumSolarReceiver;
+import reika.rotarycraft.auxiliary.interfaces.SodiumSolarUpgrades.SodiumSolarReceiver;
 import reika.rotarycraft.auxiliary.interfaces.TemperatureTE;
-import reika.rotarycraft.tileentities.production.TileEntitySolar;
+import reika.rotarycraft.blockentities.production.BlockEntitySolarTower;
 
 
 public class TileEntitySolarTop extends TileEntityReactorBase implements TemperatureTE, SodiumSolarReceiver {
@@ -40,7 +41,7 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 
 	@Override
 	public boolean isActive() {
-		return ReactorTiles.getTE(level, xCoord, yCoord+1, zCoord) == this.getTile() && this.getAdjacentTileEntity(Direction.DOWN) instanceof TileEntitySolar;
+		return ReactorTiles.getTE(level, this.getBlockPos().above()) == this.getTile() && this.getAdjacentBlockEntity(Direction.DOWN) instanceof BlockEntitySolarTower;
 	}
 
 	@Override
@@ -53,7 +54,7 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 		if (this.isActive()) {
 			//tempTimer.update();
 			if (!world.isClientSide() && this.getTicksExisted()%8 == 0) {
-				int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
+				int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, pos);
 				int dT = Tamb-temperature;
 				if (dT != 0) {
 					int d = 16;
@@ -75,11 +76,11 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 	public int getTemperature() {
 		if (this.isActive())
 			return temperature;
-		BlockEntity te = this.getAdjacentTileEntity(Direction.DOWN);
+		BlockEntity te = this.getAdjacentBlockEntity(Direction.DOWN);
 		if (te instanceof TileEntitySolarTop)
 			return ((TileEntitySolarTop)te).getTemperature();
 		else
-			return ReikaWorldHelper.getAmbientTemperatureAt(level, xCoord, yCoord, zCoord);
+			return ReikaWorldHelper.getAmbientTemperatureAt(level, this.getBlockPos());
 	}
 
 	@Override
@@ -93,7 +94,7 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 	}
 
 	@Override
-	public void updateTemperature(Level world, int x, int y, int z, int meta) {
+	public void updateTemperature(Level world, BlockPos pos) {
 
 	}
 
@@ -108,9 +109,9 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 	}
 
 	@Override
-	public void overheat(Level world, int x, int y, int z) {
-		ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.fizz");
-		world.setBlock(x, y, z, Blocks.lava);
+	public void overheat(Level world, BlockPos pos) {
+		ReikaSoundHelper.playSoundAtBlock(world, pos, SoundEvents.FIRE_EXTINGUISH);
+		world.setBlockAndUpdate(pos, Blocks.LAVA.defaultBlockState());
 	}
 
 	@Override
@@ -119,8 +120,18 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 	}
 
 	@Override
+	public boolean hasAnInventory() {
+		return false;
+	}
+
+	@Override
+	public boolean hasATank() {
+		return false;
+	}
+
+	@Override
 	public void tick(int mirrorCount, float totalBrightness) {
-		if (!level.isRemote) {
+		if (!level.isClientSide()) {
 			temperature += (0.0625*2*mirrorCount*totalBrightness);
 			temperature = Math.min(temperature, MAXTEMP);
 		}
