@@ -49,7 +49,7 @@ public class TileEntityFuelRod extends TileEntityNuclearCore {
 
 	@Override
 	public boolean isItemValidForSlot(int i, ItemStack is) {
-		if (itemHandler.getStackInSlot(i) != null)
+		if (!itemHandler.getStackInSlot(i).isEmpty())
 			return false;
 		if (this.isFuel(is))
 			return i < 4;
@@ -83,7 +83,7 @@ public class TileEntityFuelRod extends TileEntityNuclearCore {
 
 	@Override
 	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
-		super.onNeutron(e, world, x, y, z);
+		super.onNeutron(e, world, pos);
 		if (!world.isClientSide()) {
 			if (e.getType().canTriggerFission() && ReikaRandomHelper.doWithChance(e.getNeutronSpeed().getInteractionMultiplier())) {
 				if (this.checkPoisonedChance())
@@ -94,13 +94,13 @@ public class TileEntityFuelRod extends TileEntityNuclearCore {
 						ReactorAchievements.FISSION.triggerAchievement(this.getPlacer());
 						if (ReikaRandomHelper.doWithChance(f.consumeChance)) {
 							ItemStack is = itemHandler.getStackInSlot(3);
-							itemHandler.getStackInSlot(3) = f.getFissionProduct(is);
+							itemHandler.setStackInSlot(3, f.getFissionProduct(is));
 							if (itemHandler.getStackInSlot(3) != null && itemHandler.getStackInSlot(3).getItem() != is.getItem())
 								this.tryPushSpentFuel(3);
 							if (ReikaRandomHelper.doWithChance(f.wasteChance))
 								this.addWaste();
 						}
-						this.spawnNeutronBurst(world, x, y, z);
+						this.spawnNeutronBurst(world, pos);
 						temperature += f.temperatureStep;
 						return true;
 					}
@@ -112,7 +112,7 @@ public class TileEntityFuelRod extends TileEntityNuclearCore {
 
 	@Override
 	public boolean isFissile() {
-		return this.getFuel() != ItemStack.EMPTY;
+		return this.getFuel() != null;
 	}
 
 	@Override
