@@ -26,8 +26,8 @@ public class PebbleBedArrangement {
 			return;
 		if (pba == null || pba.positions.isEmpty())
 			return;
-		positions.putAll(pba.positions);
 		for (TileEntityPebbleBed te : pba.positions.values()) {
+			positions.put(te);
 			te.setReactorObject(this);
 		}
 		pba.clear();

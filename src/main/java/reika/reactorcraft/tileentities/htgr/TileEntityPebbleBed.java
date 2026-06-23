@@ -13,7 +13,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 
-import net.minecraft.world.level.block.Block;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
@@ -63,7 +63,6 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 		return 47;
 	}
 
-	@Override
 	public int getInventoryStackLimit() {
 		return 1;
 	}
@@ -84,7 +83,7 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 
 		tempTimer.update();
 		if (tempTimer.checkCap()) {
-			this.updateTemperature(world, x, y, z);
+			this.updateTemperature(world, pos);
 		}
 
 		if (damage > 0 && rand.nextInt(800) == 0) {
@@ -97,20 +96,17 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	@Override
-	protected void onFirstTick(Level world, int x, int y, int z) {
-		this.checkAndJoinArrangement(world, x, y, z);
+	protected void onFirstTick(Level world, BlockPos pos) {
+		this.checkAndJoinArrangement(world, pos);
 	}
 
-	private void checkAndJoinArrangement(Level world, int x, int y, int z) {
+	private void checkAndJoinArrangement(Level world, BlockPos pos) {
 		reactor = new PebbleBedArrangement(this);
 		int r = 3;
 		for (int i = -r; i <= r; i++) {
 			for (int j = -r; j <= r; j++) {
 				for (int k = -r; k <= r; k++) {
-					int dx = x+i;
-					int dy = y+j;
-					int dz = z+k;
-					BlockEntity te = this.getBlockEntity(dx, dy, dz);
+					BlockEntity te = world.getBlockEntity(pos.offset(i, j, k));
 					if (te instanceof TileEntityPebbleBed) {
 						reactor.merge(((TileEntityPebbleBed)te).reactor);
 					}
@@ -153,11 +149,11 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	private void runDecayCycle() {
-		if (!level.isRemote) {
+		if (!level.isClientSide()) {
 			int slot = -1;
 			for (int i = itemHandler.getSlots()-1; i >= 0; i--) {
 				ItemStack is = itemHandler.getStackInSlot(i);
-				if (is != null && is.getItem() == ReactorItems.PELLET.getItemInstance()) {
+				if (!is.isEmpty() && is.getItem() == ReactorItems.PELLET.getItemInstance()) {
 					slot = i;
 					i = -1;
 				}
@@ -165,7 +161,7 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 			if (slot != -1) {
 				if (ReikaRandomHelper.doWithChance(3)) {
 					ItemStack is = itemHandler.getStackInSlot(slot);
-					itemHandler.getStackInSlot(slot) = this.getFissionProduct(is);
+					itemHandler.setStackInSlot(slot, this.getFissionProduct(is));
 				}
 				temperature += 20;
 			}
@@ -179,26 +175,24 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	@Override
-	protected void updateTemperature(Level world, int x, int y, int z) {
-		super.updateTemperature(world, x, y, z);
-		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
+	protected void updateTemperature(Level world, BlockPos pos) {
+		super.updateTemperature(world, pos);
+		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, pos);
 		int dT = temperature-Tamb;
 
 		if (dT != 0) {
-			int f = ReikaWorldHelper.isExposedToAir(world, x, y, z) ? 24 : 96;
+			int f = ReikaWorldHelper.isExposedToAir(world, pos.getX(), pos.getY(), pos.getZ()) ? 24 : 96;
 			temperature -= (1+dT/f);
 		}
 
 		if (dT > 0) {
 			for (int i = 2; i < 6; i++) {
 				Direction dir = dirs[i];
-				int dx = x+dir.offsetX;
-				int dy = y+dir.offsetY;
-				int dz = z+dir.offsetZ;
-				ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
+				BlockPos p = pos.relative(dir);
+				ReactorTiles r = ReactorTiles.getTE(world, p);
 
 				if (r == this.getTile()) {
-					TileEntityPebbleBed te = (TileEntityPebbleBed)world.getBlockEntity(dx, dy, dz);
+					TileEntityPebbleBed te = (TileEntityPebbleBed)world.getBlockEntity(p);
 					int dTemp = temperature-te.temperature;
 					if (dTemp > 0) {
 						temperature -= dTemp/16;
@@ -209,28 +203,28 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 		}
 
 		if (temperature >= this.getMaxTemperature()) {
-			world.setBlock(x, y, z, Blocks.flowing_lava);
+			world.setBlockAndUpdate(pos, Blocks.LAVA.defaultBlockState());
 		}
 		else if (temperature >= OVERTEMP) {
 			int chance = 5+(FAILTEMP-temperature)/10/this.getReactorSize();
 			if (rand.nextInt(chance) == 0) {
-				ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.fizz", 1, 0.5F);
-				ReikaParticleHelper.SMOKE.spawnAroundBlockWithOutset(world, x, y, z, 9, 0.0625);
+				ReikaSoundHelper.playSoundAtBlock(world, pos, SoundEvents.FIRE_EXTINGUISH, 1, 0.5F);
+				ReikaParticleHelper.SMOKE.spawnAroundBlockWithOutset(world, pos, 9, 0.0625);
 				damage++;
 				if (damage >= 100) {
-					this.melt(world, x, y, z);
+					this.melt(world, pos);
 				}
 			}
 		}
 	}
 
-	private void melt(Level world, int x, int y, int z) {
+	private void melt(Level world, BlockPos pos) {
 		ReactorAchievements.PEBBLEFAIL.triggerAchievement(this.getPlacer());
 		this.delete();
-		world.setBlock(x, y, z, Blocks.flowing_lava);
-		ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.fizz", 2, 0.1F);
-		ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.explode", 1, 0.2F);
-		ReikaParticleHelper.LAVA.spawnAroundBlockWithOutset(world, x, y, z, 12, 0.0625);
+		world.setBlockAndUpdate(pos, Blocks.LAVA.defaultBlockState());
+		ReikaSoundHelper.playSoundAtBlock(world, pos, SoundEvents.FIRE_EXTINGUISH, 2, 0.1F);
+		ReikaSoundHelper.playSoundAtBlock(world, pos, SoundEvents.GENERIC_EXPLODE.value(), 1, 0.2F);
+		ReikaParticleHelper.LAVA.spawnAroundBlockWithOutset(world, pos, 12, 0.0625);
 	}
 
 	@Override
@@ -252,7 +246,7 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	public boolean canRemoveItem(int slot, ItemStack is) {
 		if (is.getItem() == ReactorItems.OLDPELLET.getItemInstance())
 			return true;
-		if (slot == 0 && cycleCooldown == 0 && this.getTileEntityAge()%80 < 40) {
+		if (slot == 0 && cycleCooldown == 0 && this.getTicksExisted()%80 < 40) {
 			cycleCooldown = 10;
 			return true;
 		}
@@ -270,30 +264,22 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	public boolean isFissile() {
-		return ReikaInventoryHelper.checkForItem(ReactorItems.PELLET.getItemInstance(), inv);
+		return ReikaInventoryHelper.locateInInventory(ReactorItems.PELLET.getItemInstance(), itemHandler) != -1;
 	}
 
 	public boolean feed() {
-		Level world = level;
-		int x = xCoord;
-		int y = yCoord;
-		int z = zCoord;
-		Block id = world.getBlock(x, y-1, z);
-		int meta = world.getBlockMetadata(x, y-1, z);
-		BlockEntity tile = this.getAdjacentTileEntity(Direction.DOWN);
+		BlockEntity tile = this.getAdjacentBlockEntity(Direction.DOWN);
 		if (tile instanceof TileEntityPebbleBed) {
 			if (((Feedable)tile).feedIn(itemHandler.getStackInSlot(itemHandler.getSlots()-1))) {
 				for (int i = itemHandler.getSlots()-1; i > 0; i--)
-					itemHandler.getStackInSlot(i) = itemHandler.getStackInSlot(i-1);
+					itemHandler.setStackInSlot(i, itemHandler.getStackInSlot(i-1));
 
-				id = world.getBlock(x, y+1, z);
-				meta = world.getBlockMetadata(x, y+1, z);
-				tile = this.getAdjacentTileEntity(Direction.UP);
+				tile = this.getAdjacentBlockEntity(Direction.UP);
 				if (tile instanceof TileEntityPebbleBed) {
-					itemHandler.getStackInSlot(0) = ((Feedable) tile).feedOut();
+					itemHandler.setStackInSlot(0, ((Feedable) tile).feedOut());
 				}
 				else
-					itemHandler.getStackInSlot(0) = ItemStack.EMPTY;
+					itemHandler.setStackInSlot(0, ItemStack.EMPTY);
 			}
 		}
 		this.collapseInventory();
@@ -303,9 +289,9 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	private void collapseInventory() {
 		for (int i = 0; i < itemHandler.getSlots(); i++) {
 			for (int k = itemHandler.getSlots()-1; k > 0; k--) {
-				if (itemHandler.getStackInSlot(k) == null && itemHandler.getStackInSlot(k-1) != null) {
-					itemHandler.getStackInSlot(k) = itemHandler.getStackInSlot(k-1);
-					itemHandler.getStackInSlot(k-1) = ItemStack.EMPTY;
+				if (itemHandler.getStackInSlot(k).isEmpty() && !itemHandler.getStackInSlot(k-1).isEmpty()) {
+					itemHandler.setStackInSlot(k, itemHandler.getStackInSlot(k-1));
+					itemHandler.setStackInSlot(k-1, ItemStack.EMPTY);
 					return;
 				}
 			}
@@ -314,12 +300,12 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 
 	@Override
 	public boolean feedIn(ItemStack is) {
-		if (is == null)
+		if (is.isEmpty())
 			return true;
 		if (!this.isItemValidForSlot(0, is))
 			return false;
-		if (itemHandler.getStackInSlot(0) == null) {
-			itemHandler.getStackInSlot(0) = is.copy();
+		if (itemHandler.getStackInSlot(0).isEmpty()) {
+			itemHandler.setStackInSlot(0, is.copy());
 			return true;
 		}
 		return false;
@@ -327,13 +313,12 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 
 	@Override
 	public ItemStack feedOut() {
-		if (itemHandler.getStackInSlot(itemHandler.getSlots()-1) == null)
-			return null;
-		else {
-			ItemStack is = itemHandler.getStackInSlot(itemHandler.getSlots()-1).copy();
-			itemHandler.getStackInSlot(itemHandler.getSlots()-1) = ItemStack.EMPTY;
-			return is;
-		}
+		ItemStack last = itemHandler.getStackInSlot(itemHandler.getSlots()-1);
+		if (last.isEmpty())
+			return ItemStack.EMPTY;
+		ItemStack is = last.copy();
+		itemHandler.setStackInSlot(itemHandler.getSlots()-1, ItemStack.EMPTY);
+		return is;
 	}
 
 	@Override
@@ -358,15 +343,11 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 
 	@Override
 	public final int getTextureState(Direction side) {
-		if (side.offsetY != 0)
+		if (side.getStepY() != 0)
 			return 4;
-		Level world = level;
-		int x = xCoord;
-		int y = yCoord;
-		int z = zCoord;
 		ReactorTiles src = this.getTile();
-		ReactorTiles r = ReactorTiles.getTE(world, x, y-1, z);
-		ReactorTiles r2 = ReactorTiles.getTE(world, x, y+1, z);
+		ReactorTiles r = ReactorTiles.getTE(level, this.getBlockPos().below());
+		ReactorTiles r2 = ReactorTiles.getTE(level, this.getBlockPos().above());
 		if (r2 == src && r == src)
 			return 2;
 		else if (r2 == src)
@@ -377,15 +358,15 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	@Override
-	public void loadAdditional(/*PORT*/CompoundTag NBT) {
-		super.loadAdditional(/*PORT*/NBT);
+	protected void readSyncTag(CompoundTag NBT) {
+		super.readSyncTag(NBT);
 
 		damage = NBT.getIntOr("dmg", 0);
 	}
 
 	@Override
-	public void saveAdditional(/*PORT*/CompoundTag NBT) {
-		super.saveAdditional(/*PORT*/NBT);
+	protected void writeSyncTag(CompoundTag NBT) {
+		super.writeSyncTag(NBT);
 
 		NBT.putInt("dmg", damage);
 	}
