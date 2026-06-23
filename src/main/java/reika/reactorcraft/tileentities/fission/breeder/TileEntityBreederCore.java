@@ -53,12 +53,10 @@ public class TileEntityBreederCore extends TileEntityNuclearCore {
 		if (timer2.checkCap()) {
 			for (int i = 2; i < 6; i++) {
 				Direction dir = dirs[i];
-				int dx = x+dir.offsetX;
-				int dy = y+dir.offsetY;
-				int dz = z+dir.offsetZ;
-				ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);/*
+				BlockPos p = pos.relative(dir);
+				ReactorTiles r = ReactorTiles.getTE(world, p);/*
 				if (r == ReactorTiles.COOLANT) {
-					TileEntityWaterCell w = (TileEntityWaterCell)world.getBlockEntity(dx, dy, dz);
+					TileEntityWaterCell w = (TileEntityWaterCell)world.getBlockEntity(p);
 					int T = w.getTemperature();
 					int dT = temperature-T;
 					if (dT > 0) {
@@ -67,7 +65,7 @@ public class TileEntityBreederCore extends TileEntityNuclearCore {
 					}
 				}*/
 				if (r == ReactorTiles.SODIUMBOILER) {
-					TileEntitySodiumHeater te = (TileEntitySodiumHeater)world.getBlockEntity(dx, dy, dz);
+					TileEntitySodiumHeater te = (TileEntitySodiumHeater)world.getBlockEntity(p);
 					int dTemp = temperature-te.getTemperature();
 					if (dTemp > 0) {
 						temperature -= dTemp/16;
@@ -83,7 +81,7 @@ public class TileEntityBreederCore extends TileEntityNuclearCore {
 
 	@Override
 	public boolean isFissile() {
-		return ReikaInventoryHelper.locateInInventory(ReactorItems.BREEDERFUEL.getItemInstance(), inv) != -1;
+		return ReikaInventoryHelper.locateInInventory(ReactorItems.BREEDERFUEL.getItemInstance(), itemHandler) != -1;
 	}
 
 	@Override
@@ -104,29 +102,29 @@ public class TileEntityBreederCore extends TileEntityNuclearCore {
 
 	@Override
 	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
-		super.onNeutron(e, world, x, y, z);
+		super.onNeutron(e, world, pos);
 		if (!world.isClientSide()) {
 			if (this.checkPoisonedChance())
 				return true;
 			if (ReikaRandomHelper.doWithChance(25+temperature/100) && this.isFissile() && ReikaRandomHelper.doWithChance(e.getNeutronSpeed().getInteractionMultiplier())) {
-				int slot = ReikaInventoryHelper.locateInInventory(ReactorItems.BREEDERFUEL.getItemInstance(), inv);
+				int slot = ReikaInventoryHelper.locateInInventory(ReactorItems.BREEDERFUEL.getItemInstance(), itemHandler);
 				if (slot != -1) {
 					if (e.getType().canTriggerFuelConversion() && ReikaRandomHelper.doWithChance(5*e.getNeutronSpeed().getWasteConversionMultiplier())) {
 						int dmg = itemHandler.getStackInSlot(slot).getDamageValue();
 						if (dmg == ReactorItems.BREEDERFUEL.getNumberMetadatas()-1) {
-							itemHandler.getStackInSlot(slot) = ReactorItems.PLUTONIUM.getStackOf();
+							itemHandler.setStackInSlot(slot, ReactorItems.PLUTONIUM.getStackOf());
 							this.tryPushSpentFuel(slot);
 							ReactorAchievements.PLUTONIUM.triggerAchievement(this.getPlacer());
 						}
 						else {
-							itemHandler.getStackInSlot(slot) = ReactorItems.BREEDERFUEL.getStackOfMetadata(dmg+1);
+							itemHandler.setStackInSlot(slot, ReactorItems.BREEDERFUEL.getStackOfMetadata(dmg+1));
 						}
 						temperature += 50;
 					}
 					else {
 						temperature += temperature >= 700 ? 30 : 20;
 					}
-					this.spawnNeutronBurst(world, x, y, z);
+					this.spawnNeutronBurst(world, pos);
 
 					if (ReikaRandomHelper.doWithChance(10)) {
 						this.addWaste();
