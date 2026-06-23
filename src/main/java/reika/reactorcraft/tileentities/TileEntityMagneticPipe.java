@@ -8,46 +8,40 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
-import net.minecraft.world.level.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.util.IIcon;
-import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidRegistry;
+import net.minecraft.world.level.material.MapColor;
 
 // CHROMA-PORT: import reika.chromaticraft.api.interfaces.WorldRift;
 import reika.dragonapi.instantiable.StepTimer;
-import reika.dragonapi.instantiable.data.immutable.WorldLocation;
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
 import reika.dragonapi.libraries.registry.ReikaParticleHelper;
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
-import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.NeutronTile;
 import reika.reactorcraft.base.TileEntityReactorPiping;
-import reika.reactorcraft.blocks.BlockDuct;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.registry.ReactorAchievements;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.fusion.TileEntityFusionHeater;
 import reika.reactorcraft.tileentities.fusion.TileEntityFusionInjector;
 import reika.rotarycraft.api.interfaces.Shockable;
 import reika.rotarycraft.entities.EntityDischarge;
-import reika.rotarycraft.registry.BlockRegistry;
 
 public class TileEntityMagneticPipe extends TileEntityReactorPiping implements Shockable, NeutronTile {
+
 	public TileEntityMagneticPipe(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.MAGNETPIPE.get(), pos, state);
 	}
-
 
 	private int charge;
 
@@ -56,16 +50,6 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 	@Override
 	public ReactorTiles getTile() {
 		return ReactorTiles.MAGNETPIPE;
-	}
-
-	@Override
-	public IIcon getBlockIcon() {
-		return charge > 0 ? BlockDuct.getGlow() : Blocks.gold_block.getIcon(0, 0);
-	}
-
-	@Override
-	public Block getPipeBlockType() {
-		return Blocks.gold_block;
 	}
 
 	@Override
@@ -84,53 +68,31 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 	}
 
 	@Override
-	public IIcon getGlassIcon() {
-		return BlockRegistry.BLASTPANE.getBlockInstance().getIcon(0, 0);
-	}
-
-	@Override
 	public void updateEntity(Level world, BlockPos pos) {
 		super.updateEntity(world, pos);
 
-		this.distributeCharge(world, x, y, z);
-		this.updateCharge(world, x, y, z);
+		this.distributeCharge(world, pos);
+		this.updateCharge(world, pos);
 
 		if (charge <= 0 && !world.isClientSide()) {
-			ReactorCraft.LOGGER.debug("Melting magnetic pipe "+this+" with charge "+charge);
 			charge = 0;
-			if (fluid != null && fluid.getTemperature(world, x, y, z) > 5000) {
-				world.setBlock(x, y, z, Blocks.flowing_lava);
-				ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.fizz");
-				ReikaParticleHelper.LAVA.spawnAroundBlock(world, x, y, z, 5);
+			if (fluid != null && fluid.getFluidType().getTemperature() > 5000) {
+				world.setBlockAndUpdate(pos, Blocks.LAVA.defaultBlockState());
+				ReikaSoundHelper.playSoundAtBlock(world, pos, SoundEvents.FIRE_EXTINGUISH);
+				ReikaParticleHelper.LAVA.spawnAroundBlock(world, pos, 5);
 				ReactorAchievements.MELTPIPE.triggerAchievement(this.getPlacer());
 			}
 		}
 	}
 
-	private void distributeCharge(Level world, int x, int y, int z) {
+	private void distributeCharge(Level world, BlockPos pos) {
 		for (int i = 0; i < 6; i++) {
 			Direction dir = dirs[i];
-			int dx = x+dir.offsetX;
-			int dy = y+dir.offsetY;
-			int dz = z+dir.offsetZ;
-			BlockEntity te = world.getBlockEntity(dx, dy, dz);
-
-			if (te instanceof WorldRift) {
-				WorldLocation loc = ((WorldRift)te).getLinkTarget();
-				if (loc != null) {
-					te = ((WorldRift)te).getTileEntityFrom(dir);
-					if (te == null)
-						continue;
-					dx = te.xCoord;
-					dy = te.yCoord;
-					dz = te.zCoord;
-					world = te.level;
-				}
-			}
-
-			ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
+			BlockPos p = pos.relative(dir);
+			// CHROMA-PORT: ChromatiCraft WorldRift cross-dimension charge transfer gated out (mod not in build).
+			ReactorTiles r = ReactorTiles.getTE(world, p);
 			if (r == ReactorTiles.MAGNETPIPE) {
-				TileEntityMagneticPipe tile = (TileEntityMagneticPipe)world.getBlockEntity(dx, dy, dz);
+				TileEntityMagneticPipe tile = (TileEntityMagneticPipe)world.getBlockEntity(p);
 				int dq = charge - tile.charge;
 				if (dq > 0) {
 					tile.charge += dq/4;
@@ -140,12 +102,13 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 		}
 	}
 
-	private void updateCharge(Level world, int x, int y, int z) {
-		Direction dir = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
+	private void updateCharge(Level world, BlockPos pos) {
+		Direction dir = ReikaWorldHelper.checkForAdjMaterial(world, pos, MapColor.WATER);
 		if (dir != null) {
-			EntityDischarge e = new EntityDischarge(world, x+0.5, y+0.5, z+0.5, charge, x+0.5+dir.offsetX, y+0.5+dir.offsetY, z+0.5+dir.offsetZ);
+			BlockPos tp = pos.relative(dir);
+			EntityDischarge e = new EntityDischarge(world, pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5, charge, tp.getX()+0.5, tp.getY()+0.5, tp.getZ()+0.5);
 			if (!world.isClientSide())
-				world.spawnEntityInWorld(e);
+				world.addFreshEntity(e);
 			charge = 0;
 		}
 		else {
@@ -183,23 +146,8 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 	}
 
 	@Override
-	public float getAimX() {
-		return 0.5F;
-	}
-
-	@Override
-	public float getAimY() {
-		return 0.5F;
-	}
-
-	@Override
-	public float getAimZ() {
-		return 0.5F;
-	}
-
-	@Override
-	public IIcon getOverlayIcon() {
-		return null;
+	public BlockPos getAimPos() {
+		return this.getBlockPos();
 	}
 
 	public int getCharge() {
@@ -212,7 +160,8 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 
 	@Override
 	protected boolean isInteractableTile(BlockEntity te) {
-		return (te instanceof WorldRift || this.isPlasmaAcceptingBlock(te)) && super.isInteractableTile(te);
+		// CHROMA-PORT: WorldRift acceptance gated out (ChromatiCraft not in build).
+		return this.isPlasmaAcceptingBlock(te) && super.isInteractableTile(te);
 	}
 
 	@Override
