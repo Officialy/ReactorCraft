@@ -15,18 +15,15 @@ import reika.reactorcraft.registry.ReactorBlockEntities;
 
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidRegistry;
 
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.mathsci.ReikaThermoHelper;
-import reika.dragonapi.libraries.registry.ReikaItemHelper;
-import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.base.TileEntityIntermediateBoiler;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.entities.EntityNeutron.NeutronType;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.registry.ReactorType;
-import reika.rotarycraft.auxiliary.ItemStacks;
 
 public class TileEntitySodiumHeater extends TileEntityIntermediateBoiler {
 	public TileEntitySodiumHeater(BlockPos pos, BlockState state) {
@@ -71,16 +68,13 @@ public class TileEntitySodiumHeater extends TileEntityIntermediateBoiler {
 
 	@Override
 	protected Fluid getOutputFluid() {
-		return ReactorCraft.NA_hot;
+		return ReactorFluids.HOT_SODIUM.get();
 	}
 
 	@Override
-	protected void overheat(Level world, int x, int y, int z) {
-		world.explode(/*PORT*/null, x+0.5, y+0.5, z+0.5, 4, true);
-		for (int i = 0; i < 4; i++) {
-			ReikaItemHelper.dropItem(world, x+rand.nextDouble(), y+rand.nextDouble(), z+rand.nextDouble(), ItemStacks.scrap);
-			ReikaItemHelper.dropItem(world, x+rand.nextDouble(), y+rand.nextDouble(), z+rand.nextDouble(), ItemStacks.ironscrap);
-		}
+	protected void overheat(Level world, BlockPos pos) {
+		world.explode(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 4, Level.ExplosionInteraction.BLOCK);
+		// MOD-PORT: scrap/ironscrap drops (RotaryCraft ItemStacks) restored when those items are ported.
 	}
 
 	@Override
