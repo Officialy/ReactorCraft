@@ -8,27 +8,23 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fusion;
-import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.ChunkCoordIntPair;
-import net.minecraft.world.level.Level;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidRegistry;
+import net.minecraft.world.phys.AABB;
 
 import reika.dragonapi.DragonAPI;
-import reika.dragonapi.auxiliary.ChunkManager;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.interfaces.blockentity.ChunkLoadingTile;
@@ -41,22 +37,23 @@ import reika.reactorcraft.base.TileEntityReactorBase;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.entities.EntityPlasma;
 import reika.reactorcraft.registry.ReactorAchievements;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorOptions;
 import reika.reactorcraft.registry.ReactorTiles;
-import reika.rotarycraft.RotaryCraft;
 import reika.rotarycraft.api.interfaces.Screwdriverable;
 import reika.rotarycraft.api.interfaces.Shockable;
-import reika.rotarycraft.base.tileentity.TileEntityPiping;
+import reika.rotarycraft.base.blockentity.BlockEntityPiping;
 import reika.rotarycraft.entities.EntityDischarge;
 import reika.rotarycraft.registry.MachineRegistry;
-import reika.rotarycraft.tileentities.weaponry.TileEntityVanDeGraff;
+import reika.rotarycraft.registry.RotaryFluids;
 
 public class TileEntityToroidMagnet extends TileEntityReactorBase implements Screwdriverable, Shockable, MultiBlockTile, FusionReactorToroidPart,
 ChunkLoadingTile, NeutronTile, NonIFluidTank {
+
 	public TileEntityToroidMagnet(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.MAGNET.get(), pos, state);
 	}
-
 
 	//0 is +x(E), rotates to -z(N)
 	private Aim aim = Aim.N;
@@ -93,26 +90,27 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	@Override
-	protected void onFirstTick(Level world, int x, int y, int z) {
+	protected void onFirstTick(Level world, BlockPos pos) {
 		if (!hasSolenoid) {
 			this.checkSurroundingMagnetsAndCopySolenoidState();
 		}
-		hasNext = this.checkCompleteness(world, x, y, z);
+		hasNext = this.checkCompleteness(world, pos.getX(), pos.getY(), pos.getZ());
 	}
 
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
+		int x = pos.getX(), y = pos.getY(), z = pos.getZ();
 
 		if (alpha > 0)
 			alpha -= 8;
 
 		if (DragonAPI.debugtest) {
-			tank.addLiquid(1000, RotaryCraft.nitrogenFluid);
+			tank.addLiquid(1000, RotaryFluids.LIQUID_NITROGEN.get());
 			charge = 250000;
 		}
 
-		AABB box = ReikaAABBHelper.getBlockAABB(x, y, z);
-		List<EntityPlasma> li = world.getEntitiesWithinAABB(EntityPlasma.class, box);
+		AABB box = ReikaAABBHelper.getBlockAABB(pos);
+		List<EntityPlasma> li = world.getEntitiesOfClass(EntityPlasma.class, box);
 		int[] tg = this.getTarget();
 		for (EntityPlasma e : li) {
 			if (this.canAffect(e)) {
@@ -127,16 +125,15 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 				ReactorAchievements.ESCAPE.triggerAchievement(this.getPlacer());
 			}
 		}
-		//this.collectCharge(world, x, y, z);
 
-		MachineRegistry m = MachineRegistry.getMachine(world, x, y+2, z);
+		MachineRegistry m = MachineRegistry.getMachine(world, new BlockPos(x, y+2, z));
 		if (m != null && m.isStandardPipe()) {
-			BlockEntity te = world.getBlockEntity(x, y+2, z);
-			int amt = Math.min(tank.getRemainingSpace(), ((TileEntityPiping)te).getFluidLevel());
+			BlockEntity te = world.getBlockEntity(new BlockPos(x, y+2, z));
+			int amt = Math.min(tank.getRemainingSpace(), ((BlockEntityPiping)te).getFluidLevel());
 			if (amt > 0) {
-				if (ReactorFluids.getLegacyFluid("rc liquid nitrogen").equals(((TileEntityPiping)te).getFluidType())) {
+				if (ReactorFluids.getLegacyFluid("rc liquid nitrogen").equals(((BlockEntityPiping)te).getAttributes())) {
 					tank.addLiquid(amt, ReactorFluids.getLegacyFluid("rc liquid nitrogen"));
-					((TileEntityPiping)te).removeLiquid(amt);
+					((BlockEntityPiping)te).removeLiquid(amt);
 				}
 			}
 		}
@@ -155,10 +152,6 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 			}
 		}
 
-		//if (this.getTicksExisted() == 0)
-		//	this.clearArea(world, x, y, z);
-		//ReikaJavaLibrary.pConsole(aim, !hasSolenoid && this.getSide() == Dist.DEDICATED_SERVER);
-
 		if (lastPlasma > 0) {
 			lastPlasma--;
 			if (lastPlasma == 0) {
@@ -172,9 +165,10 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		isActive = true;
 		lastPlasma = 20;
 		if (!last) {
-			level.markBlockForUpdate(xCoord, yCoord, zCoord);
+			level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
 			if (ReactorOptions.CHUNKLOADING.getState()) {
-				ChunkManager.instance.loadChunks(this);
+				// CHUNKLOAD-PORT: ChunkManager.instance.loadChunks(this); — DragonAPI chunkloading manager
+				// is not ported yet (RC has it commented out too); re-enable when it lands.
 			}
 		}
 	}
@@ -183,8 +177,8 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		boolean last = isActive;
 		isActive = false;
 		if (last) {
-			level.markBlockForUpdate(xCoord, yCoord, zCoord);
-			ChunkManager.instance.unloadChunks(this);
+			level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+			// CHUNKLOAD-PORT: ChunkManager.instance.unloadChunks(this);
 		}
 	}
 
@@ -195,7 +189,6 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 			te = te.getNextPart(world, x, y, z);
 			i--;
 		}
-		//ReikaJavaLibrary.pConsole("B:"+(te == world.getBlockEntity(x+aim.xOffset, y, z+aim.zOffset))+"   "+te+"/"+this+"@"+aim, Dist.DEDICATED_SERVER);
 		if (te != this)
 			if (te instanceof TileEntityToroidMagnet)
 				((TileEntityToroidMagnet)te).hasNext = false;
@@ -204,9 +197,9 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 
 	public FusionReactorToroidPart getNextPart(Level world, int x, int y, int z) {
 		Aim a = this.getAim();
-		int dx = xCoord+a.xOffset;
-		int dz = zCoord+a.zOffset;
-		BlockEntity te = level.getBlockEntity(dx, y, dz);
+		int dx = this.getBlockPos().getX()+a.xOffset;
+		int dz = this.getBlockPos().getZ()+a.zOffset;
+		BlockEntity te = level.getBlockEntity(new BlockPos(dx, y, dz));
 		return te instanceof FusionReactorToroidPart ? (FusionReactorToroidPart)te : null;
 	}
 
@@ -220,22 +213,24 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 
 	private void checkSurroundingMagnetsAndCopySolenoidState() {
 		Aim a = this.getAim();
-		int dx = xCoord+a.xOffset;
-		int dz = zCoord+a.zOffset;
-		ReactorTiles r = ReactorTiles.getTE(level, dx, yCoord, dz);
+		BlockPos pos = this.getBlockPos();
+		int dx = pos.getX()+a.xOffset;
+		int dz = pos.getZ()+a.zOffset;
+		int y0 = pos.getY();
+		ReactorTiles r = ReactorTiles.getTE(level, new BlockPos(dx, y0, dz));
 		if (r == ReactorTiles.MAGNET) {
-			TileEntityToroidMagnet te = (TileEntityToroidMagnet)level.getBlockEntity(dx, yCoord, dz);
+			TileEntityToroidMagnet te = (TileEntityToroidMagnet)level.getBlockEntity(new BlockPos(dx, y0, dz));
 			hasSolenoid = te.hasSolenoid;
-			te.checkCompleteness(level, xCoord, yCoord, zCoord);
+			te.checkCompleteness(level, pos.getX(), y0, pos.getZ());
 		}
 		else if (r == ReactorTiles.INJECTOR) {
 			dx += a.xOffset;
 			dz += a.zOffset;
-			BlockEntity te = level.getBlockEntity(dx, yCoord, dz);
+			BlockEntity te = level.getBlockEntity(new BlockPos(dx, y0, dz));
 			while (te instanceof TileEntityFusionInjector) {
 				dx += a.xOffset;
 				dz += a.zOffset;
-				te = level.getBlockEntity(dx, yCoord, dz);
+				te = level.getBlockEntity(new BlockPos(dx, y0, dz));
 			}
 			if (te instanceof TileEntityToroidMagnet) {
 				hasSolenoid = ((TileEntityToroidMagnet)te).hasSolenoid;
@@ -243,27 +238,20 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		}
 	}
 
-	private void collectCharge(Level world, int x, int y, int z) {
-		MachineRegistry m = MachineRegistry.getMachine(world, x, y-3, z);
-		if (m == MachineRegistry.VANDEGRAFF) {
-			TileEntityVanDeGraff te = (TileEntityVanDeGraff)world.getBlockEntity(x, y-3, z);
-			te.dischargeToBlock(x, y, z, this);
-		}
-	}
-
 	private boolean distributeCharge(Level world, int x, int y, int z) {
 		Aim a = this.getAim();
 		int dx = x+a.xOffset;
 		int dz = z+a.zOffset;
-		ReactorTiles r = ReactorTiles.getTE(world, dx, y, dz);
+		ReactorTiles r = ReactorTiles.getTE(world, new BlockPos(dx, y, dz));
 		if (r == ReactorTiles.MAGNET) {
-			TileEntityToroidMagnet te = (TileEntityToroidMagnet)world.getBlockEntity(dx, y, dz);
+			TileEntityToroidMagnet te = (TileEntityToroidMagnet)world.getBlockEntity(new BlockPos(dx, y, dz));
 			int dC = charge-te.charge;
 			if (dC > 0) {
 				te.charge += dC/4;
 				charge -= dC/4;
-				EntityDischarge e1 = new EntityDischarge(world, x+0.5, y+2.25, z+0.5, charge, te.xCoord+0.5, te.yCoord+2.25, te.zCoord+0.5);
-				EntityDischarge e2 = new EntityDischarge(world, x+0.5, y-1.25, z+0.5, charge, te.xCoord+0.5, te.yCoord-1.25, te.zCoord+0.5);
+				int tx = te.getBlockPos().getX(), ty = te.getBlockPos().getY(), tz = te.getBlockPos().getZ();
+				EntityDischarge e1 = new EntityDischarge(world, x+0.5, y+2.25, z+0.5, charge, tx+0.5, ty+2.25, tz+0.5);
+				EntityDischarge e2 = new EntityDischarge(world, x+0.5, y-1.25, z+0.5, charge, tx+0.5, ty-1.25, tz+0.5);
 
 				float ang = this.getAngle();
 				float ang2 = te.getAngle();
@@ -271,30 +259,31 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 				double fz = 1.75*Math.cos(Math.toRadians(ang));
 				double fx2 = 1.75*Math.sin(Math.toRadians(ang2));
 				double fz2 = 1.75*Math.cos(Math.toRadians(ang2));
-				EntityDischarge e3 = new EntityDischarge(world, x+0.5+fx, y+0.5, z+0.5+fz, charge, te.xCoord+0.5+fx2, te.yCoord+0.5, te.zCoord+0.5+fz2);
-				EntityDischarge e4 = new EntityDischarge(world, x+0.5-fx, y+0.5, z+0.5-fz, charge, te.xCoord+0.5-fx2, te.yCoord+0.5, te.zCoord+0.5-fz2);
+				EntityDischarge e3 = new EntityDischarge(world, x+0.5+fx, y+0.5, z+0.5+fz, charge, tx+0.5+fx2, ty+0.5, tz+0.5+fz2);
+				EntityDischarge e4 = new EntityDischarge(world, x+0.5-fx, y+0.5, z+0.5-fz, charge, tx+0.5-fx2, ty+0.5, tz+0.5-fz2);
 				if (!world.isClientSide() && this.shouldSpawnSparks(world)) {
-					world.spawnEntityInWorld(e1);
-					world.spawnEntityInWorld(e2);
-					world.spawnEntityInWorld(e3);
-					world.spawnEntityInWorld(e4);
+					world.addFreshEntity(e1);
+					world.addFreshEntity(e2);
+					world.addFreshEntity(e3);
+					world.addFreshEntity(e4);
 				}
 			}
 		}
 		else if (r == ReactorTiles.INJECTOR) {
 			dx += a.xOffset;
 			dz += a.zOffset;
-			TileEntityToroidMagnet te = (TileEntityToroidMagnet)world.getBlockEntity(dx, y, dz);
+			TileEntityToroidMagnet te = (TileEntityToroidMagnet)world.getBlockEntity(new BlockPos(dx, y, dz));
 			if (te != null) {
 				int dC = charge-te.charge;
 				if (dC > 0) {
 					te.charge += dC/4;
 					charge -= dC/4;
-					EntityDischarge e1 = new EntityDischarge(world, x+0.5, y+2, z+0.5, charge, te.xCoord+0.5, te.yCoord+2, te.zCoord+0.5);
-					EntityDischarge e2 = new EntityDischarge(world, x+0.5, y-1, z+0.5, charge, te.xCoord+0.5, te.yCoord-1, te.zCoord+0.5);
+					int tx = te.getBlockPos().getX(), ty = te.getBlockPos().getY(), tz = te.getBlockPos().getZ();
+					EntityDischarge e1 = new EntityDischarge(world, x+0.5, y+2, z+0.5, charge, tx+0.5, ty+2, tz+0.5);
+					EntityDischarge e2 = new EntityDischarge(world, x+0.5, y-1, z+0.5, charge, tx+0.5, ty-1, tz+0.5);
 					if (!world.isClientSide() && this.shouldSpawnSparks(world)) {
-						world.spawnEntityInWorld(e1);
-						world.spawnEntityInWorld(e2);
+						world.addFreshEntity(e1);
+						world.addFreshEntity(e2);
 					}
 				}
 			}
@@ -303,15 +292,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	private boolean shouldSpawnSparks(Level world) {
-		/*
-		int rate = this.getPacketDelay();
-		if (rate < 5)
-			return true;
-		else if (rate < 10)
-			return world.getTotalWorldTime()%2 == 0;
-		else
-			return (world.getTotalWorldTime()&3) == 0;*/
-		return rand.nextBoolean();//true;
+		return rand.nextBoolean();
 	}
 
 	private void updateCharge(Level world, int x, int y, int z) {
@@ -319,20 +300,6 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 			charge = 0;
 		else
 			charge *= 0.8;
-	}
-
-	private void clearArea(Level world, int x, int y, int z) {
-		int r = 2;
-		for (int i = -r; i <= r; i++) {
-			for (int j = -r; j <= r; j++) {
-				for (int k = -r; k <= r; k++) {
-					Block b = world.getBlock(x+i, y+j, z+k);
-					if (b == Blocks.grass || b == Blocks.dirt) {
-						world.removeBlock(x+i, y+j, z+k);
-					}
-				}
-			}
-		}
 	}
 
 	private boolean canAffect(EntityPlasma e) {
@@ -359,9 +326,10 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 
 	public int[] getTarget() {
 		int[] tg = new int[3];
-		tg[0] = xCoord+this.getAim().xOffset;
-		tg[2] = zCoord+this.getAim().zOffset;
-		tg[1] = yCoord;
+		BlockPos pos = this.getBlockPos();
+		tg[0] = pos.getX()+this.getAim().xOffset;
+		tg[2] = pos.getZ()+this.getAim().zOffset;
+		tg[1] = pos.getY();
 		return tg;
 	}
 
@@ -417,14 +385,14 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	@Override
-	public boolean onShiftRightClick(Level world, int x, int y, int z, Direction side) {
+	public boolean onShiftRightClick(Level world, BlockPos pos, Direction side) {
 		alpha = 512;
 		this.decrementAim();
 		return true;
 	}
 
 	@Override
-	public boolean onRightClick(Level world, int x, int y, int z, Direction side) {
+	public boolean onRightClick(Level world, BlockPos pos, Direction side) {
 		this.refreshAlpha();
 		this.incrementAim();
 		return true;
@@ -479,9 +447,9 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		}
 	}
 
-	@Override
+	// 1.21.5: BlockEntity.getRenderBoundingBox was removed; kept as a helper for the renderer's bounds.
 	public AABB getRenderBoundingBox() {
-		return ReikaAABBHelper.getBlockAABB(xCoord, yCoord, zCoord).expand(3, 3, 3);
+		return ReikaAABBHelper.getBlockAABB(this.getBlockPos()).inflate(3, 3, 3);
 	}
 
 	public static enum Aim {
@@ -554,18 +522,8 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 	}
 
 	@Override
-	public float getAimX() {
-		return 0.5F;
-	}
-
-	@Override
-	public float getAimY() {
-		return -1.25F;
-	}
-
-	@Override
-	public float getAimZ() {
-		return 0.5F;
+	public BlockPos getAimPos() {
+		return this.getBlockPos();
 	}
 
 	public void setAim(Aim a) {
@@ -574,12 +532,20 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 
 	@Override
 	public void breakBlock() {
-		ChunkManager.instance.unloadChunks(this);
+		// CHUNKLOAD-PORT: ChunkManager.instance.unloadChunks(this);
 	}
 
 	@Override
-	public Collection<ChunkCoordIntPair> getChunksToLoad() {
-		return ChunkManager.instance.getChunkSquare(xCoord, zCoord, 2);
+	public Collection<ChunkPos> getChunksToLoad() {
+		Set<ChunkPos> set = new HashSet();
+		int cx = this.getBlockPos().getX() >> 4;
+		int cz = this.getBlockPos().getZ() >> 4;
+		for (int i = -2; i <= 2; i++) {
+			for (int k = -2; k <= 2; k++) {
+				set.add(new ChunkPos(cx+i, cz+k));
+			}
+		}
+		return set;
 	}
 
 	public boolean isActive() {
@@ -603,7 +569,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 
 	@Override
 	public int addFluid(Fluid fluid, int amount, boolean doFill) {
-		if (fluid != RotaryCraft.nitrogenFluid)
+		if (fluid != RotaryFluids.LIQUID_NITROGEN.get())
 			return 0;
 		int add = tank.canTakeIn(fluid, 1) ? Math.min(tank.getRemainingSpace(), amount) : 0;
 		if (doFill && add > 0) {
