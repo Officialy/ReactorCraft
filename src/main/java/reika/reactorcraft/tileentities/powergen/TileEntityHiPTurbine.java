@@ -111,7 +111,7 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 		for (Direction dir : dirs) {
 			if (dir != this.getSteamMovement() && dir.getOpposite() != this.getSteamMovement()) {
 				BlockState bs = world.getBlockState(pos.relative(dir));
-				if (bs.getBlock() != ReactorBlocks.TURBINEMULTI.getBlockInstance())
+				if (bs.getBlock() != ReactorBlocks.TURBINEMULTI.get())
 					return false;
 				if (!bs.getValue(BlockMultiBlock.FORMED))
 					return false;

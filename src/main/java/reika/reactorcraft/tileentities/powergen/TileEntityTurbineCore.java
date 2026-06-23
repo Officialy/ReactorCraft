@@ -47,6 +47,7 @@ import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.MultiBlockTile;
 import reika.reactorcraft.base.TileEntityReactorBase;
 import reika.reactorcraft.blocks.BlockReactorMachine;
+import reika.reactorcraft.blocks.BlockSteam;
 import reika.reactorcraft.registry.ReactorAchievements;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorBlocks;
@@ -363,13 +364,20 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 
 	/** Return true if turbine is to accelerate */
 	protected boolean intakeSteam(Level world, BlockPos pos) {
-		BlockPos below = pos.below();
-		Block id = world.getBlockState(below).getBlock();
+		BlockState below = world.getBlockState(pos.below());
 		boolean canAccel = false;
-		if (id == ReactorBlocks.STEAM.getBlockInstance() && stage == 0) {
-			// BLOCK-PORT: steam flags (power-turbine / ammonia / moved) read off the steam block's
-			// named blockstate once BlockSteam is ported; gated here until then.
-			canAccel = false;
+		// Drive off un-moved, turbine-capable steam directly below; ammonia steam gives 2x.
+		if (below.is(ReactorBlocks.STEAM.get()) && stage == 0
+				&& below.getValue(BlockSteam.POWERED) && !below.getValue(BlockSteam.MOVED)) {
+			if (below.getValue(BlockSteam.AMMONIA)) {
+				steam += 2;
+				ammonia = true;
+			}
+			else {
+				steam++;
+				ammonia = false;
+			}
+			canAccel = true;
 		}
 		return canAccel;
 	}
@@ -391,7 +399,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 				if (ReikaMathLibrary.py3d(x - c.getX(), y - c.getY(), z - c.getZ()) <= this.getRadius()) {
 					BlockState bs = world.getBlockState(c);
 					Block id2 = bs.getBlock();
-					if (!ReikaWorldHelper.softBlocks(world, c) && !c.equals(pos) && id2 != ReactorBlocks.TURBINEMULTI.getBlockInstance()) {
+					if (!ReikaWorldHelper.softBlocks(world, c) && !c.equals(pos) && id2 != ReactorBlocks.TURBINEMULTI.get()) {
 						phi = 0;
 						omega = 0;
 						if (inter == null || inter.maxSpeed > Interference.JAM.maxSpeed)

@@ -9,419 +9,185 @@
  ******************************************************************************/
 package reika.reactorcraft.blocks;
 
-import java.util.ArrayList;
-import java.util.Random;
-
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.BlockLiquid;
-import net.minecraft.block.material.Material;
-import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.item.EntityXPOrb;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.potion.Potion;
-import net.minecraft.potion.PotionEffect;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.IIcon;
-import net.minecraft.world.BlockGetter;
-import net.minecraft.world.level.Level;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraftforge.fluids.BlockFluidBase;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import reika.dragonapi.libraries.java.ReikaArrayHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
-import reika.reactorcraft.ReactorCraft;
-import reika.reactorcraft.auxiliary.ClearSteamCommand;
-import reika.reactorcraft.registry.MatBlocks;
+import reika.reactorcraft.blocks.multi.BlockGeneratorMulti;
+import reika.reactorcraft.blocks.multi.BlockGeneratorMulti.GeneratorPart;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.powergen.TileEntityTurbineCore;
-import reika.rotarycraft.RotaryCraft;
 
+/**
+ * Flowing steam — an air-like block that self-propagates toward turbines/generators each scheduled tick.
+ * The legacy metadata bitfield is replaced with named blockstate flags.
+ */
 public class BlockSteam extends Block {
 
-	/**
-	 * Metadata Flag Map:
-	 * 1 - do not decay when moving up
-	 * 2 - can provide power to a turbine
-	 * 4 - is ammonia gas
-	 * 8 - "has moved horizontally"
-	 */
+	/** Do not decay (lose itself by chance) when rising. */
+	public static final BooleanProperty NO_DECAY = BooleanProperty.create("no_decay");
+	/** May still drive a turbine (cleared once it has been spent). */
+	public static final BooleanProperty POWERED = BooleanProperty.create("powered");
+	/** Ammonia working fluid (vs water). */
+	public static final BooleanProperty AMMONIA = BooleanProperty.create("ammonia");
+	/** Has moved horizontally already. */
+	public static final BooleanProperty MOVED = BooleanProperty.create("moved");
 
-	public BlockSteam(Material mat) {
-		super(mat);
-		this.setCreativeTab(ReactorCraft.getInstance().isLocked() ? null : ReactorCraft.tabRctr);
-		this.setTickRandomly(true);
-		this.setResistance(3600000);
-		this.setLightOpacity(0);
+	private static final int TICK_DELAY = 2;
+
+	public BlockSteam(BlockBehaviour.Properties properties) {
+		super(properties);
+		this.registerDefaultState(this.stateDefinition.any()
+				.setValue(NO_DECAY, false).setValue(POWERED, false).setValue(AMMONIA, false).setValue(MOVED, false));
 	}
 
 	@Override
-	public void onBlockAdded(World world, int x, int y, int z) {
-		world.scheduleBlockUpdate(x, y, z, this, this.tickRate(world));
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+		builder.add(NO_DECAY, POWERED, AMMONIA, MOVED);
 	}
 
-	@Override
-	public void breakBlock(World world, int x, int y, int z, Block p5, int meta) {
-
-	}
-
-	@Override
-	public void onBlockPlacedBy(World world, int x, int y, int z, EntityLivingBase e, ItemStack is) {
-		if (e != null) {
-			world.setBlockMetadataWithNotify(x, y, z, 3, 3);
+	/** The state steam takes after transmitting one step in the given direction. */
+	private BlockState getTransmittedState(BlockState state, Direction dir) {
+		if (dir == Direction.UP) {
+			if (!state.getValue(MOVED))
+				return state;
+			// Rising after a horizontal move: keep the fluid type, mark no-decay, drop powered + moved.
+			return this.defaultBlockState().setValue(NO_DECAY, true).setValue(AMMONIA, state.getValue(AMMONIA));
 		}
+		return state.setValue(MOVED, true);
+	}
+
+	private boolean canMoveInto(Level world, BlockPos pos) {
+		BlockState s = world.getBlockState(pos);
+		if (s.isAir())
+			return true;
+		if (s.is(this))
+			return false;
+		if (!s.getFluidState().isEmpty())
+			return false;
+		return ReikaWorldHelper.softBlocks(world, pos);
 	}
 
 	@Override
-	public void updateTick(World world, int x, int y, int z, Random rand) {
-		int maxh = 256;
-		if (y > maxh || ClearSteamCommand.clearSteam()) {
-			world.setBlock(x, y, z, Blocks.air, 0, 2);
+	protected void onPlace(BlockState state, Level world, BlockPos pos, BlockState oldState, boolean movedByPiston) {
+		super.onPlace(state, world, pos, oldState, movedByPiston);
+		world.scheduleTick(pos, this, TICK_DELAY);
+	}
+
+	@Override
+	protected void tick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
+		if (pos.getY() > world.getMaxY()) {
+			world.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
 			return;
 		}
-		int meta = world.getBlockMetadata(x, y, z);
-		this.defaultMovement(world, x, y, z, rand, meta);
-		world.scheduleBlockUpdate(x, y, z, this, this.tickRate(world));
+		this.move(world, pos, state, random);
 	}
 
-	private void directionalMovement(World world, int x, int y, int z, Random rand, int meta) {
-		Direction dir;
-		switch(meta-4) {
-			case 0:
-				dir = Direction.EAST;
-				break;
-			case 1:
-				dir = Direction.WEST;
-				break;
-			case 2:
-				dir = Direction.SOUTH;
-				break;
-			case 3:
-				dir = Direction.NORTH;
-				break;
-			default:
-				dir = Direction.UP;
-				break;
-		}
+	private void move(ServerLevel world, BlockPos pos, BlockState state, RandomSource rand) {
+		BlockPos above = pos.above();
+		BlockState aboveState = world.getBlockState(above);
 
-		int dx = x+dir.offsetX;
-		int dy = y+dir.offsetY;
-		int dz = z+dir.offsetZ;
-
-		if (this.canMoveInto(world, dx, dy, dz)) {
-			world.setBlock(x, y, z, Blocks.air, 0, 2);
-			world.setBlock(dx, dy, dz, this, meta, 3);
-		}
-		else
-			world.setBlockMetadataWithNotify(x, y, z, 0, 3);
-		world.markBlockForUpdate(x, y, z);
-		world.markBlockForUpdate(dx, dy, dz);
-	}
-
-	private void defaultMovement(World world, int x, int y, int z, Random rand, int meta) {
-		if (world.getBlock(x, y+1, z) == ReactorBlocks.MATS.getBlockInstance() && world.getBlockMetadata(x, y+1, z) == MatBlocks.SCRUBBER.ordinal()) {
-			world.setBlock(x, y, z, Blocks.air, 0, 2);
+		// BLOCK-PORT: scrub when the mat block above is the SCRUBBER variant (read its blockstate once
+		// BlockReactorMat is ported); for now any MATS block above scrubs the steam.
+		if (aboveState.getBlock() == ReactorBlocks.MATS.get()) {
+			world.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
 			return;
 		}
-		if (ReactorTiles.getTE(world, x, y+1, z) == ReactorTiles.TURBINECORE) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(x, y+1, z);
+
+		if (ReactorTiles.getTE(world, above) == ReactorTiles.TURBINECORE) {
+			TileEntityTurbineCore te = (TileEntityTurbineCore) world.getBlockEntity(above);
 			Direction dir = te.getSteamMovement();
-			int d = te.getNumberStagesTotal()-te.getStage();
-			int dx = x+dir.offsetX*d;
-			int dy = y+dir.offsetY;
-			int dz = z+dir.offsetZ*d;
-			if (this.canMoveInto(world, dx, dy, dz)) {
-				world.setBlock(dx, dy, dz, this, this.getTransmittedMetadata(meta, dir), 2);
-				world.setBlock(x, y, z, Blocks.air, 0, 2);
-				world.markBlockForUpdate(dx, dy, dz);
-			}
-			else if (world.getBlock(dx, dy, dz) == ReactorBlocks.GENERATORMULTI.getBlockInstance() && world.getBlockMetadata(dx, dy, dz)%8 == 3) {
-				dx = te.xCoord+dir.offsetX*(1+d);
-				dy = te.yCoord+3;
-				dz = te.zCoord+dir.offsetZ*(1+d);
-				if (this.canMoveInto(world, dx, dy, dz)) {
-					world.setBlock(dx, dy, dz, this, this.getTransmittedMetadata(meta, dir), 2);
-					world.setBlock(x, y, z, Blocks.air, 0, 2);
-					world.markBlockForUpdate(dx, dy, dz);
-				}
-				else {
-					world.setBlock(x, y, z, Blocks.air, 0, 2);
-				}
-			}
-			else if (world.getBlock(dx, dy, dz) == ReactorBlocks.FLYWHEELMULTI.getBlockInstance()) {
-				int ddx = ReikaRandomHelper.getRandomPlusMinus(dx, 1+3*Math.abs(dir.offsetZ));
-				int ddz = ReikaRandomHelper.getRandomPlusMinus(dz, 1+3*Math.abs(dir.offsetX)); //only move on Z if was moving along X
-				if ((meta&4) != 0) {
-					int i = 0;
-					while (i <= 20 && !this.canMoveInto(world, dx, dy, dz)) {
-						ddx = ReikaRandomHelper.getRandomPlusMinus(dx, 1+3*Math.abs(dir.offsetZ));
-						ddz = ReikaRandomHelper.getRandomPlusMinus(dz, 1+3*Math.abs(dir.offsetX));
-						i++;
-					}
-				}
-				if (this.canMoveInto(world, ddx, dy, ddz)) {
-					world.setBlock(ddx, dy, ddz, this, this.getTransmittedMetadata(meta, dir), 2);
-					world.setBlock(x, y, z, Blocks.air, 0, 2);
-					world.markBlockForUpdate(ddx, dy, ddz);
-				}
-				else {
-					world.setBlock(x, y, z, Blocks.air, 0, 2);
-				}
+			int d = te.getNumberStagesTotal() - te.getStage();
+			BlockPos target = pos.offset(dir.getStepX() * d, dir.getStepY(), dir.getStepZ() * d);
+			if (this.canMoveInto(world, target)) {
+				world.setBlock(target, this.getTransmittedState(state, dir), 2);
 			}
 			else {
-				world.setBlock(x, y, z, Blocks.air, 0, 2);
-			}
-			world.markBlockForUpdate(x, y, z);
-			//ReikaJavaLibrary.pConsole(x+","+y+","+z+">>"+x+","+(y+1)+","+z);
-			world.scheduleBlockUpdate(x, y, z, this, this.tickRate(world));
-			return;
-		}/*
-		else if (ReactorTiles.getTE(world, x+1, y, z) == ReactorTiles.TURBINECORE) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(x+1, y, z);
-			Direction dir = te.getSteamMovement();
-			int dx = x+dir.offsetX;
-			int dy = y+dir.offsetY;
-			int dz = z+dir.offsetZ;
-			if (this.canMoveInto(world, dx, dy, dz)) {
-				world.setBlock(dx, dy, dz, this, this.getTransmittedMetadata(meta, dir), 3);
-				world.setBlock(x, y, z);
-			}
-			else if (world.getBlock(dx, dy, dz) == ReactorBlocks.GENERATORMULTI.getBlockInstance() && world.getBlockMetadata(dx, dy, dz) == 11) {
-				if (this.canMoveInto(world, te.xCoord+dir.offsetX*2, te.yCoord+3, te.zCoord+dir.offsetZ*2)) {
-					world.setBlock(te.xCoord+dir.offsetX*2, te.yCoord+3, te.zCoord+dir.offsetZ*2, this, this.getTransmittedMetadata(meta, dir), 3);
-					world.setBlock(x, y, z);
+				BlockState ts = world.getBlockState(target);
+				if (ts.getBlock() == ReactorBlocks.GENERATORMULTI.get() && ts.getValue(BlockGeneratorMulti.PART) == GeneratorPart.COIL) {
+					BlockPos gpos = te.getBlockPos().offset(dir.getStepX() * (1 + d), 3, dir.getStepZ() * (1 + d));
+					if (this.canMoveInto(world, gpos))
+						world.setBlock(gpos, this.getTransmittedState(state, dir), 2);
+				}
+				else if (ts.getBlock() == ReactorBlocks.FLYWHEELMULTI.get()) {
+					int ddx = ReikaRandomHelper.getRandomPlusMinus(target.getX(), 1 + 3 * Math.abs(dir.getStepZ()));
+					int ddz = ReikaRandomHelper.getRandomPlusMinus(target.getZ(), 1 + 3 * Math.abs(dir.getStepX()));
+					BlockPos fpos = new BlockPos(ddx, target.getY(), ddz);
+					if (this.canMoveInto(world, fpos))
+						world.setBlock(fpos, this.getTransmittedState(state, dir), 2);
 				}
 			}
-			world.markBlockForUpdate(x, y, z);
-			world.markBlockForUpdate(dx, dy, dz);
-			//ReikaJavaLibrary.pConsole(x+","+y+","+z+">>"+x+","+(y+1)+","+z);
-			world.scheduleBlockUpdate(x, y, z, this, this.tickRate(world));
+			world.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
 			return;
 		}
-		else if (ReactorTiles.getTE(world, x-1, y, z) == ReactorTiles.TURBINECORE) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(x-1, y, z);
-			Direction dir = te.getSteamMovement();
-			int dx = x+dir.offsetX;
-			int dy = y+dir.offsetY;
-			int dz = z+dir.offsetZ;
-			if (this.canMoveInto(world, dx, dy, dz)) {
-				world.setBlock(dx, dy, dz, this, this.getTransmittedMetadata(meta, dir), 3);
-				world.setBlock(x, y, z);
-			}
-			else if (world.getBlock(dx, dy, dz) == ReactorBlocks.GENERATORMULTI.getBlockInstance() && world.getBlockMetadata(dx, dy, dz) == 11) {
-				if (this.canMoveInto(world, te.xCoord+dir.offsetX*2, te.yCoord+3, te.zCoord+dir.offsetZ*2)) {
-					world.setBlock(te.xCoord+dir.offsetX*2, te.yCoord+3, te.zCoord+dir.offsetZ*2, this, this.getTransmittedMetadata(meta, dir), 3);
-					world.setBlock(x, y, z);
-				}
-			}
-			world.markBlockForUpdate(x, y, z);
-			world.markBlockForUpdate(dx, dy, dz);
-			//ReikaJavaLibrary.pConsole(x+","+y+","+z+">>"+x+","+(y+1)+","+z);
-			world.scheduleBlockUpdate(x, y, z, this, this.tickRate(world));
+
+		if (this.canMoveInto(world, above)) {
+			if (state.getValue(NO_DECAY) || ReikaRandomHelper.doWithChance(80))
+				world.setBlock(above, this.getTransmittedState(state, Direction.UP), 2);
+			world.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
 			return;
 		}
-		else if (ReactorTiles.getTE(world, x, y, z+1) == ReactorTiles.TURBINECORE) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(x, y, z+1);
-			Direction dir = te.getSteamMovement();
-			int dx = x+dir.offsetX;
-			int dy = y+dir.offsetY;
-			int dz = z+dir.offsetZ;
-			if (this.canMoveInto(world, dx, dy, dz)) {
-				world.setBlock(dx, dy, dz, this, this.getTransmittedMetadata(meta, dir), 3);
-				world.setBlock(x, y, z);
+
+		Direction[] sides = new Direction[]{Direction.EAST, Direction.WEST, Direction.SOUTH, Direction.NORTH};
+		ReikaArrayHelper.shuffleArray(sides);
+		for (Direction s : sides) {
+			BlockPos sp = pos.relative(s);
+			if (this.canMoveInto(world, sp)) {
+				world.setBlock(sp, this.getTransmittedState(state, s), 2);
+				world.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+				return;
 			}
-			else if (world.getBlock(dx, dy, dz) == ReactorBlocks.GENERATORMULTI.getBlockInstance() && world.getBlockMetadata(dx, dy, dz) == 11) {
-				if (this.canMoveInto(world, te.xCoord+dir.offsetX*2, te.yCoord+3, te.zCoord+dir.offsetZ*2)) {
-					world.setBlock(te.xCoord+dir.offsetX*2, te.yCoord+3, te.zCoord+dir.offsetZ*2, this, this.getTransmittedMetadata(meta, dir), 3);
-					world.setBlock(x, y, z);
-				}
-			}
-			world.markBlockForUpdate(x, y, z);
-			world.markBlockForUpdate(dx, dy, dz);
-			//ReikaJavaLibrary.pConsole(x+","+y+","+z+">>"+x+","+(y+1)+","+z);
-			world.scheduleBlockUpdate(x, y, z, this, this.tickRate(world));
+		}
+	}
+
+	@Override
+	protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean isPrecise) {
+		if (entity instanceof ItemEntity || entity instanceof ExperienceOrb)
 			return;
-		}
-		else if (ReactorTiles.getTE(world, x, y, z-1) == ReactorTiles.TURBINECORE) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(x, y, z-1);
-			Direction dir = te.getSteamMovement();
-			int dx = x+dir.offsetX;
-			int dy = y+dir.offsetY;
-			int dz = z+dir.offsetZ;
-			if (this.canMoveInto(world, dx, dy, dz)) {
-				world.setBlock(dx, dy, dz, this, this.getTransmittedMetadata(meta, dir), 3);
-				world.setBlock(x, y, z);
-			}
-			else if (world.getBlock(dx, dy, dz) == ReactorBlocks.GENERATORMULTI.getBlockInstance() && world.getBlockMetadata(dx, dy, dz) == 3) {
-				if (this.canMoveInto(world, te.xCoord+dir.offsetX*2, te.yCoord+3, te.zCoord+dir.offsetZ*2)) {
-					world.setBlock(te.xCoord+dir.offsetX*2, te.yCoord+3, te.zCoord+dir.offsetZ*2, this, this.getTransmittedMetadata(meta, dir), 3);
-					world.setBlock(x, y, z);
-				}
-			}
-			world.markBlockForUpdate(x, y, z);
-			world.markBlockForUpdate(dx, dy, dz);
-			//ReikaJavaLibrary.pConsole(x+","+y+","+z+">>"+x+","+(y+1)+","+z);
-			world.scheduleBlockUpdate(x, y, z, this, this.tickRate(world));
-			return;
-		}*/
-		else if (this.canMoveInto(world, x, y+1, z)) {
-			//ReikaJavaLibrary.pConsole(meta+":"+this.getTransmittedMetadata(meta, Direction.UP), Dist.DEDICATED_SERVER);
-			if (((meta&1) != 0) || ReikaRandomHelper.doWithChance(80))
-				world.setBlock(x, y+1, z, this, this.getTransmittedMetadata(meta, Direction.UP), 2);
-			world.setBlock(x, y, z, Blocks.air, 0, 2);
-			world.markBlockForUpdate(x, y, z);
-			world.markBlockForUpdate(x, y+1, z);
-			//ReikaJavaLibrary.pConsole(x+","+y+","+z+">>"+x+","+(y+1)+","+z);
-			world.scheduleBlockUpdate(x, y, z, this, this.tickRate(world));
-			return;
-		}
-		else {
-			Direction[] dir = new Direction[]{Direction.EAST, Direction.WEST, Direction.SOUTH, Direction.NORTH};
-			ReikaArrayHelper.shuffleArray(dir);
-			for (int i = 0; i < dir.length; i++) {
-				int dx = x+dir[i].offsetX;
-				int dy = y+dir[i].offsetY;
-				int dz = z+dir[i].offsetZ;
-				if (this.canMoveInto(world, dx, dy, dz)) {
-					world.setBlock(dx, dy, dz, this, this.getTransmittedMetadata(meta, dir[i]), 2);
-					world.setBlock(x, y, z, Blocks.air, 0, 2);
-					//ReikaJavaLibrary.pConsole(x+","+y+","+z+"->"+dx+","+dy+","+dz);
-					world.markBlockForUpdate(x, y, z);
-					world.markBlockForUpdate(dx, dy, dz);
-					world.scheduleBlockUpdate(x, y, z, this, this.tickRate(world));
-					return;
-				}
-			}
+		if (level instanceof ServerLevel sl) {
+			entity.hurtServer(sl, sl.damageSources().inFire(), 1);
+			if (state.getValue(AMMONIA) && entity instanceof LivingEntity le)
+				le.addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
 		}
 	}
 
-	public int getTransmittedMetadata(int original_meta, Direction dir) {
-		if (dir == Direction.UP) {
-			return (original_meta & 8) == 0 ? original_meta : 1+(original_meta&4);
-		}
-		return original_meta | 8;
-	}
-
-	public boolean canMoveInto(World world, int x, int y, int z) {
-		Block id = world.getBlock(x, y, z);
-		//ReikaJavaLibrary.pConsole(x+", "+y+", "+z+" >> "+id+":"+world.getBlockMetadata(x, y, z));
-		if (id == Blocks.air)
-			return true;
-		if (id == this)
-			return false;
-		if (id instanceof BlockLiquid || id instanceof BlockFluidBase)
-			return false;
-		return ReikaWorldHelper.softBlocks(world, x, y, z);
+	@Override
+	protected RenderShape getRenderShape(BlockState state) {
+		return RenderShape.INVISIBLE; // rendered by a translucent BER / particle layer, not a baked model
 	}
 
 	@Override
-	public int tickRate(World world) {
-		return 2;
+	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+		return Shapes.empty();
 	}
 
 	@Override
-	public boolean isAir(BlockGetter world, int x, int y, int z) {
-		return true;
-	}
-
-	@Override
-	public Item getItemDropped(int id, Random r, int fortune) {
-		return null;
-	}
-
-	@Override
-	public ArrayList<ItemStack> getDrops(World world, int x, int y, int z, int meta, int fortune) {
-		return new ArrayList();
-	}
-
-	@Override
-	protected void dropBlockAsItem(World world, int x, int y, int z, ItemStack is) {
-
-	}
-
-	@Override
-	public boolean canSilkHarvest() {
-		return false;
-	}
-
-	@Override
-	public boolean canCollideCheck(int par1, boolean par2) {
-		return false;
-	}
-
-	@Override
-	public boolean isOpaqueCube() {
-		return false;
-	}
-
-	@Override
-	public boolean renderAsNormalBlock() {
-		return false;
-	}
-
-	@Override
-	public int getRenderType() {
-		return 0;
-	}
-
-	@Override
-	public int getRenderBlockPass() {
-		return 1;
-	}
-
-	@Override
-	public AxisAlignedBB getCollisionBoundingBoxFromPool(World world, int x, int y, int z)
-	{
-		return null;
-	}
-
-	public IIcon getBlockTexture(BlockGetter iba, int x, int y, int z) {
-		return this.getIcon(0, 0);
-	}
-
-	@Override
-	public IIcon getIcon(int s, int meta) {
-		//return Blocks.wool.getIcon(s, meta);
-		return blockIcon;
-	}
-
-	@Override
-	public void registerBlockIcons(IIconRegister ico) {
-		blockIcon = ico.registerIcon("ReactorCraft:steam");
-	}
-
-	@Override
-	public boolean shouldSideBeRendered(BlockGetter iba, int x, int y, int z, int side) {
-		Direction dir = Direction.values()[side];
-		int dx = x+dir.offsetX;
-		int dy = y+dir.offsetY;
-		int dz = z+dir.offsetZ;
-		Block id = iba.getBlock(dx, dy, dz);
-		return id != this && id != ReactorBlocks.MODELREACTOR.getBlockInstance();
-	}
-
-	@Override
-	public boolean isReplaceable(BlockGetter world, int x, int y, int z) {
-		return true;
-	}
-
-	@Override
-	public void onEntityCollidedWithBlock(World world, int x, int y, int z, Entity e) {
-		if (!(e instanceof EntityItem || e instanceof EntityXPOrb)) {
-			RotaryCraft.heatDamage.lastMachine = ItemStack.EMPTY;
-			e.attackEntityFrom(RotaryCraft.heatDamage, 1);
-			int meta = world.getBlockMetadata(x, y, z);
-			if ((meta&4) != 0) {
-				if (e instanceof EntityLivingBase)
-					((EntityLivingBase)e).addPotionEffect(new PotionEffect(Potion.poison.id, 200, 0));
-			}
-		}
+	protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+		return Shapes.empty();
 	}
 
 }

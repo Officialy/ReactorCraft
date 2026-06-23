@@ -99,6 +99,26 @@ public final class ReactorBlocks {
         return register(name, factory);
     }
 
+    /** Register a block with no block-item (technical blocks like flowing steam). */
+    private static DeferredBlock<Block> registerNoItem(String name, Supplier<Block> factory) {
+        return BLOCKS.register(name, rl -> {
+            CURRENT_BLOCK_KEY.set(ResourceKey.create(Registries.BLOCK, rl));
+            try {
+                return factory.get();
+            } finally {
+                CURRENT_BLOCK_KEY.remove();
+            }
+        });
+    }
+
+    // --- Multiblock machine casings (named-blockstate variants; see Block*Multi) ---
+    public static final DeferredBlock<Block> GENERATORMULTI = registerMachine("generator_multi", () -> new reika.reactorcraft.blocks.multi.BlockGeneratorMulti(machineProperties().noOcclusion()));
+    public static final DeferredBlock<Block> FLYWHEELMULTI = registerMachine("flywheel_multi", () -> new reika.reactorcraft.blocks.multi.BlockFlywheelMulti(machineProperties().noOcclusion()));
+
+    // --- Flowing steam (air-like, self-propagating toward turbines) ---
+    public static final DeferredBlock<Block> STEAM = registerNoItem("steam", () -> new reika.reactorcraft.blocks.BlockSteam(
+            blockProperties().strength(3600000.0F).noCollision().noLootTable().replaceable().noOcclusion()));
+
     // --- Reactor machine blocks (one DeferredBlock per ReactorTiles constant) ---
     public static final DeferredBlock<Block> FUEL = registerMachine("fuel_rod", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
     public static final DeferredBlock<Block> CONTROL = registerMachine("control_rod", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
