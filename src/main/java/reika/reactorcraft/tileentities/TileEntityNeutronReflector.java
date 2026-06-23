@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 import reika.reactorcraft.auxiliary.ReactorCoreTE;
 import reika.reactorcraft.base.TileEntityReactorBase;
@@ -30,9 +31,9 @@ public class TileEntityNeutronReflector extends TileEntityReactorBase implements
 	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		e.moderate();
 		if (rand.nextInt(4) == 0) {
-			e.motionX = -e.motionX;
-			e.motionZ = -e.motionZ;
-			e.velocityChanged = true;
+			Vec3 mot = e.getDeltaMovement();
+			e.setDeltaMovement(-mot.x, mot.y, -mot.z);
+			e.hurtMarked = true;
 			return false;
 		}
 		else
