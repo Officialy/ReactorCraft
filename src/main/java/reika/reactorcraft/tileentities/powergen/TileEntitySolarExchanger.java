@@ -8,46 +8,41 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
-import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
-import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.base.TankedReactorPowerReceiver;
+import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorTiles;
-import reika.rotarycraft.auxiliary.interfaces.sodiumsolarupgrades.SodiumSolarOutput;
-import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
+import reika.rotarycraft.base.blockentity.BlockEntityPiping;
 import reika.rotarycraft.registry.MachineRegistry;
 
+// MOD-PORT: implements RotaryCraft's SodiumSolarOutput once that sodium-solar-upgrade interface is
+// ported; until then the receiveSodium() input path (from a solar tower) is gated out.
+public class TileEntitySolarExchanger extends TankedReactorPowerReceiver {
 
-public class TileEntitySolarExchanger extends TankedReactorPowerReceiver implements SodiumSolarOutput {
 	public TileEntitySolarExchanger(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.SOLAR.get(), pos, state);
 	}
 
-
 	public static final int MINPOWER = 65536;
 	public static final int MINSPEED = 2048;
 
+	// The exchanger pushes its hot sodium out through the horizontal sides.
 	@Override
-	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
-		return this.drain(from, resource.amount, doDrain);
+	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
+		return from.getStepY() == 0 ? tank.drain(maxDrain, doDrain) : FluidStack.EMPTY;
 	}
 
 	@Override
-	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
-		return tank.drain(maxDrain, doDrain);
-	}
-
-	@Override
-	public boolean canDrain(Direction from, Fluid fluid) {
-		return from.offsetY == 0;
+	public BlockEntityPiping.Flow getFlowForSide(Direction side) {
+		return side.getStepY() == 0 ? BlockEntityPiping.Flow.OUTPUT : BlockEntityPiping.Flow.NONE;
 	}
 
 	@Override
@@ -76,11 +71,6 @@ public class TileEntitySolarExchanger extends TankedReactorPowerReceiver impleme
 	}
 
 	@Override
-	public Flow getFlowForSide(Direction side) {
-		return side.offsetY == 0 ? Flow.OUTPUT : Flow.NONE;
-	}
-
-	@Override
 	public ReactorTiles getTile() {
 		return ReactorTiles.SOLAR;
 	}
@@ -90,16 +80,8 @@ public class TileEntitySolarExchanger extends TankedReactorPowerReceiver impleme
 		super.updateEntity(world, pos);
 	}
 
-	@Override
 	public boolean isActive() {
 		return this.sufficientPower();
-	}
-
-	@Override
-	public int receiveSodium(int amt) {
-		amt = Math.min(amt, tank.getRemainingSpace());
-		tank.addLiquid(amt, ReactorCraft.NA_warm);
-		return amt;
 	}
 
 	@Override
