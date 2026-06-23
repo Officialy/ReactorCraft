@@ -8,49 +8,45 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.processing;
-import net.minecraft.core.BlockPos;
 
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
+import java.util.ArrayList;
 import java.util.HashMap;
 
-import net.minecraft.block.material.Material;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.EnumHelper;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.fluids./*FLUIDCONTAINER-PORT*/ FluidContainerRegistry;
-import net.minecraft.world.level.material.FluidRegistry;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.material.MapColor;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
-import reika.dragonapi.asm.apistripper.Strippable;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.instantiable.recipe.FlexibleIngredient;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
-import reika.dragonapi.libraries.registry.ReikaItemHelper;
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
-import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.ReactorStacks;
 import reika.reactorcraft.base.TileEntityInventoriedReactorBase;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.api.interfaces.ThermalMachine;
 import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
-import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
+import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
 public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase implements IFluidHandler, ThermalMachine, PipeConnector {
+
 	public TileEntitySynthesizer(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.SYNTHESIZER.get(), pos, state);
 	}
-
 
 	private static final int WATER_PER_AMMONIA = 250;
 	private static final int AMMONIA_PER_STEP = 1000;
@@ -68,9 +64,12 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	private StepTimer steptimer = new StepTimer(1800);
 	private StepTimer tempTimer = new StepTimer(20);
 
-	public static enum FluidSynthesis {
-		AMMONIA(FluidRegistry.WATER, ReactorCraft.NH3, WATER_PER_AMMONIA, AMMONIA_PER_STEP, AMMONIATEMP, 50, 0, constructItemMatch("dustQuicklime", ReactorStacks.lime, 1), constructItemMatch("dustAmmonium", ReactorStacks.ammonium, 1)),
-		HOTLIFBE(ReactorCraft.LIFBe_fuel, ReactorCraft.LIFBe_fuel_preheat, 50, 50, 350, 100, 5);
+	public static final class FluidSynthesis {
+
+		public static final ArrayList<FluidSynthesis> list = new ArrayList<>();
+
+		public static final FluidSynthesis AMMONIA = new FluidSynthesis(Fluids.WATER, ReactorFluids.AMMONIA.get(), WATER_PER_AMMONIA, AMMONIA_PER_STEP, AMMONIATEMP, 50, 0, constructItemMatch("dustQuicklime", ReactorStacks.lime, 1), constructItemMatch("dustAmmonium", ReactorStacks.ammonium, 1));
+		public static final FluidSynthesis HOTLIFBE = new FluidSynthesis(ReactorFluids.LIFBE_FUEL.get(), ReactorFluids.LIFBE_FUEL_PREHEAT.get(), 50, 50, 350, 100, 5);
 
 		public final Fluid input;
 		public final Fluid output;
@@ -101,18 +100,17 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 			itemA = a;
 			itemB = b;
 			if (fluidMap.containsKey(input))
-				throw new IllegalArgumentException("Fluid "+input.getName()+" already mapped to a recipe!");
+				throw new IllegalArgumentException("Fluid "+input+" already mapped to a recipe!");
 			fluidMap.put(input, this);
+			list.add(this);
 		}
 
-		@SideOnly(Dist.CLIENT)
 		public ItemStack getAForDisplay() {
-			return itemA != null ? itemA.getItemForDisplay(true) : null;
+			return itemA != null ? itemA.getItemForDisplay(true) : ItemStack.EMPTY;
 		}
 
-		@SideOnly(Dist.CLIENT)
 		public ItemStack getBForDisplay() {
-			return itemB != null ? itemB.getItemForDisplay(true) : null;
+			return itemB != null ? itemB.getItemForDisplay(true) : ItemStack.EMPTY;
 		}
 
 		public boolean usesItem(ItemStack item) {
@@ -140,9 +138,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	public static void addRecipe(String name, Fluid in, Fluid out, int amtin, int amtout, int temp, int time, int curve, FlexibleIngredient a, FlexibleIngredient b) {
-		Class[] types = new Class[]{Fluid.class, Fluid.class, int.class, int.class, int.class, int.class, int.class, FlexibleIngredient.class, FlexibleIngredient.class};
-		Object[] args = new Object[]{in, out, amtin, amtout, temp, time, curve, a, b};
-		FluidSynthesis c = EnumHelper.addEnum(FluidSynthesis.class, name.toUpperCase(), types, args);
+		new FluidSynthesis(in, out, amtin, amtout, temp, time, curve, a, b);
 	}
 
 	@Override
@@ -164,44 +160,43 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 		else
 			steptimer.reset();
 		timer = steptimer.getTick();
-		//ReikaJavaLibrary.pConsole(tank);
 		tempTimer.update();
 		if (tempTimer.checkCap()) {
-			this.updateTemperature(world, x, y, z, meta);
+			this.updateTemperature(world, pos);
 		}
 	}
 
 	private FluidSynthesis getRecipe() {
 		if (water.isEmpty())
 			return null;
-		FluidSynthesis fr = fluidMap.get(water.getActualFluid());
+		FluidSynthesis fr = fluidMap.get(water.getActualFluid().getFluid());
 		if (fr == null)
 			return null;
-		if (!ReikaItemHelper.matchStacks(itemHandler.getStackInSlot(1), fr.itemA)) //handles null
+		if (fr.itemA != null && !fr.itemA.match(itemHandler.getStackInSlot(1)))
 			return null;
-		if (!ReikaItemHelper.matchStacks(itemHandler.getStackInSlot(2), fr.itemB))
+		if (fr.itemB != null && !fr.itemB.match(itemHandler.getStackInSlot(2)))
 			return null;
 		return fr;
 	}
 
-	public void updateTemperature(Level world, int x, int y, int z, int meta) {
-		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
+	public void updateTemperature(Level world, BlockPos pos) {
+		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, pos);
 
-		Direction waterside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.water);
+		Direction waterside = ReikaWorldHelper.checkForAdjMaterial(world, pos, MapColor.WATER);
 		if (waterside != null) {
 			Tamb /= 2;
 		}
-		Direction iceside = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.ice);
+		Direction iceside = ReikaWorldHelper.checkForAdjBlock(world, pos, Blocks.ICE);
 		if (iceside != null) {
 			if (Tamb > 0)
 				Tamb /= 4;
-			ReikaWorldHelper.changeAdjBlock(world, x, y, z, iceside, Blocks.flowing_water, 0);
+			ReikaWorldHelper.changeAdjBlock(world, pos, iceside, Blocks.WATER.defaultBlockState());
 		}
-		Direction fireside = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.fire);
+		Direction fireside = ReikaWorldHelper.checkForAdjBlock(world, pos, Blocks.FIRE);
 		if (fireside != null) {
 			Tamb += 200;
 		}
-		Direction lavaside = ReikaWorldHelper.checkForAdjMaterial(world, x, y, z, Material.lava);
+		Direction lavaside = ReikaWorldHelper.checkForAdjMaterial(world, pos, MapColor.FIRE);
 		if (lavaside != null) {
 			Tamb += 600;
 		}
@@ -216,20 +211,20 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 		if (temperature > MAXTEMP)
 			temperature = MAXTEMP;
 		if (temperature > 100) {
-			Direction side = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.snow);
+			Direction side = ReikaWorldHelper.checkForAdjBlock(world, pos, Blocks.SNOW);
 			if (side != null)
-				ReikaWorldHelper.changeAdjBlock(world, x, y, z, side, Blocks.air, 0);
-			side = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, Blocks.ice);
+				ReikaWorldHelper.changeAdjBlock(world, pos, side, Blocks.AIR.defaultBlockState());
+			side = ReikaWorldHelper.checkForAdjBlock(world, pos, Blocks.ICE);
 			if (side != null)
-				ReikaWorldHelper.changeAdjBlock(world, x, y, z, side, Blocks.flowing_water, 0);
+				ReikaWorldHelper.changeAdjBlock(world, pos, side, Blocks.WATER.defaultBlockState());
 		}
 	}
 
 	private void make() {
 		if (recipe.itemA != null)
-			ReikaInventoryHelper.decrStack(1, inv);
+			ReikaInventoryHelper.decrStack(1, itemHandler);
 		if (recipe.itemB != null)
-			ReikaInventoryHelper.decrStack(2, inv);
+			ReikaInventoryHelper.decrStack(2, itemHandler);
 		water.removeLiquid(recipe.fluidConsumed);
 		tank.addLiquid(recipe.fluidProduced, recipe.output);
 	}
@@ -247,9 +242,10 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	private void getWaterBuckets() {
-		if (itemHandler.getStackInSlot(0) != null && itemHandler.getStackInSlot(0).getCount() == 1 && itemHandler.getStackInSlot(0).getItem() == Items.water_bucket && water.canTakeIn(FluidRegistry.WATER, /*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME)) {
-			water.addLiquid(/*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.BUCKET_VOLUME, FluidRegistry.WATER);
-			itemHandler.getStackInSlot(0) = new ItemStack(Items.bucket);
+		ItemStack in = itemHandler.getStackInSlot(0);
+		if (!in.isEmpty() && in.getCount() == 1 && in.getItem() == Items.WATER_BUCKET && water.canTakeIn(Fluids.WATER, FluidType.BUCKET_VOLUME)) {
+			water.addLiquid(FluidType.BUCKET_VOLUME, Fluids.WATER);
+			itemHandler.setStackInSlot(0, new ItemStack(Items.BUCKET));
 		}
 	}
 
@@ -258,41 +254,52 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 
 	}
 
+	// --- NeoForge IFluidHandler (0=output product, 1=water input) ---
 	@Override
-	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
-		return this.canDrain(from, resource.getFluid()) ? tank.drain(resource.amount, doDrain) : null;
+	public int getTanks() {
+		return 2;
 	}
 
 	@Override
-	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
-		return this.canDrain(from, null) ? tank.drain(maxDrain, doDrain) : null;
+	public FluidStack getFluidInTank(int t) {
+		return t == 0 ? tank.getFluid() : water.getFluid();
 	}
 
 	@Override
-	public boolean canDrain(Direction from, Fluid fluid) {
-		return true;//fluid.equals(ReactorFluids.getLegacyFluid("rc ammonia"));
+	public int getTankCapacity(int t) {
+		return 24000;
 	}
 
 	@Override
-	public int fill(Direction from, FluidStack resource, boolean doFill) {
-		if (!this.canFill(from, resource.getFluid()))
+	public boolean isFluidValid(int t, FluidStack stack) {
+		return t == 1 && fluidMap.containsKey(stack.getFluid());
+	}
+
+	@Override
+	public int fill(FluidStack resource, FluidAction action) {
+		if (resource.isEmpty() || !fluidMap.containsKey(resource.getFluid()))
 			return 0;
-		return water.fill(resource, doFill);
+		return water.fill(resource, action);
 	}
 
 	@Override
-	public boolean canFill(Direction from, Fluid fluid) {
-		return fluidMap.get(fluid) != ItemStack.EMPTY;
+	public FluidStack drain(FluidStack resource, FluidAction action) {
+		if (resource.isEmpty())
+			return FluidStack.EMPTY;
+		FluidStack out = tank.getFluid();
+		if (out.isEmpty() || !FluidStack.isSameFluidSameComponents(resource, out))
+			return FluidStack.EMPTY;
+		return tank.drain(resource.getAmount(), action);
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(Direction from) {
-		return new FluidTankInfo[]{water.getInfo(), tank.getInfo()};
+	public FluidStack drain(int maxDrain, FluidAction action) {
+		return tank.drain(maxDrain, action);
 	}
 
 	@Override
 	public boolean canRemoveItem(int i, ItemStack itemstack) {
-		return itemstack.getItem() == Items.bucket;
+		return itemstack.getItem() == Items.BUCKET;
 	}
 
 	@Override
@@ -303,8 +310,8 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	@Override
 	public boolean isItemValidForSlot(int i, ItemStack is) {
 		if (i == 0)
-			return is.getItem() == Items.water_bucket;
-		for (FluidSynthesis rec : FluidSynthesis.values()) {
+			return is.getItem() == Items.WATER_BUCKET;
+		for (FluidSynthesis rec : FluidSynthesis.list) {
 			if (rec.itemA != null && rec.itemA.match(is))
 				return i == 1;
 			else if (rec.itemB != null && rec.itemB.match(is))
@@ -314,11 +321,11 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	public String getInputFluid() {
-		return water.isEmpty() ? null : water.getActualFluid().getLocalizedName();
+		return water.isEmpty() ? null : water.getActualFluid().getHoverName().getString();
 	}
 
 	public String getOutputFluid() {
-		return tank.isEmpty() ? null : tank.getActualFluid().getLocalizedName();
+		return tank.isEmpty() ? null : tank.getActualFluid().getHoverName().getString();
 	}
 
 	@Override
@@ -364,7 +371,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	@Override
-	public void onOverheat(Level world, int x, int y, int z) {
+	public void onOverheat(Level world, BlockPos pos) {
 
 	}
 
@@ -375,7 +382,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 
 	public boolean addWater(int amt) {
 		if (water.canTakeIn(amt)) {
-			water.addLiquid(amt, FluidRegistry.WATER);
+			water.addLiquid(amt, Fluids.WATER);
 			return true;
 		}
 		return false;
@@ -402,8 +409,18 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	@Override
+	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
+		return from.getStepY() == 0 && !resource.isEmpty() && fluidMap.containsKey(resource.getFluid()) ? water.fill(resource, action) : 0;
+	}
+
+	@Override
+	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction action) {
+		return from.getStepY() != 0 ? tank.drain(maxDrain, action) : FluidStack.EMPTY;
+	}
+
+	@Override
 	public Flow getFlowForSide(Direction side) {
-		return side.offsetY == 0 ? Flow.INPUT : Flow.OUTPUT;
+		return side.getStepY() == 0 ? Flow.INPUT : Flow.OUTPUT;
 	}
 
 	@Override
@@ -416,9 +433,18 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 		tempTimer.reset();
 	}
 
-	@Override
 	public boolean hasWork() {
 		return recipe != null && tank.canTakeIn(recipe.output, recipe.fluidProduced);
+	}
+
+	@Override
+	public boolean hasATank() {
+		return true;
+	}
+
+	@Override
+	public boolean hasAnInventory() {
+		return true;
 	}
 
 }
