@@ -8,32 +8,31 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
-import net.minecraft.world.level.block.Block;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 
 import reika.reactorcraft.auxiliary.MultiBlockTile;
 import reika.reactorcraft.base.BlockReCMultiBlock;
 import reika.reactorcraft.base.TileEntityReactorBase;
+import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.powergen.TileEntityHiPTurbine;
 import reika.reactorcraft.tileentities.powergen.TileEntityTurbineCore;
 import reika.rotarycraft.api.interfaces.Screwdriverable;
 import reika.rotarycraft.api.power.ShaftPowerReceiver;
-import reika.rotarycraft.auxiliary.ShaftPowerEmitter;
+import reika.rotarycraft.api.power.ShaftPowerEmitter;
 
 public class TileEntityReactorFlywheel extends TileEntityReactorBase implements ShaftPowerEmitter, Screwdriverable, MultiBlockTile {
+
 	public TileEntityReactorFlywheel(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.FLYWHEEL.get(), pos, state);
 	}
-
 
 	private int iotick;
 	private long power;
@@ -44,10 +43,11 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 
 	private boolean hasMultiBlock = false;
 
-	//public static final int MAXSPEED = 8192;
-	//public static final int MINTORQUE = 32768;
 	private static final int MAXTORQUE = 12750;
 	private static final int MAXTORQUE_AMMONIA = MAXTORQUE*2;
+
+	/** The flywheel only ever faces horizontally; index order mirrors the legacy meta 0..3 (E/W/S/N). */
+	private static final Direction[] FACES = {Direction.EAST, Direction.WEST, Direction.SOUTH, Direction.NORTH};
 
 	public boolean hasMultiBlock() {
 		return hasMultiBlock;
@@ -61,6 +61,14 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 		return facing != null ? facing : Direction.EAST;
 	}
 
+	private int faceIndex() {
+		Direction f = this.getFacing();
+		for (int i = 0; i < FACES.length; i++)
+			if (FACES[i] == f)
+				return i;
+		return 0;
+	}
+
 	@Override
 	public ReactorTiles getTile() {
 		return ReactorTiles.FLYWHEEL;
@@ -68,21 +76,10 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
-		facing = this.setFacing(meta);
-		int dx = x+this.getFacing().offsetX;
-		int dy = y+this.getFacing().offsetY;
-		int dz = z+this.getFacing().offsetZ;
-		ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
+		BlockPos tp = pos.relative(this.getFacing());
+		ReactorTiles r = ReactorTiles.getTE(world, tp);
 		if (r != null && r.isTurbine()) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(dx, dy, dz);
-			//if (te.getOmega() > omega && omega < MAXSPEED && te.getTorque() >= MINTORQUE) {
-			//	omega++;
-			//}
-			//else if (omega > 0) {
-			//	omega--;
-			//}
-			//torque = te.getTorque();
-			//ReikaJavaLibrary.pConsole(torque+"/"+te.getTorque()+":"+omega+"/"+te.getOmega(), Dist.DEDICATED_SERVER);
+			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(tp);
 			omega = te.getOmega();
 			torque = TileEntityReactorFlywheel.clampTorque(te);
 		}
@@ -95,7 +92,7 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 			omega = 0;
 		}
 		power = (long)omega*(long)torque;
-		BlockEntity tg = this.getAdjacentTileEntity(this.getFacing().getOpposite());
+		BlockEntity tg = this.getAdjacentBlockEntity(this.getFacing().getOpposite());
 		if (tg instanceof ShaftPowerReceiver) {
 			ShaftPowerReceiver rec = (ShaftPowerReceiver)tg;
 			rec.setOmega(this.getOmega());
@@ -108,29 +105,12 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 		return te instanceof TileEntityHiPTurbine ? te.getTorque() : Math.min(te.getTorque(), te.isAmmonia() ? MAXTORQUE_AMMONIA : MAXTORQUE);
 	}
 
-	private Direction setFacing(int meta) {
-		switch(meta) {
-			case 0:
-				return Direction.EAST;
-			case 1:
-				return Direction.WEST;
-			case 2:
-				return Direction.SOUTH;
-			case 3:
-				return Direction.NORTH;
-			default:
-				return null;
-		}
-	}
-
 	@Override
 	protected void animateWithTick(Level world, BlockPos pos) {
-		int dx = x+this.getFacing().offsetX;
-		int dy = y+this.getFacing().offsetY;
-		int dz = z+this.getFacing().offsetZ;
-		ReactorTiles r = ReactorTiles.getTE(world, dx, dy, dz);
+		BlockPos tp = pos.relative(this.getFacing());
+		ReactorTiles r = ReactorTiles.getTE(world, tp);
 		if (r != null && r.isTurbine()) {
-			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(dx, dy, dz);
+			TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(tp);
 			phi = te.phi*6;
 		}
 		iotick -= 8;
@@ -173,8 +153,7 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 
 	@Override
 	public boolean canWriteTo(Direction from) {
-		Direction dir = this.getFacing().getOpposite();
-		return dir == from;
+		return this.getFacing().getOpposite() == from;
 	}
 
 	@Override
@@ -183,37 +162,26 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 	}
 
 	@Override
-	public int getEmittingX() {
-		return xCoord+this.getFacing().getOpposite().offsetX;
+	public BlockPos getEmittingPos(BlockPos pos) {
+		return pos.relative(this.getFacing().getOpposite());
 	}
 
 	@Override
-	public int getEmittingY() {
-		return yCoord+this.getFacing().getOpposite().offsetY;
-	}
-
-	@Override
-	public int getEmittingZ() {
-		return zCoord+this.getFacing().getOpposite().offsetZ;
-	}
-
-	@Override
-	public boolean onShiftRightClick(Level world, int x, int y, int z, Direction side) {
+	public boolean onShiftRightClick(Level world, BlockPos pos, Direction side) {
 		return false;
 	}
 
 	@Override
-	public boolean onRightClick(Level world, int x, int y, int z, Direction side) {
-		int meta = this;
+	public boolean onRightClick(Level world, BlockPos pos, Direction side) {
+		int idx = this.faceIndex();
 		if (this.hasMultiBlock()) {
-			this.setBlockMetadata((meta-meta%2)+(1-(meta%2)));
+			idx = (idx-idx%2)+(1-(idx%2));
 		}
 		else {
-			if (meta < 3)
-				this.setBlockMetadata(meta+1);
-			else
-				this.setBlockMetadata(0);
+			idx = idx < 3 ? idx+1 : 0;
 		}
+		facing = FACES[idx];
+		this.triggerBlockUpdate();
 		return true;
 	}
 
@@ -221,7 +189,7 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 	protected void readSyncTag(CompoundTag NBT) {
 		super.readSyncTag(NBT);
 
-		facing = dirs[NBT.getIntOr("face", 0)];
+		facing = Direction.values()[NBT.getIntOr("face", Direction.EAST.ordinal())];
 		hasMultiBlock = NBT.getBooleanOr("multi", false);
 
 		power = NBT.getLongOr("pwr", 0L);
@@ -239,15 +207,14 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 
 	@Override
 	public void breakBlock() {
-		if (!level.isRemote) {
+		if (!level.isClientSide()) {
+			BlockPos pos = this.getBlockPos();
 			for (int i = 0; i < 6; i++) {
 				Direction dir = dirs[i];
-				int dx = xCoord+dir.offsetX;
-				int dy = yCoord+dir.offsetY;
-				int dz = zCoord+dir.offsetZ;
-				Block b = level.getBlock(dx, dy, dz);
+				BlockPos p = pos.relative(dir);
+				Block b = level.getBlockState(p).getBlock();
 				if (b instanceof BlockReCMultiBlock) {
-					((BlockReCMultiBlock)b).breakMultiBlock(level, dx, dy, dz);
+					((BlockReCMultiBlock)b).breakMultiBlock(level, p.getX(), p.getY(), p.getZ());
 				}
 			}
 		}
