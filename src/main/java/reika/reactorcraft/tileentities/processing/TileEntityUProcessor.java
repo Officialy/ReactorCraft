@@ -9,29 +9,23 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.processing;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.state.BlockState;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.Level;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.fluids./*FLUIDCONTAINER-PORT*/ FluidContainerRegistry;
-import net.minecraft.world.level.material.FluidRegistry;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.minecraft.world.level.material.FluidTankInfo;
+import net.neoforged.neoforge.fluids.FluidUtil;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.oredict.OreDictionary;
 
-import reika.dragonapi.ModList;
-import reika.dragonapi.asm.apistripper.Strippable;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.ParallelTicker;
 import reika.dragonapi.instantiable.data.KeyedItemStack;
@@ -39,21 +33,23 @@ import reika.dragonapi.libraries.ReikaFluidHelper;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.java.ReikaJavaLibrary;
 import reika.dragonapi.libraries.registry.ReikaItemHelper;
-import reika.dragonapi.modinteract.itemhandlers.IC2Handler;
 import reika.reactorcraft.auxiliary.ReactorStacks;
 import reika.reactorcraft.base.TileEntityInventoriedReactorBase;
+import reika.reactorcraft.blocks.BlockReactorMachine;
 import reika.reactorcraft.registry.ReactorAchievements;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorItems;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
-import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
+import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
 public class TileEntityUProcessor extends TileEntityInventoriedReactorBase implements IFluidHandler, PipeConnector {
+
 	public TileEntityUProcessor(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.PROCESSOR.get(), pos, state);
 	}
-
 
 	private final HybridTank output = new HybridTank("uprocout", 3000);
 	private final HybridTank intermediate = new HybridTank("uprocmid", 3000);
@@ -62,12 +58,12 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	public int intermediate_timer;
 	public int output_timer;
 
-	private Direction facing;
+	private Direction facing = Direction.WEST;
 
 	private ParallelTicker timer = new ParallelTicker().addTicker("intermediate", 0).addTicker("output", 0);
 
 	public static enum Processes {
-		UF6("water", "rc hydrofluoric acid", "rc uranium hexafluoride", 250, 1000, 250, 125, 80, 400, "ingotUranium"),
+		UF6("water", "rc hydrofluoric acid", "rc uranium hexafluoride", 250, 1000, 250, 125, 80, 400, ReactorItems.URANIUM_INGOT.toStack()),
 		LiFBe("rc lithium", "rc hydrofluoric acid", "rc lifbe", 100, 500, 250, 1500, 120, 600, ReactorStacks.emeralddust);
 
 		public final int intermediateTime;
@@ -85,13 +81,9 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 
 		private final HashSet<KeyedItemStack> inputItem = new HashSet();
 
-		private static final HashMap<String, Processes> processMap = new HashMap();
-		private static final HashMap<String, Processes> processOutputMap = new HashMap();
+		private static final HashMap<Fluid, Processes> processMap = new HashMap();
+		private static final HashMap<Fluid, Processes> processOutputMap = new HashMap();
 		public static final Processes[] list = values();
-
-		private Processes(String f, String f1, String f2, int incons, int outprod, int prod, int cons, int t1, int t2, String in) {
-			this(f, f1, f2, incons, outprod, prod, cons, t1, t2, new ArrayList(OreDictionary.getOres(in)));
-		}
 
 		private Processes(String f, String f1, String f2, int incons, int outprod, int prod, int cons, int t1, int t2, ItemStack in) {
 			this(f, f1, f2, incons, outprod, prod, cons, t1, t2, ReikaJavaLibrary.makeListFrom(in));
@@ -111,13 +103,7 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 			intermediateFluidProduced = prod;
 			intermediateFluidConsumed = cons;
 
-			if (f2.equals("rc uranium hexafluoride")) {
-				if (ModList.IC2.isLoaded()) {
-					ItemStack is = IC2Handler.IC2Stacks.PURECRUSHEDU.getItem();
-					if (is != null)
-						in.add(is);
-				}
-			}
+			// MOD-PORT: IC2 PURECRUSHEDU input gated out (IC2 not in 26.2 build); re-add when IC2Handler ports.
 			for (ItemStack is : in) {
 				inputItem.add(new KeyedItemStack(is).setSimpleHash(true));
 			}
@@ -130,8 +116,8 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 		static {
 			for (int i = 0; i < list.length; i++) {
 				Processes p = list[i];
-				processMap.put(p.inputFluid.getName(), p);
-				processOutputMap.put(p.outputFluid.getName(), p);
+				processMap.put(p.inputFluid, p);
+				processOutputMap.put(p.outputFluid, p);
 			}
 		}
 
@@ -161,7 +147,7 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
-		this.getFacing(meta);
+		facing = this.getBlockState().getValue(BlockReactorMachine.FACING);
 		this.getFluidContainers();
 		Processes p = this.getProcess();
 		if (p == null)
@@ -193,16 +179,12 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	private Processes getProcess() {
-		Fluid f = input.getActualFluid();
+		Fluid f = input.getActualFluid().getFluid();
 		if (f == null)
 			return null;
-		Processes p = Processes.processMap.get(f.getName());
+		Processes p = Processes.processMap.get(f);
 		if (p == null)
 			return null;
-		if (p.hasIntermediate() && !this.hasFluorite())
-			;//return null;
-		if (!this.hasInputItem(p))
-			;//return null;
 		return p;
 	}
 
@@ -211,13 +193,13 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	private boolean hasInputItem(Processes p) {
-		if (itemHandler.getStackInSlot(2) == null)
+		if (itemHandler.getStackInSlot(2).isEmpty())
 			return false;
 		return p.isValidItem(itemHandler.getStackInSlot(2));
 	}
 
 	private boolean hasFluorite() {
-		if (itemHandler.getStackInSlot(0) == null)
+		if (itemHandler.getStackInSlot(0).isEmpty())
 			return false;
 		return this.isFluorite(itemHandler.getStackInSlot(0));
 	}
@@ -231,19 +213,19 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	private void runIntermediate(Processes p) {
-		ReikaInventoryHelper.decrStack(0, inv);
+		ReikaInventoryHelper.decrStack(0, itemHandler);
 		this.addIntermediate(p.intermediateFluidProduced, p.intermediateFluid);
-		input.drain(p.inputFluidConsumed, true);
+		input.drain(p.inputFluidConsumed, IFluidHandler.FluidAction.EXECUTE);
 	}
 
 	private void runOutput(Processes p) {
-		ReikaInventoryHelper.decrStack(2, inv);
+		ReikaInventoryHelper.decrStack(2, itemHandler);
 		if (!p.hasIntermediate()) {
-			ReikaInventoryHelper.decrStack(0, inv);
-			input.drain(p.inputFluidConsumed, true);
+			ReikaInventoryHelper.decrStack(0, itemHandler);
+			input.drain(p.inputFluidConsumed, IFluidHandler.FluidAction.EXECUTE);
 		}
-		output.fill(new FluidStack(p.outputFluid, p.outputFluidProduced), true);
-		intermediate.drain(p.intermediateFluidConsumed, true);
+		output.fill(new FluidStack(p.outputFluid, p.outputFluidProduced), IFluidHandler.FluidAction.EXECUTE);
+		intermediate.drain(p.intermediateFluidConsumed, IFluidHandler.FluidAction.EXECUTE);
 		if (p == Processes.UF6) {
 			ReactorAchievements.UF6.triggerAchievement(this.getPlacer());
 		}
@@ -286,37 +268,39 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	public Fluid getInputFluid() {
-		return input.getActualFluid();
+		return input.getActualFluid().getFluid();
 	}
 
 	public Fluid getIntermediateFluid() {
-		return intermediate.getActualFluid();
+		return intermediate.getActualFluid().getFluid();
 	}
 
 	public Fluid getOutputFluid() {
-		return output.getActualFluid();
+		return output.getActualFluid().getFluid();
 	}
 
 	private void getFluidContainers() {
-		if (itemHandler.getStackInSlot(1) != null) {
-			FluidStack fs = ReikaFluidHelper.getFluidForItem(itemHandler.getStackInSlot(1));
-			if (fs != null && Processes.processMap.get(fs.getFluid().getName()) != null && this.canAcceptMoreInput(fs.amount)) {
-				input.fill(fs.copy(), true);
-				itemHandler.getStackInSlot(1) = /*FLUIDCONTAINER-PORT*/ FluidContainerRegistry.drainFluidContainer(itemHandler.getStackInSlot(1));
-			}
+		ItemStack in = itemHandler.getStackInSlot(1);
+		if (in.isEmpty())
+			return;
+		FluidStack fs = ReikaFluidHelper.getFluidForItem(in);
+		if (!fs.isEmpty() && Processes.processMap.get(fs.getFluid()) != null && this.canAcceptMoreInput(fs.getAmount())) {
+			net.neoforged.neoforge.fluids.FluidActionResult r = FluidUtil.tryEmptyContainer(in, this, fs.getAmount(), null, true);
+			if (r.isSuccess())
+				itemHandler.setStackInSlot(1, r.getResult());
 		}
 	}
 
 	public boolean canAcceptMoreInput(int amt) {
-		return input.getFluid() == null || input.getFluid().amount+amt <= input.getCapacity();
+		return input.getFluid().isEmpty() || input.getFluid().getAmount()+amt <= input.getCapacity();
 	}
 
 	public boolean canAcceptMoreIntermediate(int amt) {
-		return intermediate.getFluid() == null || intermediate.getFluid().amount+amt <= intermediate.getCapacity();
+		return intermediate.getFluid().isEmpty() || intermediate.getFluid().getAmount()+amt <= intermediate.getCapacity();
 	}
 
 	public boolean canAcceptMoreOutput(int amt) {
-		return output.getFluid() == null || output.getFluid().amount+amt <= output.getCapacity();
+		return output.getFluid().isEmpty() || output.getFluid().getAmount()+amt <= output.getCapacity();
 	}
 
 	@Override
@@ -335,9 +319,9 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 			case 0:
 				return this.isFluorite(is);
 			case 1:
-				return this.getProcessByFluidItem(is) != ItemStack.EMPTY;
+				return this.getProcessByFluidItem(is) != null;
 			case 2:
-				return this.getProcessByMainItem(is) != ItemStack.EMPTY;
+				return this.getProcessByMainItem(is) != null;
 		}
 		return false;
 	}
@@ -354,70 +338,71 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 
 	public static Processes getProcessByFluidItem(ItemStack is) {
 		FluidStack fs = ReikaFluidHelper.getFluidForItem(is);
-		if (fs == null)
+		if (fs.isEmpty())
 			return null;
-		return Processes.processMap.get(fs.getFluid().getName());
+		return Processes.processMap.get(fs.getFluid());
 	}
 
 	public static Processes getProcessByFluidOutputItem(ItemStack is) {
 		FluidStack fs = ReikaFluidHelper.getFluidForItem(is);
-		if (fs == null)
+		if (fs.isEmpty())
 			return null;
-		return Processes.processOutputMap.get(fs.getFluid().getName());
+		return Processes.processOutputMap.get(fs.getFluid());
 	}
 
 	public static Processes getProcessByInput(Fluid f) {
-		return Processes.processMap.get(f.getName());
+		return Processes.processMap.get(f);
 	}
 
 	public static Processes getProcessByOutput(Fluid f) {
-		return Processes.processOutputMap.get(f.getName());
+		return Processes.processOutputMap.get(f);
+	}
+
+	// --- NeoForge IFluidHandler (0=input, 1=intermediate, 2=output) ---
+	@Override
+	public int getTanks() {
+		return 3;
 	}
 
 	@Override
-	public int fill(Direction from, FluidStack resource, boolean doFill) {
-		if (!this.canFill(from, resource.getFluid()))
+	public FluidStack getFluidInTank(int t) {
+		return t == 0 ? input.getFluid() : t == 1 ? intermediate.getFluid() : output.getFluid();
+	}
+
+	@Override
+	public int getTankCapacity(int t) {
+		return 3000;
+	}
+
+	@Override
+	public boolean isFluidValid(int t, FluidStack stack) {
+		return t == 0 && Processes.processMap.containsKey(stack.getFluid());
+	}
+
+	@Override
+	public int fill(FluidStack resource, FluidAction action) {
+		if (resource.isEmpty() || !Processes.processMap.containsKey(resource.getFluid()))
 			return 0;
-		return input.fill(resource, doFill);
+		return input.fill(resource, action);
 	}
 
 	@Override
-	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
-		return output.drain(maxDrain, doDrain);
+	public FluidStack drain(FluidStack resource, FluidAction action) {
+		if (resource.isEmpty())
+			return FluidStack.EMPTY;
+		FluidStack out = output.getFluid();
+		if (out.isEmpty() || !FluidStack.isSameFluidSameComponents(resource, out))
+			return FluidStack.EMPTY;
+		return output.drain(resource.getAmount(), action);
 	}
 
 	@Override
-	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
-		return this.canDrain(from, resource.getFluid()) ? output.drain(resource.amount, doDrain) : null;
-	}
-
-	@Override
-	public boolean canFill(Direction from, Fluid fluid) {
-		for (int i = 0; i < Processes.list.length; i++) {
-			if (Processes.list[i].inputFluid.equals(fluid))
-				return true;
-			if (Processes.list[i].intermediateFluid != null && Processes.list[i].intermediateFluid.equals(fluid))
-				return true;
-		}
-		return false;
-	}
-
-	@Override
-	public boolean canDrain(Direction from, Fluid fluid) {
-		for (int i = 0; i < Processes.list.length; i++) {
-			if (Processes.list[i].outputFluid.equals(fluid))
-				return true;
-		}
-		return false;
-	}
-
-	@Override
-	public FluidTankInfo[] getTankInfo(Direction from) {
-		return new FluidTankInfo[]{input.getInfo(), intermediate.getInfo(), output.getInfo()};
+	public FluidStack drain(int maxDrain, FluidAction action) {
+		return output.drain(maxDrain, action);
 	}
 
 	public void addIntermediate(int amt, Fluid f) {
-		int a = intermediate.fill(new FluidStack(f, amt), true);
+		intermediate.fill(new FluidStack(f, amt), IFluidHandler.FluidAction.EXECUTE);
 	}
 
 	@Override
@@ -467,28 +452,20 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
+	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
+		return from != facing && !resource.isEmpty() && Processes.processMap.containsKey(resource.getFluid()) ? input.fill(resource, action) : 0;
+	}
+
+	@Override
+	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction action) {
+		return from == facing ? output.drain(maxDrain, action) : FluidStack.EMPTY;
+	}
+
+	@Override
 	public Flow getFlowForSide(Direction side) {
 		return side == facing ? Flow.OUTPUT : Flow.INPUT;
 	}
 
-	private void getFacing(int meta) {
-		switch(meta) {
-			case 0:
-				facing = Direction.WEST;
-				break;
-			case 1:
-				facing = Direction.EAST;
-				break;
-			case 2:
-				facing = Direction.NORTH;
-				break;
-			case 3:
-				facing = Direction.SOUTH;
-				break;
-		}
-	}
-
-	@Override
 	public boolean hasWork() {
 		Processes p = this.getProcess();
 		return p != null && output.canTakeIn(p.outputFluid, p.outputFluidProduced);
