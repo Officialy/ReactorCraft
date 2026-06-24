@@ -1,35 +1,68 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
  * Distribution of the software in any form is only allowed with
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.powergen;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidRegistry;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.minecraft.world.level.material.FluidTankInfo;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
+import reika.dragonapi.base.BlockEntityBase;
 import reika.dragonapi.instantiable.HybridTank;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+import reika.reactorcraft.registry.ReactorBlocks;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
-import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
+import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
-public class TileEntitySteamInjector extends BlockEntity implements IFluidHandler, PipeConnector {
+public class TileEntitySteamInjector extends BlockEntityBase implements IFluidHandler, PipeConnector {
 
 	private final HybridTank tank = new HybridTank("injector", 1000);
 
+	public TileEntitySteamInjector(BlockPos pos, BlockState state) {
+		super(ReactorBlockEntities.STEAMINJECTOR.get(), pos, state);
+	}
+
 	@Override
-	public boolean canUpdate() {
-		return false;
+	public Block getBlockEntityBlockID() {
+		return ReactorBlocks.TURBINEMULTI.get();
+	}
+
+	@Override
+	public void updateEntity(Level world, BlockPos pos) {
+
+	}
+
+	@Override
+	protected void animateWithTick(Level world, BlockPos pos) {
+
+	}
+
+	@Override
+	public int getRedstoneOverride() {
+		return 0;
+	}
+
+	@Override
+	protected String getTEName() {
+		return "steam_injector";
+	}
+
+	private boolean isLube(FluidStack fs) {
+		return !fs.isEmpty() && fs.getFluid().equals(ReactorFluids.getLegacyFluid("rc lubricant"));
 	}
 
 	@Override
@@ -48,51 +81,60 @@ public class TileEntitySteamInjector extends BlockEntity implements IFluidHandle
 	}
 
 	@Override
-	public int fill(Direction from, FluidStack resource, boolean doFill) {
-		return this.canFill(from, resource.getFluid()) ? tank.fill(resource, doFill) : 0;
+	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
+		return this.isLube(resource) ? tank.fill(resource, action) : 0;
 	}
 
 	@Override
-	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
-		return null;
+	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction action) {
+		return FluidStack.EMPTY;
+	}
+
+	// --- NeoForge IFluidHandler (input-only lubricant tank) ---
+	@Override
+	public int getTanks() {
+		return 1;
 	}
 
 	@Override
-	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
-		return null;
+	public FluidStack getFluidInTank(int t) {
+		return tank.getFluid();
 	}
 
 	@Override
-	public boolean canFill(Direction from, Fluid fluid) {
-		return fluid.equals(ReactorFluids.getLegacyFluid("rc lubricant"));
+	public int getTankCapacity(int t) {
+		return tank.getCapacity();
 	}
 
 	@Override
-	public boolean canDrain(Direction from, Fluid fluid) {
-		return false;
+	public boolean isFluidValid(int t, FluidStack stack) {
+		return this.isLube(stack);
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(Direction from) {
-		return new FluidTankInfo[]{tank.getInfo()};
+	public int fill(FluidStack resource, FluidAction action) {
+		return this.isLube(resource) ? tank.fill(resource, action) : 0;
 	}
 
 	@Override
-	public boolean shouldRenderInPass(int pass) {
-		return false;
+	public FluidStack drain(FluidStack resource, FluidAction action) {
+		return FluidStack.EMPTY;
 	}
 
 	@Override
-	public void loadAdditional(/*PORT*/CompoundTag NBT) {
-		super.loadAdditional(/*PORT*/NBT);
+	public FluidStack drain(int maxDrain, FluidAction action) {
+		return FluidStack.EMPTY;
+	}
 
+	@Override
+	protected void readSyncTag(CompoundTag NBT) {
+		super.readSyncTag(NBT);
 		tank.readFromNBT(NBT);
 	}
 
 	@Override
-	public void saveAdditional(/*PORT*/CompoundTag NBT) {
-		super.saveAdditional(/*PORT*/NBT);
-
+	protected void writeSyncTag(CompoundTag NBT) {
+		super.writeSyncTag(NBT);
 		tank.writeToNBT(NBT);
 	}
 

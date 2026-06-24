@@ -115,6 +115,7 @@ public final class ReactorBlocks {
     public static final DeferredBlock<Block> GENERATORMULTI = registerMachine("generator_multi", () -> new reika.reactorcraft.blocks.multi.BlockGeneratorMulti(machineProperties().noOcclusion()));
     public static final DeferredBlock<Block> FLYWHEELMULTI = registerMachine("flywheel_multi", () -> new reika.reactorcraft.blocks.multi.BlockFlywheelMulti(machineProperties().noOcclusion()));
     public static final DeferredBlock<Block> SOLENOIDMULTI = registerMachine("solenoid_multi", () -> new reika.reactorcraft.blocks.multi.BlockSolenoidMulti(machineProperties().noOcclusion()));
+    public static final DeferredBlock<Block> TURBINEMULTI = registerMachine("turbine_multi", () -> new reika.reactorcraft.blocks.multi.BlockTurbineMulti(machineProperties().noOcclusion()));
 
     // --- Reactor material block (6 variants incl. scrubber/graphite/lodestone; see MatBlocks) ---
     public static final DeferredBlock<Block> MATS = register("reactor_mat", () -> new reika.reactorcraft.blocks.BlockReactorMat(machineProperties().randomTicks().noOcclusion()));

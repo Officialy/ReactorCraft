@@ -9,54 +9,62 @@
  ******************************************************************************/
 package reika.reactorcraft.blocks.multi;
 
-import java.util.Set;
+import java.util.Locale;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.BlockGetter;
-import net.minecraft.world.level.Level;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 
-import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
 import reika.dragonapi.instantiable.data.blockstruct.SlicedBlockBlueprint;
 import reika.dragonapi.instantiable.data.blockstruct.StructuredBlockArray;
-import reika.dragonapi.instantiable.data.immutable.BlockKey;
-import reika.dragonapi.instantiable.data.immutable.Coordinate;
-import reika.dragonapi.libraries.java.ReikaJavaLibrary;
+import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
 import reika.reactorcraft.base.BlockReCMultiBlock;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.powergen.TileEntitySteamInjector;
 import reika.reactorcraft.tileentities.powergen.TileEntityTurbineCore;
 
-public class BlockTurbineMulti extends BlockReCMultiBlock {
+public class BlockTurbineMulti extends BlockReCMultiBlock implements EntityBlock {
+
+	/** The named casing parts of the turbine multiblock (legacy variants 0..2 / 't','h','e'). */
+	public enum TurbinePart implements StringRepresentable {
+		SHELL,   // 0 / 't': the turbine shell
+		HOUSING, // 1 / 'h': the outer housing
+		ELEMENT; // 2 / 'e': the steam-injector element (hosts the BE)
+
+		@Override
+		public String getSerializedName() {
+			return this.name().toLowerCase(Locale.ROOT);
+		}
+	}
+
+	public static final EnumProperty<TurbinePart> PART = EnumProperty.create("part", TurbinePart.class);
 
 	private final SlicedBlockBlueprint setup;
 
-	public BlockTurbineMulti(Material par2Material) {
-		super(par2Material);
+	public BlockTurbineMulti(BlockBehaviour.Properties properties) {
+		super(properties);
+		this.registerDefaultState(this.stateDefinition.any().setValue(PART, TurbinePart.SHELL).setValue(FORMED, false));
 		setup = new SlicedBlockBlueprint();
 		this.initMap();
 	}
 
 	@Override
-	public boolean hasTileEntity(int meta) {
-		return meta%8 == 2;
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+		super.createBlockStateDefinition(builder);
+		builder.add(PART);
 	}
 
 	@Override
-	public TileEntity createTileEntity(World world, int meta) {
-		switch(meta%8) {
-			case 2:
-				return new TileEntitySteamInjector();
-			default:
-				return null;
-		}
-	}
-
-	@Override
-	public int getNumberTextures() {
-		return 6;
+	public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+		return state.getValue(PART) == TurbinePart.ELEMENT ? new TileEntitySteamInjector(pos, state) : null;
 	}
 
 	public int getThickness(int stage) {
@@ -64,9 +72,9 @@ public class BlockTurbineMulti extends BlockReCMultiBlock {
 	}
 
 	private void initMap() {
-		setup.addMapping('t', this, 0);
-		setup.addMapping('h', this, 1);
-		setup.addMapping('e', this, 2);
+		setup.addMapping('t', this.defaultBlockState().setValue(PART, TurbinePart.SHELL));
+		setup.addMapping('h', this.defaultBlockState().setValue(PART, TurbinePart.HOUSING));
+		setup.addMapping('e', this.defaultBlockState().setValue(PART, TurbinePart.ELEMENT));
 		setup.addAntiMapping('b', this);
 
 		setup.addSlice(
@@ -183,33 +191,32 @@ public class BlockTurbineMulti extends BlockReCMultiBlock {
 	}
 
 	@Override
-	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
+	public Boolean checkForFullMultiBlock(Level world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
 		StructuredBlockArray blocks = new StructuredBlockArray(world);
 		blocks.recursiveAddWithBounds(world, x, y, z, this, x-12, y-12, z-12, x+12, y+12, z+12);
-		int sx;
-		int sz;
-		int n = this.checkForTurbines(world, x, y, z, dir, blocks); //only accept steam emitter at last turb stage
+		int n = this.checkForTurbines(world, dir, blocks); //only accept steam emitter at last turb stage
 		if (n <= 0 || n > 7)
 			return false;
-		if (!this.checkForShape(world, x, y, z, dir, blocks, n, call))
+		if (!this.checkForShape(world, dir, blocks, n, call))
 			return false;
 		return true;
 	}
 
-	private int checkForTurbines(World world, int x, int y, int z, Direction dir, StructuredBlockArray blocks) {
+	private int checkForTurbines(Level world, Direction dir, StructuredBlockArray blocks) {
 		int mx = blocks.getMinX()+blocks.getSizeX()/2;
 		int my = blocks.getMinY()+blocks.getSizeY()/2;
 		int mz = blocks.getMinZ()+blocks.getSizeZ()/2;
-		int sx = dir.offsetX == 0 ? mx : dir.offsetX < 0 ? blocks.getMaxX() : blocks.getMinX();
-		int sz = dir.offsetZ == 0 ? mz : dir.offsetZ < 0 ? blocks.getMaxZ() : blocks.getMinZ();
+		int sx = dir.getStepX() == 0 ? mx : dir.getStepX() < 0 ? blocks.getMaxX() : blocks.getMinX();
+		int sz = dir.getStepZ() == 0 ? mz : dir.getStepZ() < 0 ? blocks.getMaxZ() : blocks.getMinZ();
 		int c = 0;
 		for (int i = 0; i < setup.getLength(); i++) {
-			int dx = sx+i*dir.offsetX;
-			int dz = sz+i*dir.offsetZ;
-			ReactorTiles r = ReactorTiles.getTE(world, dx, my, dz);
+			int dx = sx+i*dir.getStepX();
+			int dz = sz+i*dir.getStepZ();
+			BlockPos p = new BlockPos(dx, my, dz);
+			ReactorTiles r = ReactorTiles.getTE(world, p);
 			if (r == ReactorTiles.BIGTURBINE) {
 				c++;
-				((TileEntityTurbineCore)world.getBlockEntity(dx, my, dz)).markForMulti();
+				((TileEntityTurbineCore)world.getBlockEntity(p)).markForMulti();
 			}
 			else
 				return c;
@@ -217,17 +224,17 @@ public class BlockTurbineMulti extends BlockReCMultiBlock {
 		return c;
 	}
 
-	private boolean checkForShape(World world, int x, int y, int z, Direction dir, StructuredBlockArray blocks, int turbines, BlockMatchFailCallback call) {
+	private boolean checkForShape(Level world, Direction dir, StructuredBlockArray blocks, int turbines, BlockMatchFailCallback call) {
 		int start = setup.getLength()-turbines-1;
 		int mx = blocks.getMinX()+blocks.getSizeX()/2;
 		int my = blocks.getMinY()+blocks.getSizeY()/2;
 		int mz = blocks.getMinZ()+blocks.getSizeZ()/2;
-		int sx = dir.offsetX == 0 ? mx : dir.offsetX < 0 ? blocks.getMaxX() : blocks.getMinX();
-		int sz = dir.offsetZ == 0 ? mz : dir.offsetZ < 0 ? blocks.getMaxZ() : blocks.getMinZ();
+		int sx = dir.getStepX() == 0 ? mx : dir.getStepX() < 0 ? blocks.getMaxX() : blocks.getMinX();
+		int sz = dir.getStepZ() == 0 ? mz : dir.getStepZ() < 0 ? blocks.getMaxZ() : blocks.getMinZ();
 		for (int i = start; i < setup.getLength(); i++) {
 			int d = i-start;
-			int dx = sx+d*dir.offsetX;
-			int dz = sz+d*dir.offsetZ;
+			int dx = sx+d*dir.getStepX();
+			int dz = sz+d*dir.getStepZ();
 			boolean match = setup.checkAgainst(world, dx, my, dz, 5, 5, dir, i, call);
 			if (!match)
 				return false;
@@ -236,82 +243,48 @@ public class BlockTurbineMulti extends BlockReCMultiBlock {
 	}
 
 	@Override
-	public void breakMultiBlock(World world, int x, int y, int z) {
-		StructuredBlockArray blocks = new StructuredBlockArray(world);
-		Block tid = ReactorTiles.BIGTURBINE.getBlock();
-		Set<BlockKey> set = ReikaJavaLibrary.getSet(new BlockKey(this), new BlockKey(ReactorTiles.BIGTURBINE));
-		blocks.recursiveAddMultipleWithBounds(world, x, y, z, set, x-12, y-12, z-12, x+12, y+12, z+12);
-		for (int i = 0; i < blocks.getSize(); i++) {
-			Coordinate c = blocks.getNthBlock(i);
-			Block b = c.getBlock(world);
-			int meta = c.getBlockMetadata(world);
-			if (b == this) {
-				if (meta >= 8) {
-					world.setBlockMetadataWithNotify(c.xCoord, c.yCoord, c.zCoord, meta-8, 3);
-				}
+	public void breakMultiBlock(Level world, int x, int y, int z) {
+		for (BlockPos p : BlockPos.betweenClosed(x-12, y-12, z-12, x+12, y+12, z+12)) {
+			BlockState s = world.getBlockState(p);
+			if (s.is(this)) {
+				if (s.getValue(FORMED))
+					world.setBlock(p.immutable(), s.setValue(FORMED, false), 3);
 			}
-			else if (b == tid) {
-				TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(c.xCoord, c.yCoord, c.zCoord);
-				te.setHasMultiBlock(false);
+			else if (ReactorTiles.getTE(world, p) == ReactorTiles.BIGTURBINE) {
+				((TileEntityTurbineCore)world.getBlockEntity(p)).setHasMultiBlock(false);
 			}
 		}
 	}
 
 	@Override
-	protected void onCreateFullMultiBlock(World world, int x, int y, int z, Boolean complete) {
-		StructuredBlockArray blocks = new StructuredBlockArray(world);
-		Block tid = ReactorTiles.BIGTURBINE.getBlock();
-		Set<BlockKey> set = ReikaJavaLibrary.getSet(new BlockKey(this), new BlockKey(ReactorTiles.BIGTURBINE));
-		blocks.recursiveAddMultipleWithBounds(world, x, y, z, set, x-12, y-12, z-12, x+12, y+12, z+12);
-		for (int i = 0; i < blocks.getSize(); i++) {
-			Coordinate c = blocks.getNthBlock(i);
-			Block b = c.getBlock(world);
-			if (b == this) {
-				int meta = c.getBlockMetadata(world);
-				if (meta < 8) {
-					world.setBlockMetadataWithNotify(c.xCoord, c.yCoord, c.zCoord, meta+8, 3);
-				}
+	protected void onCreateFullMultiBlock(Level world, int x, int y, int z, Boolean complete) {
+		for (BlockPos p : BlockPos.betweenClosed(x-12, y-12, z-12, x+12, y+12, z+12)) {
+			BlockState s = world.getBlockState(p);
+			if (s.is(this)) {
+				if (!s.getValue(FORMED))
+					world.setBlock(p.immutable(), s.setValue(FORMED, true), 3);
 			}
-			else if (b == tid) {
-				TileEntityTurbineCore te = (TileEntityTurbineCore)world.getBlockEntity(c.xCoord, c.yCoord, c.zCoord);
-				te.setHasMultiBlock(true);
+			else if (ReactorTiles.getTE(world, p) == ReactorTiles.BIGTURBINE) {
+				((TileEntityTurbineCore)world.getBlockEntity(p)).setHasMultiBlock(true);
 			}
 		}
 	}
 
 	@Override
-	public int getNumberVariants() {
-		return 3;
+	public boolean canTriggerMultiBlockCheck(Level world, BlockPos pos, BlockState state) {
+		TurbinePart p = state.getValue(PART);
+		return p == TurbinePart.SHELL || p == TurbinePart.HOUSING;
 	}
 
 	@Override
-	protected String getIconBaseName() {
-		return "turbine";
-	}
-
-	@Override
-	public int getTextureIndex(BlockGetter world, int x, int y, int z, int side, int meta) {
-		return meta >= 8 ? 5 : meta;
-	}
-
-	@Override
-	public int getItemTextureIndex(int meta, int side) {
-		return meta&7;
-	}
-
-	@Override
-	public boolean canTriggerMultiBlockCheck(World world, int x, int y, int z, int meta) {
-		return meta <= 1;
-	}
-
-	@Override
-	protected TileEntity getTileEntityForPosition(World world, int x, int y, int z) {
+	protected BlockEntity getTileEntityForPosition(Level world, int x, int y, int z) {
 		StructuredBlockArray blocks = new StructuredBlockArray(world);
 		blocks.recursiveAddWithBounds(world, x, y, z, this, x-12, y-12, z-12, x+12, y+12, z+12);
 		int mx = blocks.getMinX()+blocks.getSizeX()/2;
 		int my = blocks.getMinY()+blocks.getSizeY()/2;
 		int mz = blocks.getMinZ()+blocks.getSizeZ()/2;
-		return ReactorTiles.getTE(world, mx, my, mz) == ReactorTiles.BIGTURBINE ? world.getBlockEntity(mx, my, mz) : null;
+		BlockPos p = new BlockPos(mx, my, mz);
+		return ReactorTiles.getTE(world, p) == ReactorTiles.BIGTURBINE ? world.getBlockEntity(p) : null;
 	}
 
 	public SlicedBlockBlueprint getBlueprint() {

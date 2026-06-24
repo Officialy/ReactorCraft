@@ -99,6 +99,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/blocks/multi/BlockGeneratorMulti.java'
     include 'reika/reactorcraft/blocks/multi/BlockFlywheelMulti.java'
     include 'reika/reactorcraft/blocks/multi/BlockSolenoidMulti.java'
+    include 'reika/reactorcraft/blocks/multi/BlockTurbineMulti.java'
     include 'reika/reactorcraft/blocks/BlockSteam.java'
     include 'reika/reactorcraft/blocks/BlockReactorMat.java'
     include 'reika/reactorcraft/registry/MatBlocks.java'
