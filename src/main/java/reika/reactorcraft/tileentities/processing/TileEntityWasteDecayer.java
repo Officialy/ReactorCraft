@@ -8,27 +8,25 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.processing;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.util.Mth;
-import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.mathsci.Isotopes;
-import reika.dragonapi.libraries.mathsci.isotopes.DecayData;
+import reika.dragonapi.libraries.mathsci.Isotopes.DecayData;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
 import reika.dragonapi.libraries.registry.ReikaItemHelper;
 import reika.dragonapi.modregistry.ModOreList;
 import reika.reactorcraft.auxiliary.ReactorCoreTE;
+import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.base.TileEntityInventoriedReactorBase;
 import reika.reactorcraft.base.TileEntityWasteUnit;
 import reika.reactorcraft.entities.EntityNeutron;
@@ -37,10 +35,10 @@ import reika.reactorcraft.registry.ReactorItems;
 import reika.reactorcraft.registry.ReactorTiles;
 
 public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase implements ReactorCoreTE {
+
 	public TileEntityWasteDecayer(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.WASTEDECAYER.get(), pos, state);
 	}
-
 
 	public static final int BASE_TEMP = 150;
 	public static final int OPTIMAL_TEMP = 400;
@@ -58,31 +56,23 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 
 		thermalTicker.update();
 		if (thermalTicker.checkCap()) {
-			this.updateTemperature(world, x, y, z);
+			this.updateTemperature(world, pos);
 		}
 	}
 
 	private boolean feed() {
-		Level world = level;
-		int x = xCoord;
-		int y = yCoord;
-		int z = zCoord;
-		Block id = world.getBlock(x, y-1, z);
-		int meta = world.getBlockMetadata(x, y-1, z);
-		BlockEntity tile = this.getAdjacentTileEntity(Direction.DOWN);
+		BlockEntity tile = this.getAdjacentBlockEntity(Direction.DOWN);
 		if (tile instanceof TileEntityWasteDecayer) {
 			if (((TileEntityWasteDecayer)tile).feedIn(itemHandler.getStackInSlot(itemHandler.getSlots()-1))) {
 				for (int i = itemHandler.getSlots()-1; i > 0; i--)
-					itemHandler.getStackInSlot(i) = itemHandler.getStackInSlot(i-1);
+					itemHandler.setStackInSlot(i, itemHandler.getStackInSlot(i-1));
 
-				id = world.getBlock(x, y+1, z);
-				meta = world.getBlockMetadata(x, y+1, z);
-				tile = this.getAdjacentTileEntity(Direction.UP);
+				tile = this.getAdjacentBlockEntity(Direction.UP);
 				if (tile instanceof TileEntityWasteDecayer) {
-					itemHandler.getStackInSlot(0) = ((TileEntityWasteDecayer) tile).feedOut();
+					itemHandler.setStackInSlot(0, ((TileEntityWasteDecayer) tile).feedOut());
 				}
 				else
-					itemHandler.getStackInSlot(0) = ItemStack.EMPTY;
+					itemHandler.setStackInSlot(0, ItemStack.EMPTY);
 			}
 		}
 		this.collapseInventory();
@@ -92,14 +82,16 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	private void collapseInventory() {
 		for (int i = 0; i < itemHandler.getSlots(); i++) {
 			for (int k = itemHandler.getSlots()-1; k > 0; k--) {
-				if (itemHandler.getStackInSlot(k) == null && itemHandler.getStackInSlot(k-1) != null) {
-					itemHandler.getStackInSlot(k) = itemHandler.getStackInSlot(k-1);
-					itemHandler.getStackInSlot(k-1) = ItemStack.EMPTY;
+				ItemStack a = itemHandler.getStackInSlot(k);
+				ItemStack b = itemHandler.getStackInSlot(k-1);
+				if (a.isEmpty() && !b.isEmpty()) {
+					itemHandler.setStackInSlot(k, b);
+					itemHandler.setStackInSlot(k-1, ItemStack.EMPTY);
 					return;
 				}
-				else if (ReikaItemHelper.areStacksCombinable(itemHandler.getStackInSlot(k), itemHandler.getStackInSlot(k-1), Integer.MAX_VALUE) && itemHandler.getStackInSlot(k).getCount() < Math.min(itemHandler.getStackInSlot(k).getMaxStackSize(), this.getInventoryStackLimit())) {
-					itemHandler.getStackInSlot(k).getCount()++;
-					ReikaInventoryHelper.decrStack(k-1, inv);
+				else if (ReikaItemHelper.areStacksCombinable(a, b, Integer.MAX_VALUE) && a.getCount() < Math.min(a.getMaxStackSize(), this.getInventoryStackLimit())) {
+					itemHandler.setStackInSlot(k, a.copyWithCount(a.getCount()+1));
+					ReikaInventoryHelper.decrStack(k-1, itemHandler);
 					return;
 				}
 			}
@@ -107,25 +99,24 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	private boolean feedIn(ItemStack is) {
-		if (is == null)
+		if (is.isEmpty())
 			return true;
 		if (!this.isItemValidForSlot(0, is))
 			return false;
-		if (itemHandler.getStackInSlot(0) == null) {
-			itemHandler.getStackInSlot(0) = is.copy();
+		if (itemHandler.getStackInSlot(0).isEmpty()) {
+			itemHandler.setStackInSlot(0, is.copy());
 			return true;
 		}
 		return false;
 	}
 
 	private ItemStack feedOut() {
-		if (itemHandler.getStackInSlot(itemHandler.getSlots()-1) == null)
-			return null;
-		else {
-			ItemStack is = itemHandler.getStackInSlot(itemHandler.getSlots()-1).copy();
-			itemHandler.getStackInSlot(itemHandler.getSlots()-1) = ItemStack.EMPTY;
-			return is;
-		}
+		ItemStack last = itemHandler.getStackInSlot(itemHandler.getSlots()-1);
+		if (last.isEmpty())
+			return ItemStack.EMPTY;
+		ItemStack is = last.copy();
+		itemHandler.setStackInSlot(itemHandler.getSlots()-1, ItemStack.EMPTY);
+		return is;
 	}
 
 	@Override
@@ -161,10 +152,8 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	private boolean tryDecay() {
 		for (int i = 0; i < itemHandler.getSlots(); i++) {
 			ItemStack is = itemHandler.getStackInSlot(i);
-			if (is != null && TileEntityWasteUnit.isLongLivedWaste(is)) {
-				//ReikaJavaLibrary.pConsole("Trying to decay "+Isotopes.getIsotope(is.getDamageValue())+" in slot #"+i);
+			if (!is.isEmpty() && TileEntityWasteUnit.isLongLivedWaste(is)) {
 				if (this.tryDecay(i, is)) {
-					//ReikaJavaLibrary.pConsole("Success");
 					return true;
 				}
 			}
@@ -172,22 +161,13 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 		return false;
 	}
 
-	private boolean tryDecay(int i, ItemStack is) {/*
-		int slot = is.getCount() == 1 ? i : ReikaInventoryHelper.findEmptySlot(inv);
-		if (slot >= 0) {
-			if (is.getCount() > 1)
-				is.getCount()--;
-			itemHandler.getStackInSlot(slot) = ReikaItemHelper.getSizedItemStack(Isotopes.getIsotope(is.getDamageValue()).getForcedFissionProduct(), 2);
-			return true;
-		}
-		return false;*/
+	private boolean tryDecay(int i, ItemStack is) {
 		DecayData split = Isotopes.getIsotope(is.getDamageValue()).getDecay();
 		if (split == null) {
-			ReikaInventoryHelper.decrStack(i, inv);
-			//ReikaJavaLibrary.pConsole("Decayed into nothing");
+			ReikaInventoryHelper.decrStack(i, itemHandler);
 			return true;
 		}
-		int amt = Mth.floor_double(split.amount);
+		int amt = Mth.floor(split.amount);
 		if (ReikaRandomHelper.doWithChance(split.amount-amt))
 			amt++;
 		if (amt == 0)
@@ -196,9 +176,8 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 		if (add == null) {
 			return true;
 		}
-		//ReikaJavaLibrary.pConsole("Decayed into "+split.isotope+" x"+add.getCount());
 		if (ReikaInventoryHelper.addToIInv(add, this)) {
-			ReikaInventoryHelper.decrStack(i, inv);
+			ReikaInventoryHelper.decrStack(i, itemHandler);
 			return true;
 		}
 		return false;
@@ -206,24 +185,23 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 
 	private ItemStack getItem(DecayData split, int amt) {
 		if (split.isotope.getChemicalSymbol().equalsIgnoreCase("pb"))
-			return ModOreList.LEAD.existsInGame() ? ModOreList.LEAD.getFirstProduct() : null;
-		else if (split.isotope instanceof Isotopes)
-			return new ItemStack(ReactorItems.WASTE.getItemInstance(), amt, ((Isotopes)split.isotope).ordinal());
+			return ModOreList.LEAD.existsInGame() ? ModOreList.LEAD.getFirstOreBlock() : null;
+		else if (split.isotope instanceof Isotopes) {
+			ItemStack s = ReactorItems.WASTE.getStackOfMetadata(((Isotopes)split.isotope).ordinal());
+			s.setCount(amt);
+			return s;
+		}
 		else
 			return null;
 	}
 
 	@Override
 	public final int getTextureState(Direction side) {
-		if (side.offsetY != 0)
+		if (side.getStepY() != 0)
 			return 4;
-		Level world = level;
-		int x = xCoord;
-		int y = yCoord;
-		int z = zCoord;
 		ReactorTiles src = this.getTile();
-		ReactorTiles r = ReactorTiles.getTE(world, x, y-1, z);
-		ReactorTiles r2 = ReactorTiles.getTE(world, x, y+1, z);
+		ReactorTiles r = ReactorTiles.getTE(level, this.getBlockPos().below());
+		ReactorTiles r2 = ReactorTiles.getTE(level, this.getBlockPos().above());
 		if (r2 == src && r == src)
 			return 2;
 		else if (r2 == src)
@@ -258,7 +236,6 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 		return !TileEntityWasteUnit.isLongLivedWaste(is);
 	}
 
-	@Override
 	public int getInventoryStackLimit() {
 		return 8;
 	}
