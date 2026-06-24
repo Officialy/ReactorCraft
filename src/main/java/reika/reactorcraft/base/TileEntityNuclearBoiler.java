@@ -115,7 +115,7 @@ public abstract class TileEntityNuclearBoiler extends TileEntityTankedReactorMac
 				TileEntityNuclearBoiler te = (TileEntityNuclearBoiler)world.getBlockEntity(dpos);
 				if (te.tank.getFluidLevel() < tank.getFluidLevel() && (te.tank.isEmpty() || te.tank.getActualFluid() == tank.getActualFluid())) {
 					int dl = tank.getFluidLevel()-te.tank.getFluidLevel();
-					te.tank.addLiquid(dl/4+1, tank.getActualFluid());
+					te.tank.addLiquid(dl/4+1, tank.getActualFluid().getFluid());
 					tank.removeLiquid(dl/4+1);
 				}
 			}

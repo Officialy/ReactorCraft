@@ -27,7 +27,7 @@ public class ReactorStacks {
 	public static final ItemStack calcite = ReactorItems.RAW.getStackOfMetadata(5);
 	public static final ItemStack lodestone = ReactorItems.RAW.getStackOfMetadata(6);
 	public static final ItemStack thordust = ReactorItems.RAW.getStackOfMetadata(7);
-	public static final ItemStack emeralddust = ReactorItems.EMERALD_DUST.getDefaultInstance();
+	public static final ItemStack emeralddust = ReactorItems.EMERALD_DUST.toStack();
 	public static final ItemStack wastedust = ReactorItems.RAW.getStackOfMetadata(9);
 
 	public static final ItemStack emptycan = ReactorItems.CANISTER_REF.getStackOf();
@@ -52,7 +52,7 @@ public class ReactorStacks {
 
 	private static ItemStack canister(net.minecraft.world.level.material.Fluid fluid, int amount) {
 		ItemStack s = ReactorItems.CANISTER_REF.getStackOf();
-		s.set(ReactorDataComponents.CANISTER_FLUID.get(), new SimpleFluidContent(new FluidStack(fluid, amount)));
+		s.set(ReactorDataComponents.CANISTER_FLUID.get(), SimpleFluidContent.copyOf(new FluidStack(fluid, amount)));
 		return s;
 	}
 

@@ -10,16 +10,16 @@
 package reika.reactorcraft.event;
 
 import net.minecraft.world.level.Level;
-
+import net.neoforged.bus.api.Event;
 
 public class ReactorMeltdownEvent extends Event {
 
-	public final World world;
+	public final Level world;
 	public final int centerX;
 	public final int centerY;
 	public final int centerZ;
 
-	public ReactorMeltdownEvent(World world, int x, int y, int z) {
+	public ReactorMeltdownEvent(Level world, int x, int y, int z) {
 		this.world = world;
 		centerX = x;
 		centerY = y;

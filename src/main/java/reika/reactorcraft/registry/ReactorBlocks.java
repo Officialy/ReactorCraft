@@ -119,6 +119,7 @@ public final class ReactorBlocks {
 
     // --- Reactor material block (6 variants incl. scrubber/graphite/lodestone; see MatBlocks) ---
     public static final DeferredBlock<Block> MATS = register("reactor_mat", () -> new reika.reactorcraft.blocks.BlockReactorMat(machineProperties().randomTicks().noOcclusion()));
+    public static final DeferredBlock<Block> CORIUMFLOWING = register("corium", () -> new reika.reactorcraft.blocks.BlockCoriumFlowing(machineProperties().randomTicks().noOcclusion().strength(100, 500)));
 
     // --- Flowing steam (air-like, self-propagating toward turbines) ---
     public static final DeferredBlock<Block> STEAM = registerNoItem("steam", () -> new reika.reactorcraft.blocks.BlockSteam(

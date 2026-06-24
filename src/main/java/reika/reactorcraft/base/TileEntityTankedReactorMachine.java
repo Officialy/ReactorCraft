@@ -45,7 +45,7 @@ public abstract class TileEntityTankedReactorMachine extends TileEntityReactorBa
 	}
 
 	public Fluid getContainedFluid() {
-		return tank.getActualFluid();
+		return tank.getActualFluid().getFluid();
 	}
 
 	public void addLiquid(int amt) {

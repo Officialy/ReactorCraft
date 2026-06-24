@@ -9,6 +9,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.registries.DeferredBlock;
 
@@ -152,7 +153,7 @@ public enum ReactorTiles implements TileEnum {
 		try {
 			return teClass.getConstructor(BlockPos.class, BlockState.class).newInstance(pos, state);
 		} catch (ReflectiveOperationException e) {
-			throw new RegistrationException(ReactorCraft.getInstance(),
+			throw new RegistrationException("ReactorCraft", "Reika",
 					"Failed to instantiate " + teClass + " for " + this, e);
 		}
 	}
@@ -176,7 +177,7 @@ public enum ReactorTiles implements TileEnum {
 		for (ReactorTiles r : TEList) {
 			Block id = r.getBlock();
 			if (reactorMappings.containsKey(id))
-				throw new RegistrationException(ReactorCraft.getInstance(), "Block conflict: " + id);
+				throw new RegistrationException("ReactorCraft", "Block conflict: " + id);
 			reactorMappings.put(id, r);
 		}
 	}

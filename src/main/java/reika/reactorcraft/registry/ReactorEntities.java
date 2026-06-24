@@ -32,15 +32,15 @@ public class ReactorEntities {
 
 	public static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(BuiltInRegistries.ENTITY_TYPE, ReactorCraft.MODID);
 
-	public static final DeferredHolder<EntityType<?>, EntityType<EntityNeutron>> NEUTRON = registerEntityType("neutron", () -> EntityType.Builder.of(EntityNeutron::new, MobCategory.MISC).sized(0.2F, 0.2F).clientTrackingRange(4));
+	public static final DeferredHolder<EntityType<?>, EntityType<EntityNeutron>> NEUTRON = registerEntityType("neutron", () -> EntityType.Builder.<EntityNeutron>of(EntityNeutron::new, MobCategory.MISC).sized(0.2F, 0.2F).clientTrackingRange(4));
 
-	public static final DeferredHolder<EntityType<?>, EntityType<EntityRadiation>> RADIATION = registerEntityType("radiation", () -> EntityType.Builder.of(EntityRadiation::new, MobCategory.MISC).sized(0.5F, 0.5F).clientTrackingRange(4));
+	public static final DeferredHolder<EntityType<?>, EntityType<EntityRadiation>> RADIATION = registerEntityType("radiation", () -> EntityType.Builder.<EntityRadiation>of(EntityRadiation::new, MobCategory.MISC).sized(0.5F, 0.5F).clientTrackingRange(4));
 
-	public static final DeferredHolder<EntityType<?>, EntityType<EntityPlasma>> PLASMA = registerEntityType("plasma", () -> EntityType.Builder.of(EntityPlasma::new, MobCategory.MISC).sized(1.0F, 1.0F).clientTrackingRange(8));
+	public static final DeferredHolder<EntityType<?>, EntityType<EntityPlasma>> PLASMA = registerEntityType("plasma", () -> EntityType.Builder.<EntityPlasma>of(EntityPlasma::new, MobCategory.MISC).sized(1.0F, 1.0F).clientTrackingRange(8));
 
-	public static final DeferredHolder<EntityType<?>, EntityType<EntityFusion>> FUSION = registerEntityType("fusion", () -> EntityType.Builder.of(EntityFusion::new, MobCategory.MISC).sized(0.5F, 0.5F).clientTrackingRange(8));
+	public static final DeferredHolder<EntityType<?>, EntityType<EntityFusion>> FUSION = registerEntityType("fusion", () -> EntityType.Builder.<EntityFusion>of(EntityFusion::new, MobCategory.MISC).sized(0.5F, 0.5F).clientTrackingRange(8));
 
-	public static final DeferredHolder<EntityType<?>, EntityType<EntityNuclearWaste>> NUCLEARWASTE = registerEntityType("nuclear_waste", () -> EntityType.Builder.of(EntityNuclearWaste::new, MobCategory.MISC).sized(0.25F, 0.25F).clientTrackingRange(6));
+	public static final DeferredHolder<EntityType<?>, EntityType<EntityNuclearWaste>> NUCLEARWASTE = registerEntityType("nuclear_waste", () -> EntityType.Builder.<EntityNuclearWaste>of(EntityNuclearWaste::new, MobCategory.MISC).sized(0.25F, 0.25F).clientTrackingRange(6));
 
 	private static <T extends Entity> DeferredHolder<EntityType<?>, EntityType<T>> registerEntityType(final String name, final Supplier<EntityType.Builder<T>> factory) {
 		ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(ReactorCraft.MODID, name));

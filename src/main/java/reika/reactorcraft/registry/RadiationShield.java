@@ -7,14 +7,13 @@ import net.minecraft.world.level.block.Blocks;
 
 import reika.dragonapi.instantiable.data.immutable.BlockKey;
 import reika.dragonapi.instantiable.data.maps.BlockMap;
-import reika.rotarycraft.auxiliary.ItemStacks;
 import reika.rotarycraft.registry.RotaryBlocks;
 
 public enum RadiationShield {
 
-	STEEL("Steel", 90, 95, BlockKey.fromItem(ItemStacks.steelblock)),
+	STEEL("Steel", 90, 95, new BlockKey(RotaryBlocks.HSLA_STEEL_BLOCK.get())),
 	WATER("Water", 30, 10, new BlockKey(Blocks.WATER)),
-	BEDINGOT("Bedrock Ingot", 97.5, 100, BlockKey.fromItem(ItemStacks.bedingotblock)),
+	BEDINGOT("Bedrock Ingot", 97.5, 100, new BlockKey(RotaryBlocks.BEDROCK.get())),
 	OBSIDIAN("Obsidian", 50, 80, new BlockKey(Blocks.OBSIDIAN)),
 	BLASTGLASS("Blast Glass", 80, 20, new BlockKey(RotaryBlocks.BLASTGLASS.get()));
 
@@ -37,7 +36,7 @@ public enum RadiationShield {
 	}
 
 	public static RadiationShield getFrom(Block b, int meta) {
-		return blockMap.get(b, meta);
+		return blockMap.get(b);
 	}
 
 	public static RadiationShield getFrom(BlockKey bk) {

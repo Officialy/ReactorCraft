@@ -26,6 +26,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.NeoForge;
 
 import reika.dragonapi.DragonAPI;
+import reika.dragonapi.interfaces.blockentity.ChunkLoadingTile;
 import reika.dragonapi.instantiable.data.immutable.WorldLocation;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
@@ -142,10 +143,11 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	@Override
 	public Collection<ChunkPos> getChunksToLoad() {
 		Set<ChunkPos> set = new HashSet();
-		ChunkPos c = new ChunkPos(getBlockPos());
+		int cx = getBlockPos().getX() >> 4;
+		int cz = getBlockPos().getZ() >> 4;
 		for (int i = -1; i <= 1; i++) {
 			for (int k = -1; k <= 1; k++) {
-				set.add(new ChunkPos(c.x+i, c.z+k));
+				set.add(new ChunkPos(cx+i, cz+k));
 			}
 		}
 		return set;
@@ -328,7 +330,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	}
 
 	protected void onMeltdown(Level world, BlockPos pos) {
-		NeoForge.EVENT_BUS.post(new ReactorMeltdownEvent(world, pos));
+		NeoForge.EVENT_BUS.post(new ReactorMeltdownEvent(world, pos.getX(), pos.getY(), pos.getZ()));
 		if (world.isClientSide())
 			return;
 		int x = pos.getX(), y = pos.getY(), z = pos.getZ();
@@ -340,7 +342,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 					ReactorTiles src = this.getTile();
 					ReactorTiles other = ReactorTiles.getTE(world, ipos);
 					if (src == other)
-						world.setBlockAndUpdate(ipos, ReactorBlocks.CORIUMFLOWING.getBlockInstance().defaultBlockState());
+						world.setBlockAndUpdate(ipos, ReactorBlocks.CORIUMFLOWING.get().defaultBlockState());
 				}
 			}
 		}

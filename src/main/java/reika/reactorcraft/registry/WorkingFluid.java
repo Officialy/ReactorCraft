@@ -50,7 +50,7 @@ public enum WorkingFluid {
 	}
 
 	public static WorkingFluid getFromNBT(CompoundTag tag) {
-		int val = tag.getInt("workingfluid");
+		int val = tag.getIntOr("workingfluid", 0);
 		if (val >= 0 && val < list.length)
 			return list[val];
 		return EMPTY;
