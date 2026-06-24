@@ -39,6 +39,8 @@ sourceSets.main.java {
     include 'reika/reactorcraft/auxiliary/SteamTile.java'
     include 'reika/reactorcraft/auxiliary/MultiBlockTile.java'
     include 'reika/reactorcraft/auxiliary/PebbleBedArrangement.java'
+    include 'reika/reactorcraft/auxiliary/ReactorControlLayout.java'
+    include 'reika/reactorcraft/event/ScramEvent.java'
     include 'reika/reactorcraft/auxiliary/ReactorPowerReceiver.java'
     include 'reika/reactorcraft/auxiliary/Feedable.java'
     include 'reika/reactorcraft/base/ReactorItemBase.java'

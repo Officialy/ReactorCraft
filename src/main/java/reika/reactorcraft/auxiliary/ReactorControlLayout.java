@@ -58,23 +58,23 @@ public class ReactorControlLayout {
 	}
 
 	private void updateLimit(TileEntityControlRod rod) {
-		if (minX > rod.xCoord)
-			minX = rod.xCoord;
-		if (maxX < rod.xCoord)
-			maxX = rod.xCoord;
-		if (minY > rod.yCoord)
-			minY = rod.yCoord;
-		if (maxY < rod.yCoord)
-			maxY = rod.yCoord;
-		if (minZ > rod.zCoord)
-			minZ = rod.zCoord;
-		if (maxZ < rod.zCoord)
-			maxZ = rod.zCoord;
+		if (minX > rod.getBlockPos().getX())
+			minX = rod.getBlockPos().getX();
+		if (maxX < rod.getBlockPos().getX())
+			maxX = rod.getBlockPos().getX();
+		if (minY > rod.getBlockPos().getY())
+			minY = rod.getBlockPos().getY();
+		if (maxY < rod.getBlockPos().getY())
+			maxY = rod.getBlockPos().getY();
+		if (minZ > rod.getBlockPos().getZ())
+			minZ = rod.getBlockPos().getZ();
+		if (maxZ < rod.getBlockPos().getZ())
+			maxZ = rod.getBlockPos().getZ();
 	}
 
 	public void removeControlRod(TileEntityControlRod rod) {
 		controls.remove(rod);
-		if (minX == rod.xCoord || maxX == rod.xCoord || minY == rod.yCoord || maxY == rod.yCoord || minZ == rod.zCoord || maxZ == rod.zCoord)
+		if (minX == rod.getBlockPos().getX() || maxX == rod.getBlockPos().getX() || minY == rod.getBlockPos().getY() || maxY == rod.getBlockPos().getY() || minZ == rod.getBlockPos().getZ() || maxZ == rod.getBlockPos().getZ())
 			this.recalcLimits();
 	}
 
@@ -91,15 +91,15 @@ public class ReactorControlLayout {
 	}
 
 	public boolean hasControlRodAtRelativePosition(Level world, int x, int y, int z) {
-		return this.getControlRodAtRelativePosition(world, x, y, z) != ItemStack.EMPTY;
+		return this.getControlRodAtRelativePosition(world, x, y, z) != null;
 	}
 
 	public boolean hasControlRodAtAbsolutePosition(Level world, int x, int y, int z) {
-		return this.getControlRodAtAbsolutePosition(world, x, y, z) != ItemStack.EMPTY;
+		return this.getControlRodAtAbsolutePosition(world, x, y, z) != null;
 	}
 
 	public TileEntityControlRod getControlRodAtRelativePosition(Level world, int x, int y, int z) {
-		return controls.get(new WorldLocation(world, x+controller.xCoord, y+controller.yCoord, z+controller.zCoord));
+		return controls.get(new WorldLocation(world, x+controller.pos.getX(), y+controller.pos.getY(), z+controller.pos.getZ()));
 	}
 
 	public TileEntityControlRod getControlRodAtAbsolutePosition(Level world, int x, int y, int z) {
@@ -107,30 +107,28 @@ public class ReactorControlLayout {
 	}
 
 	public int getMinX() {
-		return minX-controller.xCoord;
+		return minX-controller.pos.getX();
 	}
 
 	public int getMaxX() {
-		return maxX-controller.xCoord;
+		return maxX-controller.pos.getX();
 	}
 
 	public int getMinY() {
-		return minY-controller.yCoord;
+		return minY-controller.pos.getY();
 	}
 
 	public int getMaxY() {
-		return maxY-controller.yCoord;
+		return maxY-controller.pos.getY();
 	}
 
 	public int getMinZ() {
-		return minZ-controller.zCoord;
+		return minZ-controller.pos.getZ();
 	}
 
 	public int getMaxZ() {
-		return maxZ-controller.zCoord;
+		return maxZ-controller.pos.getZ();
 	}
-
-	@SideOnly(Dist.CLIENT)
 	public int getDisplayColorAtRelativePosition(Level world, int x, int y, int z) {
 		TileEntityControlRod rod = this.getControlRodAtRelativePosition(world, x, y, z);
 		if (rod != null) {
@@ -208,23 +206,23 @@ public class ReactorControlLayout {
 	public void writeToNBT(CompoundTag NBT) {
 		controls.writeToNBT(NBT);
 		controller.saveAdditional(/*PORT*/"control", NBT);
-		NBT.setInteger("maxx", maxX);
-		NBT.setInteger("maxy", maxY);
-		NBT.setInteger("maxz", maxZ);
-		NBT.setInteger("minx", minX);
-		NBT.setInteger("miny", minY);
-		NBT.setInteger("minz", minZ);
+		NBT.putInt("maxx", maxX);
+		NBT.putInt("maxy", maxY);
+		NBT.putInt("maxz", maxZ);
+		NBT.putInt("minx", minX);
+		NBT.putInt("miny", minY);
+		NBT.putInt("minz", minZ);
 	}
 
 	public void readFromNBT(CompoundTag NBT) {
 		controls.readFromNBT(NBT);
 		controller = WorldLocation.load("control", NBT);
-		maxX = NBT.getInteger("maxx");
-		maxY = NBT.getInteger("maxy");
-		maxZ = NBT.getInteger("maxz");
-		minX = NBT.getInteger("minx");
-		minY = NBT.getInteger("miny");
-		minZ = NBT.getInteger("minz");
+		maxX = NBT.getIntOr("maxx", 0);
+		maxY = NBT.getIntOr("maxy", 0);
+		maxZ = NBT.getIntOr("maxz", 0);
+		minX = NBT.getIntOr("minx", 0);
+		minY = NBT.getIntOr("miny", 0);
+		minZ = NBT.getIntOr("minz", 0);
 	}
 
 }

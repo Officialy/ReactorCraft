@@ -8,27 +8,22 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission;
-import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-import net.minecraft.world.level.block.Block;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.common.NeoForge;
 
 import reika.dragonapi.DragonAPI;
-import reika.dragonapi.instantiable.data.blockstruct.abstractsearch.PropagationCondition;
+import reika.dragonapi.instantiable.data.blockstruct.AbstractSearch;
 import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
-import reika.dragonapi.instantiable.data.immutable.Coordinate;
-import reika.dragonapi.libraries.reikanbthelper.NBTTypes;
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.auxiliary.LinkableReactorCore;
 import reika.reactorcraft.auxiliary.NeutronTile;
@@ -40,6 +35,7 @@ import reika.reactorcraft.base.TileEntityReactorBase;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.event.ScramEvent;
 import reika.reactorcraft.registry.ReactorAchievements;
+import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorSounds;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.registry.ReactorType;
@@ -47,10 +43,10 @@ import reika.reactorcraft.tileentities.fission.TileEntityWaterCell.LiquidStates;
 import reika.rotarycraft.api.power.PowerTransferHelper;
 
 public class TileEntityCPU extends TileEntityReactorBase implements ReactorPowerReceiver, TemperaturedReactorTyped, ReactorBlock, NeutronTile {
+
 	public TileEntityCPU(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.CPU.get(), pos, state);
 	}
-
 
 	private ReactorControlLayout layout;
 	private final BlockArray reactor = new BlockArray();
@@ -64,22 +60,23 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 
 	private int redstoneUpdate = 200;
 
-	private final PropagationCondition reactorBlocks = new PropagationCondition() {
+	private final AbstractSearch.PropagationCondition reactorBlocks = new AbstractSearch.PropagationCondition() {
 
 		@Override
-		public boolean isValidLocation(Level world, int x, int y, int z, Coordinate from) {
-			return world.getBlockEntity(x, y, z) instanceof ReactorBlock;
+		public boolean isValidLocation(Level world, BlockPos pos, BlockPos from) {
+			return world.getBlockEntity(pos) instanceof ReactorBlock;
 		}
 
 	};
 
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
+		int x = pos.getX(), y = pos.getY(), z = pos.getZ();
 		thermalTicker.update();
 		if (thermalTicker.checkCap())
-			this.updateTemperature(world, x, y, z);
+			this.updateTemperature(world, pos);
 		if (!world.isClientSide()) {
-			if (world.getTotalWorldTime()%64 == 0)
+			if (world.getGameTime()%64 == 0)
 				reactor.clear();
 
 			if (reactor.isEmpty()) {
@@ -87,14 +84,9 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 				int r = 12;
 				reactor.recursiveAddCallbackWithBounds(world, x, y, z, x-r, y-4, z-r, x+r, y+4, z+r, reactorBlocks);
 				for (int i = 0; i < reactor.getSize(); i++) {
-					Coordinate c = reactor.getNthBlock(i);
-					int dx = c.xCoord;
-					int dy = c.yCoord;
-					int dz = c.zCoord;
-					Block idx = world.getBlock(dx, dy, dz);
-					int metax = world.getBlockMetadata(dx, dy, dz);
-					if (idx == ReactorTiles.CONTROL.getBlock() && metax == ReactorTiles.CONTROL) {
-						TileEntityControlRod rod = (TileEntityControlRod)world.getBlockEntity(dx, dy, dz);
+					BlockPos c = reactor.getNthBlock(i);
+					if (ReactorTiles.getTE(world, c) == ReactorTiles.CONTROL) {
+						TileEntityControlRod rod = (TileEntityControlRod)world.getBlockEntity(c);
 						layout.addControlRod(rod);
 					}
 				}
@@ -102,10 +94,6 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 			}
 		}
 
-		//TileEntity te = this.getAdjacentTileEntity(Direction.DOWN);
-		//if (te instanceof TileEntityCPU) {
-		//	power = ((TileEntityCPU)te).power;
-		//}
 		if (DragonAPI.debugtest) {
 			omega = 1024;
 			torque = 1024;
@@ -131,26 +119,23 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 		if (redstoneUpdate > 0) {
 			redstoneUpdate--;
 			if (redstoneUpdate <= 0) {
-				world.markBlockForUpdate(x, y, z);
-				ReikaWorldHelper.causeAdjacentUpdates(world, x, y, z);
+				this.triggerBlockUpdate();
+				ReikaWorldHelper.causeAdjacentUpdates(world, pos);
 			}
 		}
 
 	}
 
 	@Override
-	protected void onFirstTick(Level world, int x, int y, int z) {
+	protected void onFirstTick(Level world, BlockPos pos) {
 		layout = new ReactorControlLayout(this);
 	}
 
 	public void SCRAM() {
-		MinecraftForge.EVENT_BUS.post(new ScramEvent(this, temperature));
+		NeoForge.EVENT_BUS.post(new ScramEvent(this, temperature));
 		layout.SCRAM();
 		if (redstoneUpdate == 0)
 			redstoneUpdate = 7;
-		//TileEntity te = this.getAdjacentTileEntity(Direction.UP);
-		//if (te instanceof TileEntityCPU)
-		//	((TileEntityCPU)te).SCRAM();
 	}
 
 	@Override
@@ -246,7 +231,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 		for (TileEntityControlRod te : li) {
 			te.setActive(true, false);
 		}
-		ReactorSounds.CONTROL.playSoundAtBlock(level, xCoord, yCoord, zCoord, 1, 1.3F);
+		ReactorSounds.CONTROL.playSoundAtBlock(level, this.getBlockPos(), 1, 1.3F);
 		redstoneUpdate = 30;
 	}
 
@@ -255,7 +240,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 		for (TileEntityControlRod te : li) {
 			te.setActive(false, false);
 		}
-		ReactorSounds.CONTROL.playSoundAtBlock(level, xCoord, yCoord, zCoord, 1, 1.3F);
+		ReactorSounds.CONTROL.playSoundAtBlock(level, this.getBlockPos(), 1, 1.3F);
 		redstoneUpdate = 30;
 	}
 
@@ -276,11 +261,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 
 	@Override
 	public long getMinPower() {
-		long base = layout != null ? layout.getMinPower() : 0;
-		//TileEntity te = this.getAdjacentTileEntity(Direction.UP);
-		//if (te instanceof TileEntityCPU)
-		//	base += ((TileEntityCPU)te).getMinPower();
-		return base;
+		return layout != null ? layout.getMinPower() : 0;
 	}
 
 	@Override
@@ -300,6 +281,12 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 
 		if (layout != null)
 			layout.readFromNBT(NBT);
+
+		temperatureChecks.clear();
+		ListTag li = NBT.getListOrEmpty("checks");
+		for (int j = 0; j < li.size(); j++) {
+			temperatureChecks.add(TemperatureMonitor.readTag(li.getCompoundOrEmpty(j)));
+		}
 	}
 
 	@Override
@@ -314,29 +301,12 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 
 		if (layout != null)
 			layout.writeToNBT(NBT);
-	}
-
-	@Override
-	public void saveAdditional(/*PORT*/CompoundTag NBT) {
-		super.saveAdditional(/*PORT*/NBT);
 
 		ListTag li = new ListTag();
 		for (TemperatureMonitor m : temperatureChecks) {
 			li.add(m.writeTag());
 		}
-		NBT.setTag("checks", li);
-	}
-
-	@Override
-	public void loadAdditional(/*PORT*/CompoundTag NBT) {
-		super.loadAdditional(/*PORT*/NBT);
-
-		temperatureChecks.clear();
-		ListTag li = NBT.getTagList("checks", NBTTypes.COMPOUND.ID);
-		for (Object o : li.tagList) {
-			CompoundTag tag = (CompoundTag)o;
-			temperatureChecks.add(TemperatureMonitor.readTag(tag));
-		}
+		NBT.put("checks", li);
 	}
 
 	@Override
@@ -360,26 +330,28 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 
 	private static class TemperatureMonitor {
 
-		private final Coordinate location;
+		private final BlockPos location;
 
 		private TemperatureMonitor(LinkableReactorCore te) {
-			location = new Coordinate((BlockEntity)te);
+			location = ((BlockEntity)te).getBlockPos();
 		}
 
-		private TemperatureMonitor(Coordinate c) {
+		private TemperatureMonitor(BlockPos c) {
 			location = c;
 		}
 
-		public CompoundTag saveAdditional(/*PORT*/) {
-			return location.writeToTag();
+		public CompoundTag writeTag() {
+			CompoundTag t = new CompoundTag();
+			t.putLong("pos", location.asLong());
+			return t;
 		}
 
 		public static TemperatureMonitor readTag(CompoundTag tag) {
-			return new TemperatureMonitor(Coordinate.readTag(tag));
+			return new TemperatureMonitor(BlockPos.of(tag.getLongOr("pos", 0)));
 		}
 
 		public int getTemperature(TileEntityCPU te) {
-			return ((LinkableReactorCore)location.getBlockEntity(te.level)).getTemperature();
+			return ((LinkableReactorCore)te.level.getBlockEntity(location)).getTemperature();
 		}
 
 		@Override
