@@ -8,36 +8,28 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.waste;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.util.IIcon;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraft.core.Direction;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidRegistry;
 
 // CHROMA-PORT: import reika.chromaticraft.api.interfaces.WorldRift;
 import reika.reactorcraft.auxiliary.NeutronTile;
 import reika.reactorcraft.base.TileEntityReactorPiping;
 import reika.reactorcraft.entities.EntityNeutron;
-import reika.reactorcraft.registry.MatBlocks;
-import reika.reactorcraft.registry.ReactorBlocks;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.fission.thorium.TileEntityThoriumCore;
-import reika.rotarycraft.tileentities.processing.TileEntityCrystallizer;
 
 public class TileEntityWastePipe extends TileEntityReactorPiping implements NeutronTile {
+
 	public TileEntityWastePipe(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.WASTEPIPE.get(), pos, state);
 	}
-
 
 	@Override
 	public ReactorTiles getTile() {
@@ -45,27 +37,10 @@ public class TileEntityWastePipe extends TileEntityReactorPiping implements Neut
 	}
 
 	@Override
-	public IIcon getBlockIcon() {
-		return MatBlocks.CONCRETE.getIcon();
-	}
-
-	@Override
-	public IIcon getGlassIcon() {
-		return Blocks.leaves.getIcon(0, 1);
-	}
-
 	public boolean isConnectedToNonSelf(Direction dir) {
 		if (!this.isConnectionValidForSide(dir))
 			return false;
-		if (dir.offsetX == 0 && MinecraftForgeClient.getRenderPass() != 1)
-			dir = dir.getOpposite();
-		int dx = xCoord+dir.offsetX;
-		int dy = yCoord+dir.offsetY;
-		int dz = zCoord+dir.offsetZ;
-		Level world = level;
-		Block id = world.getBlock(dx, dy, dz);
-		int meta = world.getBlockMetadata(dx, dy, dz);
-		return id != this.getTile().getBlock() || meta != this.getTile();
+		return ReactorTiles.getTE(level, this.getBlockPos().relative(dir)) != this.getTile();
 	}
 
 	@Override
@@ -79,22 +54,20 @@ public class TileEntityWastePipe extends TileEntityReactorPiping implements Neut
 	}
 
 	@Override
-	public Block getPipeBlockType() {
-		return ReactorBlocks.MATS.getBlockInstance();
-	}
-
-	@Override
 	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		return false;
 	}
 
 	@Override
 	protected boolean isInteractableTile(BlockEntity te) {
-		return te instanceof WorldRift || this.isWasteAcceptingBlock(te);
+		// CHROMA-PORT: WorldRift acceptance gated out (ChromatiCraft not in build).
+		return this.isWasteAcceptingBlock(te);
 	}
 
 	private boolean isWasteAcceptingBlock(BlockEntity te) {
-		return te instanceof TileEntityWastePipe || te instanceof TileEntityThoriumCore || te instanceof TileEntityCrystallizer;
+		// MOD-PORT: RotaryCraft BlockEntityCrystallizer is not yet ported (package commented out); re-add
+		// `|| te instanceof BlockEntityCrystallizer` once it lands so the crystallizer can pull waste.
+		return te instanceof TileEntityWastePipe || te instanceof TileEntityThoriumCore;
 	}
 
 }
