@@ -94,7 +94,9 @@ public class EntityPlasma extends ParticleEntity implements CustomFanEntity {
 	@Override
 	public void applyEntityCollision(Entity e) {
 		float dmg = e instanceof LivingEntity && ((LivingEntity)e).hasEffect(MobEffects.FIRE_RESISTANCE) ? 4 : Integer.MAX_VALUE;
-		e.hurt(ReactorCraft.fusionDamage, dmg);
+		// MOD-PORT: legacy ReactorCraft.fusionDamage custom DamageSource -> vanilla hot source.
+		if (e.level() instanceof net.minecraft.server.level.ServerLevel sl)
+			e.hurtServer(sl, sl.damageSources().inFire(), dmg);
 		if (e instanceof Player) {
 			if (!e.isAlive() || ((LivingEntity)e).getHealth() <= 0) {
 				ReactorAchievements.PLASMADIE.triggerAchievement((Player)e);

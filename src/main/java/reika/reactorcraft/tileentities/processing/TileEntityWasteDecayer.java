@@ -136,7 +136,7 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 
 	@Override
 	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
-		NeutronType type = e.getType();
+		NeutronType type = e.getNeutronType();
 		if (!world.isClientSide() && type.canIrradiateMaterials() && ReikaRandomHelper.doWithChance(50)) {
 			if (ReikaRandomHelper.doWithChance(this.getDecayChance()*e.getNeutronSpeed().getWasteConversionMultiplier()))
 				this.tryDecay();

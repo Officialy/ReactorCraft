@@ -85,7 +85,7 @@ public class TileEntityFuelRod extends TileEntityNuclearCore {
 	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		super.onNeutron(e, world, pos);
 		if (!world.isClientSide()) {
-			if (e.getType().canTriggerFission() && ReikaRandomHelper.doWithChance(e.getNeutronSpeed().getInteractionMultiplier())) {
+			if (e.getNeutronType().canTriggerFission() && ReikaRandomHelper.doWithChance(e.getNeutronSpeed().getInteractionMultiplier())) {
 				if (this.checkPoisonedChance())
 					return true;
 				if (this.isFissile()) {

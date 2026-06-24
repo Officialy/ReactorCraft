@@ -79,7 +79,7 @@ public class TileEntitySodiumHeater extends TileEntityIntermediateBoiler {
 
 	@Override
 	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
-		NeutronType type = e.getType();
+		NeutronType type = e.getNeutronType();
 		return !tank.isEmpty() && ReikaRandomHelper.doWithChance(type.getSodiumBoilerAbsorptionChance());
 	}
 

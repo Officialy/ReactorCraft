@@ -28,6 +28,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
 
 import reika.dragonapi.base.ParticleEntity;
+import reika.dragonapi.instantiable.data.immutable.BlockKey;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.reactorcraft.api.NeutronShield;
 import reika.reactorcraft.auxiliary.NeutronBlock;
@@ -45,8 +46,8 @@ public class EntityNeutron extends ParticleEntity {
 
 	// MOD-PORT: Botania/ThaumicTinkerer "platform" transparency blocks — those mods are not in the
 	// 26.2 build, so neutrons treat them as opaque. Re-resolve via the block registry if they ship.
-	private static final Block botaniaPlatform = ItemStack.EMPTY;
-	private static final Block ttPlatform = ItemStack.EMPTY;
+	private static final Block botaniaPlatform = null; // MOD-PORT: Botania platform not in build
+	private static final Block ttPlatform = null; // MOD-PORT: ThaumicTinkerer platform not in build
 
 	public EntityNeutron(EntityType<? extends Entity> type, Level world) {
 		super(type, world);
@@ -88,7 +89,7 @@ public class EntityNeutron extends ParticleEntity {
 			}
 			else if (id instanceof NeutronShield) {
 				NeutronShield ns = (NeutronShield)id;
-				String type = this.getType().name();
+				String type = this.getNeutronType().name();
 				double c = Math.min(ns.getAbsorptionChance(type), RadiationShield.BEDINGOT.neutronAbsorbChance);
 				if (ReikaRandomHelper.doWithChance(c)) {
 					double c2 = Mth.clamp(ns.getRadiationSpawnMultiplier(world, pos, type), 0, 1);
@@ -102,13 +103,13 @@ public class EntityNeutron extends ParticleEntity {
 			// BLOCK-PORT: fluorite irradiation (legacy meta+8 glow on FLUORITE/FLUORITEORE) — wire to
 			// the fluorite blockstate when ReactorBlocks/FluoriteTypes is ported.
 
-			RadiationShield rs = RadiationShield.getFrom(bs);
+			RadiationShield rs = RadiationShield.getFrom(new BlockKey(bs));
 			if (rs != null && ReikaRandomHelper.doWithChance(rs.neutronAbsorbChance))
 				return true;
 
 			if (ReikaRandomHelper.doWithChance(speed.getIrradiatedAbsorptionChance())) {
 				float res = bs.getBlock().getExplosionResistance();
-				int lightOpacity = bs.getLightBlock();
+				int lightOpacity = bs.canOcclude() ? 15 : 0;
 				boolean flag = bs.canOcclude()
 						? (this.random.nextBoolean() && res >= 12) || ReikaRandomHelper.getSafeRandomInt((int)(24 - res)) == 0
 						: (15 - lightOpacity == 0 ? ReikaRandomHelper.getSafeRandomInt(lightOpacity) > 0 : this.random.nextInt(1000) == 0);
@@ -173,7 +174,7 @@ public class EntityNeutron extends ParticleEntity {
 		speed = type.getCreationSpeed();
 	}
 
-	public NeutronType getType() {
+	public NeutronType getNeutronType() {
 		return type != null ? type : NeutronType.NULL;
 	}
 
@@ -277,7 +278,7 @@ public class EntityNeutron extends ParticleEntity {
 
 	@Override
 	protected void addAdditionalSaveData(ValueOutput output) {
-		output.putInt("ntype", this.getType().ordinal());
+		output.putInt("ntype", this.getNeutronType().ordinal());
 		output.putInt("nspeed", this.getNeutronSpeed().ordinal());
 	}
 

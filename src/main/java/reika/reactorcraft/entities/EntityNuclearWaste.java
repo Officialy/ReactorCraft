@@ -71,10 +71,6 @@ public final class EntityNuclearWaste extends ItemEntity {
 		timer++;
 	}
 
-	@Override
-	public boolean hurtServer(ServerLevel world, DamageSource src, float dmg) {
-		return false;
-	}
 
 	private void applyRadiation() {
 		Level world = this.level();

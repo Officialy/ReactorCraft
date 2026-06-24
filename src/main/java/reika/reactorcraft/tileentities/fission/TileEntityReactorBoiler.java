@@ -196,7 +196,7 @@ public class TileEntityReactorBoiler extends TileEntityNuclearBoiler implements 
 
 	@Override
 	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
-		NeutronType type = e.getType();
+		NeutronType type = e.getNeutronType();
 		if (!tank.isEmpty()) {
 			if (tank.getActualFluid().getFluid() == ReactorFluids.getLegacyFluid("rc heavy water")) {
 				e.moderate();

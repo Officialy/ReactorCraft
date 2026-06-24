@@ -236,7 +236,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
 		super.onNeutron(e, world, pos);
 		if (!world.isClientSide()) {
-			if (e.getType().canTriggerFission() && ReikaRandomHelper.doWithChance(e.getNeutronSpeed().getInteractionMultiplier()) && e.getType() != NeutronType.BREEDER && ReikaRandomHelper.doWithChance(this.getNeutronInteractionChance())) {
+			if (e.getNeutronType().canTriggerFission() && ReikaRandomHelper.doWithChance(e.getNeutronSpeed().getInteractionMultiplier()) && e.getNeutronType() != NeutronType.BREEDER && ReikaRandomHelper.doWithChance(this.getNeutronInteractionChance())) {
 				if (this.checkPoisonedChance())
 					return true;
 				if (ReikaRandomHelper.doWithChance(this.getNeutronChance()) && this.hasFuel()) {

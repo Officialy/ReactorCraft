@@ -63,7 +63,7 @@ public class TileEntityNeutronAbsorber extends TileEntityReactorBase implements 
 
 	@Override
 	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
-		if (e.getType() == NeutronType.FUSION) {
+		if (e.getNeutronType() == NeutronType.FUSION) {
 			temperature += 40;
 			return true;
 		}
