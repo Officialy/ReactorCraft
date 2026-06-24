@@ -8,18 +8,18 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.waste;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
-import net.minecraft.world.level.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluids;
 
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
 import reika.dragonapi.libraries.mathsci.Isotopes;
@@ -33,14 +33,15 @@ import reika.reactorcraft.auxiliary.RadiationEffects.RadiationIntensity;
 import reika.reactorcraft.base.TileEntityWasteUnit;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.registry.ReactorAchievements;
+import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.auxiliary.interfaces.TemperatureTE;
 
 public class TileEntityWasteContainer extends TileEntityWasteUnit implements TemperatureTE, Feedable, NeutronTile {
+
 	public TileEntityWasteContainer(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.WASTECONTAINER.get(), pos, state);
 	}
-
 
 	public static final int WIDTH = 9;
 	public static final int HEIGHT = 3;
@@ -57,7 +58,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 		if (thermalTicker.checkCap()) {
 			int waste = this.countWaste();
 			temperature += waste*ReikaNuclearHelper.getWasteDecayHeat();
-			this.updateTemperature(world, x, y, z, meta);
+			this.updateTemperature(world, pos);
 		}
 
 		if (!world.isClientSide())
@@ -65,8 +66,6 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 
 		if (!world.isClientSide())
 			this.feed();
-
-		//this.fill();
 	}
 
 	@Override
@@ -74,34 +73,41 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 		return false;
 	}
 
-	private void distributeHeat(Level world, int x, int y, int z) {
-		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, x, y, z);
-		//ReikaJavaLibrary.pConsole(temperature);
+	private void distributeHeat(Level world, BlockPos pos) {
+		int Tamb = ReikaWorldHelper.getAmbientTemperatureAt(world, pos);
 		if (temperature > Tamb) {
-			Direction side = ReikaWorldHelper.checkForAdjSourceBlock(world, x, y, z, Material.water);
+			Direction side = null;
+			for (Direction d : Direction.values()) {
+				if (world.getFluidState(pos.relative(d)).getType() == Fluids.WATER) {
+					side = d;
+					break;
+				}
+			}
 			if (side != null) {
 				temperature -= ReikaThermoHelper.getTemperatureIncrease(1, 15000, ReikaThermoHelper.WATER_BLOCK_HEAT);
-				//ReikaJavaLibrary.pConsole(temperature);
 				if (temperature > 100)
-					ReikaWorldHelper.changeAdjBlock(world, x, y, z, side, Blocks.air, 0);
+					ReikaWorldHelper.changeAdjBlock(world, pos, side, Blocks.AIR.defaultBlockState());
 				else
-					ReikaWorldHelper.changeAdjBlock(world, x, y, z, side, Blocks.flowing_water, 6);
+					ReikaWorldHelper.changeAdjBlock(world, pos, side, Blocks.WATER.defaultBlockState());
 			}
 		}
-		//ReikaJavaLibrary.pConsole(temperature);
 		if (temperature < Tamb)
 			temperature = Tamb;
 		if (temperature > this.getMaxTemperature()) {
-			this.overheat(world, x, y, z);
+			this.overheat(world, pos);
 		}
 		else if (temperature > this.getMaxTemperature()/2 && rand.nextInt(6) == 0) {
-			world.spawnParticle("smoke", x+rand.nextDouble(), y+1, z+rand.nextDouble(), 0, 0, 0);
-			ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.fizz");
+			this.smokeAndFizz(world, pos);
 		}
 		else if (temperature > this.getMaxTemperature()/4 && rand.nextInt(20) == 0) {
-			world.spawnParticle("smoke", x+rand.nextDouble(), y+1, z+rand.nextDouble(), 0, 0, 0);
-			ReikaSoundHelper.playSoundAtBlock(world, x, y, z, "random.fizz");
+			this.smokeAndFizz(world, pos);
 		}
+	}
+
+	private void smokeAndFizz(Level world, BlockPos pos) {
+		if (world instanceof ServerLevel sl)
+			sl.sendParticles(ParticleTypes.SMOKE, pos.getX()+rand.nextDouble(), pos.getY()+1, pos.getZ()+rand.nextDouble(), 1, 0, 0, 0, 0);
+		ReikaSoundHelper.playSoundAtBlock(world, pos, SoundEvents.FIRE_EXTINGUISH);
 	}
 
 	@Override
@@ -133,15 +139,15 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 		return 600;
 	}
 
-	public void onMeltdown(Level world, int x, int y, int z) {
-		world.explode(/*PORT*/null, x+0.5, y+0.5, z+0.5, 9, true);
-		RadiationEffects.instance.contaminateArea(world, x, y, z, 9, 4, 1.5, true, RadiationIntensity.LETHAL);
+	public void onMeltdown(Level world, BlockPos pos) {
+		world.explode(null, pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5, 9, Level.ExplosionInteraction.BLOCK);
+		RadiationEffects.instance.contaminateArea(world, pos.getX(), pos.getY(), pos.getZ(), 9, 4, 1.5, true, RadiationIntensity.LETHAL);
 		ReactorAchievements.WASTELEAK.triggerAchievement(this.getPlacer());
 	}
 
 	@Override
-	public void updateTemperature(Level world, int x, int y, int z, int meta) {
-		this.distributeHeat(world, x, y, z);
+	public void updateTemperature(Level world, BlockPos pos) {
+		this.distributeHeat(world, pos);
 	}
 
 	@Override
@@ -150,9 +156,9 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	@Override
-	public void overheat(Level world, int x, int y, int z) {
+	public void overheat(Level world, BlockPos pos) {
 		if (!world.isClientSide())
-			this.onMeltdown(world, x, y, z);
+			this.onMeltdown(world, pos);
 	}
 
 	@Override
@@ -166,26 +172,18 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	public boolean feed() {
-		Level world = level;
-		int x = xCoord;
-		int y = yCoord;
-		int z = zCoord;
-		Block id = world.getBlock(x, y-1, z);
-		int meta = world.getBlockMetadata(x, y-1, z);
-		BlockEntity tile = this.getAdjacentTileEntity(Direction.DOWN);
+		BlockEntity tile = this.getAdjacentBlockEntity(Direction.DOWN);
 		if (tile instanceof TileEntityWasteContainer) {
 			if (((Feedable)tile).feedIn(itemHandler.getStackInSlot(itemHandler.getSlots()-1))) {
 				for (int i = itemHandler.getSlots()-1; i > 0; i--)
-					itemHandler.getStackInSlot(i) = itemHandler.getStackInSlot(i-1);
+					itemHandler.setStackInSlot(i, itemHandler.getStackInSlot(i-1));
 
-				id = world.getBlock(x, y+1, z);
-				meta = world.getBlockMetadata(x, y+1, z);
-				tile = this.getAdjacentTileEntity(Direction.UP);
+				tile = this.getAdjacentBlockEntity(Direction.UP);
 				if (tile instanceof TileEntityWasteContainer) {
-					itemHandler.getStackInSlot(0) = ((Feedable) tile).feedOut();
+					itemHandler.setStackInSlot(0, ((Feedable) tile).feedOut());
 				}
 				else
-					itemHandler.getStackInSlot(0) = ItemStack.EMPTY;
+					itemHandler.setStackInSlot(0, ItemStack.EMPTY);
 			}
 		}
 		this.collapseInventory();
@@ -195,9 +193,9 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	private void collapseInventory() {
 		for (int i = 0; i < itemHandler.getSlots(); i++) {
 			for (int k = itemHandler.getSlots()-1; k > 0; k--) {
-				if (itemHandler.getStackInSlot(k) == null) {
-					itemHandler.getStackInSlot(k) = itemHandler.getStackInSlot(k-1);
-					itemHandler.getStackInSlot(k-1) = ItemStack.EMPTY;
+				if (itemHandler.getStackInSlot(k).isEmpty()) {
+					itemHandler.setStackInSlot(k, itemHandler.getStackInSlot(k-1));
+					itemHandler.setStackInSlot(k-1, ItemStack.EMPTY);
 				}
 			}
 		}
@@ -205,12 +203,12 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 
 	@Override
 	public boolean feedIn(ItemStack is) {
-		if (is == null)
+		if (is.isEmpty())
 			return true;
 		if (!this.isItemValidForSlot(0, is))
 			return false;
-		if (itemHandler.getStackInSlot(0) == null) {
-			itemHandler.getStackInSlot(0) = is.copy();
+		if (itemHandler.getStackInSlot(0).isEmpty()) {
+			itemHandler.setStackInSlot(0, is.copy());
 			return true;
 		}
 		return false;
@@ -218,13 +216,12 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 
 	@Override
 	public ItemStack feedOut() {
-		if (itemHandler.getStackInSlot(itemHandler.getSlots()-1) == null)
-			return null;
-		else {
-			ItemStack is = itemHandler.getStackInSlot(itemHandler.getSlots()-1).copy();
-			itemHandler.getStackInSlot(itemHandler.getSlots()-1) = ItemStack.EMPTY;
-			return is;
-		}
+		ItemStack last = itemHandler.getStackInSlot(itemHandler.getSlots()-1);
+		if (last.isEmpty())
+			return ItemStack.EMPTY;
+		ItemStack is = last.copy();
+		itemHandler.setStackInSlot(itemHandler.getSlots()-1, ItemStack.EMPTY);
+		return is;
 	}
 
 	public void setTemperature(int temp) {
@@ -249,6 +246,16 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	@Override
 	protected double getBaseDecayRate() {
 		return 1;
+	}
+
+	@Override
+	public boolean hasAnInventory() {
+		return true;
+	}
+
+	@Override
+	public boolean hasATank() {
+		return false;
 	}
 
 }
