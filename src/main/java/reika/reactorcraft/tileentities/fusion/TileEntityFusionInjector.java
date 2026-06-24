@@ -8,25 +8,20 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fusion;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
-import net.minecraft.world.level.block.Block;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.FluidRegistry;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.minecraft.world.level.material.FluidTankInfo;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.HybridTank;
-import reika.dragonapi.instantiable.rendering.StructureRenderer;
 import reika.dragonapi.interfaces.blockentity.ToggleTile;
 import reika.reactorcraft.auxiliary.FusionReactorToroidPart;
 import reika.reactorcraft.auxiliary.MultiBlockTile;
@@ -35,19 +30,20 @@ import reika.reactorcraft.base.BlockReCMultiBlock;
 import reika.reactorcraft.base.TileEntityReactorBase;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.entities.EntityPlasma;
+import reika.reactorcraft.registry.ReactorBlockEntities;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.TileEntityMagneticPipe;
 import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
-import reika.rotarycraft.base.tileentity.tileentitypiping.Flow;
+import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
-
 
 public class TileEntityFusionInjector extends TileEntityReactorBase implements IFluidHandler, PipeConnector, MultiBlockTile, FusionReactorToroidPart,
 ToggleTile, NeutronTile {
+
 	public TileEntityFusionInjector(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.INJECTOR.get(), pos, state);
 	}
-
 
 	private final HybridTank tank = new HybridTank("injector", 8000);
 
@@ -73,7 +69,7 @@ ToggleTile, NeutronTile {
 		}
 
 		if (this.canMake())
-			this.make(world, x, y, z);
+			this.make(world, pos);
 	}
 
 	public void setFacing(Direction dir) {
@@ -92,40 +88,34 @@ ToggleTile, NeutronTile {
 		return true;
 	}
 
-	private void make(Level world, int x, int y, int z) {
-		this.createPlasma(world, x, y, z);
+	private void make(Level world, BlockPos pos) {
+		this.createPlasma(world, pos);
 		tank.removeLiquid(2);
 	}
 
-	private void createPlasma(Level world, int x, int y, int z) {
-		EntityPlasma e = new EntityPlasma(world, x, y, z, placer);
-		e.setTarget(x+this.getFacing().offsetX, z+this.getFacing().offsetZ);
+	private void createPlasma(Level world, BlockPos pos) {
+		EntityPlasma e = new EntityPlasma(world, pos.getX(), pos.getY(), pos.getZ(), this.getPlacerName());
+		e.setTarget(pos.getX()+this.getFacing().getStepX(), pos.getZ()+this.getFacing().getStepZ());
 		if (!world.isClientSide())
-			world.spawnEntityInWorld(e);
+			world.addFreshEntity(e);
 	}
 
 	public int[] getTarget() {
-		int dx = xCoord+this.getFacing().offsetX;
-		int dz = zCoord+this.getFacing().offsetZ;
-		return new int[]{dx, yCoord, dz};
+		BlockPos pos = this.getBlockPos();
+		int dx = pos.getX()+this.getFacing().getStepX();
+		int dz = pos.getZ()+this.getFacing().getStepZ();
+		return new int[]{dx, pos.getY(), dz};
 	}
 
 	public FusionReactorToroidPart getNextPart(Level world, int x, int y, int z) {
-		int dx = xCoord+this.getFacing().offsetX*2;
-		int dz = zCoord+this.getFacing().offsetZ*2;
-		BlockEntity te = world.getBlockEntity(dx, y, dz);
+		int dx = this.getBlockPos().getX()+this.getFacing().getStepX()*2;
+		int dz = this.getBlockPos().getZ()+this.getFacing().getStepZ()*2;
+		BlockEntity te = world.getBlockEntity(new BlockPos(dx, y, dz));
 		return te instanceof FusionReactorToroidPart ? (FusionReactorToroidPart)te : null;
 	}
 
 	public Direction getFacing() {
-		if (FMLEnvironment.dist == Dist.CLIENT && this.shouldFlip())
-			return System.currentTimeMillis()%4000 >= 2000 ? Direction.NORTH : Direction.SOUTH;
-			return facing != null ? facing : Direction.EAST;
-	}
-
-	@SideOnly(Dist.CLIENT)
-	private boolean shouldFlip() {
-		return StructureRenderer.isRenderingTiles();
+		return facing != null ? facing : Direction.EAST;
 	}
 
 	@Override
@@ -143,34 +133,54 @@ ToggleTile, NeutronTile {
 		return Flow.INPUT;
 	}
 
+	private boolean isPlasma(FluidStack fs) {
+		return !fs.isEmpty() && fs.getFluid().equals(ReactorFluids.getLegacyFluid("rc fusion plasma"));
+	}
+
+	// --- NeoForge IFluidHandler (input-only plasma tank, fed by an adjacent magnetic pipe) ---
 	@Override
-	public int fill(Direction from, FluidStack resource, boolean doFill) {
-		return this.canFill(from, resource.getFluid()) ? tank.fill(resource, doFill) : 0;
+	public int getTanks() {
+		return 1;
 	}
 
 	@Override
-	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
-		return null;
+	public FluidStack getFluidInTank(int t) {
+		return tank.getFluid();
 	}
 
 	@Override
-	public FluidStack drain(Direction from, int amount, boolean doDrain) {
-		return null;
+	public int getTankCapacity(int t) {
+		return tank.getCapacity();
 	}
 
 	@Override
-	public boolean canFill(Direction from, Fluid fluid) {
-		return fluid.equals(ReactorFluids.getLegacyFluid("rc fusion plasma")) && this.getAdjacentTileEntity(from) instanceof TileEntityMagneticPipe;
+	public boolean isFluidValid(int t, FluidStack stack) {
+		return this.isPlasma(stack);
 	}
 
 	@Override
-	public boolean canDrain(Direction from, Fluid fluid) {
-		return false;
+	public int fill(FluidStack resource, FluidAction action) {
+		return this.isPlasma(resource) ? tank.fill(resource, action) : 0;
 	}
 
 	@Override
-	public FluidTankInfo[] getTankInfo(Direction from) {
-		return new FluidTankInfo[]{tank.getInfo()};
+	public FluidStack drain(FluidStack resource, FluidAction action) {
+		return FluidStack.EMPTY;
+	}
+
+	@Override
+	public FluidStack drain(int maxDrain, FluidAction action) {
+		return FluidStack.EMPTY;
+	}
+
+	@Override
+	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
+		return this.isPlasma(resource) && this.getAdjacentBlockEntity(from) instanceof TileEntityMagneticPipe ? tank.fill(resource, action) : 0;
+	}
+
+	@Override
+	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction action) {
+		return FluidStack.EMPTY;
 	}
 
 	@Override
@@ -202,17 +212,16 @@ ToggleTile, NeutronTile {
 
 		tank.readFromNBT(NBT);
 
-		facing = dirs[NBT.getIntOr("face", 0)];
+		facing = Direction.values()[NBT.getIntOr("face", Direction.EAST.ordinal())];
 
 		hasMultiBlock = NBT.getBooleanOr("multi", false);
 
-		if (NBT.hasKey("t_enable"))
-			enabled = NBT.getBooleanOr("t_enable", false);
+		enabled = NBT.getBooleanOr("t_enable", true);
 	}
 
 	@Override
 	public int getTextureState(Direction side) {
-		return side == this.getFacing() ? 0 : side.offsetY != 0 ? 2 : 2;
+		return side == this.getFacing() ? 0 : 2;
 	}
 
 	@Override
@@ -228,15 +237,14 @@ ToggleTile, NeutronTile {
 
 	@Override
 	public void breakBlock() {
-		if (!level.isRemote) {
+		if (!level.isClientSide()) {
+			BlockPos pos = this.getBlockPos();
 			for (int i = 0; i < 6; i++) {
 				Direction dir = dirs[i];
-				int dx = xCoord+dir.offsetX;
-				int dy = yCoord+dir.offsetY;
-				int dz = zCoord+dir.offsetZ;
-				Block b = level.getBlock(dx, dy, dz);
+				BlockPos p = pos.relative(dir);
+				Block b = level.getBlockState(p).getBlock();
 				if (b instanceof BlockReCMultiBlock) {
-					((BlockReCMultiBlock)b).breakMultiBlock(level, dx, dy, dz);
+					((BlockReCMultiBlock)b).breakMultiBlock(level, p.getX(), p.getY(), p.getZ());
 				}
 			}
 		}
