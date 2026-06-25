@@ -217,6 +217,16 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	@Override
+	public boolean hasGui() {
+		return true;
+	}
+
+	@Override
+	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
+		return new reika.reactorcraft.container.MenuWasteDecayer(id, inv, this);
+	}
+
+	@Override
 	public boolean isItemValidForSlot(int slot, ItemStack is) {
 		return ReactorItems.WASTE.matchWith(is);
 	}

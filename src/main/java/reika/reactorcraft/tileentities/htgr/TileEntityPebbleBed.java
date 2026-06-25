@@ -63,6 +63,16 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 		return 47;
 	}
 
+	@Override
+	public boolean hasGui() {
+		return true;
+	}
+
+	@Override
+	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
+		return new reika.reactorcraft.container.MenuPebbleBed(id, inv, this);
+	}
+
 	public int getInventoryStackLimit() {
 		return 1;
 	}

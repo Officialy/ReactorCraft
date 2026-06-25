@@ -19,6 +19,9 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.container.MenuCentrifuge;
 import reika.reactorcraft.container.MenuNuclearCore;
+import reika.reactorcraft.container.MenuPebbleBed;
+import reika.reactorcraft.container.MenuWasteContainer;
+import reika.reactorcraft.container.MenuWasteDecayer;
 
 /**
  * 26.2 menu-type registry, mirroring {@code RotaryMenus}. Each {@link MenuType} is built from an
@@ -37,5 +40,8 @@ public interface ReactorMenus {
 
     Supplier<MenuType<MenuNuclearCore>> NUCLEAR_CORE = register("nuclear_core", MenuNuclearCore::new);
     Supplier<MenuType<MenuCentrifuge>> CENTRIFUGE = register("centrifuge", MenuCentrifuge::new);
+    Supplier<MenuType<MenuWasteDecayer>> WASTE_DECAYER = register("waste_decayer", MenuWasteDecayer::new);
+    Supplier<MenuType<MenuWasteContainer>> WASTE_CONTAINER = register("waste_container", MenuWasteContainer::new);
+    Supplier<MenuType<MenuPebbleBed>> PEBBLE_BED = register("pebble_bed", MenuPebbleBed::new);
 
 }
