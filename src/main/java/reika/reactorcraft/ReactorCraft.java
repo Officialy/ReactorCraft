@@ -90,6 +90,8 @@ public class ReactorCraft {
     private static void registerScreens(final net.neoforged.neoforge.client.event.RegisterMenuScreensEvent event) {
         event.register(reika.reactorcraft.registry.ReactorMenus.NUCLEAR_CORE.get(),
                 reika.reactorcraft.guis.ScreenNuclearCore::new);
+        event.register(reika.reactorcraft.registry.ReactorMenus.CENTRIFUGE.get(),
+                reika.reactorcraft.guis.ScreenCentrifuge::new);
     }
 
     public static ReactorCraft getInstance() {

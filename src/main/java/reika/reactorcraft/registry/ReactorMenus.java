@@ -17,6 +17,7 @@ import net.neoforged.neoforge.network.IContainerFactory;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.container.MenuCentrifuge;
 import reika.reactorcraft.container.MenuNuclearCore;
 
 /**
@@ -35,5 +36,6 @@ public interface ReactorMenus {
     }
 
     Supplier<MenuType<MenuNuclearCore>> NUCLEAR_CORE = register("nuclear_core", MenuNuclearCore::new);
+    Supplier<MenuType<MenuCentrifuge>> CENTRIFUGE = register("centrifuge", MenuCentrifuge::new);
 
 }
