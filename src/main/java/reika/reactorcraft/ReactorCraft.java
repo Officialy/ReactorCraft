@@ -45,7 +45,7 @@ public class ReactorCraft {
             DeferredRegister.create(BuiltInRegistries.MOB_EFFECT, MODID);
 
     public static final DeferredHolder<MobEffect, MobEffect> radiation = MOB_EFFECTS.register("radiation",
-            () -> new MobEffect(MobEffectCategory.HARMFUL, 0x7FFF00));
+            () -> new reika.reactorcraft.auxiliary.MobEffectRadiation(MobEffectCategory.HARMFUL, 0x7FFF00));
 
     public static ReactorCraft instance;
 

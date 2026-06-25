@@ -35,6 +35,7 @@ dependencies {
 // whole block once the entire mod is ported.
 sourceSets.main.java {
     include 'reika/reactorcraft/api/NeutronShield.java'
+    include 'reika/reactorcraft/api/RadiationHandler.java'
     include 'reika/reactorcraft/auxiliary/ReactorBlock.java'
     include 'reika/reactorcraft/auxiliary/SteamTile.java'
     include 'reika/reactorcraft/auxiliary/MultiBlockTile.java'
@@ -118,6 +119,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/base/TileEntityReactorPiping.java'
     include 'reika/reactorcraft/auxiliary/ReactorStacks.java'
     include 'reika/reactorcraft/auxiliary/WasteManager.java'
+    include 'reika/reactorcraft/auxiliary/MobEffectRadiation.java'
     include 'reika/reactorcraft/auxiliary/RadiationEffects.java'
     include 'reika/reactorcraft/auxiliary/HydrogenExplosion.java'
     include 'reika/reactorcraft/auxiliary/NeutronTile.java'

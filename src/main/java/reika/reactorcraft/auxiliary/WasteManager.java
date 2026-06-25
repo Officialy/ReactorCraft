@@ -21,7 +21,7 @@ import net.minecraft.world.item.ItemStack;
 import reika.dragonapi.instantiable.data.WeightedRandom;
 import reika.dragonapi.instantiable.data.collections.ChancedOutputList;
 import reika.dragonapi.libraries.mathsci.Isotopes;
-import reika.dragonapi.libraries.mathsci.isotopes.ElementGroup;
+import reika.dragonapi.libraries.mathsci.Isotopes.ElementGroup;
 import reika.reactorcraft.registry.ReactorItems;
 
 public class WasteManager {

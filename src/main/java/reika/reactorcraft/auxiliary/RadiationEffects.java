@@ -60,7 +60,7 @@ public class RadiationEffects {
 
 	public boolean applyEffects(LivingEntity e, RadiationIntensity ri) {
 		if (ri.causesHarm()) {
-			if (!e.hasEffect(ReactorCraft.radiation.get())) {
+			if (!e.hasEffect(ReactorCraft.radiation)) {
 				if (!this.isEntityImmuneToAll(e) && !ri.hasSufficientShielding(e)) {
 					e.addEffect(this.getRadiationEffect(ri));
 					return true;
@@ -76,7 +76,7 @@ public class RadiationEffects {
 	}
 
 	public void applyPulseEffects(LivingEntity e, RadiationIntensity ri) {
-		if (!e.hasEffect(ReactorCraft.radiation.get()) && !this.isEntityImmuneToAll(e) && !ri.hasSufficientShielding(e))
+		if (!e.hasEffect(ReactorCraft.radiation) && !this.isEntityImmuneToAll(e) && !ri.hasSufficientShielding(e))
 			e.addEffect(this.getRadiationEffect(20, ri));
 	}
 
@@ -89,8 +89,9 @@ public class RadiationEffects {
 	}
 
 	private boolean isValidHazmatItem(ItemStack is) {
-		ReactorItems ri = ReactorItems.getEntry(is);
-		return ri != null && ri.isHazmat();
+		// ITEM-PORT: the hazmat suit pieces (ItemHazmatSuit) are not yet ported/registered, so nothing
+		// qualifies as hazmat gear yet. Re-enable by matching the registered hazmat armor items once ported.
+		return false;
 	}
 
 	public double contaminateArea(Level world, int x, int y, int z, int range, float density, double force, boolean los, RadiationIntensity ri) {
@@ -143,7 +144,7 @@ public class RadiationEffects {
 			if (state.is(BlockTags.LEAVES) || ModWoodList.isModLeaf(id)) {
 				world.removeBlock(pos, false);
 			}
-			else if (state.is(BlockTags.SAPLINGS)) {
+			else if (id instanceof net.minecraft.world.level.block.SaplingBlock) {
 				world.setBlockAndUpdate(pos, Blocks.DEAD_BUSH.defaultBlockState());
 			}
 			else if (id == Blocks.SHORT_GRASS || id == Blocks.FERN || id == Blocks.TALL_GRASS) {
@@ -162,10 +163,9 @@ public class RadiationEffects {
 			}
 		}
 
-		if (id == ReactorBlocks.FLUORITE.getBlockInstance() || id == ReactorBlocks.FLUORITEORE.getBlockInstance()) {
-			// BLOCK-PORT: fluorite irradiation (legacy meta+8 glowing variant) — wire to the fluorite
-			// block's irradiated blockstate once ReactorBlocks/FluoriteTypes is ported.
-		}
+		// BLOCK-PORT: fluorite irradiation (legacy meta+8 glowing variant) — the ported fluorite ore is
+		// per-colour (ReactorBlocks.FLUORITE_ORE map) with no single FLUORITE/FLUORITEORE block; wire the
+		// irradiated blockstate here once the fluorite irradiation variant is ported.
 
 		// DRAGONAPI-PORT: Thaumcraft node tainting (INode/Aspect) gated out — Thaumcraft not in build.
 	}
@@ -175,7 +175,7 @@ public class RadiationEffects {
 	}
 
 	private MobEffectInstance getRadiationEffect(int duration, RadiationIntensity ri) {
-		return new MobEffectInstance(ReactorCraft.radiation.get(), duration, ri.ordinal());
+		return new MobEffectInstance(ReactorCraft.radiation, duration, ri.ordinal());
 	}
 
 	public void doOreIrradiation(Level world, int x, int y, int z, Player ep) {
