@@ -26,6 +26,7 @@ import reika.reactorcraft.container.MenuSynthesizer;
 import reika.reactorcraft.container.MenuThoriumCore;
 import reika.reactorcraft.container.MenuWasteContainer;
 import reika.reactorcraft.container.MenuWasteDecayer;
+import reika.reactorcraft.container.MenuWasteStorage;
 
 /**
  * 26.2 menu-type registry, mirroring {@code RotaryMenus}. Each {@link MenuType} is built from an
@@ -51,5 +52,6 @@ public interface ReactorMenus {
     Supplier<MenuType<MenuSynthesizer>> SYNTHESIZER = register("synthesizer", MenuSynthesizer::new);
     Supplier<MenuType<MenuProcessor>> PROCESSOR = register("processor", MenuProcessor::new);
     Supplier<MenuType<MenuElectrolyzer>> ELECTROLYZER = register("electrolyzer", MenuElectrolyzer::new);
+    Supplier<MenuType<MenuWasteStorage>> WASTE_STORAGE = register("waste_storage", MenuWasteStorage::new);
 
 }

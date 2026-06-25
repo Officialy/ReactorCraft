@@ -9,15 +9,16 @@
  ******************************************************************************/
 package reika.reactorcraft.auxiliary;
 
-import net.minecraft.inventory.Slot;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 import reika.reactorcraft.base.TileEntityWasteUnit;
 import reika.reactorcraft.registry.ReactorItems;
 
+/** 26.2 port: only accepts nuclear-waste items the waste unit will take ({@code isItemValid}→{@code mayPlace}). */
 public class SlotNuclearWaste extends Slot {
 
-	private TileEntityWasteUnit tile;
+	private final TileEntityWasteUnit tile;
 
 	public SlotNuclearWaste(TileEntityWasteUnit te, int id, int x, int y)
 	{
@@ -26,7 +27,7 @@ public class SlotNuclearWaste extends Slot {
 	}
 
 	@Override
-	public final boolean isItemValid(ItemStack is)
+	public final boolean mayPlace(ItemStack is)
 	{
 		return is.getItem() == ReactorItems.WASTE.getItemInstance() && tile.isItemValidForSlot(this.getSlotIndex(), is);
 	}

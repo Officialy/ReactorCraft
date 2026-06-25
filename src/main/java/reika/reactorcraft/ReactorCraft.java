@@ -106,6 +106,8 @@ public class ReactorCraft {
                 reika.reactorcraft.guis.ScreenProcessor::new);
         event.register(reika.reactorcraft.registry.ReactorMenus.ELECTROLYZER.get(),
                 reika.reactorcraft.guis.ScreenElectrolyzer::new);
+        event.register(reika.reactorcraft.registry.ReactorMenus.WASTE_STORAGE.get(),
+                reika.reactorcraft.guis.ScreenWasteStorage::new);
     }
 
     public static ReactorCraft getInstance() {

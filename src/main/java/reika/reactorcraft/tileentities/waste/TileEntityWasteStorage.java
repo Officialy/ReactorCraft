@@ -50,6 +50,16 @@ public class TileEntityWasteStorage extends TileEntityWasteUnit implements Range
 	}
 
 	@Override
+	public boolean hasGui() {
+		return true;
+	}
+
+	@Override
+	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
+		return new reika.reactorcraft.container.MenuWasteStorage(id, inv, this);
+	}
+
+	@Override
 	public void updateEntity(Level world, BlockPos pos) {
 		if (rand.nextInt(20) == 0)
 			this.sickenMobs(world, pos);
