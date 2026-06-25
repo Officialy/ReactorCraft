@@ -39,6 +39,9 @@ public class ReactorCraft {
 
     public static final String MODID = "reactorcraft";
 
+    /** Legacy single-channel name for the ReikaPacketHelper bridge (see {@link reika.reactorcraft.ReactorPacketCore}). */
+    public static final String packetChannel = "ReactorCraftData";
+
     public static final Logger LOGGER = LogManager.getLogger("ReactorCraft");
 
     private static final DeferredRegister<MobEffect> MOB_EFFECTS =
@@ -73,6 +76,11 @@ public class ReactorCraft {
         ReactorSounds.SOUND_EVENTS.register(modEventBus);
 
         reika.reactorcraft.registry.ReactorMenus.REGISTRY.register(modEventBus);
+
+        // ReactorCraft isn't a DragonAPIMod, so the bridge registers under RotaryCraft's mod object
+        // (channel string "ReactorCraftData" keeps it distinct). Same getOwnerMod precedent as the BERs.
+        reika.dragonapi.libraries.io.ReikaPacketHelper.registerPacketHandler(
+                reika.rotarycraft.RotaryCraft.getInstance(), packetChannel, new reika.reactorcraft.ReactorPacketCore());
 
         MOB_EFFECTS.register(modEventBus);
 

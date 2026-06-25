@@ -42,7 +42,7 @@ public enum ReactorPackets {
 	public static ReactorPackets getEnum(int index) {
 		if (index >= 0 && index < list.length)
 			return list[index];
-		ReactorCraft.LOGGER.logError("Index "+index+" does not correspond to an existing packet classification!");
+		ReactorCraft.LOGGER.error("Index "+index+" does not correspond to an existing packet classification!");
 		return null;
 	}
 
