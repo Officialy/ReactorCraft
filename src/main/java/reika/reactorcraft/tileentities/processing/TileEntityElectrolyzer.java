@@ -221,6 +221,16 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable {
 	}
 
 	@Override
+	public boolean hasGui() {
+		return true;
+	}
+
+	@Override
+	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
+		return new reika.reactorcraft.container.MenuElectrolyzer(id, inv, this);
+	}
+
+	@Override
 	public boolean isItemValidForSlot(int i, ItemStack itemstack) {
 		for (Electrolysis e : Electrolysis.recipes) {
 			if (e.uses(itemstack)) {

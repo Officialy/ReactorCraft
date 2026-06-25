@@ -405,6 +405,12 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 		wasteTank.writeToNBT(NBT);
 	}
 
+	// Override the inherited NuclearCore menu (hasGui() stays true from the parent).
+	@Override
+	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
+		return new reika.reactorcraft.container.MenuThoriumCore(id, inv, this);
+	}
+
 	@Override
 	public ReactorType getReactorType() {
 		return ReactorType.THORIUM;

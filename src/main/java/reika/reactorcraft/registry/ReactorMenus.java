@@ -19,7 +19,11 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.container.MenuCentrifuge;
 import reika.reactorcraft.container.MenuNuclearCore;
+import reika.reactorcraft.container.MenuElectrolyzer;
 import reika.reactorcraft.container.MenuPebbleBed;
+import reika.reactorcraft.container.MenuProcessor;
+import reika.reactorcraft.container.MenuSynthesizer;
+import reika.reactorcraft.container.MenuThoriumCore;
 import reika.reactorcraft.container.MenuWasteContainer;
 import reika.reactorcraft.container.MenuWasteDecayer;
 
@@ -43,5 +47,9 @@ public interface ReactorMenus {
     Supplier<MenuType<MenuWasteDecayer>> WASTE_DECAYER = register("waste_decayer", MenuWasteDecayer::new);
     Supplier<MenuType<MenuWasteContainer>> WASTE_CONTAINER = register("waste_container", MenuWasteContainer::new);
     Supplier<MenuType<MenuPebbleBed>> PEBBLE_BED = register("pebble_bed", MenuPebbleBed::new);
+    Supplier<MenuType<MenuThoriumCore>> THORIUM_CORE = register("thorium_core", MenuThoriumCore::new);
+    Supplier<MenuType<MenuSynthesizer>> SYNTHESIZER = register("synthesizer", MenuSynthesizer::new);
+    Supplier<MenuType<MenuProcessor>> PROCESSOR = register("processor", MenuProcessor::new);
+    Supplier<MenuType<MenuElectrolyzer>> ELECTROLYZER = register("electrolyzer", MenuElectrolyzer::new);
 
 }

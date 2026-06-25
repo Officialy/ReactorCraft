@@ -98,6 +98,14 @@ public class ReactorCraft {
                 reika.reactorcraft.guis.ScreenWasteContainer::new);
         event.register(reika.reactorcraft.registry.ReactorMenus.PEBBLE_BED.get(),
                 reika.reactorcraft.guis.ScreenPebbleBed::new);
+        event.register(reika.reactorcraft.registry.ReactorMenus.THORIUM_CORE.get(),
+                reika.reactorcraft.guis.ScreenThoriumCore::new);
+        event.register(reika.reactorcraft.registry.ReactorMenus.SYNTHESIZER.get(),
+                reika.reactorcraft.guis.ScreenSynthesizer::new);
+        event.register(reika.reactorcraft.registry.ReactorMenus.PROCESSOR.get(),
+                reika.reactorcraft.guis.ScreenProcessor::new);
+        event.register(reika.reactorcraft.registry.ReactorMenus.ELECTROLYZER.get(),
+                reika.reactorcraft.guis.ScreenElectrolyzer::new);
     }
 
     public static ReactorCraft getInstance() {
