@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "reactorcraft:reactor_cpu"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "reactorcraft:blocks/reactor_cpu"
+}

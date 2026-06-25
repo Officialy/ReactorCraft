@@ -1,7 +1,6 @@
 package reika.reactorcraft.data;
 
 import com.google.common.collect.ImmutableList;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import net.minecraft.data.CachedOutput;
@@ -31,24 +30,21 @@ public final class ReactorBiomeModifierProvider implements DataProvider {
         this.pathProvider = output.createPathProvider(PackOutput.Target.DATA_PACK, "neoforge/biome_modifier");
     }
 
-    private static void biomes(JsonObject json, ReactorOreType ore) {
+    /**
+     * The biome tags each ore generates in. A {@code HolderSet} JSON only accepts a SINGLE tag string
+     * (or an explicit list of biome ids) — it cannot take an array of {@code #tag} strings — so an ore
+     * spanning two tags (pitchblende: oceans + rivers) emits one biome modifier per tag.
+     */
+    private static String[] biomeTags(ReactorOreType ore) {
         switch (ore) {
-            case PITCHBLENDE: {
-                JsonArray tags = new JsonArray();
-                tags.add("#minecraft:is_ocean");
-                tags.add("#minecraft:is_river");
-                json.add("biomes", tags);
-                break;
-            }
+            case PITCHBLENDE:
+                return new String[]{"#minecraft:is_ocean", "#minecraft:is_river"};
             case AMMONIUM:
-                json.addProperty("biomes", "#minecraft:is_nether");
-                break;
+                return new String[]{"#minecraft:is_nether"};
             case ENDBLENDE:
-                json.addProperty("biomes", "#minecraft:is_end");
-                break;
+                return new String[]{"#minecraft:is_end"};
             default:
-                json.addProperty("biomes", "#minecraft:is_overworld");
-                break;
+                return new String[]{"#minecraft:is_overworld"};
         }
     }
 
@@ -56,16 +52,22 @@ public final class ReactorBiomeModifierProvider implements DataProvider {
     public CompletableFuture<?> run(CachedOutput cache) {
         ImmutableList.Builder<CompletableFuture<?>> futures = ImmutableList.builder();
         for (ReactorOreType ore : ReactorOreType.list) {
-            Identifier id = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, ore.featureName());
-            Path path = pathProvider.json(id);
-            futures.add(CompletableFuture.supplyAsync(() -> {
-                JsonObject json = new JsonObject();
-                json.addProperty("type", "neoforge:add_features");
-                biomes(json, ore);
-                json.addProperty("features", id.toString());
-                json.addProperty("step", GenerationStep.Decoration.UNDERGROUND_ORES.getName());
-                return json;
-            }).thenComposeAsync(encoded -> DataProvider.saveStable(cache, encoded, path)));
+            String featureId = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, ore.featureName()).toString();
+            String[] tags = biomeTags(ore);
+            for (int i = 0; i < tags.length; i++) {
+                String tag = tags[i];
+                // unique modifier id per tag; the feature added is always the ore's placed feature
+                String modName = tags.length > 1 ? ore.featureName() + "_" + i : ore.featureName();
+                Path path = pathProvider.json(Identifier.fromNamespaceAndPath(ReactorCraft.MODID, modName));
+                futures.add(CompletableFuture.supplyAsync(() -> {
+                    JsonObject json = new JsonObject();
+                    json.addProperty("type", "neoforge:add_features");
+                    json.addProperty("biomes", tag);
+                    json.addProperty("features", featureId);
+                    json.addProperty("step", GenerationStep.Decoration.UNDERGROUND_ORES.getName());
+                    return json;
+                }).thenComposeAsync(encoded -> DataProvider.saveStable(cache, encoded, path)));
+            }
         }
         return CompletableFuture.allOf(futures.build().toArray(CompletableFuture[]::new));
     }

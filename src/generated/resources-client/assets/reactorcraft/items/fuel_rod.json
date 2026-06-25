@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:item/fuel_rod"
+    "model": "reactorcraft:block/fuel_rod"
   }
 }

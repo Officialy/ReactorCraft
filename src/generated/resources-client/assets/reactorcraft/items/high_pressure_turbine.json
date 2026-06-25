@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "reactorcraft:block/high_pressure_turbine"
+  }
+}

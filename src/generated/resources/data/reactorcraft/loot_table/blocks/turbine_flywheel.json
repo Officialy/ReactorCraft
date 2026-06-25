@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "reactorcraft:turbine_flywheel"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "reactorcraft:blocks/turbine_flywheel"
+}

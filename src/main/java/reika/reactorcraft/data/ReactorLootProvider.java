@@ -1,12 +1,5 @@
 package reika.reactorcraft.data;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.loot.BlockLootSubProvider;
@@ -15,11 +8,13 @@ import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
-
 import reika.reactorcraft.registry.FluoriteTypes;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorItems;
 import reika.reactorcraft.registry.ReactorOreType;
+
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Block loot tables, faithful to the 1.7.10 {@code ReactorOres.getOreDrop}: ores that yielded their
@@ -56,6 +51,8 @@ public final class ReactorLootProvider extends LootTableProvider {
 
             for (var holder : ReactorBlocks.BLOCKS.getEntries()) {
                 Block block = holder.get();
+                if (block.getLootTable().isEmpty())
+                    continue;
                 ItemLike drop = materialDrops.get(block);
                 if (drop != null)
                     this.dropOther(block, drop);
