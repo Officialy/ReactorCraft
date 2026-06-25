@@ -1,95 +1,101 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
- * Distribution of the software in any form is only allowed with
- * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.base;
 
-import org.lwjgl.opengl.GL11;
-
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.inventory.Container;
-import net.minecraft.inventory.IInventory;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
 
-import reika.dragonapi.instantiable.gui.ImagedGuiButton;
-import reika.dragonapi.interfaces.blockentity.InertIInv;
-import reika.dragonapi.libraries.ReikaInventoryHelper;
-import reika.dragonapi.libraries.io.ReikaTextureHelper;
+import reika.dragonapi.base.CoreContainer;
 import reika.dragonapi.libraries.rendering.ReikaGuiAPI;
 import reika.reactorcraft.ReactorCraft;
-import reika.reactorcraft.registry.ReactorItems;
-import reika.rotarycraft.RotaryCraft;
 
-public abstract class ReactorGuiBase extends GuiContainer {
+/**
+ * 26.2 base screen for ReactorCraft machine GUIs, mirroring RotaryCraft's non-powered
+ * {@code MachineScreen} but without the power tab (ReactorCraft tiles are not power receivers).
+ *
+ * Subclasses supply {@link #getGuiTexture()} (the {@code textures/gui/<name>.png} stem) and may
+ * override {@link #extractBackground} to draw progress bars / fluid tanks on top of the background,
+ * remembering to call {@code super.extractBackground(...)} first.
+ *
+ * The 1.21.5+ render pipeline replaces {@code drawGuiContainerBackgroundLayer}/{@code ...Foreground}
+ * with {@link #extractBackground}/{@link #extractLabels} using a {@link GuiGraphicsExtractor}.
+ * {@code imageWidth}/{@code imageHeight} are final and must be passed through the super constructor.
+ */
+public abstract class ReactorGuiBase<E extends TileEntityReactorBase, T extends CoreContainer<E>> extends AbstractContainerScreen<T> {
 
-	private TileEntityReactorBase tile;
-	private Player player;
+    protected static final ReikaGuiAPI api = ReikaGuiAPI.instance;
+    protected final E tile;
+    protected Inventory inventory;
 
-	public ReactorGuiBase(Container c, Player ep, TileEntityReactorBase te) {
-		super(c);
-		player = ep;
-		tile = te;
-	}
+    public ReactorGuiBase(T container, Inventory inv, Component title) {
+        super(container, inv, title);
+        tile = container.tile;
+        inventory = inv;
+    }
 
-	@Override
-	public void initGui() {
-		super.initGui();
-		buttonList.clear();
-		int j = (width - xSize) / 2;
-		int k = (height - ySize) / 2;
-		String file = "/Reika/RotaryCraft/Textures/GUI/buttons.png";
-		buttonList.add(new ImagedGuiButton(24000, j-17, k+4, 18, ySize-12, 72, 0, file, "Info", 0xffffff, false, RotaryCraft.class));
-		buttonList.add(new ImagedGuiButton(24001, j-17, k+ySize-8, 18, 4, 72, 252, file, "Info", 0xffffff, false, RotaryCraft.class));
-	}
+    public ReactorGuiBase(T container, Inventory inv, Component title, int imageWidth, int imageHeight) {
+        super(container, inv, title, imageWidth, imageHeight);
+        tile = container.tile;
+        inventory = inv;
+    }
 
-	@Override
-	protected void actionPerformed(GuiButton b) {
-		if (b.id == 24000 || b.id == 24001) {
-			player.closeScreen();
-			if (ReikaInventoryHelper.checkForItem(ReactorItems.BOOK.getItemInstance(), player.inventory.mainInventory))
-				player.openGui(ReactorCraft.getInstance(), 11, tile.level, tile.xCoord, tile.yCoord, tile.zCoord);
-			else
-				player.openGui(ReactorCraft.getInstance(), 12, tile.level, tile.xCoord, tile.yCoord, tile.zCoord);
-		}
-	}
+    protected abstract String getGuiTexture();
 
-	@Override
-	protected void drawGuiContainerForegroundLayer(int par1, int par2) {
-		ReikaTextureHelper.bindFontTexture();
+    protected Identifier getTextureIdentifier() {
+        return Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "textures/gui/" + getGuiTexture() + ".png");
+    }
 
-		int j = (width - xSize) / 2;
-		int k = (height - ySize) / 2;
+    public final int getXSize() {
+        return imageWidth;
+    }
 
-		ReikaGuiAPI.instance.drawCenteredStringNoShadow(fontRendererObj, tile.getName(), xSize/2, 5, 4210752);
-		if (tile instanceof IInventory && !(tile instanceof InertIInv && ySize <= 100) && this.showInventoryLabel())
-			fontRendererObj.drawString(I18n.get("container.inventory"), xSize-58, (ySize - 96) + 3, 4210752);
+    public final int getYSize() {
+        return imageHeight;
+    }
 
-		fontRendererObj.drawString("?", -10, ySize/2-4, 0xffffff);
-	}
+    public int getGuiLeft() {
+        return leftPos;
+    }
 
-	protected boolean showInventoryLabel() {
-		return true;
-	}
+    public int getGuiTop() {
+        return topPos;
+    }
 
-	@Override
-	protected void drawGuiContainerBackgroundLayer(float par1, int par2, int par3) {
-		int j = (width - xSize) / 2;
-		int k = (height - ySize) / 2;
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
 
-		String i = "/Reika/ReactorCraft/Textures/GUI/"+this.getGuiTexture()+".png";
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-		ReikaTextureHelper.bindTexture(ReactorCraft.class, i);
-		this.drawTexturedModalRect(j, k, 0, 0, xSize, ySize);
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-	}
+    // TODO(OFF-50): the legacy ReactorGuiBase added two ImagedGuiButtons (ids 24000/24001) that
+    // open the reactor handbook (GuiReactorBook). Re-add them once the book screens are ported.
 
-	public abstract String getGuiTexture();
+    @Override
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        int j = (width - imageWidth) / 2;
+        int k = (height - imageHeight) / 2;
+        graphics.blit(RenderPipelines.GUI_TEXTURED, getTextureIdentifier(), j, k, 0, 0, imageWidth, imageHeight, 256, 256);
+    }
 
+    @Override
+    protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        api.drawCenteredStringNoShadow(graphics, font, this.title.getString(), imageWidth / 2, 5, 4210752);
+        if (tile instanceof Container && this.showInventoryLabel()) {
+            graphics.text(font, I18n.get("container.inventory"), imageWidth - 58, (imageHeight - 96) + 3, 4210752);
+        }
+    }
+
+    protected boolean showInventoryLabel() {
+        return true;
+    }
 }

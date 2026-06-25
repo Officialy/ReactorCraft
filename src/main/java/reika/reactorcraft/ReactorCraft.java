@@ -72,6 +72,8 @@ public class ReactorCraft {
 
         ReactorSounds.SOUND_EVENTS.register(modEventBus);
 
+        reika.reactorcraft.registry.ReactorMenus.REGISTRY.register(modEventBus);
+
         MOB_EFFECTS.register(modEventBus);
 
         modEventBus.addListener(ReactorBlockEntities::registerCapabilities);
@@ -80,7 +82,14 @@ public class ReactorCraft {
 
         if (net.neoforged.fml.loading.FMLEnvironment.getDist() == net.neoforged.api.distmarker.Dist.CLIENT) {
             reika.reactorcraft.registry.ReactorModelLayers.init(modEventBus);
+            modEventBus.addListener(ReactorCraft::registerScreens);
         }
+    }
+
+    /** Binds {@code AbstractContainerScreen}s to their {@link net.minecraft.world.inventory.MenuType}s. */
+    private static void registerScreens(final net.neoforged.neoforge.client.event.RegisterMenuScreensEvent event) {
+        event.register(reika.reactorcraft.registry.ReactorMenus.NUCLEAR_CORE.get(),
+                reika.reactorcraft.guis.ScreenNuclearCore::new);
     }
 
     public static ReactorCraft getInstance() {

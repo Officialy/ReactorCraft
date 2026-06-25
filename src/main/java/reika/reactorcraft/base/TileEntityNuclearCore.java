@@ -17,6 +17,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -177,6 +180,16 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	@Override
 	public final int getContainerSize() {
 		return 12;
+	}
+
+	@Override
+	public boolean hasGui() {
+		return true;
+	}
+
+	@Override
+	public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+		return new reika.reactorcraft.container.MenuNuclearCore(id, inv, this);
 	}
 
 	@Override

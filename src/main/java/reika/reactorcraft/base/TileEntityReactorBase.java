@@ -15,7 +15,12 @@ import java.util.HashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -50,7 +55,7 @@ import reika.rotarycraft.api.power.ShaftPowerReceiver;
 import reika.rotarycraft.auxiliary.Variables;
 import reika.rotarycraft.auxiliary.interfaces.TemperatureTE;
 
-public abstract class TileEntityReactorBase extends BlockEntityBase implements Transducerable {
+public abstract class TileEntityReactorBase extends BlockEntityBase implements Transducerable, MenuProvider {
 
 	protected StepTimer thermalTicker = new StepTimer(20);
 
@@ -83,6 +88,25 @@ public abstract class TileEntityReactorBase extends BlockEntityBase implements T
 	@Override
 	protected String getTEName() {
 		return this.getTile().getName();
+	}
+
+	/**
+	 * Whether right-clicking this machine should open a GUI. Defaults to {@code false}; tiles with a
+	 * menu override this (and {@link #createMenu}). {@code BlockReactorMachine} gates {@code openMenu}
+	 * on this so GUI-less machines don't pop an empty screen.
+	 */
+	public boolean hasGui() {
+		return false;
+	}
+
+	@Override
+	public Component getDisplayName() {
+		return Component.literal(this.getTEName());
+	}
+
+	@Override
+	public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+		return null;
 	}
 
 	public int getAmbientTemperature() {
