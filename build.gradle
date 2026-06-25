@@ -68,6 +68,8 @@ sourceSets.main.java {
     include 'reika/reactorcraft/auxiliary/recipe/ProcessorRecipe.java'
     include 'reika/reactorcraft/auxiliary/recipe/CentrifugeRecipe.java'
     include 'reika/reactorcraft/client/ReactorFluidModels.java'
+    include 'reika/reactorcraft/base/ReactorTERenderer.java'
+    include 'reika/reactorcraft/registry/ReactorModelLayers.java'
 
     // Worldgen (26.2 custom ore feature + config; configured/placed features & biome modifiers via datagen)
     include 'reika/reactorcraft/registry/ReactorFeatures.java'

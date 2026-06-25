@@ -77,6 +77,10 @@ public class ReactorCraft {
         modEventBus.addListener(ReactorBlockEntities::registerCapabilities);
         modEventBus.addListener((net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent e) ->
                 e.enqueueWork(ReactorTiles::loadMappings));
+
+        if (net.neoforged.fml.loading.FMLEnvironment.getDist() == net.neoforged.api.distmarker.Dist.CLIENT) {
+            reika.reactorcraft.registry.ReactorModelLayers.init(modEventBus);
+        }
     }
 
     public static ReactorCraft getInstance() {
