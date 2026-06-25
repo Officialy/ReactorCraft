@@ -75,7 +75,9 @@ public final class ReactorItems {
     public static final DeferredItem<Item> WASTE_DUST = reg("waste_dust", () -> new Item(itemProperties()));
 
     // --- Fuel rods (burnup carried by the FUEL_BURNUP data component) ---
-    public static final DeferredItem<ItemReactorFuel> FUEL_ROD = reg("fuel_rod", () -> new ItemReactorFuel(itemProperties(), 1));
+    // Registry id "fuel" (matches the 1.7.10 "item.fuel"); the machine block keeps "fuel_rod". These are
+    // distinct objects upstream — the item is inserted into cores/recipes, the block is the placed rod.
+    public static final DeferredItem<ItemReactorFuel> FUEL_ROD = reg("fuel", () -> new ItemReactorFuel(itemProperties(), 1));
     public static final DeferredItem<ItemReactorFuel> FUEL_PELLET = reg("fuel_pellet", () -> new ItemReactorFuel(itemProperties(), 1));
     public static final DeferredItem<ItemReactorFuel> BREEDER_FUEL = reg("breeder_fuel", () -> new ItemReactorFuel(itemProperties(), 1));
     public static final DeferredItem<Item> DEPLETED_FUEL = reg("depleted_fuel", () -> new Item(itemProperties()));

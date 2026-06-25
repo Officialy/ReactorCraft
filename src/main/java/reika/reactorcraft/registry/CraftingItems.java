@@ -35,7 +35,7 @@ public enum CraftingItems {
     FABRIC("radiation_fabric"),
     CARBIDEFLAKES("carbide_flakes"),
     CARBIDE("carbide"),
-    TURBCORE("turbine_core");
+    TURBCORE("turbine_core_part"); // distinct from the TURBINECORE machine block's "turbine_core" item
 
     private final String registryName;
 
