@@ -8,100 +8,93 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission.thorium;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
-import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.base.TileEntityTankedReactorMachine;
 import reika.reactorcraft.blocks.BlockThoriumFuel;
+import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorBlocks;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.registry.MachineRegistry;
 
 
 public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
+
+	private int fullTicks = 0;
+
 	public TileEntityFuelDump(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.FUELDUMP.get(), pos, state);
 	}
 
-
-	private int fullTicks = 0;
-
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
 		if (!world.isClientSide()) {
-			BlockEntity te = this.getAdjacentTileEntity(Direction.UP);
-			if (te instanceof TileEntityThoriumCore) {
-				TileEntityThoriumCore tc = (TileEntityThoriumCore)te;
-				if (tc.getTemperature() >= tc.FUEL_DUMP_TEMPERATURE && tc.hasFuel()) {
+			BlockEntity te = this.getAdjacentBlockEntity(Direction.UP);
+			if (te instanceof TileEntityThoriumCore tc) {
+				if (tc.getTemperature() >= TileEntityThoriumCore.FUEL_DUMP_TEMPERATURE && tc.hasFuel()) {
 					int rem = tank.getRemainingSpace();
 					if (rem > 0) {
-						int fuel = ((TileEntityThoriumCore)te).dumpFuel(this, rem);
+						int fuel = tc.dumpFuel(this, rem);
 						if (fuel > 0) {
-							tank.addLiquid(fuel, ReactorCraft.LIFBe_fuel);
+							tank.addLiquid(fuel, ReactorFluids.LIFBE_FUEL.get());
 						}
 						fullTicks = 0;
 					}
 					else {
 						fullTicks++;
 						if (fullTicks > 200) {
-							this.overload(world, x, y, z);
+							this.overload(world, pos);
 						}
 					}
 				}
 			}
-			if (tank.getFluidLevel() >= 125 && this.canDumpAt(world, x, y-1, z)) {
-				this.dumpFuel(world, x, y, z);
+			if (tank.getFluidLevel() >= 125 && this.canDumpAt(world, pos.below())) {
+				this.dumpFuel(world, pos);
 			}
 		}
 	}
 
-	private void dumpFuel(Level world, int x, int y, int z) {
+	private void dumpFuel(Level world, BlockPos pos) {
+		BlockPos below = pos.below();
 		int n1 = Math.min(8, tank.getFluidLevel()/125);
 		int n2 = n1-1;
-		if (world.getBlock(x, y-1, z) == ReactorBlocks.THORIUM.getBlockInstance()) {
-			int fmeta = world.getBlockMetadata(x, y-1, z);
+		BlockState bs = world.getBlockState(below);
+		if (bs.getBlock() == ReactorBlocks.THORIUM_FUEL.get()) {
+			int fmeta = bs.getValue(BlockThoriumFuel.LEVEL);
 			n1 = Math.min(n1, 7-fmeta);
 			n2 = n1+fmeta;
 		}
 		tank.removeLiquid(n1*125);
-		world.setBlock(x, y-1, z, ReactorBlocks.THORIUM.getBlockInstance(), n2, 3);
+		world.setBlock(below, ReactorBlocks.THORIUM_FUEL.get().defaultBlockState().setValue(BlockThoriumFuel.LEVEL, Math.max(0, Math.min(7, n2))), 3);
 		fullTicks = 0;
-		ReikaSoundHelper.playSoundFromServerAtBlock(world, x, y, z, "random.fizz", 1, 1, true);
+		ReikaSoundHelper.playSoundAtBlock(world, pos, SoundEvents.FIRE_EXTINGUISH, 1, 1);
 	}
 
-	private boolean canDumpAt(Level world, int x, int y, int z) {
-		return BlockThoriumFuel.canOverwrite(world, x, y, z) || (world.getBlock(x, y, z) == ReactorBlocks.THORIUM.getBlockInstance() && world.getBlockMetadata(x, y, z) < 7);
+	private boolean canDumpAt(Level world, BlockPos pos) {
+		BlockState bs = world.getBlockState(pos);
+		return BlockThoriumFuel.canOverwrite(world, pos) || (bs.getBlock() == ReactorBlocks.THORIUM_FUEL.get() && bs.getValue(BlockThoriumFuel.LEVEL) < 7);
 	}
 
-	private void overload(Level world, int x, int y, int z) {
+	private void overload(Level world, BlockPos pos) {
 		this.delete();
-		world.newExplosion(null, x+0.5, y+0.5, z+0.5, 3, true, true);
-		world.setBlock(x, y, z, ReactorBlocks.CORIUMFLOWING.getBlockInstance());
+		world.explode(null, pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5, 3, true, Level.ExplosionInteraction.BLOCK);
+		world.setBlockAndUpdate(pos, ReactorBlocks.CORIUMFLOWING.get().defaultBlockState());
 	}
 
 	@Override
-	public FluidStack drain(Direction from, FluidStack resource, boolean doDrain) {
-		return this.hasTile() ? this.getCore().drain(from, resource, doDrain) : null;
-	}
-
-	@Override
-	public FluidStack drain(Direction from, int maxDrain, boolean doDrain) {
-		return this.hasTile() ? this.getCore().drain(from, maxDrain, doDrain) : null;
-	}
-
-	@Override
-	public boolean canDrain(Direction from, Fluid fluid) {
-		return this.hasTile() ? this.getCore().canDrain(from, fluid) : false;
+	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction action) {
+		return this.hasTile() ? this.getCore().drainPipe(from, maxDrain, action) : FluidStack.EMPTY;
 	}
 
 	@Override
@@ -110,11 +103,11 @@ public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
 	}
 
 	private boolean hasTile() {
-		return this.getAdjacentTileEntity(Direction.UP) instanceof TileEntityThoriumCore;
+		return this.getAdjacentBlockEntity(Direction.UP) instanceof TileEntityThoriumCore;
 	}
 
 	private TileEntityThoriumCore getCore() {
-		return (TileEntityThoriumCore)this.getAdjacentTileEntity(Direction.UP);
+		return (TileEntityThoriumCore)this.getAdjacentBlockEntity(Direction.UP);
 	}
 
 	@Override

@@ -121,6 +121,9 @@ public final class ReactorBlocks {
     public static final DeferredBlock<Block> MATS = register("reactor_mat", () -> new reika.reactorcraft.blocks.BlockReactorMat(machineProperties().randomTicks().noOcclusion()));
     public static final DeferredBlock<Block> CORIUMFLOWING = register("corium", () -> new reika.reactorcraft.blocks.BlockCoriumFlowing(machineProperties().randomTicks().noOcclusion().strength(100, 500)));
 
+    // --- Molten LiFBe thorium fuel pool (finite-fluid replacement; placed/consumed by the fuel dump) ---
+    public static final DeferredBlock<Block> THORIUM_FUEL = registerNoItem("thorium_fuel", () -> new reika.reactorcraft.blocks.BlockThoriumFuel(blockProperties().strength(100, 500).lightLevel(s -> 7).randomTicks().noOcclusion().noLootTable()));
+
     // --- Flowing steam (air-like, self-propagating toward turbines) ---
     public static final DeferredBlock<Block> STEAM = registerNoItem("steam", () -> new reika.reactorcraft.blocks.BlockSteam(
             blockProperties().strength(3600000.0F).noCollision().noLootTable().replaceable().noOcclusion()));
