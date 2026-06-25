@@ -38,7 +38,8 @@ public final class ReactorModelLayers {
 	}
 
 	public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
-		// event.registerBlockEntityRenderer(ReactorBlockEntities.X.get(), RenderX::new);
+		// First ReactorCraft BER: the fusion-marker tokamak build guide (pure line geometry, no model layer).
+		event.registerBlockEntityRenderer(ReactorBlockEntities.MARKER.get(), reika.reactorcraft.renders.RenderFusionMarker::new);
 	}
 
 	public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {

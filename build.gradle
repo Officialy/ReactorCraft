@@ -126,6 +126,8 @@ sourceSets.main.java {
     // packet system (OFF-54) — unblocks the CPU GUI (OFF-49)
     include 'reika/reactorcraft/registry/ReactorPackets.java'
     include 'reika/reactorcraft/ReactorPacketCore.java'
+    // first ReactorCraft BER: fusion-marker tokamak build guide
+    include 'reika/reactorcraft/renders/RenderFusionMarker.java'
     include 'reika/reactorcraft/blocks/BlockReactorLine.java'
     include 'reika/reactorcraft/base/BlockReCMultiBlock.java'
     include 'reika/reactorcraft/blocks/multi/BlockGeneratorMulti.java'
