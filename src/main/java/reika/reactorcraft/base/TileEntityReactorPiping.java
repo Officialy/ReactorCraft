@@ -135,7 +135,7 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 		return level.getBlockState(npos).getBlock() != this.getTile().getBlockState().getBlock();
 	}
 
-	@Override
+	// 1.21.5: BlockEntity.getRenderBoundingBox was removed; renderers compute their own bounds.
 	public final AABB getRenderBoundingBox() {
 		return new AABB(getBlockPos());
 	}

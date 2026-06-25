@@ -49,7 +49,7 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 		Block id = world.getBlockState(dpos).getBlock();
 		if (id == Blocks.AIR)
 			return false;
-		if (ReactorTiles.getMachineFromBlock(id) == this.getTile())
+		if (ReactorTiles.getMachineMapping(id) == this.getTile())
 			return true;
 		BlockEntity te = world.getBlockEntity(dpos);
 		return this.canConnectToMachine(id, dir, te);
@@ -82,7 +82,7 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 		return connections[dir.ordinal()];
 	}
 
-	@Override
+	// 1.21.5: BlockEntity.getRenderBoundingBox was removed; renderers compute their own bounds.
 	public final AABB getRenderBoundingBox() {
 		return new AABB(getBlockPos());
 	}

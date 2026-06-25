@@ -2,8 +2,10 @@ package reika.reactorcraft.registry;
 
 import java.util.EnumMap;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -119,7 +121,15 @@ public final class ReactorBlockEntities {
 
 	private static <T extends BlockEntity> DeferredHolder<BlockEntityType<?>, BlockEntityType<T>> register(
 			String name, Class<T> cls, DeferredHolder<Block, ? extends Block> block) {
-		return BLOCK_ENTITIES.register(name, () -> new BlockEntityType<>(cls::new, block.get()));
+		// cls::new is not expressible off a Class<T>, so construct reflectively via the (BlockPos, BlockState) ctor.
+		BlockEntityType.BlockEntitySupplier<T> factory = (pos, state) -> {
+			try {
+				return cls.getConstructor(BlockPos.class, BlockState.class).newInstance(pos, state);
+			} catch (ReflectiveOperationException e) {
+				throw new RuntimeException("Failed to instantiate " + cls + " for " + name, e);
+			}
+		};
+		return BLOCK_ENTITIES.register(name, () -> new BlockEntityType<>(factory, block.get()));
 	}
 
 	public static BlockEntityType<?> getType(ReactorTiles tile) {
@@ -178,7 +188,6 @@ public final class ReactorBlockEntities {
 	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
 		for (DeferredHolder<BlockEntityType<?>, ? extends BlockEntityType<?>> holder : BLOCK_ENTITIES.getEntries()) {
 			registerItemCap(event, holder.get());
-			registerFluidCap(event, holder.get());
 		}
 	}
 
@@ -187,10 +196,9 @@ public final class ReactorBlockEntities {
 				(be, ctx) -> be instanceof HasItemHandler h ? h.getItemHandler() : null);
 	}
 
-	private static <T extends BlockEntity> void registerFluidCap(RegisterCapabilitiesEvent event, BlockEntityType<T> type) {
-		event.registerBlockEntity(Capabilities.Fluid.BLOCK, type,
-				(be, ctx) -> be instanceof TileEntityTankedReactorMachine t ? t : null);
-	}
+	// CAP-PORT: external Capabilities.Fluid.BLOCK exposure deferred (mirrors RotaryBlockEntities). The
+	// reactor tanks still implement the deprecated IFluidHandler and interoperate internally via
+	// PipeConnector; wiring them to the new ResourceHandler<FluidResource> capability is a follow-up.
 
 	private ReactorBlockEntities() {}
 }
