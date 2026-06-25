@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "reactorcraft:block/coolant_cell"
+    "all": "reactorcraft:blocks/coolant_0"
   }
 }

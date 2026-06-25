@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "reactorcraft:block/synthesizer"
+    "all": "reactorcraft:blocks/synthesizer"
   }
 }

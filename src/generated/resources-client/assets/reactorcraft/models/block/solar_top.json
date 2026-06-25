@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "reactorcraft:block/solar_top"
+    "all": "reactorcraft:blocks/steel"
   }
 }
