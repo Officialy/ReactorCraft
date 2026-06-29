@@ -54,7 +54,7 @@ public final class ReactorModelLayers {
 		// core is fuelled). The legacy billboard-quad effect renderers (RenderNeutron/Plasma/Fusion/
 		// Radiation) aren't ported yet, so use NoopRenderer for now — the entities stay invisible but the
 		// reactor logic (neutron fission, radiation, plasma) is fully server-side and unaffected.
-		event.registerEntityRenderer(ReactorEntities.NEUTRON.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
+		event.registerEntityRenderer(ReactorEntities.NEUTRON.get(), reika.reactorcraft.entities.RenderNeutron::new);
 		event.registerEntityRenderer(ReactorEntities.RADIATION.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
 		event.registerEntityRenderer(ReactorEntities.PLASMA.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
 		event.registerEntityRenderer(ReactorEntities.FUSION.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);

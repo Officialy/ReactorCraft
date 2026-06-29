@@ -4,83 +4,64 @@
  * Copyright 2017
  *
  * All rights reserved.
- * Distribution of the software in any form is only allowed with
- * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.entities;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 
-import reika.dragonapi.libraries.rendering.ReikaRenderHelper;
 import reika.reactorcraft.entities.EntityNeutron.NeutronSpeed;
-import reika.reactorcraft.registry.ReactorOptions;
+import reika.rotarycraft.renders.RotaryRenderPipelines;
 
-public class RenderNeutron extends Render
-{
-	public RenderNeutron()
-	{
-		shadowSize = 0.15F;
-		shadowOpaque = 0.75F;
-	}
+/**
+ * 26.2 port of the neutron renderer. The legacy renderer drew a small camera-facing coloured quad;
+ * here we emit a tiny no-depth coloured cube (always visible — handy for seeing fission activity)
+ * via RotaryCraft's {@code NO_DEPTH_FILLED_BOX_TYPE}. Blue for slow/thermal neutrons, bright cyan-blue
+ * for fast ones, matching the legacy colours.
+ */
+public class RenderNeutron extends EntityRenderer<EntityNeutron, RenderNeutron.NeutronRenderState> {
 
-	public void renderTheNeutron(EntityNeutron e, double par2, double par4, double par6, float par8, float par9) {
-		GL11.glPushMatrix();
-		GL11.glTranslatef((float)par2, (float)par4, (float)par6);
-		Tessellator v5 = Tessellator.instance;
-		float var16 = 0.25F;
-		float var17 = 0.5F;
-		float var18 = 0.25F;
-		int var19 = e.getBrightnessForRender(par9);
-		int var20 = var19 % 65536;
-		int var21 = var19 / 65536;
-		OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, var20 / 1.0F, var21 / 1.0F);
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-		float var26 = 255.0F;
-		int var22 = (int)var26;
-		GL11.glRotatef(180.0F - renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
-		GL11.glRotatef(-renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
-		float var25 = 0.3F;
-		GL11.glScalef(var25, var25, var25);
-		ReikaRenderHelper.prepareGeoDraw(false);
+    private static final float S = 0.12F;
 
-		v5.startDrawingQuads();
-		v5.setNormal(0.0F, 1.0F, 0.0F);
-		v5.setColorOpaque(0, 0, e.getNeutronSpeed() == NeutronSpeed.FAST ? 0x22aaff : 0x0000aa);
-		v5.addVertex(0.0F - var17, 0.0F - var18, 0.0D);
-		v5.addVertex(var16 - var17, 0.0F - var18, 0.0D);
-		v5.addVertex(var16 - var17, var16 - var18, 0.0D);
-		v5.addVertex(0.0F - var17, var16 - var18, 0.0D);
-		v5.draw();
+    public RenderNeutron(EntityRendererProvider.Context context) {
+        super(context);
+    }
 
-		ReikaRenderHelper.exitGeoDraw();
-		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-		GL11.glPopMatrix();
-	}
+    @Override
+    public NeutronRenderState createRenderState() {
+        return new NeutronRenderState();
+    }
 
-	/**
-	 * Actually renders the given argument. This is a synthetic bridge method, always casting down its argument and then
-	 * handing it off to a worker function which does the actual work. In all probabilty, the class Render is generic
-	 * (Render<T extends Entity) and this method has signature public void doRender(T entity, double d, double d1,
-	 * double d2, float f, float f1). But JAD is pre 1.5 so doesn't do that.
-	 */
-	@Override
-	public void doRender(Entity e, double par2, double par4, double par6, float par8, float par9)
-	{
-		EntityNeutron n = (EntityNeutron)e;
-		if (ReactorOptions.VISIBLENEUTRONS.getState())
-			this.renderTheNeutron(n, par2, par4+0*0.5, par6, par8, par9);
-	}
+    @Override
+    public void extractRenderState(EntityNeutron entity, NeutronRenderState state, float partialTicks) {
+        super.extractRenderState(entity, state, partialTicks);
+        state.color = entity.getNeutronSpeed() == NeutronSpeed.FAST ? 0xFF22AAFF : 0xFF0000AA;
+    }
 
-	@Override
-	protected ResourceLocation getEntityTexture(Entity entity) {
-		return null;
-	}
+    @Override
+    public void submit(NeutronRenderState state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState camera) {
+        int rgba = state.color;
+        collector.submitCustomGeometry(poseStack, RotaryRenderPipelines.NO_DEPTH_FILLED_BOX_TYPE,
+                (pose, buf) -> emitCube(pose, buf, -S, -S, -S, S, S, S, rgba));
+    }
+
+    private static void emitCube(PoseStack.Pose pose, VertexConsumer b, float x0, float y0, float z0, float x1, float y1, float z1, int rgba) {
+        b.addVertex(pose, x0, y0, z0).setColor(rgba); b.addVertex(pose, x1, y0, z0).setColor(rgba); b.addVertex(pose, x1, y0, z1).setColor(rgba); b.addVertex(pose, x0, y0, z1).setColor(rgba);
+        b.addVertex(pose, x0, y1, z1).setColor(rgba); b.addVertex(pose, x1, y1, z1).setColor(rgba); b.addVertex(pose, x1, y1, z0).setColor(rgba); b.addVertex(pose, x0, y1, z0).setColor(rgba);
+        b.addVertex(pose, x0, y0, z0).setColor(rgba); b.addVertex(pose, x0, y1, z0).setColor(rgba); b.addVertex(pose, x1, y1, z0).setColor(rgba); b.addVertex(pose, x1, y0, z0).setColor(rgba);
+        b.addVertex(pose, x1, y0, z1).setColor(rgba); b.addVertex(pose, x1, y1, z1).setColor(rgba); b.addVertex(pose, x0, y1, z1).setColor(rgba); b.addVertex(pose, x0, y0, z1).setColor(rgba);
+        b.addVertex(pose, x0, y0, z1).setColor(rgba); b.addVertex(pose, x0, y1, z1).setColor(rgba); b.addVertex(pose, x0, y1, z0).setColor(rgba); b.addVertex(pose, x0, y0, z0).setColor(rgba);
+        b.addVertex(pose, x1, y0, z0).setColor(rgba); b.addVertex(pose, x1, y1, z0).setColor(rgba); b.addVertex(pose, x1, y1, z1).setColor(rgba); b.addVertex(pose, x1, y0, z1).setColor(rgba);
+    }
+
+    /** Carries the per-neutron colour (fast vs slow) into the submit pass. */
+    public static class NeutronRenderState extends EntityRenderState {
+        public int color = 0xFF0000AA;
+    }
 }

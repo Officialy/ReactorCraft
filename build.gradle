@@ -128,6 +128,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/ReactorPacketCore.java'
     // first ReactorCraft BER: fusion-marker tokamak build guide
     include 'reika/reactorcraft/renders/RenderFusionMarker.java'
+    include 'reika/reactorcraft/entities/RenderNeutron.java'
     // static machine BER: condenser
     include 'reika/reactorcraft/renders/RenderCondenser.java'
     include 'reika/reactorcraft/models/ModelCondenser.java'
