@@ -40,7 +40,9 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
-
+		// Build the connection cache (used by the renderer's isConnectionValidForSide). Had no caller
+		// before, so lines drew/connected as disconnected. Sync-on-change keeps it cheap per tick.
+		this.recomputeConnections(world, pos);
 	}
 
 	public final boolean isConnectedOnSideAt(Level world, BlockPos pos, Direction dir) {
@@ -88,10 +90,16 @@ public abstract class TileEntityLine extends TileEntityReactorBase {
 	}
 
 	public final void recomputeConnections(Level world, BlockPos pos) {
+		boolean changed = false;
 		for (int i = 0; i < 6; i++) {
-			connections[i] = this.isConnected(dirs[i]);
+			boolean c = this.isConnected(dirs[i]);
+			if (c != connections[i]) {
+				connections[i] = c;
+				changed = true;
+			}
 		}
-		this.syncAllData(false);
+		if (changed)
+			this.syncAllData(false);
 	}
 
 	public final void deleteFromAdjacentConnections(Level world, BlockPos pos) {

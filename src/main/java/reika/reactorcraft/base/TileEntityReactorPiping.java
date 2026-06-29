@@ -50,6 +50,10 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
+		// Build/refresh the connection cache that canInteractWith (and thus intake/dump) gates on.
+		// recomputeConnections previously had NO caller, so connections[] stayed all-false and no pipe
+		// ever transferred fluid — the "pressure system not working" report. Sync-on-change keeps this cheap.
+		this.recomputeConnections(world, pos);
 		Fluid f = this.getFluidType();
 		this.intakeFluid(world, pos);
 		if (this.getFluidLevel() <= 0) {
@@ -141,10 +145,18 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 	}
 
 	public final void recomputeConnections(Level world, BlockPos pos) {
+		// Only sync when a connection actually changed — this runs every tick (from updateEntity), and
+		// the old unconditional syncAllData(true) would have been a per-tick packet storm per pipe.
+		boolean changed = false;
 		for (int i = 0; i < 6; i++) {
-			connections[i] = this.isConnected(dirs[i]);
+			boolean c = this.isConnected(dirs[i]);
+			if (c != connections[i]) {
+				connections[i] = c;
+				changed = true;
+			}
 		}
-		this.syncAllData(true);
+		if (changed)
+			this.syncAllData(true);
 	}
 
 	public final void deleteFromAdjacentConnections(Level world, BlockPos pos) {
