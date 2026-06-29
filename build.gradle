@@ -123,6 +123,8 @@ sourceSets.main.java {
     include 'reika/reactorcraft/auxiliary/SlotNuclearWaste.java'
     include 'reika/reactorcraft/container/MenuWasteStorage.java'
     include 'reika/reactorcraft/guis/ScreenWasteStorage.java'
+    include 'reika/reactorcraft/container/MenuCPU.java'
+    include 'reika/reactorcraft/guis/ScreenCPU.java'
     // packet system (OFF-54) — unblocks the CPU GUI (OFF-49)
     include 'reika/reactorcraft/registry/ReactorPackets.java'
     include 'reika/reactorcraft/ReactorPacketCore.java'

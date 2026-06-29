@@ -9,9 +9,6 @@
  ******************************************************************************/
 package reika.reactorcraft.tileentities.fission;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -20,32 +17,29 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.NeoForge;
-
 import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.data.blockstruct.AbstractSearch;
 import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
-import reika.reactorcraft.auxiliary.LinkableReactorCore;
-import reika.reactorcraft.auxiliary.NeutronTile;
-import reika.reactorcraft.auxiliary.ReactorBlock;
-import reika.reactorcraft.auxiliary.ReactorControlLayout;
-import reika.reactorcraft.auxiliary.ReactorPowerReceiver;
-import reika.reactorcraft.auxiliary.TemperaturedReactorTyped;
+import reika.reactorcraft.auxiliary.*;
 import reika.reactorcraft.base.TileEntityReactorBase;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.event.ScramEvent;
-import reika.reactorcraft.registry.ReactorAchievements;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-import reika.reactorcraft.registry.ReactorSounds;
-import reika.reactorcraft.registry.ReactorTiles;
-import reika.reactorcraft.registry.ReactorType;
+import reika.reactorcraft.registry.*;
 import reika.reactorcraft.tileentities.fission.TileEntityWaterCell.LiquidStates;
 import reika.rotarycraft.api.power.PowerTransferHelper;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class TileEntityCPU extends TileEntityReactorBase implements ReactorPowerReceiver, TemperaturedReactorTyped, ReactorBlock, NeutronTile {
 
 	public TileEntityCPU(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.CPU.get(), pos, state);
+		// Init here (not just onFirstTick) so the layout exists on the CLIENT — onFirstTick only fires
+		// server-side, but readSyncTag (which guards on layout != null) needs it present to receive the
+		// synced control-rod grid that ScreenCPU draws.
+		layout = new ReactorControlLayout(this);
 	}
 
 	private ReactorControlLayout layout;
@@ -60,14 +54,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 
 	private int redstoneUpdate = 200;
 
-	private final AbstractSearch.PropagationCondition reactorBlocks = new AbstractSearch.PropagationCondition() {
-
-		@Override
-		public boolean isValidLocation(Level world, BlockPos pos, BlockPos from) {
-			return world.getBlockEntity(pos) instanceof ReactorBlock;
-		}
-
-	};
+	private final AbstractSearch.PropagationCondition reactorBlocks = (world, pos, from) -> world.getBlockEntity(pos) instanceof ReactorBlock;
 
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
@@ -150,6 +137,16 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 
 	public ReactorControlLayout getLayout() {
 		return layout;
+	}
+
+	@Override
+	public boolean hasGui() {
+		return true;
+	}
+
+	@Override
+	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
+		return new reika.reactorcraft.container.MenuCPU(id, inv, this);
 	}
 
 	@Override

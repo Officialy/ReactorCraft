@@ -17,6 +17,7 @@ import net.neoforged.neoforge.network.IContainerFactory;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.container.MenuCPU;
 import reika.reactorcraft.container.MenuCentrifuge;
 import reika.reactorcraft.container.MenuNuclearCore;
 import reika.reactorcraft.container.MenuElectrolyzer;
@@ -53,5 +54,6 @@ public interface ReactorMenus {
     Supplier<MenuType<MenuProcessor>> PROCESSOR = register("processor", MenuProcessor::new);
     Supplier<MenuType<MenuElectrolyzer>> ELECTROLYZER = register("electrolyzer", MenuElectrolyzer::new);
     Supplier<MenuType<MenuWasteStorage>> WASTE_STORAGE = register("waste_storage", MenuWasteStorage::new);
+    Supplier<MenuType<MenuCPU>> CPU = register("reactor_cpu", MenuCPU::new);
 
 }
