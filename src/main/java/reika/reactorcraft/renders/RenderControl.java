@@ -1,66 +1,51 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
- * Distribution of the software in any form is only allowed with
- * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.renders;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
-import reika.dragonapi.interfaces.tileentity.RenderFetcher;
-import reika.reactorcraft.base.ReactorRenderBase;
-import reika.reactorcraft.base.TileEntityReactorBase;
+import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.base.ReactorTERenderer;
 import reika.reactorcraft.models.ModelControl;
+import reika.reactorcraft.registry.ReactorModelLayers;
 import reika.reactorcraft.tileentities.fission.TileEntityControlRod;
 
-public class RenderControl extends ReactorRenderBase
-{
-	private ModelControl ControlModel = new ModelControl();
+/**
+ * 26.2 port of the control-rod BER. The rod assembly slides vertically with the rod's insertion
+ * depth ({@link TileEntityControlRod#getRodPosition()}); the housing stays fixed. Texture {@code control.png}.
+ */
+public class RenderControl extends ReactorTERenderer<TileEntityControlRod> {
 
-	/**
-	 * Renders the TileEntity for the position.
-	 */
-	public void renderTileEntityControlRodAt(TileEntityControlRod tile, double par2, double par4, double par6, float par8)
-	{
-		ModelControl var14;
-		var14 = ControlModel;
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "textures/tileentity/control.png");
 
-		this.bindTextureByName("/Reika/ReactorCraft/Textures/TileEntity/control.png");
+    private final ModelControl model;
 
-		GL11.glPushMatrix();
-		GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-		GL11.glTranslatef((float)par2, (float)par4 + 2.0F, (float)par6 + 1.0F);
-		GL11.glScalef(1.0F, -1.0F, -1.0F);
-		GL11.glTranslatef(0.5F, 0.5F, 0.5F);
-		int var11 = 0;
-		float var13;
+    public RenderControl(BlockEntityRendererProvider.Context context) {
+        model = new ModelControl(context.bakeLayer(ReactorModelLayers.CONTROL_ROD));
+    }
 
-		var14.renderAll(tile, null, tile.getRodPosition(), 0);
+    @Override
+    protected Identifier getSubmitTexture(BlockEntity be) {
+        return TEXTURE;
+    }
 
-		if (tile.isInWorld())
-			GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-		GL11.glPopMatrix();
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-
-	}
-
-	@Override
-	public void renderTileEntityAt(TileEntity tile, double par2, double par4, double par6, float par8)
-	{
-		if (this.doRenderModel((TileEntityReactorBase)tile))
-			this.renderTileEntityControlRodAt((TileEntityControlRod)tile, par2, par4, par6, par8);
-	}
-
-	@Override
-	public String getImageFileName(RenderFetcher te) {
-		return "control.png";
-	}
+    @Override
+    protected void renderModel(PoseStack stack, BlockEntity be, VertexConsumer vc, int light) {
+        stack.pushPose();
+        stack.translate(0.0, 2.0, 1.0);
+        stack.scale(1.0F, -1.0F, -1.0F);
+        stack.translate(0.5, 0.5, 0.5);
+        model.renderAll(stack, vc, light, ((TileEntityControlRod) be).getRodPosition());
+        stack.popPose();
+    }
 }
