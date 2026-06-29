@@ -36,6 +36,7 @@ public final class ReactorModelLayers {
 	public static final ModelLayerLocation SOLENOID = layer("solenoid");
 	public static final ModelLayerLocation STEAM_GRATE = layer("steam_grate");
 	public static final ModelLayerLocation CONTROL_ROD = layer("control_rod");
+	public static final ModelLayerLocation TURBINE = layer("turbine");
 
 	public static void init(IEventBus bus) {
 		bus.addListener(ReactorModelLayers::registerEntityRenderers);
@@ -50,6 +51,7 @@ public final class ReactorModelLayers {
 		event.registerBlockEntityRenderer(ReactorBlockEntities.SOLENOID.get(), reika.reactorcraft.renders.RenderSolenoid::new);
 		event.registerBlockEntityRenderer(ReactorBlockEntities.GRATE.get(), reika.reactorcraft.renders.RenderSteamGrate::new);
 		event.registerBlockEntityRenderer(ReactorBlockEntities.CONTROL.get(), reika.reactorcraft.renders.RenderControl::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.TURBINECORE.get(), reika.reactorcraft.renders.RenderTurbine::new);
 
 		// Entity renderers MUST be registered for every spawnable entity type or the client NPEs in
 		// EntityRenderDispatcher.shouldRender the moment one spawns (e.g. a neutron burst when a fission
@@ -69,6 +71,7 @@ public final class ReactorModelLayers {
 		event.registerLayerDefinition(SOLENOID, reika.reactorcraft.models.ModelSolenoid::createLayer);
 		event.registerLayerDefinition(STEAM_GRATE, reika.reactorcraft.models.ModelSteamGrate::createLayer);
 		event.registerLayerDefinition(CONTROL_ROD, reika.reactorcraft.models.ModelControl::createLayer);
+		event.registerLayerDefinition(TURBINE, reika.reactorcraft.models.ModelTurbine::createLayer);
 	}
 
 	private ReactorModelLayers() {}
