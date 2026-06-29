@@ -112,9 +112,13 @@ public class BlockReactorMachine extends BlockTEBase implements MachineRegistryB
         if (level.isClientSide())
             return null;
         return (lvl, pos, st, be) -> {
-            if (be instanceof TileEntityReactorBase rc) {
-                rc.updateEntity(lvl, pos);
-            } else if (be instanceof BlockEntityBase base) {
+            if (be instanceof BlockEntityBase base) {
+                // Drive the BlockEntityBase lifecycle FIRST (no-arg updateEntity): this fires onFirstTick
+                // on tick 0 and advances ticksExisted/sync. Without it, onFirstTick never runs — which
+                // left TileEntityCPU.layout null (crash) and reactor cores never initialising. RotaryCraft
+                // machines call super.updateEntity() at the top of their 2-arg method for the same reason;
+                // doing it here covers every ReactorCraft TE in one place.
+                base.updateEntity();
                 base.updateEntity(lvl, pos);
             }
         };
