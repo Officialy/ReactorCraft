@@ -31,6 +31,7 @@ public final class ReactorModelLayers {
 
 	// --- Machine model layers (one per ported machine model) ---
 	// (added incrementally as each ModelX is ported)
+	public static final ModelLayerLocation CONDENSER = layer("condenser");
 
 	public static void init(IEventBus bus) {
 		bus.addListener(ReactorModelLayers::registerEntityRenderers);
@@ -40,10 +41,11 @@ public final class ReactorModelLayers {
 	public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
 		// First ReactorCraft BER: the fusion-marker tokamak build guide (pure line geometry, no model layer).
 		event.registerBlockEntityRenderer(ReactorBlockEntities.MARKER.get(), reika.reactorcraft.renders.RenderFusionMarker::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.CONDENSER.get(), reika.reactorcraft.renders.RenderCondenser::new);
 	}
 
 	public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
-		// event.registerLayerDefinition(X, XModel::createLayer);
+		event.registerLayerDefinition(CONDENSER, reika.reactorcraft.models.ModelCondenser::createLayer);
 	}
 
 	private ReactorModelLayers() {}
