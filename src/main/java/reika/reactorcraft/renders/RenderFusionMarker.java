@@ -7,22 +7,21 @@
  ******************************************************************************/
 package reika.reactorcraft.renders;
 
-import java.util.ArrayList;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
+import net.minecraft.world.phys.Vec3;
 import reika.reactorcraft.base.ReactorTERenderer;
 import reika.reactorcraft.tileentities.TileEntityFusionMarker;
 import reika.reactorcraft.tileentities.fusion.TileEntityToroidMagnet.Aim;
 import reika.rotarycraft.renders.RotaryRenderPipelines;
+
+import java.util.ArrayList;
 
 /**
  * 26.2 port of the immediate-mode fusion-marker renderer (the first ReactorCraft BER). When the
@@ -44,10 +43,25 @@ public class RenderFusionMarker extends ReactorTERenderer<TileEntityFusionMarker
 
     // The build guide spans the whole tokamak (14+ blocks out), so don't frustum-cull it to the
     // marker block's own cell — otherwise the far toroid/injector lines vanish when the marker
-    // itself is off-screen.
+    // itself is off-screen.  Follow the BeaconRenderer pattern: shouldRenderOffScreen=true puts the
+    // BE in globallyRenderedBlockEntities (extracted every frame regardless of chunk-section
+    // visibility), getViewDistance uses the player's actual render distance, and shouldRender only
+    // checks horizontal distance so the marker is never distance-culled.
     @Override
     public boolean shouldRenderOffScreen() {
         return true;
+    }
+
+    @Override
+    public int getViewDistance() {
+        return Minecraft.getInstance().options.getEffectiveRenderDistance() * 16;
+    }
+
+    @Override
+    public boolean shouldRender(TileEntityFusionMarker be, Vec3 cameraPosition) {
+        return Vec3.atCenterOf(be.getBlockPos())
+                .multiply(1.0, 0.0, 1.0)
+                .closerThan(cameraPosition.multiply(1.0, 0.0, 1.0), this.getViewDistance());
     }
 
     @Override

@@ -8,19 +8,17 @@
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.tileentities;
+
 import net.minecraft.core.BlockPos;
-
-import net.minecraft.world.level.block.state.BlockState;
-import reika.reactorcraft.registry.ReactorBlockEntities;
-
-import java.util.ArrayList;
-
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.Level;
-
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import reika.reactorcraft.base.TileEntityReactorBase;
+import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.fusion.TileEntityToroidMagnet.Aim;
+
+import java.util.ArrayList;
 
 public class TileEntityFusionMarker extends TileEntityReactorBase {
 	public TileEntityFusionMarker(BlockPos pos, BlockState state) {
@@ -48,7 +46,7 @@ public class TileEntityFusionMarker extends TileEntityReactorBase {
 	}
 
 	public ArrayList<Aim> getAimPoints() {
-		ArrayList li = new ArrayList();
+		ArrayList<Aim> li = new ArrayList<>();
 		li.add(Aim.N);
 		li.add(Aim.N);
 		li.add(Aim.NNW1);
