@@ -42,6 +42,17 @@ public final class ReactorModelLayers {
 		// First ReactorCraft BER: the fusion-marker tokamak build guide (pure line geometry, no model layer).
 		event.registerBlockEntityRenderer(ReactorBlockEntities.MARKER.get(), reika.reactorcraft.renders.RenderFusionMarker::new);
 		event.registerBlockEntityRenderer(ReactorBlockEntities.CONDENSER.get(), reika.reactorcraft.renders.RenderCondenser::new);
+
+		// Entity renderers MUST be registered for every spawnable entity type or the client NPEs in
+		// EntityRenderDispatcher.shouldRender the moment one spawns (e.g. a neutron burst when a fission
+		// core is fuelled). The legacy billboard-quad effect renderers (RenderNeutron/Plasma/Fusion/
+		// Radiation) aren't ported yet, so use NoopRenderer for now — the entities stay invisible but the
+		// reactor logic (neutron fission, radiation, plasma) is fully server-side and unaffected.
+		event.registerEntityRenderer(ReactorEntities.NEUTRON.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
+		event.registerEntityRenderer(ReactorEntities.RADIATION.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
+		event.registerEntityRenderer(ReactorEntities.PLASMA.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
+		event.registerEntityRenderer(ReactorEntities.FUSION.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
+		event.registerEntityRenderer(ReactorEntities.NUCLEARWASTE.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
 	}
 
 	public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
