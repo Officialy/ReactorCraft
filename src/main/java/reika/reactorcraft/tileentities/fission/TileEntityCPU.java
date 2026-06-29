@@ -36,10 +36,9 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 
 	public TileEntityCPU(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.CPU.get(), pos, state);
-		// Init here (not just onFirstTick) so the layout exists on the CLIENT — onFirstTick only fires
-		// server-side, but readSyncTag (which guards on layout != null) needs it present to receive the
-		// synced control-rod grid that ScreenCPU draws.
-		layout = new ReactorControlLayout(this);
+		// NOTE: do NOT create the ReactorControlLayout here — it builds a WorldLocation that requires a
+		// non-null level, which the BE does not have at construction time (NPE -> CPU fails to load).
+		// The layout is created lazily in getLayout() once the level is set (see below).
 	}
 
 	private ReactorControlLayout layout;
@@ -136,6 +135,11 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	}
 
 	public ReactorControlLayout getLayout() {
+		// Lazy init: the layout needs a non-null level (WorldLocation), which isn't available in the
+		// constructor. Creating it on first access (server tick OR client sync) keeps both sides working
+		// without the constructor NPE.
+		if (layout == null && level != null)
+			layout = new ReactorControlLayout(this);
 		return layout;
 	}
 
@@ -276,8 +280,10 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 
 		redstoneUpdate = NBT.getIntOr("redsu", 0);
 
-		if (layout != null)
-			layout.readFromNBT(NBT);
+		// Lazy-init on the client so the synced control-rod grid is received (level is set by sync time).
+		ReactorControlLayout l = this.getLayout();
+		if (l != null)
+			l.readFromNBT(NBT);
 
 		temperatureChecks.clear();
 		ListTag li = NBT.getListOrEmpty("checks");
