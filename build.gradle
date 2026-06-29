@@ -131,6 +131,8 @@ sourceSets.main.java {
     // static machine BER: condenser
     include 'reika/reactorcraft/renders/RenderCondenser.java'
     include 'reika/reactorcraft/models/ModelCondenser.java'
+    include 'reika/reactorcraft/renders/RenderMagnet.java'
+    include 'reika/reactorcraft/models/ModelMagnet.java'
     include 'reika/reactorcraft/blocks/BlockReactorLine.java'
     include 'reika/reactorcraft/base/BlockReCMultiBlock.java'
     include 'reika/reactorcraft/blocks/multi/BlockGeneratorMulti.java'

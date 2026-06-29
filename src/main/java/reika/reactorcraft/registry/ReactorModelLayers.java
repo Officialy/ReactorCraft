@@ -32,6 +32,7 @@ public final class ReactorModelLayers {
 	// --- Machine model layers (one per ported machine model) ---
 	// (added incrementally as each ModelX is ported)
 	public static final ModelLayerLocation CONDENSER = layer("condenser");
+	public static final ModelLayerLocation MAGNET = layer("magnet");
 
 	public static void init(IEventBus bus) {
 		bus.addListener(ReactorModelLayers::registerEntityRenderers);
@@ -42,6 +43,7 @@ public final class ReactorModelLayers {
 		// First ReactorCraft BER: the fusion-marker tokamak build guide (pure line geometry, no model layer).
 		event.registerBlockEntityRenderer(ReactorBlockEntities.MARKER.get(), reika.reactorcraft.renders.RenderFusionMarker::new);
 		event.registerBlockEntityRenderer(ReactorBlockEntities.CONDENSER.get(), reika.reactorcraft.renders.RenderCondenser::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.MAGNET.get(), reika.reactorcraft.renders.RenderMagnet::new);
 
 		// Entity renderers MUST be registered for every spawnable entity type or the client NPEs in
 		// EntityRenderDispatcher.shouldRender the moment one spawns (e.g. a neutron burst when a fission
@@ -57,6 +59,7 @@ public final class ReactorModelLayers {
 
 	public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
 		event.registerLayerDefinition(CONDENSER, reika.reactorcraft.models.ModelCondenser::createLayer);
+		event.registerLayerDefinition(MAGNET, reika.reactorcraft.models.ModelMagnet::createLayer);
 	}
 
 	private ReactorModelLayers() {}
