@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/control_rod"
+    "model": "reactorcraft:item/control_rod"
   }
 }

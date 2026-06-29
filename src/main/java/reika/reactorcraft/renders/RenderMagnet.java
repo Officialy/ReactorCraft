@@ -11,10 +11,16 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
+import reika.dragonapi.libraries.rendering.ReikaColorAPI;
+import reika.dragonapi.libraries.rendering.ReikaRenderHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.base.ReactorTERenderer;
 import reika.reactorcraft.models.ModelMagnet;
@@ -54,5 +60,37 @@ public class RenderMagnet extends ReactorTERenderer<TileEntityToroidMagnet> {
         stack.mulPose(Axis.YP.rotationDegrees(ang));
         model.renderAll(stack, vc, light);
         stack.popPose();
+    }
+
+    // Draw the ring (super) plus the aim indicator: a cyan arrow + concentric range circles pointing
+    // along the magnet's aim, in upright world space (NOT the flipped model transform). Faithful to the
+    // legacy renderAngleLine; the indicator fades as TileEntityToroidMagnet.alpha decays (refreshed on aim).
+    @Override
+    public void submit(BlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState camera) {
+        super.submit(state, poseStack, collector, camera);
+
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null)
+            return;
+        BlockEntity be = mc.level.getBlockEntity(state.blockPos);
+        if (!(be instanceof TileEntityToroidMagnet tile) || !tile.isInWorld())
+            return;
+        int a = Math.min(255, tile.getAlpha());
+        if (a <= 0)
+            return;
+
+        PoseStack ps = new PoseStack();
+        ps.last().set(poseStack.last());
+        ps.translate(0.5, 0.5, 0.5);
+        ps.mulPose(Axis.YP.rotationDegrees(tile.getAngle() + 90.0F));
+
+        int[] arrow = {100, 192, 255, a};
+        ReikaRenderHelper.renderLine(collector, ps, 0, 0.1, 0, 4, 0.1, 0, arrow);
+        ReikaRenderHelper.renderLine(collector, ps, 3.5, 0.1, 0.5, 4, 0.1, 0, arrow);
+        ReikaRenderHelper.renderLine(collector, ps, 3.5, 0.1, -0.5, 4, 0.1, 0, arrow);
+
+        int white = ReikaColorAPI.RGBtoHex(255, 255, 255, a);
+        for (int i = 1; i < 4; i++)
+            ReikaRenderHelper.renderVCircle(collector, ps, i, 0, 0, 0, white, 90, 10);
     }
 }

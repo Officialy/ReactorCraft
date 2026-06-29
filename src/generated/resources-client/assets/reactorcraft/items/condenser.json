@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/condenser"
+    "model": "reactorcraft:item/condenser"
   }
 }

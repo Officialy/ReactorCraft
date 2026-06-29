@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/toroid_magnet"
+    "model": "reactorcraft:item/toroid_magnet"
   }
 }

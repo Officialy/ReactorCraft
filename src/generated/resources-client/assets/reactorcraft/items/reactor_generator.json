@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/reactor_generator"
+    "model": "reactorcraft:item/reactor_generator"
   }
 }

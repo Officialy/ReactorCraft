@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/heavy_pump"
+    "model": "reactorcraft:item/heavy_pump"
   }
 }

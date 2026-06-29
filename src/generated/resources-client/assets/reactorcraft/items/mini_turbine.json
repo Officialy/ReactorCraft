@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/mini_turbine"
+    "model": "reactorcraft:item/mini_turbine"
   }
 }

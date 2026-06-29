@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/uranium_processor"
+    "model": "reactorcraft:item/uranium_processor"
   }
 }

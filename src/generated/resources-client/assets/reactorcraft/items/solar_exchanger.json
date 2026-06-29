@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/solar_exchanger"
+    "model": "reactorcraft:item/solar_exchanger"
   }
 }

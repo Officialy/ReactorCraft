@@ -72,6 +72,35 @@ public class ReactorModelProvider extends ModelProvider {
 
         for (var holder : ReactorBlocks.BLOCKS.getEntries()) {
             Block block = holder.get();
+
+            if (block instanceof reika.reactorcraft.blocks.BlockReactorMachineModelled) {
+                // BER-rendered machine: render NOTHING in the chunk mesh (the BlockEntityRenderer draws
+                // the real model). A cube_all here would put a solid steel cube inside the BER — wrong
+                // for non-cube shapes like the toroid ring. Emit an empty in-world model (particle texture
+                // only, for break/place FX); the held/inventory item still gets a visible cube_all.
+                Identifier emptyModelId = ModelLocationUtils.getModelLocation(block);
+                String particle = blockTexture(block).sprite().toString();
+                modelOut.accept(emptyModelId, () -> {
+                    com.google.gson.JsonObject root = new com.google.gson.JsonObject();
+                    com.google.gson.JsonObject tex = new com.google.gson.JsonObject();
+                    tex.addProperty("particle", particle);
+                    root.add("textures", tex);
+                    return root;
+                });
+                blockStateOut.accept(MultiVariantGenerator.dispatch(block,
+                        new MultiVariant(WeightedList.of(new Variant(emptyModelId)))));
+
+                Item asItem = block.asItem();
+                if (asItem != Items.AIR) {
+                    Identifier itemModelId = ModelTemplates.CUBE_ALL.create(
+                            ModelLocationUtils.getModelLocation(asItem),
+                            TextureMapping.cube(blockTexture(block)), modelOut);
+                    itemModelOut.accept(asItem, ItemModelUtils.plainModel(itemModelId));
+                    blockItemsHandled.add(asItem);
+                }
+                continue;
+            }
+
             Identifier blockModelId = ModelTemplates.CUBE_ALL.create(block, TextureMapping.cube(blockTexture(block)), modelOut);
             MultiVariant single = new MultiVariant(WeightedList.of(new Variant(blockModelId)));
             blockStateOut.accept(MultiVariantGenerator.dispatch(block, single));

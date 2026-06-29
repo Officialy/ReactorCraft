@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/fusion_marker"
+    "model": "reactorcraft:item/fusion_marker"
   }
 }

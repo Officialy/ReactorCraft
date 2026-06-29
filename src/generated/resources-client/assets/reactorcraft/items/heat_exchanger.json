@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/heat_exchanger"
+    "model": "reactorcraft:item/heat_exchanger"
   }
 }
