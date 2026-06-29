@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "reactorcraft:blocks/fluid/lifbe_fuel"
+    "all": "reactorcraft:block/fluid/lifbe_fuel"
   }
 }

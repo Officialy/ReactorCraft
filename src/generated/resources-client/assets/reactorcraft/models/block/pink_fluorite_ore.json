@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "reactorcraft:blocks/ore/fluorite_pink"
+    "all": "reactorcraft:block/ore/fluorite_pink"
   }
 }

@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "reactorcraft:blocks/ore/indium"
+    "all": "reactorcraft:block/ore/indium"
   }
 }

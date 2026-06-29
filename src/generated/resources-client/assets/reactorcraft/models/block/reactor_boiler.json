@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "reactorcraft:blocks/boiler_0"
+    "all": "reactorcraft:block/boiler_0"
   }
 }

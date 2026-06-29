@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "reactorcraft:blocks/co2heater_0"
+    "all": "reactorcraft:block/co2heater_0"
   }
 }

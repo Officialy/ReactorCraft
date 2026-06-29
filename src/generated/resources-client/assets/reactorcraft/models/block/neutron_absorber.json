@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "reactorcraft:blocks/absorber"
+    "all": "reactorcraft:block/absorber"
   }
 }

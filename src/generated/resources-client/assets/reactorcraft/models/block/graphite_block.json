@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "reactorcraft:blocks/mat/graphite"
+    "all": "reactorcraft:block/mat/graphite"
   }
 }

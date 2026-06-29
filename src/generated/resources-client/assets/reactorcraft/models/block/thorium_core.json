@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "reactorcraft:blocks/thorium_0"
+    "all": "reactorcraft:block/thorium_0"
   }
 }

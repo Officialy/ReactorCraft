@@ -97,48 +97,48 @@ public class ReactorModelProvider extends ModelProvider {
     // Registry block id -> texture path under assets/reactorcraft/textures/ (the 1.7.10 art lives in
     // blocks/{ore,mat,...} with old names). Visible blocks (ores/storage/fluorite) map to their real
     // texture; BER-rendered machines whose only art is a tileentity model use a single side texture
-    // or fall back to "blocks/steel". Multi-texture machines ("_#" variants) use the base #0 sprite.
+    // or fall back to "block/steel". Multi-texture machines ("_#" variants) use the base #0 sprite.
     private static final java.util.Map<String, String> BLOCK_TEX = new java.util.HashMap<>();
     static {
         // ores
-        BLOCK_TEX.put("pitchblende_ore", "blocks/ore/pitchblende");
-        BLOCK_TEX.put("end_pitchblende_ore", "blocks/ore/endblende");
-        BLOCK_TEX.put("cadmium_ore", "blocks/ore/cadmium");
-        BLOCK_TEX.put("indium_ore", "blocks/ore/indium");
-        BLOCK_TEX.put("silver_ore", "blocks/ore/silver");
-        BLOCK_TEX.put("ammonium_ore", "blocks/ore/ammonium");
-        BLOCK_TEX.put("calcite_ore", "blocks/ore/calcite");
-        BLOCK_TEX.put("magnetite_ore", "blocks/ore/magnetite");
-        BLOCK_TEX.put("thorium_ore", "blocks/ore/thorium");
+        BLOCK_TEX.put("pitchblende_ore", "block/ore/pitchblende");
+        BLOCK_TEX.put("end_pitchblende_ore", "block/ore/endblende");
+        BLOCK_TEX.put("cadmium_ore", "block/ore/cadmium");
+        BLOCK_TEX.put("indium_ore", "block/ore/indium");
+        BLOCK_TEX.put("silver_ore", "block/ore/silver");
+        BLOCK_TEX.put("ammonium_ore", "block/ore/ammonium");
+        BLOCK_TEX.put("calcite_ore", "block/ore/calcite");
+        BLOCK_TEX.put("magnetite_ore", "block/ore/magnetite");
+        BLOCK_TEX.put("thorium_ore", "block/ore/thorium");
         // storage
-        BLOCK_TEX.put("graphite_block", "blocks/mat/graphite");
-        BLOCK_TEX.put("calcite_block", "blocks/mat/calcite");
-        BLOCK_TEX.put("lodestone_block", "blocks/mat/lodestone");
+        BLOCK_TEX.put("graphite_block", "block/mat/graphite");
+        BLOCK_TEX.put("calcite_block", "block/mat/calcite");
+        BLOCK_TEX.put("lodestone_block", "block/mat/lodestone");
         // single-texture machines (registry id differs from texture name)
-        BLOCK_TEX.put("control_rod", "blocks/control");
-        BLOCK_TEX.put("reactor_cpu", "blocks/cpu");
-        BLOCK_TEX.put("neutron_absorber", "blocks/absorber");
-        BLOCK_TEX.put("breeder_core", "blocks/breeder");
-        BLOCK_TEX.put("heat_exchanger", "blocks/exchanger");
-        BLOCK_TEX.put("fusion_heater", "blocks/heater");
-        BLOCK_TEX.put("fusion_injector", "blocks/injector");
-        BLOCK_TEX.put("synthesizer", "blocks/synthesizer");
-        BLOCK_TEX.put("tritizer", "blocks/tritizer");
-        BLOCK_TEX.put("waste_container", "blocks/wastecontainer");
-        BLOCK_TEX.put("neutron_reflector", "blocks/reflector");
-        BLOCK_TEX.put("fuel_dump", "blocks/fueldump");
-        BLOCK_TEX.put("fuel_rod", "blocks/fuel_0");
-        BLOCK_TEX.put("coolant_cell", "blocks/coolant_0");
-        BLOCK_TEX.put("reactor_boiler", "blocks/boiler_0");
-        BLOCK_TEX.put("thorium_core", "blocks/thorium_0");
-        BLOCK_TEX.put("sodium_boiler", "blocks/sodiumboiler_0");
-        BLOCK_TEX.put("pebble_bed", "blocks/pebblebed_0");
-        BLOCK_TEX.put("co2_heater", "blocks/co2heater_0");
-        BLOCK_TEX.put("turbine_meter", "blocks/turbinemeter_0");
-        BLOCK_TEX.put("waste_decayer", "blocks/wastedecayer_0");
+        BLOCK_TEX.put("control_rod", "block/control");
+        BLOCK_TEX.put("reactor_cpu", "block/cpu");
+        BLOCK_TEX.put("neutron_absorber", "block/absorber");
+        BLOCK_TEX.put("breeder_core", "block/breeder");
+        BLOCK_TEX.put("heat_exchanger", "block/exchanger");
+        BLOCK_TEX.put("fusion_heater", "block/heater");
+        BLOCK_TEX.put("fusion_injector", "block/injector");
+        BLOCK_TEX.put("synthesizer", "block/synthesizer");
+        BLOCK_TEX.put("tritizer", "block/tritizer");
+        BLOCK_TEX.put("waste_container", "block/wastecontainer");
+        BLOCK_TEX.put("neutron_reflector", "block/reflector");
+        BLOCK_TEX.put("fuel_dump", "block/fueldump");
+        BLOCK_TEX.put("fuel_rod", "block/fuel_0");
+        BLOCK_TEX.put("coolant_cell", "block/coolant_0");
+        BLOCK_TEX.put("reactor_boiler", "block/boiler_0");
+        BLOCK_TEX.put("thorium_core", "block/thorium_0");
+        BLOCK_TEX.put("sodium_boiler", "block/sodiumboiler_0");
+        BLOCK_TEX.put("pebble_bed", "block/pebblebed_0");
+        BLOCK_TEX.put("co2_heater", "block/co2heater_0");
+        BLOCK_TEX.put("turbine_meter", "block/turbinemeter_0");
+        BLOCK_TEX.put("waste_decayer", "block/wastedecayer_0");
         // fluid-ish technical blocks
-        BLOCK_TEX.put("thorium_fuel", "blocks/fluid/lifbe_fuel");
-        BLOCK_TEX.put("steam", "blocks/steam");
+        BLOCK_TEX.put("thorium_fuel", "block/fluid/lifbe_fuel");
+        BLOCK_TEX.put("steam", "block/steam");
     }
 
     private static Material blockTexture(Block block) {
@@ -146,9 +146,9 @@ public class ReactorModelProvider extends ModelProvider {
         String path = BLOCK_TEX.get(id);
         if (path == null) {
             if (id.endsWith("_fluorite_ore")) // fluorite ores: <color>_fluorite_ore -> ore/fluorite_<color>
-                path = "blocks/ore/fluorite_" + id.substring(0, id.length() - "_fluorite_ore".length());
+                path = "block/ore/fluorite_" + id.substring(0, id.length() - "_fluorite_ore".length());
             else // BER-rendered machines / unmapped: a generic steel casing so they aren't missing-texture
-                path = "blocks/steel";
+                path = "block/steel";
         }
         return new Material(Identifier.fromNamespaceAndPath(ReactorCraft.MODID, path));
     }

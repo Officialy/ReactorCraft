@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "reactorcraft:blocks/ore/fluorite_magenta"
+    "all": "reactorcraft:block/ore/fluorite_magenta"
   }
 }

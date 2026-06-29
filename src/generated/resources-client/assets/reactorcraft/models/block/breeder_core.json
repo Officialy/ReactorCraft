@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "reactorcraft:blocks/breeder"
+    "all": "reactorcraft:block/breeder"
   }
 }
