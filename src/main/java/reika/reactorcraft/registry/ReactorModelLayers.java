@@ -75,6 +75,11 @@ public final class ReactorModelLayers {
 		event.registerBlockEntityRenderer(ReactorBlockEntities.MAGNETPIPE.get(), reika.reactorcraft.renders.ReactorPipeRenderer::new);
 		event.registerBlockEntityRenderer(ReactorBlockEntities.WASTEPIPE.get(), reika.reactorcraft.renders.ReactorPipeRenderer::new);
 
+		// Lines (steam line, heat pipe): connected square pipe textured with waterline.png (legacy
+		// RenderWaterLine), heat pipe tinted warm. Same empty-model + BER-draws-everything approach.
+		event.registerBlockEntityRenderer(ReactorBlockEntities.STEAMLINE.get(), reika.reactorcraft.renders.ReactorLineRenderer::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.HEATPIPE.get(), reika.reactorcraft.renders.ReactorLineRenderer::new);
+
 		// Entity renderers MUST be registered for every spawnable entity type or the client NPEs in
 		// EntityRenderDispatcher.shouldRender the moment one spawns (e.g. a neutron burst when a fission
 		// core is fuelled). The legacy billboard-quad effect renderers (RenderNeutron/Plasma/Fusion/

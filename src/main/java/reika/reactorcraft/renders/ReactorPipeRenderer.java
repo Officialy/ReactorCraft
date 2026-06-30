@@ -52,7 +52,7 @@ public class ReactorPipeRenderer extends ReactorTERenderer<TileEntityReactorPipi
     private static final float SIZE = 0.75F / 2F;          // 0.375 — half-width of the pipe
     private static final double IN = 0.5 + SIZE - 0.01;    // 0.865 — inner-far edge
     private static final double IN2 = 0.5 - SIZE + 0.01;   // 0.135 — inner-near edge
-    private static final double DD2 = IN - IN2;            // 0.730 — inner span
+    static final double DD2 = IN - IN2;                    // 0.730 — inner span (shared with ReactorLineRenderer)
 
     private final SpriteGetter sprites;
 
@@ -100,8 +100,8 @@ public class ReactorPipeRenderer extends ReactorTERenderer<TileEntityReactorPipi
         });
     }
 
-    private static void emitCap(Matrix4f m, VertexConsumer vc, Direction dir,
-                                float u, float v, float u2, float v2, int tint, int light, int overlay) {
+    static void emitCap(Matrix4f m, VertexConsumer vc, Direction dir,
+                        float u, float v, float u2, float v2, int tint, int light, int overlay) {
         switch (dir) {
             case UP -> quad(m, vc, IN2, IN, IN, u, v2, IN, IN, IN, u2, v2, IN, IN, IN2, u2, v, IN2, IN, IN2, u, v, tint, light, overlay, 0, 1, 0);
             case DOWN -> quad(m, vc, IN2, IN2, IN2, u, v, IN, IN2, IN2, u2, v, IN, IN2, IN, u2, v2, IN2, IN2, IN, u, v2, tint, light, overlay, 0, -1, 0);
@@ -112,9 +112,9 @@ public class ReactorPipeRenderer extends ReactorTERenderer<TileEntityReactorPipi
         }
     }
 
-    private static void emitConnectedFluid(Matrix4f m, VertexConsumer vc, Direction dir,
-                                           float u, float v, float u2, float v2, float du,
-                                           int tint, int light, int overlay) {
+    static void emitConnectedFluid(Matrix4f m, VertexConsumer vc, Direction dir,
+                                   float u, float v, float u2, float v2, float du,
+                                   int tint, int light, int overlay) {
         switch (dir) {
             case DOWN -> {
                 quad(m, vc, IN2, IN2, IN, u, v, IN2, IN2, IN2, u2, v, IN2, 0, IN2, u2, v + du, IN2, 0, IN, u, v + du, tint, light, overlay, -1, 0, 0);
