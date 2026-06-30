@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/solenoid_magnet"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/solenoid_magnet",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "solenoid_magnet"
+    }
   }
 }

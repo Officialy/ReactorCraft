@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/steam_grate"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/steam_grate",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "steam_grate"
+    }
   }
 }

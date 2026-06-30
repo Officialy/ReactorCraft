@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/condenser"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/condenser",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "condenser"
+    }
   }
 }

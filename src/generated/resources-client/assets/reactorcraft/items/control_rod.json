@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/control_rod"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/control_rod",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "control_rod"
+    }
   }
 }

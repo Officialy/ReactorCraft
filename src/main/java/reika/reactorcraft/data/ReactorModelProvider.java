@@ -47,6 +47,11 @@ import reika.reactorcraft.registry.ReactorItems;
  */
 public class ReactorModelProvider extends ModelProvider {
 
+    // BER-rendered machine blocks whose ITEM icon should use the 3D model via the
+    // reactorcraft:machine special renderer (see ReactorMachineItemRenderer). Keyed by block path.
+    private static final Set<String> MACHINE_ITEM_MODELS = Set.of(
+            "control_rod", "toroid_magnet", "solenoid_magnet", "steam_grate", "condenser", "turbine_core");
+
     public ReactorModelProvider(PackOutput output) {
         super(output, ReactorCraft.MODID);
     }
@@ -122,7 +127,14 @@ public class ReactorModelProvider extends ModelProvider {
                     Identifier itemModelId = ModelTemplates.CUBE_ALL.create(
                             ModelLocationUtils.getModelLocation(asItem),
                             TextureMapping.cube(blockTexture(block)), modelOut);
-                    itemModelOut.accept(asItem, ItemModelUtils.plainModel(itemModelId));
+                    String path = BuiltInRegistries.BLOCK.getKey(block).getPath();
+                    if (MACHINE_ITEM_MODELS.contains(path)) {
+                        // Route the icon through the BER model (3D) instead of the cube_all placeholder.
+                        itemModelOut.accept(asItem, ItemModelUtils.specialModel(itemModelId,
+                                new reika.reactorcraft.renders.item.ReactorMachineItemRenderer.Unbaked(path)));
+                    } else {
+                        itemModelOut.accept(asItem, ItemModelUtils.plainModel(itemModelId));
+                    }
                     blockItemsHandled.add(asItem);
                 }
                 continue;
