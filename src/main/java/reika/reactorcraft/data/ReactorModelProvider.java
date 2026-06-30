@@ -51,7 +51,7 @@ public class ReactorModelProvider extends ModelProvider {
     // reactorcraft:machine special renderer (see ReactorMachineItemRenderer). Keyed by block path.
     private static final Set<String> MACHINE_ITEM_MODELS = Set.of(
             "control_rod", "toroid_magnet", "solenoid_magnet", "steam_grate", "condenser", "turbine_core",
-            "waste_storage", "electrolyzer");
+            "waste_storage", "electrolyzer", "solar_exchanger");
 
     public ReactorModelProvider(PackOutput output) {
         super(output, ReactorCraft.MODID);

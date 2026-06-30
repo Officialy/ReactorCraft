@@ -150,6 +150,9 @@ sourceSets.main.java {
     // static machine BER: electrolyzer
     include 'reika/reactorcraft/renders/RenderElectrolyzer.java'
     include 'reika/reactorcraft/models/ModelElectrolyzer.java'
+    // static machine BER: solar exchanger
+    include 'reika/reactorcraft/renders/RenderSolarExchanger.java'
+    include 'reika/reactorcraft/models/ModelSolarExchanger.java'
     include 'reika/reactorcraft/renders/ReactorPipeRenderer.java'
     include 'reika/reactorcraft/renders/ReactorLineRenderer.java'
     include 'reika/reactorcraft/renders/item/ReactorMachineItemRenderer.java'

@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/solar_exchanger"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/solar_exchanger",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "solar_exchanger"
+    }
   }
 }

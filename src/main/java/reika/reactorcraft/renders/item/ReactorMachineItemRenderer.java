@@ -33,6 +33,7 @@ import reika.reactorcraft.models.ModelControl;
 import reika.reactorcraft.models.ModelCondenser;
 import reika.reactorcraft.models.ModelElectrolyzer;
 import reika.reactorcraft.models.ModelMagnet;
+import reika.reactorcraft.models.ModelSolarExchanger;
 import reika.reactorcraft.models.ModelSolenoid;
 import reika.reactorcraft.models.ModelSteamGrate;
 import reika.reactorcraft.models.ModelTurbine;
@@ -151,6 +152,10 @@ public class ReactorMachineItemRenderer implements NoDataSpecialModelRenderer {
                 case "electrolyzer" -> {
                     ModelElectrolyzer m = new ModelElectrolyzer(set.bakeLayer(ReactorModelLayers.ELECTROLYZER));
                     return make((p, vc, l) -> m.renderAll(p, vc, l), tex("electrolyzer"));
+                }
+                case "solar_exchanger" -> {
+                    ModelSolarExchanger m = new ModelSolarExchanger(set.bakeLayer(ReactorModelLayers.SOLAR_EXCHANGER));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l), tex("solar"));
                 }
                 default -> {
                     ReactorCraft.LOGGER.warn("Unknown machine '{}' for item renderer", machine);
