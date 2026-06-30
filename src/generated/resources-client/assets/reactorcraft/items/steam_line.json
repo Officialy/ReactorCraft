@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/steam_line"
+    "model": "reactorcraft:item/steam_line"
   }
 }

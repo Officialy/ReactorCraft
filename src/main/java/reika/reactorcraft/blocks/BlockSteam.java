@@ -177,7 +177,11 @@ public class BlockSteam extends Block {
 
 	@Override
 	protected RenderShape getRenderShape(BlockState state) {
-		return RenderShape.INVISIBLE; // rendered by a translucent BER / particle layer, not a baked model
+		// Legacy steam rendered as a standard block model on the translucent pass (getRenderType()==0,
+		// getRenderBlockPass()==1). The earlier INVISIBLE setting assumed a BER/particle renderer that was
+		// never written, so steam blocks the grate emits were completely invisible ("grate not outputting
+		// steam"). Render the baked cube model; ReactorModelProvider gives it render_type translucent.
+		return RenderShape.MODEL;
 	}
 
 	@Override

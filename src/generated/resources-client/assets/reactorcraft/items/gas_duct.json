@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/gas_duct"
+    "model": "reactorcraft:item/gas_duct"
   }
 }

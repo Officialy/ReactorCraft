@@ -1,10 +1,15 @@
 package reika.reactorcraft.data;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import com.google.gson.JsonObject;
 import net.minecraft.client.data.models.BlockModelGenerators;
 import net.minecraft.client.data.models.ItemModelGenerators;
 import net.minecraft.client.data.models.ItemModelOutput;
@@ -29,6 +34,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 
 import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.blocks.BlockReactorMachineModelled;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorItems;
 
@@ -68,12 +74,33 @@ public class ReactorModelProvider extends ModelProvider {
                     "Failed to reflectively access BlockModelGenerators sinks — vanilla shape changed?", e);
         }
 
-        java.util.Set<Item> blockItemsHandled = new java.util.HashSet<>();
+        Set<Item> blockItemsHandled = new HashSet<>();
 
         for (var holder : ReactorBlocks.BLOCKS.getEntries()) {
             Block block = holder.get();
 
-            if (block instanceof reika.reactorcraft.blocks.BlockReactorMachineModelled) {
+            if (block instanceof reika.reactorcraft.blocks.BlockSteam) {
+                // Steam renders as a translucent cube (legacy render pass 1). A plain cube_all would land
+                // on the solid/cutout layer and read as an opaque block; emit a cube model with
+                // render_type translucent so the steam texture's alpha shows as wispy gas. No item (steam
+                // is registerNoItem).
+                Identifier steamModelId = ModelLocationUtils.getModelLocation(block);
+                String steamTex = blockTexture(block).sprite().toString();
+                modelOut.accept(steamModelId, () -> {
+                    JsonObject root = new JsonObject();
+                    root.addProperty("parent", "minecraft:block/cube_all");
+                    root.addProperty("render_type", "minecraft:translucent");
+                    JsonObject tex = new JsonObject();
+                    tex.addProperty("all", steamTex);
+                    root.add("textures", tex);
+                    return root;
+                });
+                blockStateOut.accept(MultiVariantGenerator.dispatch(block,
+                        new MultiVariant(WeightedList.of(new Variant(steamModelId)))));
+                continue;
+            }
+
+            if (block instanceof BlockReactorMachineModelled) {
                 // BER-rendered machine: render NOTHING in the chunk mesh (the BlockEntityRenderer draws
                 // the real model). A cube_all here would put a solid steel cube inside the BER — wrong
                 // for non-cube shapes like the toroid ring. Emit an empty in-world model (particle texture
@@ -81,8 +108,8 @@ public class ReactorModelProvider extends ModelProvider {
                 Identifier emptyModelId = ModelLocationUtils.getModelLocation(block);
                 String particle = blockTexture(block).sprite().toString();
                 modelOut.accept(emptyModelId, () -> {
-                    com.google.gson.JsonObject root = new com.google.gson.JsonObject();
-                    com.google.gson.JsonObject tex = new com.google.gson.JsonObject();
+                    JsonObject root = new JsonObject();
+                    JsonObject tex = new JsonObject();
                     tex.addProperty("particle", particle);
                     root.add("textures", tex);
                     return root;
@@ -127,7 +154,7 @@ public class ReactorModelProvider extends ModelProvider {
     // blocks/{ore,mat,...} with old names). Visible blocks (ores/storage/fluorite) map to their real
     // texture; BER-rendered machines whose only art is a tileentity model use a single side texture
     // or fall back to "block/steel". Multi-texture machines ("_#" variants) use the base #0 sprite.
-    private static final java.util.Map<String, String> BLOCK_TEX = new java.util.HashMap<>();
+    private static final Map<String, String> BLOCK_TEX = new HashMap<>();
     static {
         // ores
         BLOCK_TEX.put("pitchblende_ore", "block/ore/pitchblende");
