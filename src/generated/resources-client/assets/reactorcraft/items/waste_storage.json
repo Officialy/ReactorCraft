@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/waste_storage"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/waste_storage",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "waste_storage"
+    }
   }
 }

@@ -35,6 +35,7 @@ import reika.reactorcraft.models.ModelMagnet;
 import reika.reactorcraft.models.ModelSolenoid;
 import reika.reactorcraft.models.ModelSteamGrate;
 import reika.reactorcraft.models.ModelTurbine;
+import reika.reactorcraft.models.ModelWasteStorage;
 import reika.reactorcraft.registry.ReactorModelLayers;
 
 /**
@@ -141,6 +142,10 @@ public class ReactorMachineItemRenderer implements NoDataSpecialModelRenderer {
                 case "turbine_core" -> {
                     ModelTurbine m = new ModelTurbine(set.bakeLayer(ReactorModelLayers.TURBINE_STAGES[0]), 0);
                     return make((p, vc, l) -> m.renderAll(p, vc, l, 0F), tex("turbine"));
+                }
+                case "waste_storage" -> {
+                    ModelWasteStorage m = new ModelWasteStorage(set.bakeLayer(ReactorModelLayers.WASTE_STORAGE));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l), tex("storage"));
                 }
                 default -> {
                     ReactorCraft.LOGGER.warn("Unknown machine '{}' for item renderer", machine);

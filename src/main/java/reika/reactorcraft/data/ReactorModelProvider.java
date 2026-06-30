@@ -50,7 +50,8 @@ public class ReactorModelProvider extends ModelProvider {
     // BER-rendered machine blocks whose ITEM icon should use the 3D model via the
     // reactorcraft:machine special renderer (see ReactorMachineItemRenderer). Keyed by block path.
     private static final Set<String> MACHINE_ITEM_MODELS = Set.of(
-            "control_rod", "toroid_magnet", "solenoid_magnet", "steam_grate", "condenser", "turbine_core");
+            "control_rod", "toroid_magnet", "solenoid_magnet", "steam_grate", "condenser", "turbine_core",
+            "waste_storage");
 
     public ReactorModelProvider(PackOutput output) {
         super(output, ReactorCraft.MODID);
