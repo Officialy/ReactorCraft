@@ -31,6 +31,7 @@ import org.joml.Vector3fc;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.models.ModelControl;
 import reika.reactorcraft.models.ModelCondenser;
+import reika.reactorcraft.models.ModelElectrolyzer;
 import reika.reactorcraft.models.ModelMagnet;
 import reika.reactorcraft.models.ModelSolenoid;
 import reika.reactorcraft.models.ModelSteamGrate;
@@ -146,6 +147,10 @@ public class ReactorMachineItemRenderer implements NoDataSpecialModelRenderer {
                 case "waste_storage" -> {
                     ModelWasteStorage m = new ModelWasteStorage(set.bakeLayer(ReactorModelLayers.WASTE_STORAGE));
                     return make((p, vc, l) -> m.renderAll(p, vc, l), tex("storage"));
+                }
+                case "electrolyzer" -> {
+                    ModelElectrolyzer m = new ModelElectrolyzer(set.bakeLayer(ReactorModelLayers.ELECTROLYZER));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l), tex("electrolyzer"));
                 }
                 default -> {
                     ReactorCraft.LOGGER.warn("Unknown machine '{}' for item renderer", machine);

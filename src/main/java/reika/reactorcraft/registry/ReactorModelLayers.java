@@ -19,6 +19,7 @@ import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.entities.RenderNeutron;
 import reika.reactorcraft.models.ModelCondenser;
 import reika.reactorcraft.models.ModelControl;
+import reika.reactorcraft.models.ModelElectrolyzer;
 import reika.reactorcraft.models.ModelMagnet;
 import reika.reactorcraft.models.ModelSolenoid;
 import reika.reactorcraft.models.ModelSteamGrate;
@@ -26,6 +27,7 @@ import reika.reactorcraft.models.ModelTurbine;
 import reika.reactorcraft.models.ModelWasteStorage;
 import reika.reactorcraft.renders.RenderCondenser;
 import reika.reactorcraft.renders.RenderControl;
+import reika.reactorcraft.renders.RenderElectrolyzer;
 import reika.reactorcraft.renders.RenderFusionMarker;
 import reika.reactorcraft.renders.RenderMagnet;
 import reika.reactorcraft.renders.RenderSolenoid;
@@ -54,6 +56,7 @@ public final class ReactorModelLayers {
 	public static final ModelLayerLocation STEAM_GRATE = layer("steam_grate");
 	public static final ModelLayerLocation CONTROL_ROD = layer("control_rod");
 	public static final ModelLayerLocation WASTE_STORAGE = layer("waste_storage");
+	public static final ModelLayerLocation ELECTROLYZER = layer("electrolyzer");
 	// One layer per turbine multiblock stage (0..MAX_STAGE): the blade box size is baked per stage so a
 	// row of cores renders as one tapered turbine. RenderTurbine bakes all and picks by getStage().
 	public static final ModelLayerLocation[] TURBINE_STAGES = new ModelLayerLocation[reika.reactorcraft.models.ModelTurbine.MAX_STAGE + 1];
@@ -77,6 +80,7 @@ public final class ReactorModelLayers {
 		event.registerBlockEntityRenderer(ReactorBlockEntities.CONTROL.get(), RenderControl::new);
 		event.registerBlockEntityRenderer(ReactorBlockEntities.TURBINECORE.get(), RenderTurbine::new);
 		event.registerBlockEntityRenderer(ReactorBlockEntities.STORAGE.get(), RenderWasteStorage::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.ELECTROLYZER.get(), RenderElectrolyzer::new);
 
 		// Fluid ducts: the connected pipe + fluid tube (legacy DuctRenderer, ported). Empty in-world model
 		// (BlockReactorDuct is a BlockReactorMachineModelled), so the BER draws the whole pipe from the BE's
@@ -109,6 +113,7 @@ public final class ReactorModelLayers {
 		event.registerLayerDefinition(STEAM_GRATE, ModelSteamGrate::createLayer);
 		event.registerLayerDefinition(CONTROL_ROD, ModelControl::createLayer);
 		event.registerLayerDefinition(WASTE_STORAGE, ModelWasteStorage::createLayer);
+		event.registerLayerDefinition(ELECTROLYZER, ModelElectrolyzer::createLayer);
 		for (int i = 0; i < TURBINE_STAGES.length; i++) {
 			final int s = i;
 			event.registerLayerDefinition(TURBINE_STAGES[s], () -> ModelTurbine.createLayer(s));
