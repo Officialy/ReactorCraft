@@ -215,7 +215,13 @@ public class ReactorControlLayout {
 	}
 
 	public void readFromNBT(CompoundTag NBT) {
-		controls.readFromNBT(NBT);
+		this.readFromNBT(NBT, null);
+	}
+
+	/** {@code world} is the owning CPU's level — pass it so the control-rod cache resolves on the right
+	 *  side (the client level on a sync read), otherwise the grid comes back empty. */
+	public void readFromNBT(CompoundTag NBT, Level world) {
+		controls.readFromNBT(NBT, world);
 		controller = WorldLocation.load("control", NBT);
 		maxX = NBT.getIntOr("maxx", 0);
 		maxY = NBT.getIntOr("maxy", 0);

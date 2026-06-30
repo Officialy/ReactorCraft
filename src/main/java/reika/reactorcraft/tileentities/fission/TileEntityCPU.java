@@ -13,6 +13,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -23,6 +26,7 @@ import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.auxiliary.*;
 import reika.reactorcraft.base.TileEntityReactorBase;
+import reika.reactorcraft.container.MenuCPU;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.event.ScramEvent;
 import reika.reactorcraft.registry.*;
@@ -149,8 +153,8 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	}
 
 	@Override
-	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
-		return new reika.reactorcraft.container.MenuCPU(id, inv, this);
+	public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+		return new MenuCPU(id, inv, this);
 	}
 
 	@Override
@@ -281,9 +285,12 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 		redstoneUpdate = NBT.getIntOr("redsu", 0);
 
 		// Lazy-init on the client so the synced control-rod grid is received (level is set by sync time).
+		// Pass this.level so the rod cache resolves on the CLIENT level on a client sync read — otherwise
+		// WorldLocation.getWorld() resolves to the integrated server level and the cross-thread lookup
+		// returns null, leaving the grid empty.
 		ReactorControlLayout l = this.getLayout();
 		if (l != null)
-			l.readFromNBT(NBT);
+			l.readFromNBT(NBT, this.level);
 
 		temperatureChecks.clear();
 		ListTag li = NBT.getListOrEmpty("checks");
