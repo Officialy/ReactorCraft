@@ -9,46 +9,47 @@
  ******************************************************************************/
 package reika.reactorcraft;
 
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import reika.reactorcraft.registry.ReactorBlockEntities;
-import reika.reactorcraft.registry.ReactorBlocks;
-import reika.reactorcraft.registry.ReactorDataComponents;
-import reika.reactorcraft.registry.ReactorEntities;
-import reika.reactorcraft.registry.ReactorFeatures;
-import reika.reactorcraft.registry.ReactorFluids;
-import reika.reactorcraft.registry.ReactorItems;
-import reika.reactorcraft.registry.ReactorRecipeSerializers;
-import reika.reactorcraft.registry.ReactorRecipeTypes;
-import reika.reactorcraft.registry.ReactorSounds;
-import reika.reactorcraft.registry.ReactorTabs;
-import reika.reactorcraft.registry.ReactorTiles;
+import reika.dragonapi.instantiable.io.SoundLoader;
+import reika.dragonapi.libraries.io.ReikaPacketHelper;
+import reika.reactorcraft.auxiliary.MobEffectRadiation;
+import reika.reactorcraft.command.SolenoidDebugCommand;
+import reika.reactorcraft.guis.*;
+import reika.reactorcraft.registry.*;
+import reika.rotarycraft.RotaryCraft;
 
 @Mod(ReactorCraft.MODID)
 public class ReactorCraft {
 
     public static final String MODID = "reactorcraft";
 
-    /** Legacy single-channel name for the ReikaPacketHelper bridge (see {@link reika.reactorcraft.ReactorPacketCore}). */
+    /**
+     * Legacy single-channel name for the ReikaPacketHelper bridge (see {@link ReactorPacketCore}).
+     */
     public static final String packetChannel = "ReactorCraftData";
-
     public static final Logger LOGGER = LogManager.getLogger("ReactorCraft");
-
+    protected static final SoundLoader sounds = new SoundLoader(ReactorSounds.class);
     private static final DeferredRegister<MobEffect> MOB_EFFECTS =
             DeferredRegister.create(BuiltInRegistries.MOB_EFFECT, MODID);
 
     public static final DeferredHolder<MobEffect, MobEffect> radiation = MOB_EFFECTS.register("radiation",
-            () -> new reika.reactorcraft.auxiliary.MobEffectRadiation(MobEffectCategory.HARMFUL, 0x7FFF00));
+            () -> new MobEffectRadiation(MobEffectCategory.HARMFUL, 0x7FFF00));
 
     public static ReactorCraft instance;
 
@@ -75,56 +76,73 @@ public class ReactorCraft {
 
         ReactorSounds.SOUND_EVENTS.register(modEventBus);
 
-        reika.reactorcraft.registry.ReactorMenus.REGISTRY.register(modEventBus);
+        ReactorMenus.REGISTRY.register(modEventBus);
 
         // ReactorCraft isn't a DragonAPIMod, so the bridge registers under RotaryCraft's mod object
         // (channel string "ReactorCraftData" keeps it distinct). Same getOwnerMod precedent as the BERs.
-        reika.dragonapi.libraries.io.ReikaPacketHelper.registerPacketHandler(
-                reika.rotarycraft.RotaryCraft.getInstance(), packetChannel, new reika.reactorcraft.ReactorPacketCore());
+        ReikaPacketHelper.registerPacketHandler(
+                RotaryCraft.getInstance(), packetChannel, new ReactorPacketCore());
 
         MOB_EFFECTS.register(modEventBus);
 
         modEventBus.addListener(ReactorBlockEntities::registerCapabilities);
-        modEventBus.addListener((net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent e) ->
+        modEventBus.addListener((FMLCommonSetupEvent e) ->
                 e.enqueueWork(ReactorTiles::loadMappings));
 
-        if (net.neoforged.fml.loading.FMLEnvironment.getDist() == net.neoforged.api.distmarker.Dist.CLIENT) {
-            reika.reactorcraft.registry.ReactorModelLayers.init(modEventBus);
+        // RegisterCommandsEvent fires on the game bus, not the mod bus -- see DragonAPI.onRegisterCommandEvent
+        // for the same pattern.
+        NeoForge.EVENT_BUS.addListener(ReactorCraft::registerCommands);
+
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
+            ReactorModelLayers.init(modEventBus);
             modEventBus.addListener(ReactorCraft::registerScreens);
+            modEventBus.addListener(this::clientSetup);
         }
     }
 
-    /** Binds {@code AbstractContainerScreen}s to their {@link net.minecraft.world.inventory.MenuType}s. */
-    private static void registerScreens(final net.neoforged.neoforge.client.event.RegisterMenuScreensEvent event) {
-        event.register(reika.reactorcraft.registry.ReactorMenus.NUCLEAR_CORE.get(),
-                reika.reactorcraft.guis.ScreenNuclearCore::new);
-        event.register(reika.reactorcraft.registry.ReactorMenus.CENTRIFUGE.get(),
-                reika.reactorcraft.guis.ScreenCentrifuge::new);
-        event.register(reika.reactorcraft.registry.ReactorMenus.WASTE_DECAYER.get(),
-                reika.reactorcraft.guis.ScreenWasteDecayer::new);
-        event.register(reika.reactorcraft.registry.ReactorMenus.WASTE_CONTAINER.get(),
-                reika.reactorcraft.guis.ScreenWasteContainer::new);
-        event.register(reika.reactorcraft.registry.ReactorMenus.PEBBLE_BED.get(),
-                reika.reactorcraft.guis.ScreenPebbleBed::new);
-        event.register(reika.reactorcraft.registry.ReactorMenus.THORIUM_CORE.get(),
-                reika.reactorcraft.guis.ScreenThoriumCore::new);
-        event.register(reika.reactorcraft.registry.ReactorMenus.SYNTHESIZER.get(),
-                reika.reactorcraft.guis.ScreenSynthesizer::new);
-        event.register(reika.reactorcraft.registry.ReactorMenus.PROCESSOR.get(),
-                reika.reactorcraft.guis.ScreenProcessor::new);
-        event.register(reika.reactorcraft.registry.ReactorMenus.ELECTROLYZER.get(),
-                reika.reactorcraft.guis.ScreenElectrolyzer::new);
-        event.register(reika.reactorcraft.registry.ReactorMenus.WASTE_STORAGE.get(),
-                reika.reactorcraft.guis.ScreenWasteStorage::new);
-        event.register(reika.reactorcraft.registry.ReactorMenus.CPU.get(),
-                reika.reactorcraft.guis.ScreenCPU::new);
+    private static void registerCommands(final RegisterCommandsEvent event) {
+        SolenoidDebugCommand.register(event.getDispatcher());
+    }
+
+    /**
+     * Binds {@code AbstractContainerScreen}s to their {@link net.minecraft.world.inventory.MenuType}s.
+     */
+    private static void registerScreens(final RegisterMenuScreensEvent event) {
+        event.register(ReactorMenus.NUCLEAR_CORE.get(),
+                ScreenNuclearCore::new);
+        event.register(ReactorMenus.CENTRIFUGE.get(),
+                ScreenCentrifuge::new);
+        event.register(ReactorMenus.WASTE_DECAYER.get(),
+                ScreenWasteDecayer::new);
+        event.register(ReactorMenus.WASTE_CONTAINER.get(),
+                ScreenWasteContainer::new);
+        event.register(ReactorMenus.PEBBLE_BED.get(),
+                ScreenPebbleBed::new);
+        event.register(ReactorMenus.THORIUM_CORE.get(),
+                ScreenThoriumCore::new);
+        event.register(ReactorMenus.SYNTHESIZER.get(),
+                ScreenSynthesizer::new);
+        event.register(ReactorMenus.PROCESSOR.get(),
+                ScreenProcessor::new);
+        event.register(ReactorMenus.ELECTROLYZER.get(),
+                ScreenElectrolyzer::new);
+        event.register(ReactorMenus.WASTE_STORAGE.get(),
+                ScreenWasteStorage::new);
+        event.register(ReactorMenus.CPU.get(),
+                ScreenCPU::new);
     }
 
     public static ReactorCraft getInstance() {
         return instance;
     }
 
-    /** Original ReactorCraft beta lock — always false in the port. */
+    public void clientSetup(final FMLClientSetupEvent event) {
+        sounds.register();
+    }
+
+    /**
+     * Original ReactorCraft beta lock — always false in the port.
+     */
     public boolean isLocked() {
         return false;
     }
