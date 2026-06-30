@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FlowingFluid;
+import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.fluids.BaseFlowingFluid;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -14,6 +15,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import reika.reactorcraft.ReactorCraft;
+import reika.rotarycraft.registry.RotaryFluids;
 
 /**
  * The complete set of ReactorCraft-owned fluids (26.2), transcribed verbatim from the 1.7.10
@@ -118,7 +120,10 @@ public final class ReactorFluids {
         if (name == null || name.isEmpty())
             return null;
         return switch (name) {
-            case "water" -> net.minecraft.world.level.material.Fluids.WATER;
+            case "water" -> Fluids.WATER;
+            case "steam" -> RotaryFluids.STEAM.get();
+            case "rc lubricant" -> RotaryFluids.LUBRICANT.get();
+            case "rc liquid nitrogen" -> RotaryFluids.LIQUID_NITROGEN.get();
             case "rc heavy water" -> HEAVY_WATER.get();
             case "rc hydrofluoric acid" -> HF.get();
             case "rc uranium hexafluoride" -> UF6.get();
@@ -133,8 +138,8 @@ public final class ReactorFluids {
             case "rc liquid oxygen" -> LIQUID_OXYGEN.get();
             case "rc deuterium" -> DEUTERIUM.get();
             case "rc tritium" -> TRITIUM.get();
-            case "rc carbon dioxide" -> CO2.get();
-            case "rc hot carbon dioxide" -> HOT_CO2.get();
+            case "rc co2", "rc carbon dioxide" -> CO2.get();
+            case "rc hot co2", "rc hot carbon dioxide" -> HOT_CO2.get();
             case "rc fusion plasma" -> PLASMA.get();
             case "rc corium" -> CORIUM.get();
             case "rc nuclear waste" -> WASTE.get();
