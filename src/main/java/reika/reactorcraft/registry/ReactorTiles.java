@@ -159,6 +159,11 @@ public enum ReactorTiles implements TileEnum {
 	}
 
 	public static ReactorTiles getMachine(Level level, BlockPos pos) {
+		// Defensive null guard: callers pass cached neighbour positions (turbine read/writePos, etc.)
+		// that are null until a multiblock forms. A null pos crashed the server via BlockSteam.move ->
+		// TileEntityTurbineCore.getNumberStagesTotal. A null position simply means "no machine here".
+		if (level == null || pos == null)
+			return null;
 		Block b = level.getBlockState(pos).getBlock();
 		if (b == Blocks.AIR)
 			return null;
