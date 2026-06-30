@@ -10,11 +10,26 @@
 package reika.reactorcraft.registry;
 
 import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.resources.Identifier;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
 import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.entities.RenderNeutron;
+import reika.reactorcraft.models.ModelCondenser;
+import reika.reactorcraft.models.ModelControl;
+import reika.reactorcraft.models.ModelMagnet;
+import reika.reactorcraft.models.ModelSolenoid;
+import reika.reactorcraft.models.ModelSteamGrate;
+import reika.reactorcraft.models.ModelTurbine;
+import reika.reactorcraft.renders.RenderCondenser;
+import reika.reactorcraft.renders.RenderControl;
+import reika.reactorcraft.renders.RenderFusionMarker;
+import reika.reactorcraft.renders.RenderMagnet;
+import reika.reactorcraft.renders.RenderSolenoid;
+import reika.reactorcraft.renders.RenderSteamGrate;
+import reika.reactorcraft.renders.RenderTurbine;
 
 /**
  * Client render registration for ReactorCraft machine block-entity renderers (the ReactorCraft
@@ -45,33 +60,40 @@ public final class ReactorModelLayers {
 
 	public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
 		// First ReactorCraft BER: the fusion-marker tokamak build guide (pure line geometry, no model layer).
-		event.registerBlockEntityRenderer(ReactorBlockEntities.MARKER.get(), reika.reactorcraft.renders.RenderFusionMarker::new);
-		event.registerBlockEntityRenderer(ReactorBlockEntities.CONDENSER.get(), reika.reactorcraft.renders.RenderCondenser::new);
-		event.registerBlockEntityRenderer(ReactorBlockEntities.MAGNET.get(), reika.reactorcraft.renders.RenderMagnet::new);
-		event.registerBlockEntityRenderer(ReactorBlockEntities.SOLENOID.get(), reika.reactorcraft.renders.RenderSolenoid::new);
-		event.registerBlockEntityRenderer(ReactorBlockEntities.GRATE.get(), reika.reactorcraft.renders.RenderSteamGrate::new);
-		event.registerBlockEntityRenderer(ReactorBlockEntities.CONTROL.get(), reika.reactorcraft.renders.RenderControl::new);
-		event.registerBlockEntityRenderer(ReactorBlockEntities.TURBINECORE.get(), reika.reactorcraft.renders.RenderTurbine::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.MARKER.get(), RenderFusionMarker::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.CONDENSER.get(), RenderCondenser::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.MAGNET.get(), RenderMagnet::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.SOLENOID.get(), RenderSolenoid::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.GRATE.get(), RenderSteamGrate::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.CONTROL.get(), RenderControl::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.TURBINECORE.get(), RenderTurbine::new);
+
+		// Fluid ducts: the connected pipe + fluid tube (legacy DuctRenderer, ported). Empty in-world model
+		// (BlockReactorDuct is a BlockReactorMachineModelled), so the BER draws the whole pipe from the BE's
+		// connection cache — grey shell when empty, translucent fluid tube when carrying fluid.
+		event.registerBlockEntityRenderer(ReactorBlockEntities.GASPIPE.get(), reika.reactorcraft.renders.ReactorPipeRenderer::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.MAGNETPIPE.get(), reika.reactorcraft.renders.ReactorPipeRenderer::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.WASTEPIPE.get(), reika.reactorcraft.renders.ReactorPipeRenderer::new);
 
 		// Entity renderers MUST be registered for every spawnable entity type or the client NPEs in
 		// EntityRenderDispatcher.shouldRender the moment one spawns (e.g. a neutron burst when a fission
 		// core is fuelled). The legacy billboard-quad effect renderers (RenderNeutron/Plasma/Fusion/
 		// Radiation) aren't ported yet, so use NoopRenderer for now — the entities stay invisible but the
 		// reactor logic (neutron fission, radiation, plasma) is fully server-side and unaffected.
-		event.registerEntityRenderer(ReactorEntities.NEUTRON.get(), reika.reactorcraft.entities.RenderNeutron::new);
-		event.registerEntityRenderer(ReactorEntities.RADIATION.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
-		event.registerEntityRenderer(ReactorEntities.PLASMA.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
-		event.registerEntityRenderer(ReactorEntities.FUSION.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
-		event.registerEntityRenderer(ReactorEntities.NUCLEARWASTE.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
+		event.registerEntityRenderer(ReactorEntities.NEUTRON.get(), RenderNeutron::new);
+		event.registerEntityRenderer(ReactorEntities.RADIATION.get(), NoopRenderer::new);
+		event.registerEntityRenderer(ReactorEntities.PLASMA.get(), NoopRenderer::new);
+		event.registerEntityRenderer(ReactorEntities.FUSION.get(), NoopRenderer::new);
+		event.registerEntityRenderer(ReactorEntities.NUCLEARWASTE.get(), NoopRenderer::new);
 	}
 
 	public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
-		event.registerLayerDefinition(CONDENSER, reika.reactorcraft.models.ModelCondenser::createLayer);
-		event.registerLayerDefinition(MAGNET, reika.reactorcraft.models.ModelMagnet::createLayer);
-		event.registerLayerDefinition(SOLENOID, reika.reactorcraft.models.ModelSolenoid::createLayer);
-		event.registerLayerDefinition(STEAM_GRATE, reika.reactorcraft.models.ModelSteamGrate::createLayer);
-		event.registerLayerDefinition(CONTROL_ROD, reika.reactorcraft.models.ModelControl::createLayer);
-		event.registerLayerDefinition(TURBINE, reika.reactorcraft.models.ModelTurbine::createLayer);
+		event.registerLayerDefinition(CONDENSER, ModelCondenser::createLayer);
+		event.registerLayerDefinition(MAGNET, ModelMagnet::createLayer);
+		event.registerLayerDefinition(SOLENOID, ModelSolenoid::createLayer);
+		event.registerLayerDefinition(STEAM_GRATE, ModelSteamGrate::createLayer);
+		event.registerLayerDefinition(CONTROL_ROD, ModelControl::createLayer);
+		event.registerLayerDefinition(TURBINE, ModelTurbine::createLayer);
 	}
 
 	private ReactorModelLayers() {}

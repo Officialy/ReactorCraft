@@ -144,6 +144,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/models/ModelControl.java'
     include 'reika/reactorcraft/renders/RenderTurbine.java'
     include 'reika/reactorcraft/models/ModelTurbine.java'
+    include 'reika/reactorcraft/renders/ReactorPipeRenderer.java'
     include 'reika/reactorcraft/blocks/BlockReactorLine.java'
     include 'reika/reactorcraft/base/BlockReCMultiBlock.java'
     include 'reika/reactorcraft/blocks/multi/BlockGeneratorMulti.java'
