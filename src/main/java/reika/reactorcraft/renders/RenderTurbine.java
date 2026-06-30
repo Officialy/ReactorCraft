@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 import reika.reactorcraft.ReactorCraft;
@@ -34,10 +35,14 @@ public class RenderTurbine extends ReactorTERenderer<TileEntityTurbineCore> {
 
     private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "textures/tileentity/turbine.png");
 
-    private final ModelTurbine model;
+    // One model per stage (0..MAX_STAGE) — a turbine core renders the wheel sized for its own stage so
+    // a row of cores forms one tapered turbine.
+    private final ModelTurbine[] models;
 
     public RenderTurbine(BlockEntityRendererProvider.Context context) {
-        model = new ModelTurbine(context.bakeLayer(ReactorModelLayers.TURBINE));
+        models = new ModelTurbine[ReactorModelLayers.TURBINE_STAGES.length];
+        for (int i = 0; i < models.length; i++)
+            models[i] = new ModelTurbine(context.bakeLayer(ReactorModelLayers.TURBINE_STAGES[i]), i);
     }
 
     @Override
@@ -60,8 +65,10 @@ public class RenderTurbine extends ReactorTERenderer<TileEntityTurbineCore> {
         stack.translate(0.0, 2.0, 1.0);
         stack.scale(1.0F, -1.0F, -1.0F);
         stack.translate(0.5, 0.5, 0.5);
-        stack.mulPose(Axis.YP.rotationDegrees(facingAngle(((TileEntityTurbineCore) be).getFacing())));
-        model.renderAll(stack, vc, light, spinAngle((TileEntityTurbineCore) be));
+        TileEntityTurbineCore turb = (TileEntityTurbineCore) be;
+        stack.mulPose(Axis.YP.rotationDegrees(facingAngle(turb.getFacing())));
+        int stage = Mth.clamp(turb.getStage(), 0, models.length - 1);
+        models[stage].renderAll(stack, vc, light, spinAngle(turb));
         stack.popPose();
     }
 
@@ -72,7 +79,9 @@ public class RenderTurbine extends ReactorTERenderer<TileEntityTurbineCore> {
      * rate {@code phi += 0.2 * log2(omega+1)^1.05} per tick.
      */
     private static float spinAngle(TileEntityTurbineCore te) {
-        int omega = te.getOmega();
+        // Raw omega (propagated to every core via copyDataFrom), not getOmega() which is gated by
+        // isEmitting() — otherwise only the emitting head core would spin and the followers stay still.
+        int omega = te.getRenderOmega();
         if (omega <= 0)
             return 0F;
         double degPerTick = 0.2 * Math.pow(Math.log(omega + 1) / Math.log(2), 1.05);

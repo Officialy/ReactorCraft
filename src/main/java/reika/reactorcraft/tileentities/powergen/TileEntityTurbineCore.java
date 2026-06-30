@@ -548,6 +548,12 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker {
 		return this.isEmitting() ? omega : 0;
 	}
 
+	/** Raw rotation speed for the BER spin — propagated to every core via copyDataFrom, unlike getOmega()
+	 *  which is gated to the emitting head. Lets all cores in the multiblock spin in sync. */
+	public final int getRenderOmega() {
+		return omega;
+	}
+
 	@Override
 	public final int getTorque() {
 		return this.getGenTorque();

@@ -51,7 +51,13 @@ public final class ReactorModelLayers {
 	public static final ModelLayerLocation SOLENOID = layer("solenoid");
 	public static final ModelLayerLocation STEAM_GRATE = layer("steam_grate");
 	public static final ModelLayerLocation CONTROL_ROD = layer("control_rod");
-	public static final ModelLayerLocation TURBINE = layer("turbine");
+	// One layer per turbine multiblock stage (0..MAX_STAGE): the blade box size is baked per stage so a
+	// row of cores renders as one tapered turbine. RenderTurbine bakes all and picks by getStage().
+	public static final ModelLayerLocation[] TURBINE_STAGES = new ModelLayerLocation[reika.reactorcraft.models.ModelTurbine.MAX_STAGE + 1];
+	static {
+		for (int i = 0; i < TURBINE_STAGES.length; i++)
+			TURBINE_STAGES[i] = layer("turbine_stage_" + i);
+	}
 
 	public static void init(IEventBus bus) {
 		bus.addListener(ReactorModelLayers::registerEntityRenderers);
@@ -98,7 +104,10 @@ public final class ReactorModelLayers {
 		event.registerLayerDefinition(SOLENOID, ModelSolenoid::createLayer);
 		event.registerLayerDefinition(STEAM_GRATE, ModelSteamGrate::createLayer);
 		event.registerLayerDefinition(CONTROL_ROD, ModelControl::createLayer);
-		event.registerLayerDefinition(TURBINE, ModelTurbine::createLayer);
+		for (int i = 0; i < TURBINE_STAGES.length; i++) {
+			final int s = i;
+			event.registerLayerDefinition(TURBINE_STAGES[s], () -> ModelTurbine.createLayer(s));
+		}
 	}
 
 	private ReactorModelLayers() {}
