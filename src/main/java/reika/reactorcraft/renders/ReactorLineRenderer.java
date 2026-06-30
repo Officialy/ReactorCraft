@@ -39,8 +39,12 @@ public class ReactorLineRenderer extends ReactorTERenderer<TileEntityLine> {
     // never authored; waterline.png is the only real line art (used for both, heat pipe tinted warm).
     private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "textures/tileentity/waterline.png");
 
+    // Lines are drawn thinner than ducts — the legacy steam line / heat pipe were ~0.375 wide (half the
+    // fluid-pipe shell), not the 0.75 of the fluid ducts. Use a 0.375-wide cross-section.
+    private static final double IN = 0.6875;   // 0.5 + 0.1875
+    private static final double IN2 = 0.3125;  // 0.5 - 0.1875
     // Arm-extension texture offset along the flow axis for a full-texture (0..1) sprite.
-    private static final float DU = (float) (ReactorPipeRenderer.DD2 / 4D);
+    private static final float DU = (float) ((IN - IN2) / 4D);
 
     public ReactorLineRenderer(BlockEntityRendererProvider.Context context) {
     }
@@ -58,9 +62,9 @@ public class ReactorLineRenderer extends ReactorTERenderer<TileEntityLine> {
         Matrix4f m = stack.last().pose();
         for (Direction dir : Direction.values()) {
             if (te.isConnectionValidForSide(dir))
-                ReactorPipeRenderer.emitConnectedFluid(m, vc, dir, 0F, 0F, 1F, 1F, DU, tint, light, overlay);
+                ReactorPipeRenderer.emitConnectedFluid(m, vc, dir, 0F, 0F, 1F, 1F, DU, IN, IN2, tint, light, overlay);
             else
-                ReactorPipeRenderer.emitCap(m, vc, dir, 0F, 0F, 1F, 1F, tint, light, overlay);
+                ReactorPipeRenderer.emitCap(m, vc, dir, 0F, 0F, 1F, 1F, IN, IN2, tint, light, overlay);
         }
     }
 }

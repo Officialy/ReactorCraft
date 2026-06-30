@@ -93,64 +93,64 @@ public class ReactorPipeRenderer extends ReactorTERenderer<TileEntityReactorPipi
             for (Direction dir : Direction.values()) {
                 boolean connected = tile.isConnectedDirectly(dir);
                 if (connected)
-                    emitConnectedFluid(m, vc, dir, u, v, u2, v2, (float) du, tint, light, overlay);
+                    emitConnectedFluid(m, vc, dir, u, v, u2, v2, (float) du, IN, IN2, tint, light, overlay);
                 else
-                    emitCap(m, vc, dir, u, v, u2, v2, tint, light, overlay);
+                    emitCap(m, vc, dir, u, v, u2, v2, IN, IN2, tint, light, overlay);
             }
         });
     }
 
     static void emitCap(Matrix4f m, VertexConsumer vc, Direction dir,
-                        float u, float v, float u2, float v2, int tint, int light, int overlay) {
+                        float u, float v, float u2, float v2, double in, double in2, int tint, int light, int overlay) {
         switch (dir) {
-            case UP -> quad(m, vc, IN2, IN, IN, u, v2, IN, IN, IN, u2, v2, IN, IN, IN2, u2, v, IN2, IN, IN2, u, v, tint, light, overlay, 0, 1, 0);
-            case DOWN -> quad(m, vc, IN2, IN2, IN2, u, v, IN, IN2, IN2, u2, v, IN, IN2, IN, u2, v2, IN2, IN2, IN, u, v2, tint, light, overlay, 0, -1, 0);
-            case SOUTH -> quad(m, vc, IN, IN, IN, u, v, IN2, IN, IN, u2, v, IN2, IN2, IN, u2, v2, IN, IN2, IN, u, v2, tint, light, overlay, 0, 0, 1);
-            case NORTH -> quad(m, vc, IN, IN2, IN2, u, v2, IN2, IN2, IN2, u2, v2, IN2, IN, IN2, u2, v, IN, IN, IN2, u, v, tint, light, overlay, 0, 0, -1);
-            case EAST -> quad(m, vc, IN, IN2, IN, u, v2, IN, IN2, IN2, u2, v2, IN, IN, IN2, u2, v, IN, IN, IN, u, v, tint, light, overlay, 1, 0, 0);
-            case WEST -> quad(m, vc, IN2, IN, IN, u, v, IN2, IN, IN2, u2, v, IN2, IN2, IN2, u2, v2, IN2, IN2, IN, u, v2, tint, light, overlay, -1, 0, 0);
+            case UP -> quad(m, vc, in2, in, in, u, v2, in, in, in, u2, v2, in, in, in2, u2, v, in2, in, in2, u, v, tint, light, overlay, 0, 1, 0);
+            case DOWN -> quad(m, vc, in2, in2, in2, u, v, in, in2, in2, u2, v, in, in2, in, u2, v2, in2, in2, in, u, v2, tint, light, overlay, 0, -1, 0);
+            case SOUTH -> quad(m, vc, in, in, in, u, v, in2, in, in, u2, v, in2, in2, in, u2, v2, in, in2, in, u, v2, tint, light, overlay, 0, 0, 1);
+            case NORTH -> quad(m, vc, in, in2, in2, u, v2, in2, in2, in2, u2, v2, in2, in, in2, u2, v, in, in, in2, u, v, tint, light, overlay, 0, 0, -1);
+            case EAST -> quad(m, vc, in, in2, in, u, v2, in, in2, in2, u2, v2, in, in, in2, u2, v, in, in, in, u, v, tint, light, overlay, 1, 0, 0);
+            case WEST -> quad(m, vc, in2, in, in, u, v, in2, in, in2, u2, v, in2, in2, in2, u2, v2, in2, in2, in, u, v2, tint, light, overlay, -1, 0, 0);
         }
     }
 
     static void emitConnectedFluid(Matrix4f m, VertexConsumer vc, Direction dir,
-                                   float u, float v, float u2, float v2, float du,
+                                   float u, float v, float u2, float v2, float du, double in, double in2,
                                    int tint, int light, int overlay) {
         switch (dir) {
             case DOWN -> {
-                quad(m, vc, IN2, IN2, IN, u, v, IN2, IN2, IN2, u2, v, IN2, 0, IN2, u2, v + du, IN2, 0, IN, u, v + du, tint, light, overlay, -1, 0, 0);
-                quad(m, vc, IN, 0, IN, u, v + du, IN, 0, IN2, u2, v + du, IN, IN2, IN2, u2, v, IN, IN2, IN, u, v, tint, light, overlay, 1, 0, 0);
-                quad(m, vc, IN, 0, IN2, u, v + du, IN2, 0, IN2, u2, v + du, IN2, IN2, IN2, u2, v, IN, IN2, IN2, u, v, tint, light, overlay, 0, 0, -1);
-                quad(m, vc, IN, IN2, IN, u, v, IN2, IN2, IN, u2, v, IN2, 0, IN, u2, v + du, IN, 0, IN, u, v + du, tint, light, overlay, 0, 0, 1);
+                quad(m, vc, in2, in2, in, u, v, in2, in2, in2, u2, v, in2, 0, in2, u2, v + du, in2, 0, in, u, v + du, tint, light, overlay, -1, 0, 0);
+                quad(m, vc, in, 0, in, u, v + du, in, 0, in2, u2, v + du, in, in2, in2, u2, v, in, in2, in, u, v, tint, light, overlay, 1, 0, 0);
+                quad(m, vc, in, 0, in2, u, v + du, in2, 0, in2, u2, v + du, in2, in2, in2, u2, v, in, in2, in2, u, v, tint, light, overlay, 0, 0, -1);
+                quad(m, vc, in, in2, in, u, v, in2, in2, in, u2, v, in2, 0, in, u2, v + du, in, 0, in, u, v + du, tint, light, overlay, 0, 0, 1);
             }
             case UP -> {
-                quad(m, vc, IN2, 1, IN, u, v + du, IN2, 1, IN2, u2, v + du, IN2, IN, IN2, u2, v, IN2, IN, IN, u, v, tint, light, overlay, -1, 0, 0);
-                quad(m, vc, IN, IN, IN, u, v, IN, IN, IN2, u2, v, IN, 1, IN2, u2, v + du, IN, 1, IN, u, v + du, tint, light, overlay, 1, 0, 0);
-                quad(m, vc, IN, IN, IN2, u, v, IN2, IN, IN2, u2, v, IN2, 1, IN2, u2, v + du, IN, 1, IN2, u, v + du, tint, light, overlay, 0, 0, -1);
-                quad(m, vc, IN, 1, IN, u, v + du, IN2, 1, IN, u2, v + du, IN2, IN, IN, u2, v, IN, IN, IN, u, v, tint, light, overlay, 0, 0, 1);
+                quad(m, vc, in2, 1, in, u, v + du, in2, 1, in2, u2, v + du, in2, in, in2, u2, v, in2, in, in, u, v, tint, light, overlay, -1, 0, 0);
+                quad(m, vc, in, in, in, u, v, in, in, in2, u2, v, in, 1, in2, u2, v + du, in, 1, in, u, v + du, tint, light, overlay, 1, 0, 0);
+                quad(m, vc, in, in, in2, u, v, in2, in, in2, u2, v, in2, 1, in2, u2, v + du, in, 1, in2, u, v + du, tint, light, overlay, 0, 0, -1);
+                quad(m, vc, in, 1, in, u, v + du, in2, 1, in, u2, v + du, in2, in, in, u2, v, in, in, in, u, v, tint, light, overlay, 0, 0, 1);
             }
             case NORTH -> {
-                quad(m, vc, IN2, IN2, 0, u, v2, IN2, IN2, IN2, u + du, v2, IN2, IN, IN2, u + du, v, IN2, IN, 0, u, v, tint, light, overlay, -1, 0, 0);
-                quad(m, vc, IN, IN, 0, u, v, IN, IN, IN2, u + du, v, IN, IN2, IN2, u + du, v2, IN, IN2, 0, u, v2, tint, light, overlay, 1, 0, 0);
-                quad(m, vc, IN2, IN, 0, u, v2, IN2, IN, IN2, u + du, v2, IN, IN, IN2, u + du, v, IN, IN, 0, u, v, tint, light, overlay, 0, 1, 0);
-                quad(m, vc, IN, IN2, 0, u, v, IN, IN2, IN2, u + du, v, IN2, IN2, IN2, u + du, v2, IN2, IN2, 0, u, v2, tint, light, overlay, 0, -1, 0);
+                quad(m, vc, in2, in2, 0, u, v2, in2, in2, in2, u + du, v2, in2, in, in2, u + du, v, in2, in, 0, u, v, tint, light, overlay, -1, 0, 0);
+                quad(m, vc, in, in, 0, u, v, in, in, in2, u + du, v, in, in2, in2, u + du, v2, in, in2, 0, u, v2, tint, light, overlay, 1, 0, 0);
+                quad(m, vc, in2, in, 0, u, v2, in2, in, in2, u + du, v2, in, in, in2, u + du, v, in, in, 0, u, v, tint, light, overlay, 0, 1, 0);
+                quad(m, vc, in, in2, 0, u, v, in, in2, in2, u + du, v, in2, in2, in2, u + du, v2, in2, in2, 0, u, v2, tint, light, overlay, 0, -1, 0);
             }
             case SOUTH -> {
-                quad(m, vc, IN2, IN, 1, u, v, IN2, IN, IN, u + du, v, IN2, IN2, IN, u + du, v2, IN2, IN2, 1, u, v2, tint, light, overlay, -1, 0, 0);
-                quad(m, vc, IN, IN2, 1, u, v2, IN, IN2, IN, u + du, v2, IN, IN, IN, u + du, v, IN, IN, 1, u, v, tint, light, overlay, 1, 0, 0);
-                quad(m, vc, IN, IN, 1, u, v, IN, IN, IN, u + du, v, IN2, IN, IN, u + du, v2, IN2, IN, 1, u, v2, tint, light, overlay, 0, 1, 0);
-                quad(m, vc, IN2, IN2, 1, u, v2, IN2, IN2, IN, u + du, v2, IN, IN2, IN, u + du, v, IN, IN2, 1, u, v, tint, light, overlay, 0, -1, 0);
+                quad(m, vc, in2, in, 1, u, v, in2, in, in, u + du, v, in2, in2, in, u + du, v2, in2, in2, 1, u, v2, tint, light, overlay, -1, 0, 0);
+                quad(m, vc, in, in2, 1, u, v2, in, in2, in, u + du, v2, in, in, in, u + du, v, in, in, 1, u, v, tint, light, overlay, 1, 0, 0);
+                quad(m, vc, in, in, 1, u, v, in, in, in, u + du, v, in2, in, in, u + du, v2, in2, in, 1, u, v2, tint, light, overlay, 0, 1, 0);
+                quad(m, vc, in2, in2, 1, u, v2, in2, in2, in, u + du, v2, in, in2, in, u + du, v, in, in2, 1, u, v, tint, light, overlay, 0, -1, 0);
             }
             case EAST -> {
-                quad(m, vc, 1, IN, IN, u, v, IN, IN, IN, u + du, v, IN, IN2, IN, u + du, v2, 1, IN2, IN, u, v2, tint, light, overlay, 0, 0, 1);
-                quad(m, vc, 1, IN2, IN2, u, v2, IN, IN2, IN2, u + du, v2, IN, IN, IN2, u + du, v, 1, IN, IN2, u, v, tint, light, overlay, 0, 0, -1);
-                quad(m, vc, 1, IN, IN2, u, v2, IN, IN, IN2, u + du, v2, IN, IN, IN, u + du, v, 1, IN, IN, u, v, tint, light, overlay, 0, 1, 0);
-                quad(m, vc, 1, IN2, IN, u, v, IN, IN2, IN, u + du, v, IN, IN2, IN2, u + du, v2, 1, IN2, IN2, u, v2, tint, light, overlay, 0, -1, 0);
+                quad(m, vc, 1, in, in, u, v, in, in, in, u + du, v, in, in2, in, u + du, v2, 1, in2, in, u, v2, tint, light, overlay, 0, 0, 1);
+                quad(m, vc, 1, in2, in2, u, v2, in, in2, in2, u + du, v2, in, in, in2, u + du, v, 1, in, in2, u, v, tint, light, overlay, 0, 0, -1);
+                quad(m, vc, 1, in, in2, u, v2, in, in, in2, u + du, v2, in, in, in, u + du, v, 1, in, in, u, v, tint, light, overlay, 0, 1, 0);
+                quad(m, vc, 1, in2, in, u, v, in, in2, in, u + du, v, in, in2, in2, u + du, v2, 1, in2, in2, u, v2, tint, light, overlay, 0, -1, 0);
             }
             case WEST -> {
-                quad(m, vc, 0, IN2, IN, u, v2, IN2, IN2, IN, u + du, v2, IN2, IN, IN, u + du, v, 0, IN, IN, u, v, tint, light, overlay, 0, 0, 1);
-                quad(m, vc, 0, IN, IN2, u, v, IN2, IN, IN2, u + du, v, IN2, IN2, IN2, u + du, v2, 0, IN2, IN2, u, v2, tint, light, overlay, 0, 0, -1);
-                quad(m, vc, 0, IN, IN, u, v, IN2, IN, IN, u + du, v, IN2, IN, IN2, u + du, v2, 0, IN, IN2, u, v2, tint, light, overlay, 0, 1, 0);
-                quad(m, vc, 0, IN2, IN2, u, v2, IN2, IN2, IN2, u + du, v2, IN2, IN2, IN, u + du, v, 0, IN2, IN, u, v, tint, light, overlay, 0, -1, 0);
+                quad(m, vc, 0, in2, in, u, v2, in2, in2, in, u + du, v2, in2, in, in, u + du, v, 0, in, in, u, v, tint, light, overlay, 0, 0, 1);
+                quad(m, vc, 0, in, in2, u, v, in2, in, in2, u + du, v, in2, in2, in2, u + du, v2, 0, in2, in2, u, v2, tint, light, overlay, 0, 0, -1);
+                quad(m, vc, 0, in, in, u, v, in2, in, in, u + du, v, in2, in, in2, u + du, v2, 0, in, in2, u, v2, tint, light, overlay, 0, 1, 0);
+                quad(m, vc, 0, in2, in2, u, v2, in2, in2, in2, u + du, v2, in2, in2, in, u + du, v, 0, in2, in, u, v, tint, light, overlay, 0, -1, 0);
             }
         }
     }
