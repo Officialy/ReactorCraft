@@ -11,6 +11,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
@@ -60,7 +61,24 @@ public class RenderTurbine extends ReactorTERenderer<TileEntityTurbineCore> {
         stack.scale(1.0F, -1.0F, -1.0F);
         stack.translate(0.5, 0.5, 0.5);
         stack.mulPose(Axis.YP.rotationDegrees(facingAngle(((TileEntityTurbineCore) be).getFacing())));
-        model.renderAll(stack, vc, light);
+        model.renderAll(stack, vc, light, spinAngle((TileEntityTurbineCore) be));
         stack.popPose();
+    }
+
+    /**
+     * Client-side spin angle for the blade wheel. The BE's own {@code phi} can't be used: the client
+     * BE doesn't tick (getTicker is null client-side), so {@code animateWithTick} never advances it.
+     * Instead derive the angle from the synced {@code omega} and the game clock, matching the legacy
+     * rate {@code phi += 0.2 * log2(omega+1)^1.05} per tick.
+     */
+    private static float spinAngle(TileEntityTurbineCore te) {
+        int omega = te.getOmega();
+        if (omega <= 0)
+            return 0F;
+        double degPerTick = 0.2 * Math.pow(Math.log(omega + 1) / Math.log(2), 1.05);
+        Minecraft mc = Minecraft.getInstance();
+        double t = (mc.level != null ? mc.level.getGameTime() : 0L)
+                + mc.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        return (float) ((t * degPerTick) % 360.0);
     }
 }

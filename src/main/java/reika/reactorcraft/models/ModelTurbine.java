@@ -62,13 +62,18 @@ public class ModelTurbine {
     }
 
     public void renderAll(PoseStack stack, VertexConsumer vc, int light) {
+        this.renderAll(stack, vc, light, 0F);
+    }
+
+    /** {@code phi} is the current spin angle (deg) of the blade wheel about the shaft (Z) axis. */
+    public void renderAll(PoseStack stack, VertexConsumer vc, int light, float phi) {
         shaft1.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shaft1a.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
 
         // front ring
         stack.pushPose();
         stack.translate(0, 0, DD);
-        renderBlades(stack, vc, light);
+        renderBlades(stack, vc, light, phi);
         stack.popPose();
 
         // back ring (offset the other way, scaled up about the pivot)
@@ -77,15 +82,15 @@ public class ModelTurbine {
         stack.translate(0, VO, 0);
         stack.scale((float) SC, (float) SC, 1F);
         stack.translate(0, -VO, 0);
-        renderBlades(stack, vc, light);
+        renderBlades(stack, vc, light, phi);
         stack.popPose();
     }
 
-    private void renderBlades(PoseStack stack, VertexConsumer vc, int light) {
+    private void renderBlades(PoseStack stack, VertexConsumer vc, int light, float phi) {
         for (int i = 0; i < 360; i += SEP) {
             stack.pushPose();
             stack.translate(0, VO, 0);
-            stack.mulPose(Axis.ZP.rotationDegrees(i));
+            stack.mulPose(Axis.ZP.rotationDegrees(i + phi));
             stack.translate(0, -VO, 0);
             stack.mulPose(Axis.YP.rotationDegrees(-TWIST));
             blade.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
