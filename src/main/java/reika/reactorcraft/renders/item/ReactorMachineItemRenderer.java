@@ -62,23 +62,33 @@ public class ReactorMachineItemRenderer implements NoDataSpecialModelRenderer {
         void render(PoseStack pose, VertexConsumer vc, int light);
     }
 
+    // Was a flat 0.5 for every machine ("the wrong size, all too small"). Bumped the shared default
+    // up to 0.65; solenoid_magnet overrides down to 0.3 (was reading "giant" at 0.5), toroid_magnet
+    // keeps the original 0.5 and gets an extra -20 degree yaw ("rotate left a little") instead of a
+    // size change. These are first-pass numbers, not measured against anything — expect another round.
+    private static final float DEFAULT_SCALE = 0.65F;
+
     private final Draw draw;
     private final Identifier texture;
+    private final float scale;
+    private final float extraYawDeg;
 
-    private ReactorMachineItemRenderer(Draw draw, Identifier texture) {
+    private ReactorMachineItemRenderer(Draw draw, Identifier texture, float scale, float extraYawDeg) {
         this.draw = draw;
         this.texture = texture;
+        this.scale = scale;
+        this.extraYawDeg = extraYawDeg;
     }
 
     @Override
     public void submit(PoseStack poseStack, SubmitNodeCollector collector, int lightCoords, int overlayCoords, boolean hasFoil, int outlineColor) {
         poseStack.pushPose();
         // Frame the block-scale model in the slot: shrink + the standard block-item GUI rotation, about
-        // the block centre. (First-pass framing — may want per-machine tuning once seen in-inventory.)
+        // the block centre.
         poseStack.translate(0.5F, 0.5F, 0.5F);
-        poseStack.scale(0.5F, 0.5F, 0.5F);
+        poseStack.scale(scale, scale, scale);
         poseStack.mulPose(Axis.XP.rotationDegrees(30F));
-        poseStack.mulPose(Axis.YP.rotationDegrees(225F));
+        poseStack.mulPose(Axis.YP.rotationDegrees(225F + extraYawDeg));
         poseStack.translate(-0.5F, -0.5F, -0.5F);
 
         RenderType rt = RenderTypes.entitySolid(texture);
@@ -127,11 +137,11 @@ public class ReactorMachineItemRenderer implements NoDataSpecialModelRenderer {
                 }
                 case "toroid_magnet" -> {
                     ModelMagnet m = new ModelMagnet(set.bakeLayer(ReactorModelLayers.MAGNET));
-                    return make((p, vc, l) -> m.renderAll(p, vc, l), tex("magnet"));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l), tex("magnet"), 0.5F, -20F);
                 }
                 case "solenoid_magnet" -> {
                     ModelSolenoid m = new ModelSolenoid(set.bakeLayer(ReactorModelLayers.SOLENOID));
-                    return make((p, vc, l) -> m.renderAll(p, vc, l), tex("solenoid"));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l), tex("solenoid"), 0.3F, 0F);
                 }
                 case "steam_grate" -> {
                     ModelSteamGrate m = new ModelSteamGrate(set.bakeLayer(ReactorModelLayers.STEAM_GRATE));
@@ -165,12 +175,16 @@ public class ReactorMachineItemRenderer implements NoDataSpecialModelRenderer {
         }
 
         private static ReactorMachineItemRenderer make(Draw inner, Identifier texture) {
+            return make(inner, texture, DEFAULT_SCALE, 0F);
+        }
+
+        private static ReactorMachineItemRenderer make(Draw inner, Identifier texture, float scale, float extraYawDeg) {
             return new ReactorMachineItemRenderer((pose, vc, light) -> {
                 pose.pushPose();
                 baseTransform(pose);
                 inner.render(pose, vc, light);
                 pose.popPose();
-            }, texture);
+            }, texture, scale, extraYawDeg);
         }
     }
 }
