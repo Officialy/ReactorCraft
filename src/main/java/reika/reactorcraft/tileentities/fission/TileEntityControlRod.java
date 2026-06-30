@@ -57,6 +57,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 	}
 
 	private void moveRods() {
+		boolean wasMoving = motion != null;
 		if (motion != null) {
 			rodOffset += motion.stepHeight;
 		}
@@ -66,6 +67,17 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 			rodOffset = Math.min(MAXOFFSET, rodOffset);
 			lowered = rodOffset == MINOFFSET;
 		}
+		// Motion just settled: push the final rodOffset/lowered to clients so the BER stops at the
+		// right place and the CPU GUI grid's isActive() colour updates. The client BE does not tick
+		// (getTicker is null client-side), so without an explicit sync the rod never visibly moves.
+		if (wasMoving && motion == null)
+			this.syncMotion();
+	}
+
+	/** Server-side sync of rod state (start/end of a movement). Cheap: fires twice per toggle, not per tick. */
+	private void syncMotion() {
+		if (level != null && !level.isClientSide())
+			this.syncAllData(false);
 	}
 
 	@Override
@@ -103,12 +115,14 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 
 		if (sound)
 			ReactorSounds.CONTROL.playSoundAtBlock(level, this.getBlockPos(), 1, 1.3F);
+		this.syncMotion();
 	}
 
 	public void setActive(boolean active, boolean sound) {
 		motion = active ? Motions.LOWERING : Motions.RAISING;
 		if (sound)
 			ReactorSounds.CONTROL.playSoundAtBlock(level, this.getBlockPos(), 1, 1.3F);
+		this.syncMotion();
 	}
 
 	public void drop(boolean sound) {
@@ -116,6 +130,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 			if (rodOffset > MINOFFSET && motion != Motions.SCRAM)
 				ReactorSounds.SCRAM.playSoundAtBlock(level, this.getBlockPos(), 1, 1F);
 		motion = Motions.SCRAM;
+		this.syncMotion();
 	}
 
 	public boolean isActive() {

@@ -310,8 +310,11 @@ public class ModelControl {
         shape5i.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape5j.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape5k.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
-        // The rod assembly (shape6*) slides vertically by the rod's insertion depth (legacy
-        // glTranslated(0, -phi/28, 0) where phi = getRodPosition()); shape7+ stay fixed.
+        // The whole rod assembly (shape6* bundle, shape7* tie-bars, shape8 cap, shape9/9a centre rod)
+        // slides vertically by the rod's insertion depth. The legacy renderAll applied
+        // glTranslated(0, -phi/28, 0) once with NO matching pop, so EVERY shape from shape6 onward
+        // moved together — the port had wrongly popped after shape6n, pinning shape7/8/9/9a (incl. the
+        // centre rod) in place. Keep the translate live through shape9a to match the original.
         stack.pushPose();
         stack.translate(0, -rodPosition / 28.0, 0);
         shape6.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
@@ -330,7 +333,6 @@ public class ModelControl {
         shape6l.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape6m.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape6n.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
-        stack.popPose();
         shape7.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape7a.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape7b.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
@@ -338,5 +340,6 @@ public class ModelControl {
         shape8.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape9.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape9a.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
+        stack.popPose();
     }
 }
