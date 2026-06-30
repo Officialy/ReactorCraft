@@ -1,5 +1,5 @@
 {
   "textures": {
-    "particle": "reactorcraft:block/steel"
+    "particle": "reactorcraft:block/fluid/sodiumhot"
   }
 }

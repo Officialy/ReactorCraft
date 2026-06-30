@@ -208,6 +208,10 @@ public class ReactorModelProvider extends ModelProvider {
         // fluid-ish technical blocks
         BLOCK_TEX.put("thorium_fuel", "block/fluid/lifbe_fuel");
         BLOCK_TEX.put("steam", "block/steam");
+        // lines: were falling through to the generic steel fallback (same as every unmapped
+        // machine), giving the steam line and heat pipe identical, thematically blank item icons.
+        BLOCK_TEX.put("steam_line", "block/steam");
+        BLOCK_TEX.put("heat_pipe", "block/fluid/sodiumhot");
     }
 
     private static Material blockTexture(Block block) {

@@ -39,10 +39,12 @@ public class ReactorLineRenderer extends ReactorTERenderer<TileEntityLine> {
     // never authored; waterline.png is the only real line art (used for both, heat pipe tinted warm).
     private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "textures/tileentity/waterline.png");
 
-    // Lines are drawn thinner than ducts — the legacy steam line / heat pipe were ~0.375 wide (half the
-    // fluid-pipe shell), not the 0.75 of the fluid ducts. Use a 0.375-wide cross-section.
-    private static final double IN = 0.6875;   // 0.5 + 0.1875
-    private static final double IN2 = 0.3125;  // 0.5 - 0.1875
+    // Lines are drawn thinner than ducts — legacy SteamLineRenderer.renderFace used a fixed
+    // size=1/3 cross-section (not the fluid-pipe shell's 0.75, and NOT 0.375 either — that was
+    // this port's own earlier guess). bounds = 0.5 +/- size/2.
+    private static final double SIZE = 1.0 / 3.0;
+    private static final double IN = 0.5 + SIZE / 2.0;   // 0.6667
+    private static final double IN2 = 0.5 - SIZE / 2.0;  // 0.3333
     // Arm-extension texture offset along the flow axis for a full-texture (0..1) sprite.
     private static final float DU = (float) ((IN - IN2) / 4D);
 
