@@ -20,11 +20,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.item.context.BlockPlaceContext;
 
 import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
 import reika.dragonapi.instantiable.data.immutable.BlockKey;
@@ -63,18 +59,10 @@ public class BlockSolenoidCasing extends BlockReCMultiBlock implements Transduce
 		public String getSerializedName() {
 			return this.name().toLowerCase(Locale.ROOT);
 		}
-
-		/** Spokes are radial bars, so they carry a horizontal axis; the rest are rotationally uniform. */
-		public boolean directional() {
-			return this == SPOKE;
-		}
 	}
 
-	/** A casing position's expected part + (for spokes) the horizontal axis it should point along. */
-	public record CasingSpec(SolenoidPart part, Direction.Axis axis) {}
-
-	/** Horizontal-only axis for spoke orientation. */
-	public static final EnumProperty<Direction.Axis> AXIS = BlockStateProperties.HORIZONTAL_AXIS;
+	/** A casing position's expected part. The spoke rod is rotationally symmetric, so no orientation. */
+	public record CasingSpec(SolenoidPart part) {}
 
 	// The core sits at most 8 blocks away horizontally (walls at distance 8) and within 1 vertically.
 	private static final int SCAN_H = 9;
@@ -85,28 +73,11 @@ public class BlockSolenoidCasing extends BlockReCMultiBlock implements Transduce
 	public BlockSolenoidCasing(BlockBehaviour.Properties properties, SolenoidPart part) {
 		super(properties);
 		this.part = part;
-		// AXIS is added to every casing block's state definition (createBlockStateDefinition runs during
-		// super(), before `part` is assigned, so it can't be made conditional). Non-directional parts
-		// simply never change it off the default -- it's inert for them.
-		this.registerDefaultState(this.stateDefinition.any().setValue(FORMED, false).setValue(AXIS, Direction.Axis.X));
+		this.registerDefaultState(this.stateDefinition.any().setValue(FORMED, false));
 	}
 
 	public SolenoidPart getPart() {
 		return part;
-	}
-
-	@Override
-	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-		super.createBlockStateDefinition(builder);
-		builder.add(AXIS);
-	}
-
-	@Override
-	public BlockState getStateForPlacement(BlockPlaceContext ctx) {
-		BlockState state = this.defaultBlockState();
-		if (part.directional())
-			state = state.setValue(AXIS, ctx.getHorizontalDirection().getAxis());
-		return state;
 	}
 
 	// --- layout: single source of truth (mirrors the legacy check* loops exactly) ---
@@ -137,20 +108,19 @@ public class BlockSolenoidCasing extends BlockReCMultiBlock implements Transduce
 			for (int j = 0; j <= 1; j++)
 				for (int k = -1; k <= 1; k++)
 					if (i != 0 || j != 0 || k != 0)
-						map.put(new BlockPos(midX + i, midY + j, midZ + k), new CasingSpec(SolenoidPart.SHELL, null));
+						map.put(new BlockPos(midX + i, midY + j, midZ + k), new CasingSpec(SolenoidPart.SHELL));
 
 		// SPOKES: radial arms out to 7, diagonals out to 5.
 		for (int i = 2; i <= 7; i++) {
-			map.put(new BlockPos(midX + i, midY, midZ), new CasingSpec(SolenoidPart.SPOKE, Direction.Axis.X));
-			map.put(new BlockPos(midX - i, midY, midZ), new CasingSpec(SolenoidPart.SPOKE, Direction.Axis.X));
-			map.put(new BlockPos(midX, midY, midZ + i), new CasingSpec(SolenoidPart.SPOKE, Direction.Axis.Z));
-			map.put(new BlockPos(midX, midY, midZ - i), new CasingSpec(SolenoidPart.SPOKE, Direction.Axis.Z));
+			map.put(new BlockPos(midX + i, midY, midZ), new CasingSpec(SolenoidPart.SPOKE));
+			map.put(new BlockPos(midX - i, midY, midZ), new CasingSpec(SolenoidPart.SPOKE));
+			map.put(new BlockPos(midX, midY, midZ + i), new CasingSpec(SolenoidPart.SPOKE));
+			map.put(new BlockPos(midX, midY, midZ - i), new CasingSpec(SolenoidPart.SPOKE));
 			if (i < 6) {
-				// Diagonal spokes have no single axis; render them along X.
-				map.put(new BlockPos(midX + i, midY, midZ + i), new CasingSpec(SolenoidPart.SPOKE, Direction.Axis.X));
-				map.put(new BlockPos(midX - i, midY, midZ + i), new CasingSpec(SolenoidPart.SPOKE, Direction.Axis.X));
-				map.put(new BlockPos(midX + i, midY, midZ - i), new CasingSpec(SolenoidPart.SPOKE, Direction.Axis.X));
-				map.put(new BlockPos(midX - i, midY, midZ - i), new CasingSpec(SolenoidPart.SPOKE, Direction.Axis.X));
+				map.put(new BlockPos(midX + i, midY, midZ + i), new CasingSpec(SolenoidPart.SPOKE));
+				map.put(new BlockPos(midX - i, midY, midZ + i), new CasingSpec(SolenoidPart.SPOKE));
+				map.put(new BlockPos(midX + i, midY, midZ - i), new CasingSpec(SolenoidPart.SPOKE));
+				map.put(new BlockPos(midX - i, midY, midZ - i), new CasingSpec(SolenoidPart.SPOKE));
 			}
 		}
 
@@ -161,9 +131,9 @@ public class BlockSolenoidCasing extends BlockReCMultiBlock implements Transduce
 		// all four posts; we validate the full set so assembly requires the complete build.
 		for (int sx : new int[]{-6, 6}) {
 			for (int sz : new int[]{-6, 6}) {
-				map.put(new BlockPos(midX + sx, midY + 1, midZ + sz), new CasingSpec(SolenoidPart.EDGE, null));
-				map.put(new BlockPos(midX + sx, midY, midZ + sz), new CasingSpec(SolenoidPart.WALL_EDGE, null));
-				map.put(new BlockPos(midX + sx, midY - 1, midZ + sz), new CasingSpec(SolenoidPart.EDGE, null));
+				map.put(new BlockPos(midX + sx, midY + 1, midZ + sz), new CasingSpec(SolenoidPart.EDGE));
+				map.put(new BlockPos(midX + sx, midY, midZ + sz), new CasingSpec(SolenoidPart.WALL_EDGE));
+				map.put(new BlockPos(midX + sx, midY - 1, midZ + sz), new CasingSpec(SolenoidPart.EDGE));
 			}
 		}
 
@@ -179,10 +149,10 @@ public class BlockSolenoidCasing extends BlockReCMultiBlock implements Transduce
 		for (int i = -5; i <= 5; i++) {
 			int d = Math.abs(i) >= 4 ? 7 : 8;
 			SolenoidPart p = Math.abs(i) >= 3 ? outer : inner;
-			map.put(new BlockPos(midX - d, dy, midZ + i), new CasingSpec(p, null));
-			map.put(new BlockPos(midX + d, dy, midZ + i), new CasingSpec(p, null));
-			map.put(new BlockPos(midX + i, dy, midZ + d), new CasingSpec(p, null));
-			map.put(new BlockPos(midX + i, dy, midZ - d), new CasingSpec(p, null));
+			map.put(new BlockPos(midX - d, dy, midZ + i), new CasingSpec(p));
+			map.put(new BlockPos(midX + d, dy, midZ + i), new CasingSpec(p));
+			map.put(new BlockPos(midX + i, dy, midZ + d), new CasingSpec(p));
+			map.put(new BlockPos(midX + i, dy, midZ - d), new CasingSpec(p));
 		}
 	}
 

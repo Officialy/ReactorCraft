@@ -73,9 +73,6 @@ public final class SolenoidDebugCommand {
 
     private static void placeCasing(Level level, BlockPos pos, CasingSpec spec) {
         Block b = BlockSolenoidCasing.blockFor(spec.part());
-        BlockState st = b.defaultBlockState();
-        if (spec.axis() != null)
-            st = st.setValue(BlockSolenoidCasing.AXIS, spec.axis());
-        level.setBlock(pos, st, 3);
+        level.setBlock(pos, b.defaultBlockState(), 3);
     }
 }
