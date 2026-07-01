@@ -164,7 +164,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/blocks/multi/BlockFlywheelMulti.java'
     include 'reika/reactorcraft/blocks/BlockCoriumFlowing.java'
     include 'reika/reactorcraft/blocks/BlockThoriumFuel.java'
-    include 'reika/reactorcraft/blocks/multi/BlockSolenoidMulti.java'
+    include 'reika/reactorcraft/blocks/multi/BlockSolenoidCasing.java'
     include 'reika/reactorcraft/blocks/multi/BlockTurbineMulti.java'
     include 'reika/reactorcraft/blocks/BlockSteam.java'
     include 'reika/reactorcraft/blocks/BlockReactorMat.java'

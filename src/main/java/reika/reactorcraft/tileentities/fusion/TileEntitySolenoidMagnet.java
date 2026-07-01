@@ -26,7 +26,7 @@ import reika.reactorcraft.auxiliary.NeutronTile;
 import reika.reactorcraft.auxiliary.ReactorPowerReceiver;
 import reika.reactorcraft.base.BlockReCMultiBlock;
 import reika.reactorcraft.base.TileEntityReactorBase;
-import reika.reactorcraft.blocks.multi.BlockSolenoidMulti;
+import reika.reactorcraft.blocks.multi.BlockSolenoidCasing;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorBlocks;
@@ -129,11 +129,12 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 	}
 
 	private void checkForMultiBlock(Level world, BlockPos pos) {
-		BlockPos below = pos.below();
-		if (world.getBlockState(below).getBlock() == ReactorBlocks.SOLENOIDMULTI.get()) {
-			BlockSolenoidMulti b = (BlockSolenoidMulti)ReactorBlocks.SOLENOIDMULTI.get();
-			b.tryAssemble(world, below.getX(), below.getY(), below.getZ(), null);
-		}
+		// The core IS the structure centre; tryAssemble scans out from here for the casing layout.
+		// Runs regardless of placement order (unlike the legacy "casing directly below" check), so
+		// placing the core last still forms the multiblock. Any casing instance carries the shared
+		// validation logic -- SHELL is arbitrary.
+		BlockSolenoidCasing b = (BlockSolenoidCasing) ReactorBlocks.SOLENOID_SHELL.get();
+		b.tryAssemble(world, pos.getX(), pos.getY(), pos.getZ(), null);
 	}
 
 	@Override

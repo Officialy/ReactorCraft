@@ -35,11 +35,14 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 
+import com.mojang.math.Quadrant;
+import net.minecraft.core.Direction;
+
 import reika.dragonapi.base.BlockMultiBlock;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.blocks.BlockReactorMachineModelled;
-import reika.reactorcraft.blocks.multi.BlockSolenoidMulti;
-import reika.reactorcraft.blocks.multi.BlockSolenoidMulti.SolenoidPart;
+import reika.reactorcraft.blocks.multi.BlockSolenoidCasing;
+import reika.reactorcraft.blocks.multi.BlockSolenoidCasing.SolenoidPart;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorItems;
 
@@ -86,6 +89,12 @@ public class ReactorModelProvider extends ModelProvider {
         }
 
         Set<Item> blockItemsHandled = new HashSet<>();
+
+        // Shared "assembled" model for every solenoid-casing block's FORMED=true state (solenoid_10).
+        // Emitted once here (not per-block) to avoid a duplicate-model-definition error.
+        Identifier solenoidFormedModelId = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "block/solenoid_formed");
+        modelOut.accept(solenoidFormedModelId, () -> cubeAllModel("reactorcraft:block/multi/solenoid_10"));
+        MultiVariant solenoidFormedVariant = new MultiVariant(WeightedList.of(new Variant(solenoidFormedModelId)));
 
         for (var holder : ReactorBlocks.BLOCKS.getEntries()) {
             Block block = holder.get();
@@ -146,50 +155,35 @@ public class ReactorModelProvider extends ModelProvider {
                 continue;
             }
 
-            if (block instanceof BlockSolenoidMulti) {
-                // The solenoid casing has 6 named PART variants plus a FORMED flag. Legacy
-                // BlockSolenoidMulti.getTextureIndex picked one of solenoid_0..11 per face + neighbour
-                // connectivity (a connected-textures scheme); we can't reproduce the neighbour-aware
-                // selection in a static blockstate, but we CAN give each part its representative
-                // top/bottom + side sprite (the non-connected default of the legacy table) so casings
-                // read as the real solenoid art instead of a plain steel cube. FORMED=true swaps every
-                // part to solenoid_10 (the legacy "assembled" sprite) -- useful live feedback that the
-                // multiblock actually locked in.
-                Map<SolenoidPart, MultiVariant> partVariants = new EnumMap<>(SolenoidPart.class);
-                // { end (top/bottom), side } sprite index per part -- from the legacy getTextureIndex
-                // side<2 vs side>1 branches, non-connected case.
-                record Tex(String end, String side) {}
-                Map<SolenoidPart, Tex> texByPart = new EnumMap<>(SolenoidPart.class);
-                texByPart.put(SolenoidPart.FACE, new Tex("3", "3"));
-                texByPart.put(SolenoidPart.EDGE, new Tex("3", "3"));
-                texByPart.put(SolenoidPart.WALL, new Tex("3", "11"));
-                texByPart.put(SolenoidPart.WALL_EDGE, new Tex("3", "2"));
-                texByPart.put(SolenoidPart.SPOKE, new Tex("8", "9"));
-                texByPart.put(SolenoidPart.CORE, new Tex("6", "3"));
+            if (block instanceof BlockSolenoidCasing casing) {
+                // Each solenoid-casing part is its own block now. Legacy getTextureIndex picked one of
+                // solenoid_0..11 per face + neighbour connectivity (a connected-textures scheme); we
+                // can't reproduce the neighbour-aware selection statically, but we give each part its
+                // representative top/bottom + side sprite (the non-connected default of that table).
+                // FORMED=true swaps every part to solenoid_10 (the legacy "assembled" sprite) -- live
+                // feedback that the multiblock locked in. Spokes are radial bars, so their column model
+                // is rotated to lie along the block's stored horizontal AXIS.
+                SolenoidPart part = casing.getPart();
+                String name = BuiltInRegistries.BLOCK.getKey(block).getPath();
+                String[] tex = casingTex(part);
+                Identifier partModelId = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "block/" + name);
+                String endTex = "reactorcraft:block/multi/solenoid_" + tex[0];
+                String sideTex = "reactorcraft:block/multi/solenoid_" + tex[1];
+                modelOut.accept(partModelId, () -> columnModel(endTex, sideTex));
+                MultiVariant partVariant = new MultiVariant(WeightedList.of(new Variant(partModelId)));
 
-                for (Map.Entry<SolenoidPart, Tex> e : texByPart.entrySet()) {
-                    Identifier partModelId = Identifier.fromNamespaceAndPath(ReactorCraft.MODID,
-                            "block/solenoid_multi_" + e.getKey().getSerializedName());
-                    String endTex = "reactorcraft:block/multi/solenoid_" + e.getValue().end();
-                    String sideTex = "reactorcraft:block/multi/solenoid_" + e.getValue().side();
-                    modelOut.accept(partModelId, () -> columnModel(endTex, sideTex));
-                    partVariants.put(e.getKey(), new MultiVariant(WeightedList.of(new Variant(partModelId))));
-                }
-
-                Identifier formedModelId = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "block/solenoid_multi_formed");
-                modelOut.accept(formedModelId, () -> cubeAllModel("reactorcraft:block/multi/solenoid_10"));
-                MultiVariant formedVariant = new MultiVariant(WeightedList.of(new Variant(formedModelId)));
-
+                boolean spoke = part == SolenoidPart.SPOKE;
                 PropertyDispatch<MultiVariant> dispatch = PropertyDispatch
-                        .initial(BlockSolenoidMulti.PART, BlockMultiBlock.FORMED)
-                        .generate((part, formed) -> formed ? formedVariant : partVariants.get(part));
+                        .initial(BlockSolenoidCasing.AXIS, BlockMultiBlock.FORMED)
+                        .generate((axis, formed) -> {
+                            if (formed) return solenoidFormedVariant;
+                            return spoke ? spokeVariant(partModelId, axis) : partVariant;
+                        });
                 blockStateOut.accept(MultiVariantGenerator.dispatch(block).with(dispatch));
 
                 Item asItem = block.asItem();
                 if (asItem != Items.AIR) {
-                    // Held/inventory icon = the FACE part model (the block's default state).
-                    itemModelOut.accept(asItem, ItemModelUtils.plainModel(
-                            Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "block/solenoid_multi_face")));
+                    itemModelOut.accept(asItem, ItemModelUtils.plainModel(partModelId));
                     blockItemsHandled.add(asItem);
                 }
                 continue;
@@ -278,6 +272,25 @@ public class ReactorModelProvider extends ModelProvider {
                 path = "block/steel";
         }
         return new Material(Identifier.fromNamespaceAndPath(ReactorCraft.MODID, path));
+    }
+
+    /** { end (top/bottom), side } solenoid_N sprite index per casing part -- legacy getTextureIndex default. */
+    private static String[] casingTex(SolenoidPart part) {
+        return switch (part) {
+            case FACE, EDGE -> new String[]{"3", "3"};
+            case WALL -> new String[]{"3", "11"};
+            case WALL_EDGE -> new String[]{"3", "2"};
+            case SPOKE -> new String[]{"8", "9"};
+            case SHELL -> new String[]{"6", "3"};
+        };
+    }
+
+    /** A spoke's vertical column model rotated to lie horizontally along the given axis (log-style). */
+    private static MultiVariant spokeVariant(Identifier model, Direction.Axis axis) {
+        Variant v = new Variant(model).withXRot(Quadrant.R90);
+        if (axis == Direction.Axis.X)
+            v = v.withYRot(Quadrant.R90);
+        return new MultiVariant(WeightedList.of(v));
     }
 
     /** {@code cube_column} model JSON with the given end (top/bottom) and side sprites. */

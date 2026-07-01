@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=x,formed=false": {
+      "model": "reactorcraft:block/solenoid_face"
+    },
+    "axis=x,formed=true": {
+      "model": "reactorcraft:block/solenoid_formed"
+    },
+    "axis=z,formed=false": {
+      "model": "reactorcraft:block/solenoid_face"
+    },
+    "axis=z,formed=true": {
+      "model": "reactorcraft:block/solenoid_formed"
+    }
+  }
+}

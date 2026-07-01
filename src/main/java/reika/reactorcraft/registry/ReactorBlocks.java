@@ -21,6 +21,19 @@ import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.blocks.BlockCoriumFlowing;
+import reika.reactorcraft.blocks.BlockReactorDuct;
+import reika.reactorcraft.blocks.BlockReactorLine;
+import reika.reactorcraft.blocks.BlockReactorMachine;
+import reika.reactorcraft.blocks.BlockReactorMachineModelled;
+import reika.reactorcraft.blocks.BlockReactorMat;
+import reika.reactorcraft.blocks.BlockSteam;
+import reika.reactorcraft.blocks.BlockThoriumFuel;
+import reika.reactorcraft.blocks.multi.BlockFlywheelMulti;
+import reika.reactorcraft.blocks.multi.BlockGeneratorMulti;
+import reika.reactorcraft.blocks.multi.BlockSolenoidCasing;
+import reika.reactorcraft.blocks.multi.BlockSolenoidCasing.SolenoidPart;
+import reika.reactorcraft.blocks.multi.BlockTurbineMulti;
 
 /**
  * 26.2 block registry for the ore→fuel slice, replacing the 1.7.10 metadata block enum
@@ -112,69 +125,78 @@ public final class ReactorBlocks {
     }
 
     // --- Multiblock machine casings (named-blockstate variants; see Block*Multi) ---
-    public static final DeferredBlock<Block> GENERATORMULTI = registerMachine("generator_multi", () -> new reika.reactorcraft.blocks.multi.BlockGeneratorMulti(machineProperties().noOcclusion()));
-    public static final DeferredBlock<Block> FLYWHEELMULTI = registerMachine("flywheel_multi", () -> new reika.reactorcraft.blocks.multi.BlockFlywheelMulti(machineProperties().noOcclusion()));
-    public static final DeferredBlock<Block> SOLENOIDMULTI = registerMachine("solenoid_multi", () -> new reika.reactorcraft.blocks.multi.BlockSolenoidMulti(machineProperties().noOcclusion()));
-    public static final DeferredBlock<Block> TURBINEMULTI = registerMachine("turbine_multi", () -> new reika.reactorcraft.blocks.multi.BlockTurbineMulti(machineProperties().noOcclusion()));
+    public static final DeferredBlock<Block> GENERATORMULTI = registerMachine("generator_multi", () -> new BlockGeneratorMulti(machineProperties().noOcclusion()));
+    public static final DeferredBlock<Block> FLYWHEELMULTI = registerMachine("flywheel_multi", () -> new BlockFlywheelMulti(machineProperties().noOcclusion()));
+    // Solenoid casing split into six individually-named, individually-placeable blocks (was one
+    // block with a `part` metadata property). Validation/forming keys on block identity now; see
+    // BlockSolenoidCasing.layout(). SHELL is the legacy "core" 3x2x3 shell (renamed to avoid
+    // confusion with the central solenoid_magnet).
+    public static final DeferredBlock<Block> SOLENOID_FACE = registerMachine("solenoid_face", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.FACE));
+    public static final DeferredBlock<Block> SOLENOID_EDGE = registerMachine("solenoid_edge", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.EDGE));
+    public static final DeferredBlock<Block> SOLENOID_WALL = registerMachine("solenoid_wall", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.WALL));
+    public static final DeferredBlock<Block> SOLENOID_WALL_EDGE = registerMachine("solenoid_wall_edge", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.WALL_EDGE));
+    public static final DeferredBlock<Block> SOLENOID_SPOKE = registerMachine("solenoid_spoke", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.SPOKE));
+    public static final DeferredBlock<Block> SOLENOID_SHELL = registerMachine("solenoid_shell", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.SHELL));
+    public static final DeferredBlock<Block> TURBINEMULTI = registerMachine("turbine_multi", () -> new BlockTurbineMulti(machineProperties().noOcclusion()));
 
     // --- Reactor material block (6 variants incl. scrubber/graphite/lodestone; see MatBlocks) ---
-    public static final DeferredBlock<Block> MATS = register("reactor_mat", () -> new reika.reactorcraft.blocks.BlockReactorMat(machineProperties().randomTicks().noOcclusion()));
-    public static final DeferredBlock<Block> CORIUMFLOWING = register("corium", () -> new reika.reactorcraft.blocks.BlockCoriumFlowing(machineProperties().randomTicks().noOcclusion().strength(100, 500)));
+    public static final DeferredBlock<Block> MATS = register("reactor_mat", () -> new BlockReactorMat(machineProperties().randomTicks().noOcclusion()));
+    public static final DeferredBlock<Block> CORIUMFLOWING = register("corium", () -> new BlockCoriumFlowing(machineProperties().randomTicks().noOcclusion().strength(100, 500)));
 
     // --- Molten LiFBe thorium fuel pool (finite-fluid replacement; placed/consumed by the fuel dump) ---
-    public static final DeferredBlock<Block> THORIUM_FUEL = registerNoItem("thorium_fuel", () -> new reika.reactorcraft.blocks.BlockThoriumFuel(blockProperties().strength(100, 500).lightLevel(s -> 7).randomTicks().noOcclusion().noLootTable()));
+    public static final DeferredBlock<Block> THORIUM_FUEL = registerNoItem("thorium_fuel", () -> new BlockThoriumFuel(blockProperties().strength(100, 500).lightLevel(s -> 7).randomTicks().noOcclusion().noLootTable()));
 
     // --- Flowing steam (air-like, self-propagating toward turbines) ---
-    public static final DeferredBlock<Block> STEAM = registerNoItem("steam", () -> new reika.reactorcraft.blocks.BlockSteam(
+    public static final DeferredBlock<Block> STEAM = registerNoItem("steam", () -> new BlockSteam(
             blockProperties().strength(3600000.0F).noCollision().noLootTable().replaceable().noOcclusion()));
 
     // --- Reactor machine blocks (one DeferredBlock per ReactorTiles constant) ---
-    public static final DeferredBlock<Block> FUEL = registerMachine("fuel_rod", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> CONTROL = registerMachine("control_rod", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> COOLANT = registerMachine("coolant_cell", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> CPU = registerMachine("reactor_cpu", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> TURBINECORE = registerMachine("turbine_core", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> CONDENSER = registerMachine("condenser", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> STEAMLINE = registerMachine("steam_line", () -> new reika.reactorcraft.blocks.BlockReactorLine(machineProperties()));
-    public static final DeferredBlock<Block> FLUIDEXTRACTOR = registerMachine("heavy_pump", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> CENTRIFUGE = registerMachine("isotope_centrifuge", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> PROCESSOR = registerMachine("uranium_processor", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> WASTECONTAINER = registerMachine("waste_container", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> BOILER = registerMachine("reactor_boiler", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> GRATE = registerMachine("steam_grate", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> PUMP = registerMachine("reactor_pump", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> SYNTHESIZER = registerMachine("synthesizer", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> MAGNET = registerMachine("toroid_magnet", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> ELECTROLYZER = registerMachine("electrolyzer", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> TRITIZER = registerMachine("tritizer", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> BREEDER = registerMachine("breeder_core", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> SODIUMBOILER = registerMachine("sodium_boiler", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> EXCHANGER = registerMachine("heat_exchanger", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> STORAGE = registerMachine("waste_storage", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> INJECTOR = registerMachine("fusion_injector", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> HEATER = registerMachine("fusion_heater", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> GASPIPE = registerMachine("gas_duct", () -> new reika.reactorcraft.blocks.BlockReactorDuct(machineProperties()));
-    public static final DeferredBlock<Block> MAGNETPIPE = registerMachine("magnetic_pipe", () -> new reika.reactorcraft.blocks.BlockReactorDuct(machineProperties()));
-    public static final DeferredBlock<Block> ABSORBER = registerMachine("neutron_absorber", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> SOLENOID = registerMachine("solenoid_magnet", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> COLLECTOR = registerMachine("gas_collector", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> PEBBLEBED = registerMachine("pebble_bed", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> CO2HEATER = registerMachine("co2_heater", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> FLYWHEEL = registerMachine("turbine_flywheel", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> REFLECTOR = registerMachine("neutron_reflector", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> GENERATOR = registerMachine("reactor_generator", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> MARKER = registerMachine("fusion_marker", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> TURBINEMETER = registerMachine("turbine_meter", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> BIGTURBINE = registerMachine("high_pressure_turbine", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> DIFFUSER = registerMachine("steam_diffuser", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> THORIUM = registerMachine("thorium_core", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> WASTEPIPE = registerMachine("waste_pipe", () -> new reika.reactorcraft.blocks.BlockReactorDuct(machineProperties()));
-    public static final DeferredBlock<Block> FUELDUMP = registerMachine("fuel_dump", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> SOLAR = registerMachine("solar_exchanger", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> SOLARTOP = registerMachine("solar_top", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> MINITURBINE = registerMachine("mini_turbine", () -> new reika.reactorcraft.blocks.BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> HEATPIPE = registerMachine("heat_pipe", () -> new reika.reactorcraft.blocks.BlockReactorLine(machineProperties()));
-    public static final DeferredBlock<Block> WASTEDECAYER = registerMachine("waste_decayer", () -> new reika.reactorcraft.blocks.BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> FUEL = registerMachine("fuel_rod", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> CONTROL = registerMachine("control_rod", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> COOLANT = registerMachine("coolant_cell", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> CPU = registerMachine("reactor_cpu", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> TURBINECORE = registerMachine("turbine_core", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> CONDENSER = registerMachine("condenser", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> STEAMLINE = registerMachine("steam_line", () -> new BlockReactorLine(machineProperties()));
+    public static final DeferredBlock<Block> FLUIDEXTRACTOR = registerMachine("heavy_pump", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> CENTRIFUGE = registerMachine("isotope_centrifuge", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> PROCESSOR = registerMachine("uranium_processor", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> WASTECONTAINER = registerMachine("waste_container", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> BOILER = registerMachine("reactor_boiler", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> GRATE = registerMachine("steam_grate", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> PUMP = registerMachine("reactor_pump", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> SYNTHESIZER = registerMachine("synthesizer", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> MAGNET = registerMachine("toroid_magnet", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> ELECTROLYZER = registerMachine("electrolyzer", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> TRITIZER = registerMachine("tritizer", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> BREEDER = registerMachine("breeder_core", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> SODIUMBOILER = registerMachine("sodium_boiler", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> EXCHANGER = registerMachine("heat_exchanger", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> STORAGE = registerMachine("waste_storage", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> INJECTOR = registerMachine("fusion_injector", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> HEATER = registerMachine("fusion_heater", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> GASPIPE = registerMachine("gas_duct", () -> new BlockReactorDuct(machineProperties()));
+    public static final DeferredBlock<Block> MAGNETPIPE = registerMachine("magnetic_pipe", () -> new BlockReactorDuct(machineProperties()));
+    public static final DeferredBlock<Block> ABSORBER = registerMachine("neutron_absorber", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> SOLENOID = registerMachine("solenoid_magnet", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> COLLECTOR = registerMachine("gas_collector", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> PEBBLEBED = registerMachine("pebble_bed", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> CO2HEATER = registerMachine("co2_heater", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> FLYWHEEL = registerMachine("turbine_flywheel", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> REFLECTOR = registerMachine("neutron_reflector", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> GENERATOR = registerMachine("reactor_generator", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> MARKER = registerMachine("fusion_marker", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> TURBINEMETER = registerMachine("turbine_meter", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> BIGTURBINE = registerMachine("high_pressure_turbine", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> DIFFUSER = registerMachine("steam_diffuser", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> THORIUM = registerMachine("thorium_core", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> WASTEPIPE = registerMachine("waste_pipe", () -> new BlockReactorDuct(machineProperties()));
+    public static final DeferredBlock<Block> FUELDUMP = registerMachine("fuel_dump", () -> new BlockReactorMachine(machineProperties()));
+    public static final DeferredBlock<Block> SOLAR = registerMachine("solar_exchanger", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> SOLARTOP = registerMachine("solar_top", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> MINITURBINE = registerMachine("mini_turbine", () -> new BlockReactorMachineModelled(machineProperties()));
+    public static final DeferredBlock<Block> HEATPIPE = registerMachine("heat_pipe", () -> new BlockReactorLine(machineProperties()));
+    public static final DeferredBlock<Block> WASTEDECAYER = registerMachine("waste_decayer", () -> new BlockReactorMachine(machineProperties()));
 
     private ReactorBlocks() {}
 }
