@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/solenoid_face"
+    "model": "reactorcraft:block/magnetic_linkage"
   }
 }

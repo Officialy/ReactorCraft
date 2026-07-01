@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/solenoid_spoke"
+    "model": "reactorcraft:block/hysteresis_rod"
   }
 }

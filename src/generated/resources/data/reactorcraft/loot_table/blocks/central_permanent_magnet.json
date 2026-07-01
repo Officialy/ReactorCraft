@@ -10,11 +10,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "reactorcraft:solenoid_shell"
+          "name": "reactorcraft:central_permanent_magnet"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "reactorcraft:blocks/solenoid_shell"
+  "random_sequence": "reactorcraft:blocks/central_permanent_magnet"
 }

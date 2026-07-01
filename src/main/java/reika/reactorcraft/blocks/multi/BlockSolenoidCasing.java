@@ -85,12 +85,12 @@ public class BlockSolenoidCasing extends BlockReCMultiBlock implements Transduce
 	/** Maps registry part -> its concrete block. */
 	public static Block blockFor(SolenoidPart p) {
 		return switch (p) {
-			case FACE -> ReactorBlocks.SOLENOID_FACE.get();
-			case EDGE -> ReactorBlocks.SOLENOID_EDGE.get();
-			case WALL -> ReactorBlocks.SOLENOID_WALL.get();
-			case WALL_EDGE -> ReactorBlocks.SOLENOID_WALL_EDGE.get();
-			case SPOKE -> ReactorBlocks.SOLENOID_SPOKE.get();
-			case SHELL -> ReactorBlocks.SOLENOID_SHELL.get();
+			case FACE -> ReactorBlocks.FERROMAGNETIC_BASE.get();
+			case EDGE -> ReactorBlocks.MAGNETIC_LINKAGE.get();
+			case WALL -> ReactorBlocks.CENTRAL_MAGNET.get();
+			case WALL_EDGE -> ReactorBlocks.AUXILIARY_MAGNET.get();
+			case SPOKE -> ReactorBlocks.HYSTERESIS_ROD.get();
+			case SHELL -> ReactorBlocks.SOLENOID_HUB.get();
 		};
 	}
 

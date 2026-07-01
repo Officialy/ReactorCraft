@@ -10,11 +10,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "reactorcraft:solenoid_wall_edge"
+          "name": "reactorcraft:hysteresis_rod"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "reactorcraft:blocks/solenoid_wall_edge"
+  "random_sequence": "reactorcraft:blocks/hysteresis_rod"
 }

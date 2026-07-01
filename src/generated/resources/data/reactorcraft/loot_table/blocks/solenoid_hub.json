@@ -10,11 +10,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "reactorcraft:solenoid_edge"
+          "name": "reactorcraft:solenoid_hub"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "reactorcraft:blocks/solenoid_edge"
+  "random_sequence": "reactorcraft:blocks/solenoid_hub"
 }

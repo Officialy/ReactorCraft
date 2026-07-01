@@ -10,11 +10,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "reactorcraft:solenoid_wall"
+          "name": "reactorcraft:magnetic_linkage"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "reactorcraft:blocks/solenoid_wall"
+  "random_sequence": "reactorcraft:blocks/magnetic_linkage"
 }

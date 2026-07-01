@@ -10,11 +10,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "reactorcraft:solenoid_face"
+          "name": "reactorcraft:ferromagnetic_base"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "reactorcraft:blocks/solenoid_face"
+  "random_sequence": "reactorcraft:blocks/ferromagnetic_base"
 }

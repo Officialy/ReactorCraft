@@ -129,14 +129,14 @@ public final class ReactorBlocks {
     public static final DeferredBlock<Block> FLYWHEELMULTI = registerMachine("flywheel_multi", () -> new BlockFlywheelMulti(machineProperties().noOcclusion()));
     // Solenoid casing split into six individually-named, individually-placeable blocks (was one
     // block with a `part` metadata property). Validation/forming keys on block identity now; see
-    // BlockSolenoidCasing.layout(). SHELL is the legacy "core" 3x2x3 shell (renamed to avoid
-    // confusion with the central solenoid_magnet).
-    public static final DeferredBlock<Block> SOLENOID_FACE = registerMachine("solenoid_face", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.FACE));
-    public static final DeferredBlock<Block> SOLENOID_EDGE = registerMachine("solenoid_edge", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.EDGE));
-    public static final DeferredBlock<Block> SOLENOID_WALL = registerMachine("solenoid_wall", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.WALL));
-    public static final DeferredBlock<Block> SOLENOID_WALL_EDGE = registerMachine("solenoid_wall_edge", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.WALL_EDGE));
-    public static final DeferredBlock<Block> SOLENOID_SPOKE = registerMachine("solenoid_spoke", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.SPOKE));
-    public static final DeferredBlock<Block> SOLENOID_SHELL = registerMachine("solenoid_shell", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.SHELL));
+    // BlockSolenoidCasing.layout(). The SolenoidPart enum names the structural ROLE (face/edge/wall/
+    // spoke/shell); the registry id is the canonical in-game flavour name (from the 1.7.10 lang).
+    public static final DeferredBlock<Block> FERROMAGNETIC_BASE = registerMachine("ferromagnetic_base", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.FACE));
+    public static final DeferredBlock<Block> MAGNETIC_LINKAGE = registerMachine("magnetic_linkage", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.EDGE));
+    public static final DeferredBlock<Block> CENTRAL_MAGNET = registerMachine("central_permanent_magnet", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.WALL));
+    public static final DeferredBlock<Block> AUXILIARY_MAGNET = registerMachine("auxiliary_permanent_magnet", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.WALL_EDGE));
+    public static final DeferredBlock<Block> HYSTERESIS_ROD = registerMachine("hysteresis_rod", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.SPOKE));
+    public static final DeferredBlock<Block> SOLENOID_HUB = registerMachine("solenoid_hub", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.SHELL));
     public static final DeferredBlock<Block> TURBINEMULTI = registerMachine("turbine_multi", () -> new BlockTurbineMulti(machineProperties().noOcclusion()));
 
     // --- Reactor material block (6 variants incl. scrubber/graphite/lodestone; see MatBlocks) ---

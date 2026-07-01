@@ -60,10 +60,11 @@ public final class SolenoidDebugCommand {
             // The core (solenoid_magnet) is intentionally NOT placed -- the player places it.
 
             final int count = placed;
+            final String gapName = BlockSolenoidCasing.blockFor(gapSpec.part()).getName().getString();
             ctx.getSource().sendSuccess(() -> Component.literal(
                     "Solenoid casing placed (" + count + " blocks). Two blocks left for you:\n"
                             + " 1. Core (solenoid_magnet) at " + mid.getX() + ", " + mid.getY() + ", " + mid.getZ() + "\n"
-                            + " 2. Final " + gapSpec.part().getSerializedName() + " casing at "
+                            + " 2. Final " + gapName + " at "
                             + ringGap.getX() + ", " + ringGap.getY() + ", " + ringGap.getZ() + "\n"
                             + "Place the CORE first, then the casing block LAST -- the casing's placement "
                             + "triggers the assembly check."), true);

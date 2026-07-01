@@ -133,7 +133,7 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 		// Runs regardless of placement order (unlike the legacy "casing directly below" check), so
 		// placing the core last still forms the multiblock. Any casing instance carries the shared
 		// validation logic -- SHELL is arbitrary.
-		BlockSolenoidCasing b = (BlockSolenoidCasing) ReactorBlocks.SOLENOID_SHELL.get();
+		BlockSolenoidCasing b = (BlockSolenoidCasing) ReactorBlocks.SOLENOID_HUB.get();
 		b.tryAssemble(world, pos.getX(), pos.getY(), pos.getZ(), null);
 	}
 

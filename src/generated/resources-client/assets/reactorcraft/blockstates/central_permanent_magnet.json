@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "reactorcraft:block/central_permanent_magnet"
+    }
+  }
+}
