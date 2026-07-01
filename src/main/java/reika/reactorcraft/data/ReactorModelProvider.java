@@ -169,10 +169,17 @@ public class ReactorModelProvider extends ModelProvider {
                 modelOut.accept(partModelId, () -> columnModel(endTex, sideTex));
                 MultiVariant partVariant = new MultiVariant(WeightedList.of(new Variant(partModelId)));
 
-                PropertyDispatch<MultiVariant> dispatch = PropertyDispatch
-                        .initial(BlockMultiBlock.FORMED)
-                        .generate(formed -> formed ? solenoidFormedVariant : partVariant);
-                blockStateOut.accept(MultiVariantGenerator.dispatch(block).with(dispatch));
+                if (part == SolenoidPart.SHELL) {
+                    // The hub has no connectivity in the legacy table -- normal datagen dispatch.
+                    PropertyDispatch<MultiVariant> dispatch = PropertyDispatch
+                            .initial(BlockMultiBlock.FORMED)
+                            .generate(formed -> formed ? solenoidFormedVariant : partVariant);
+                    blockStateOut.accept(MultiVariantGenerator.dispatch(block).with(dispatch));
+                }
+                // Every other casing part is connectivity-textured in the legacy getTextureIndex table,
+                // so its blockstate ships as STATIC JSON using DragonAPI's dragonapi:connected_axis
+                // custom model (see scripts/gen_solenoid_ct_blockstates.py) -- datagen's Variant codec
+                // can't express custom model types. The part model above still backs the ITEM icon.
 
                 Item asItem = block.asItem();
                 if (asItem != Items.AIR) {
@@ -279,7 +286,9 @@ public class ReactorModelProvider extends ModelProvider {
             case WALL -> new String[]{"3", "11"};
             case WALL_EDGE -> new String[]{"3", "2"};
             case SPOKE -> new String[]{"9", "8"};
-            case SHELL -> new String[]{"6", "3"};
+            // Legacy meta 5: side>1 -> solenoid_6 (lateral), side<2 -> solenoid_3 (top/bottom).
+            // Was previously emitted swapped (end=6/side=3).
+            case SHELL -> new String[]{"3", "6"};
         };
     }
 
@@ -315,7 +324,11 @@ public class ReactorModelProvider extends ModelProvider {
     @Override
     protected Stream<? extends Holder<Block>> getKnownBlocks() {
         return BuiltInRegistries.BLOCK.listElements()
-                .filter(h -> h.getKey().identifier().getNamespace().equals(ReactorCraft.MODID));
+                .filter(h -> h.getKey().identifier().getNamespace().equals(ReactorCraft.MODID))
+                // Connectivity-textured solenoid casings ship STATIC blockstates (dragonapi:connected_axis
+                // custom model, not expressible in datagen) -- exclude them from the must-have-a-generated-
+                // blockstate validation. The hub (SHELL) keeps its datagen blockstate.
+                .filter(h -> !(h.value() instanceof BlockSolenoidCasing c) || c.getPart() == SolenoidPart.SHELL);
     }
 
     @Override

@@ -44,7 +44,18 @@ import reika.rotarycraft.api.interfaces.Transducerable;
  * layout method is the one source of truth shared by validation, forming, breaking and the
  * {@code /solenoiddebug} command.</p>
  */
-public class BlockSolenoidCasing extends BlockReCMultiBlock implements Transducerable, NeutronBlock {
+public class BlockSolenoidCasing extends BlockReCMultiBlock implements Transducerable, NeutronBlock, reika.dragonapi.interfaces.block.ConnectedModelBlock {
+
+	/**
+	 * Connected-texture rule for the casing's {@code dragonapi:connected_axis} blockstate models:
+	 * legacy {@code getTextureIndex} tested {@code world.getBlock(..) == this} against the ONE
+	 * solenoid_multi block regardless of metadata, so in the split-block port any casing part counts
+	 * as connected (the central solenoid_magnet does not, faithfully to 1.7.10).
+	 */
+	@Override
+	public boolean connectsToCT(net.minecraft.world.level.block.state.BlockState self, net.minecraft.world.level.block.state.BlockState neighbor) {
+		return neighbor.getBlock() instanceof BlockSolenoidCasing;
+	}
 
 	/** The named casing parts (was BlockSolenoidMulti's metadata 0..5). */
 	public enum SolenoidPart implements StringRepresentable {

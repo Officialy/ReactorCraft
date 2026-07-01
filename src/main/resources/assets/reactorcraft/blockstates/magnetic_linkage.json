@@ -1,0 +1,15 @@
+{
+  "variants": {
+    "formed=false": {
+      "type": "dragonapi:connected_axis",
+      "x_run": "reactorcraft:block/multi/solenoid_0",
+      "z_run": "reactorcraft:block/multi/solenoid_1",
+      "isolated": "reactorcraft:block/multi/solenoid_3",
+      "side_connected": "reactorcraft:block/multi/solenoid_0",
+      "side_isolated": "reactorcraft:block/multi/solenoid_3"
+    },
+    "formed=true": {
+      "model": "reactorcraft:block/solenoid_formed"
+    }
+  }
+}
