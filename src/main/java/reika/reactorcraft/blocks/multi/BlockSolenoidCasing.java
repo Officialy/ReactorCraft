@@ -154,9 +154,18 @@ public class BlockSolenoidCasing extends BlockReCMultiBlock implements Transduce
 			}
 		}
 
-		// CORNERS (legacy checkCorners): the two -X/-Z outer corners at +/-1 Y.
-		map.put(new BlockPos(midX - 6, midY + 1, midZ - 6), new CasingSpec(SolenoidPart.EDGE, null));
-		map.put(new BlockPos(midX - 6, midY - 1, midZ - 6), new CasingSpec(SolenoidPart.EDGE, null));
+		// CORNER POSTS: a 3-tall stack (EDGE / WALL_EDGE / EDGE) at each of the four (+/-6, +/-6)
+		// diagonal corners, just beyond the diagonal spoke ends. NOTE the legacy validator
+		// (BlockSolenoidMulti.checkCorners) only checked TWO of these twelve blocks -- so it assembled
+		// with the corner posts largely absent. The authoritative structure (SolenoidStructure) places
+		// all four posts; we validate the full set so assembly requires the complete build.
+		for (int sx : new int[]{-6, 6}) {
+			for (int sz : new int[]{-6, 6}) {
+				map.put(new BlockPos(midX + sx, midY + 1, midZ + sz), new CasingSpec(SolenoidPart.EDGE, null));
+				map.put(new BlockPos(midX + sx, midY, midZ + sz), new CasingSpec(SolenoidPart.WALL_EDGE, null));
+				map.put(new BlockPos(midX + sx, midY - 1, midZ + sz), new CasingSpec(SolenoidPart.EDGE, null));
+			}
+		}
 
 		// The three ring layers (middle wall + lower/upper faces).
 		addRing(map, midX, midY, midZ, SolenoidPart.WALL, SolenoidPart.WALL_EDGE);
