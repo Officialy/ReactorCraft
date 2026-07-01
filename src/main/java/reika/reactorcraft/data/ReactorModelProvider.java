@@ -18,6 +18,7 @@ import net.minecraft.client.data.models.ModelProvider;
 import net.minecraft.client.data.models.MultiVariant;
 import net.minecraft.client.data.models.blockstates.BlockModelDefinitionGenerator;
 import net.minecraft.client.data.models.blockstates.MultiVariantGenerator;
+import net.minecraft.client.data.models.blockstates.PropertyDispatch;
 import net.minecraft.client.data.models.model.ItemModelUtils;
 import net.minecraft.client.data.models.model.ModelInstance;
 import net.minecraft.client.data.models.model.ModelLocationUtils;
@@ -34,6 +35,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 
+import reika.dragonapi.base.BlockMultiBlock;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.blocks.BlockReactorMachineModelled;
 import reika.reactorcraft.blocks.multi.BlockSolenoidCasing;
@@ -84,6 +86,13 @@ public class ReactorModelProvider extends ModelProvider {
         }
 
         Set<Item> blockItemsHandled = new HashSet<>();
+
+        // Assembled solenoid casings render invisible (legacy: formed meta swapped to solenoid_10, a
+        // fully-transparent sprite -- the completed solenoid hides its casing so the coil shows). One
+        // shared model for every casing block's FORMED=true state; emitted once to avoid a duplicate.
+        Identifier solenoidFormedModelId = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "block/solenoid_formed");
+        modelOut.accept(solenoidFormedModelId, () -> cubeAllModel("reactorcraft:block/multi/solenoid_10"));
+        MultiVariant solenoidFormedVariant = new MultiVariant(WeightedList.of(new Variant(solenoidFormedModelId)));
 
         for (var holder : ReactorBlocks.BLOCKS.getEntries()) {
             Block block = holder.get();
@@ -149,10 +158,8 @@ public class ReactorModelProvider extends ModelProvider {
                 // solenoid_0..11 per face + neighbour connectivity (a connected-textures scheme); we
                 // can't reproduce the neighbour-aware selection statically, but we give each part its
                 // representative top/bottom + side sprite (the non-connected default of that table).
-                // The block renders the same opaque cube whether FORMED or not -- the earlier
-                // FORMED->solenoid_10 swap made assembled casings vanish (solenoid_10 is a pure-glow
-                // texture, fully transparent, meant to be composited over the base, not used alone).
-                // The spinning coil (BER) is the assembly indicator instead.
+                // FORMED=false shows this opaque casing; FORMED=true swaps to the invisible
+                // solenoid_formed model so the assembled solenoid hides its casing (legacy behaviour).
                 SolenoidPart part = casing.getPart();
                 String name = BuiltInRegistries.BLOCK.getKey(block).getPath();
                 String[] tex = casingTex(part);
@@ -162,9 +169,10 @@ public class ReactorModelProvider extends ModelProvider {
                 modelOut.accept(partModelId, () -> columnModel(endTex, sideTex));
                 MultiVariant partVariant = new MultiVariant(WeightedList.of(new Variant(partModelId)));
 
-                // FORMED is a real block property (multiblock state) but doesn't change the model; a
-                // single variant covers every FORMED value.
-                blockStateOut.accept(MultiVariantGenerator.dispatch(block, partVariant));
+                PropertyDispatch<MultiVariant> dispatch = PropertyDispatch
+                        .initial(BlockMultiBlock.FORMED)
+                        .generate(formed -> formed ? solenoidFormedVariant : partVariant);
+                blockStateOut.accept(MultiVariantGenerator.dispatch(block).with(dispatch));
 
                 Item asItem = block.asItem();
                 if (asItem != Items.AIR) {
@@ -282,6 +290,16 @@ public class ReactorModelProvider extends ModelProvider {
         JsonObject tex = new JsonObject();
         tex.addProperty("end", endTex);
         tex.addProperty("side", sideTex);
+        root.add("textures", tex);
+        return root;
+    }
+
+    /** {@code cube_all} model JSON with the given sprite on every face. */
+    private static JsonObject cubeAllModel(String allTex) {
+        JsonObject root = new JsonObject();
+        root.addProperty("parent", "minecraft:block/cube_all");
+        JsonObject tex = new JsonObject();
+        tex.addProperty("all", allTex);
         root.add("textures", tex);
         return root;
     }

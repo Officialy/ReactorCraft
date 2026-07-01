@@ -68,6 +68,12 @@ public class BlockSolenoidCasing extends BlockReCMultiBlock implements Transduce
 	private static final int SCAN_H = 9;
 	private static final int SCAN_V = 2;
 
+	// Flags for toggling the FORMED flag: normal update + client sync, but SKIP onPlace. Without
+	// UPDATE_SKIP_ON_PLACE, onPlace fires on every setBlockState (not just block changes), so setting
+	// FORMED would re-run the assembly check -- and during a break the block being removed is still
+	// present, so the structure re-validates and instantly re-forms, leaving casings stuck invisible.
+	private static final int FORMED_FLAGS = Block.UPDATE_ALL | Block.UPDATE_SKIP_ON_PLACE;
+
 	private final SolenoidPart part;
 
 	public BlockSolenoidCasing(BlockBehaviour.Properties properties, SolenoidPart part) {
@@ -209,7 +215,7 @@ public class BlockSolenoidCasing extends BlockReCMultiBlock implements Transduce
 		for (BlockPos p : layout(core).keySet()) {
 			BlockState cs = world.getBlockState(p);
 			if (cs.getBlock() instanceof BlockSolenoidCasing && !cs.getValue(FORMED))
-				world.setBlock(p, cs.setValue(FORMED, true), 3);
+				world.setBlock(p, cs.setValue(FORMED, true), FORMED_FLAGS);
 		}
 		if (world.getBlockEntity(core) instanceof TileEntitySolenoidMagnet te)
 			te.setHasMultiBlock(true);
@@ -223,7 +229,7 @@ public class BlockSolenoidCasing extends BlockReCMultiBlock implements Transduce
 		for (BlockPos p : layout(core).keySet()) {
 			BlockState cs = world.getBlockState(p);
 			if (cs.getBlock() instanceof BlockSolenoidCasing && cs.getValue(FORMED))
-				world.setBlock(p, cs.setValue(FORMED, false), 3);
+				world.setBlock(p, cs.setValue(FORMED, false), FORMED_FLAGS);
 		}
 		if (world.getBlockEntity(core) instanceof TileEntitySolenoidMagnet te)
 			te.setHasMultiBlock(false);
