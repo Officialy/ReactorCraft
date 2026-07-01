@@ -31,8 +31,12 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import org.joml.Matrix4f;
 
+import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.base.ReactorTERenderer;
 import reika.reactorcraft.base.TileEntityReactorPiping;
+import reika.reactorcraft.tileentities.TileEntityGasDuct;
+import reika.reactorcraft.tileentities.TileEntityMagneticPipe;
+import reika.reactorcraft.tileentities.waste.TileEntityWastePipe;
 
 /**
  * 26.2 BER for the ReactorCraft fluid ducts (gas duct, magnetic pipe, waste pipe). Port of the legacy
@@ -70,10 +74,10 @@ public class ReactorPipeRenderer extends ReactorTERenderer<TileEntityReactorPipi
         Fluid fluid = tile.getFluidType();
         boolean hasFluid = fluid != null && fluid != Fluids.EMPTY && tile.getFluidLevel() > 0;
 
-        // Full pipe → translucent fluid tube; empty pipe → neutral grey shell tube so it's still
-        // visible when placed before fluid flows. One geometry path either way.
-        TextureAtlasSprite sprite = hasFluid ? stillSpriteFor(fluid) : shellSprite();
-        int tint = hasFluid ? fluidTint(fluid) : 0xFFB0B0B0;
+        // Full pipe → translucent fluid tube; empty pipe → the duct's own shell texture (untinted --
+        // it already carries its real colour, unlike the fluid sprites which need a tint).
+        TextureAtlasSprite sprite = hasFluid ? stillSpriteFor(fluid) : shellSprite(tile);
+        int tint = hasFluid ? fluidTint(fluid) : 0xFFFFFFFF;
 
         int light = state.lightCoords;
         int overlay = OverlayTexture.NO_OVERLAY;
@@ -172,9 +176,25 @@ public class ReactorPipeRenderer extends ReactorTERenderer<TileEntityReactorPipi
         return sprites.get(new SpriteId(TextureAtlas.LOCATION_BLOCKS, stillTextureId(fluid)));
     }
 
-    /** Neutral metal sprite for an empty pipe's shell. */
-    private TextureAtlasSprite shellSprite() {
-        return sprites.get(new SpriteId(TextureAtlas.LOCATION_BLOCKS, Identifier.withDefaultNamespace("block/iron_block")));
+    /**
+     * Empty-pipe shell texture, per duct type -- matches the legacy {@code getBlockIcon()} overrides
+     * on each TE (gas duct = orange terracotta, magnetic pipe = gold/glowgold when charged, waste
+     * pipe = concrete). All three previously fell through to a single hardcoded iron-block texture.
+     */
+    private TextureAtlasSprite shellSprite(TileEntityReactorPiping tile) {
+        Identifier id;
+        if (tile instanceof TileEntityMagneticPipe magnet) {
+            id = magnet.getCharge() > 0
+                    ? Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "block/glowgold")
+                    : Identifier.withDefaultNamespace("block/gold_block");
+        } else if (tile instanceof TileEntityGasDuct) {
+            id = Identifier.withDefaultNamespace("block/orange_terracotta");
+        } else if (tile instanceof TileEntityWastePipe) {
+            id = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "block/mat/concrete");
+        } else {
+            id = Identifier.withDefaultNamespace("block/iron_block");
+        }
+        return sprites.get(new SpriteId(TextureAtlas.LOCATION_BLOCKS, id));
     }
 
     private static Identifier stillTextureId(Fluid fluid) {
