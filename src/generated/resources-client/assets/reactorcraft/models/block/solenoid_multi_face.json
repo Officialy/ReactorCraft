@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "reactorcraft:block/multi/solenoid_3",
+    "side": "reactorcraft:block/multi/solenoid_3"
+  }
+}

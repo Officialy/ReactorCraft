@@ -49,20 +49,35 @@ public final class SolenoidDebugCommand {
             BlockPos mid = player.blockPosition().offset(0, 5, 0);
 
             List<Placement> placements = buildPlacements(mid);
-            Placement skip = placements.remove(placements.size() - 1);
 
-            level.setBlock(mid, ReactorBlocks.SOLENOID.get().defaultBlockState(), 3);
+            // Skip ONE casing block of the outer wall ring so the player can place it themselves.
+            // Deliberately the front-centre WALL block at eye level (midZ+8) -- an obvious gap in the
+            // ring rather than a hard-to-spot corner. Its onPlace is what triggers the assembly scan,
+            // so it must be the LAST block placed (with the core already present).
+            BlockPos ringGap = new BlockPos(mid.getX(), mid.getY(), mid.getZ() + 8);
+            Placement skip = null;
+            for (int i = 0; i < placements.size(); i++) {
+                if (placements.get(i).pos().equals(ringGap)) {
+                    skip = placements.remove(i);
+                    break;
+                }
+            }
+
+            // Do NOT place the core -- the player places it themselves (per request). Everything else
+            // except the one ring gap is placed for them.
             BlockState casingDefault = ReactorBlocks.SOLENOIDMULTI.get().defaultBlockState();
             for (Placement p : placements) {
                 level.setBlock(p.pos(), casingDefault.setValue(BlockSolenoidMulti.PART, p.part()), 3);
             }
 
+            final Placement gap = skip;
             ctx.getSource().sendSuccess(() -> Component.literal(
-                    "Solenoid multiblock placed (" + placements.size() + " casing blocks, core at "
-                            + mid.getX() + ", " + mid.getY() + ", " + mid.getZ() + "). Place the final "
-                            + skip.part().getSerializedName() + " block yourself at "
-                            + skip.pos().getX() + ", " + skip.pos().getY() + ", " + skip.pos().getZ()
-                            + " to complete it."), true);
+                    "Solenoid casing placed (" + placements.size() + " blocks). Two blocks left for you:\n"
+                            + " 1. Core (solenoid_magnet) at " + mid.getX() + ", " + mid.getY() + ", " + mid.getZ() + "\n"
+                            + " 2. Final " + gap.part().getSerializedName() + " casing at "
+                            + gap.pos().getX() + ", " + gap.pos().getY() + ", " + gap.pos().getZ() + "\n"
+                            + "Place the CORE first, then the casing block LAST -- the casing's placement "
+                            + "triggers the assembly check."), true);
             return 1;
         }));
     }

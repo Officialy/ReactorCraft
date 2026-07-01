@@ -1,6 +1,7 @@
 package reika.reactorcraft.data;
 
 import java.lang.reflect.Field;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -17,6 +18,7 @@ import net.minecraft.client.data.models.ModelProvider;
 import net.minecraft.client.data.models.MultiVariant;
 import net.minecraft.client.data.models.blockstates.BlockModelDefinitionGenerator;
 import net.minecraft.client.data.models.blockstates.MultiVariantGenerator;
+import net.minecraft.client.data.models.blockstates.PropertyDispatch;
 import net.minecraft.client.data.models.model.ItemModelUtils;
 import net.minecraft.client.data.models.model.ModelInstance;
 import net.minecraft.client.data.models.model.ModelLocationUtils;
@@ -33,8 +35,11 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 
+import reika.dragonapi.base.BlockMultiBlock;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.blocks.BlockReactorMachineModelled;
+import reika.reactorcraft.blocks.multi.BlockSolenoidMulti;
+import reika.reactorcraft.blocks.multi.BlockSolenoidMulti.SolenoidPart;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorItems;
 
@@ -141,6 +146,55 @@ public class ReactorModelProvider extends ModelProvider {
                 continue;
             }
 
+            if (block instanceof BlockSolenoidMulti) {
+                // The solenoid casing has 6 named PART variants plus a FORMED flag. Legacy
+                // BlockSolenoidMulti.getTextureIndex picked one of solenoid_0..11 per face + neighbour
+                // connectivity (a connected-textures scheme); we can't reproduce the neighbour-aware
+                // selection in a static blockstate, but we CAN give each part its representative
+                // top/bottom + side sprite (the non-connected default of the legacy table) so casings
+                // read as the real solenoid art instead of a plain steel cube. FORMED=true swaps every
+                // part to solenoid_10 (the legacy "assembled" sprite) -- useful live feedback that the
+                // multiblock actually locked in.
+                Map<SolenoidPart, MultiVariant> partVariants = new EnumMap<>(SolenoidPart.class);
+                // { end (top/bottom), side } sprite index per part -- from the legacy getTextureIndex
+                // side<2 vs side>1 branches, non-connected case.
+                record Tex(String end, String side) {}
+                Map<SolenoidPart, Tex> texByPart = new EnumMap<>(SolenoidPart.class);
+                texByPart.put(SolenoidPart.FACE, new Tex("3", "3"));
+                texByPart.put(SolenoidPart.EDGE, new Tex("3", "3"));
+                texByPart.put(SolenoidPart.WALL, new Tex("3", "11"));
+                texByPart.put(SolenoidPart.WALL_EDGE, new Tex("3", "2"));
+                texByPart.put(SolenoidPart.SPOKE, new Tex("8", "9"));
+                texByPart.put(SolenoidPart.CORE, new Tex("6", "3"));
+
+                for (Map.Entry<SolenoidPart, Tex> e : texByPart.entrySet()) {
+                    Identifier partModelId = Identifier.fromNamespaceAndPath(ReactorCraft.MODID,
+                            "block/solenoid_multi_" + e.getKey().getSerializedName());
+                    String endTex = "reactorcraft:block/multi/solenoid_" + e.getValue().end();
+                    String sideTex = "reactorcraft:block/multi/solenoid_" + e.getValue().side();
+                    modelOut.accept(partModelId, () -> columnModel(endTex, sideTex));
+                    partVariants.put(e.getKey(), new MultiVariant(WeightedList.of(new Variant(partModelId))));
+                }
+
+                Identifier formedModelId = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "block/solenoid_multi_formed");
+                modelOut.accept(formedModelId, () -> cubeAllModel("reactorcraft:block/multi/solenoid_10"));
+                MultiVariant formedVariant = new MultiVariant(WeightedList.of(new Variant(formedModelId)));
+
+                PropertyDispatch<MultiVariant> dispatch = PropertyDispatch
+                        .initial(BlockSolenoidMulti.PART, BlockMultiBlock.FORMED)
+                        .generate((part, formed) -> formed ? formedVariant : partVariants.get(part));
+                blockStateOut.accept(MultiVariantGenerator.dispatch(block).with(dispatch));
+
+                Item asItem = block.asItem();
+                if (asItem != Items.AIR) {
+                    // Held/inventory icon = the FACE part model (the block's default state).
+                    itemModelOut.accept(asItem, ItemModelUtils.plainModel(
+                            Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "block/solenoid_multi_face")));
+                    blockItemsHandled.add(asItem);
+                }
+                continue;
+            }
+
             Identifier blockModelId = ModelTemplates.CUBE_ALL.create(block, TextureMapping.cube(blockTexture(block)), modelOut);
             MultiVariant single = new MultiVariant(WeightedList.of(new Variant(blockModelId)));
             blockStateOut.accept(MultiVariantGenerator.dispatch(block, single));
@@ -224,6 +278,27 @@ public class ReactorModelProvider extends ModelProvider {
                 path = "block/steel";
         }
         return new Material(Identifier.fromNamespaceAndPath(ReactorCraft.MODID, path));
+    }
+
+    /** {@code cube_column} model JSON with the given end (top/bottom) and side sprites. */
+    private static JsonObject columnModel(String endTex, String sideTex) {
+        JsonObject root = new JsonObject();
+        root.addProperty("parent", "minecraft:block/cube_column");
+        JsonObject tex = new JsonObject();
+        tex.addProperty("end", endTex);
+        tex.addProperty("side", sideTex);
+        root.add("textures", tex);
+        return root;
+    }
+
+    /** {@code cube_all} model JSON with the given sprite on every face. */
+    private static JsonObject cubeAllModel(String allTex) {
+        JsonObject root = new JsonObject();
+        root.addProperty("parent", "minecraft:block/cube_all");
+        JsonObject tex = new JsonObject();
+        tex.addProperty("all", allTex);
+        root.add("textures", tex);
+        return root;
     }
 
     private static void flatItem(Item item, BiConsumer<Identifier, ModelInstance> modelOut, ItemModelOutput itemModelOut) {
