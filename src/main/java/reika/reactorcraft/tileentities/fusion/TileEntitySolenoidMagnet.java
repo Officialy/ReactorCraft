@@ -146,7 +146,9 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 			phi = 0;
 	}
 
-	private float getMaxRenderSpeed() {
+	// Public: RenderSolenoid derives the client-side spin angle from this (the BE's own phi field
+	// never advances client-side -- see RenderSolenoid.spinAngle for why).
+	public float getMaxRenderSpeed() {
 		if (omega > MAX_SPEED)
 			return 512;
 		else if (omega >= 4096)
