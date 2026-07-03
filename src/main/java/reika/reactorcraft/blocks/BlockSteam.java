@@ -113,7 +113,7 @@ public class BlockSteam extends Block {
 		BlockState aboveState = world.getBlockState(above);
 
 		// A scrubber block directly above absorbs the steam.
-		if (aboveState.getBlock() == ReactorBlocks.MATS.get() && aboveState.getValue(BlockReactorMat.VARIANT) == MatBlocks.SCRUBBER) {
+		if (aboveState.getBlock() == ReactorBlocks.matBlock(MatBlocks.SCRUBBER)) {
 			world.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
 			return;
 		}

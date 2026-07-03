@@ -16,24 +16,30 @@ import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * The variants of the reactor "material" block ({@code ReactorBlocks.MATS} / BlockReactorMat).
- * Modelled as an {@code EnumProperty<MatBlocks>} on the block; none of them carry a block entity.
+ * The reactor "material" blocks (BlockReactorMat); each is its own registered block, keyed here.
  */
 public enum MatBlocks implements StringRepresentable {
 
-	CONCRETE("block.concrete"),
-	SLAG("block.slag"),
-	CALCITE("block.calcite"),
-	SCRUBBER("block.scrubber"),
-	LODESTONE("block.lodestone"),
-	GRAPHITE("block.graphite");
+	CONCRETE("block.concrete", "concrete"),
+	SLAG("block.slag", "slag"),
+	CALCITE("block.calcite", "calcite_block"),
+	SCRUBBER("block.scrubber", "scrubber"),
+	LODESTONE("block.lodestone", "lodestone_block"),
+	GRAPHITE("block.graphite", "graphite_block");
 
 	private final String translationKey;
+	private final String registryName;
 
 	public static final MatBlocks[] matList = values();
 
-	private MatBlocks(String n) {
+	private MatBlocks(String n, String reg) {
 		translationKey = n;
+		registryName = reg;
+	}
+
+	/** Block registry id. Calcite/lodestone/graphite take a {@code _block} suffix to avoid colliding with the same-named items. */
+	public String getRegistryName() {
+		return registryName;
 	}
 
 	public String getName() {
@@ -49,9 +55,7 @@ public enum MatBlocks implements StringRepresentable {
 	}
 
 	public ItemStack getStackOf(int size) {
-		// VARIANT-ITEM-PORT: the 6 mats currently share one block-item; the variant is set on the
-		// placed blockstate. Split into per-variant items / data components when the item layer lands.
-		return new ItemStack(ReactorBlocks.MATS.get(), size);
+		return new ItemStack(ReactorBlocks.matBlock(this), size);
 	}
 
 	@Override

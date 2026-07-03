@@ -9,9 +9,6 @@
  ******************************************************************************/
 package reika.reactorcraft.registry;
 
-import java.util.EnumMap;
-import java.util.function.Supplier;
-
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.block.Block;
@@ -19,21 +16,16 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
-
 import reika.reactorcraft.ReactorCraft;
-import reika.reactorcraft.blocks.BlockCoriumFlowing;
-import reika.reactorcraft.blocks.BlockReactorDuct;
-import reika.reactorcraft.blocks.BlockReactorLine;
-import reika.reactorcraft.blocks.BlockReactorMachine;
-import reika.reactorcraft.blocks.BlockReactorMachineModelled;
-import reika.reactorcraft.blocks.BlockReactorMat;
-import reika.reactorcraft.blocks.BlockSteam;
-import reika.reactorcraft.blocks.BlockThoriumFuel;
+import reika.reactorcraft.blocks.*;
 import reika.reactorcraft.blocks.multi.BlockFlywheelMulti;
 import reika.reactorcraft.blocks.multi.BlockGeneratorMulti;
 import reika.reactorcraft.blocks.multi.BlockSolenoidCasing;
 import reika.reactorcraft.blocks.multi.BlockSolenoidCasing.SolenoidPart;
 import reika.reactorcraft.blocks.multi.BlockTurbineMulti;
+
+import java.util.EnumMap;
+import java.util.function.Supplier;
 
 /**
  * 26.2 block registry for the ore→fuel slice, replacing the 1.7.10 metadata block enum
@@ -74,10 +66,6 @@ public final class ReactorBlocks {
         return new Block(blockProperties().strength(3.0F, 5.0F).requiresCorrectToolForDrops().sound(SoundType.STONE));
     }
 
-    private static Block storage() {
-        return new Block(blockProperties().strength(5.0F, 6.0F).requiresCorrectToolForDrops().sound(SoundType.METAL));
-    }
-
     public static final DeferredBlock<Block> PITCHBLENDE_ORE = register("pitchblende_ore", ReactorBlocks::ore);
     public static final DeferredBlock<Block> END_PITCHBLENDE_ORE = register("end_pitchblende_ore", ReactorBlocks::ore);
     public static final DeferredBlock<Block> CADMIUM_ORE = register("cadmium_ore", ReactorBlocks::ore);
@@ -94,11 +82,6 @@ public final class ReactorBlocks {
             FLUORITE_ORE.put(f, register(f.getOreBlockName(), ReactorBlocks::ore));
         }
     }
-
-    // Storage / decorative material blocks referenced by the crafting recipes.
-    public static final DeferredBlock<Block> GRAPHITE_BLOCK = register("graphite_block", ReactorBlocks::storage);
-    public static final DeferredBlock<Block> CALCITE_BLOCK = register("calcite_block", ReactorBlocks::storage);
-    public static final DeferredBlock<Block> LODESTONE_BLOCK = register("lodestone_block", ReactorBlocks::storage);
 
     public static Block fluoriteOre(FluoriteTypes f) {
         return FLUORITE_ORE.get(f).get();
@@ -139,8 +122,18 @@ public final class ReactorBlocks {
     public static final DeferredBlock<Block> SOLENOID_HUB = registerMachine("solenoid_hub", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.SHELL));
     public static final DeferredBlock<Block> TURBINEMULTI = registerMachine("turbine_multi", () -> new BlockTurbineMulti(machineProperties().noOcclusion()));
 
-    // --- Reactor material block (6 variants incl. scrubber/graphite/lodestone; see MatBlocks) ---
-    public static final DeferredBlock<Block> MATS = register("reactor_mat", () -> new BlockReactorMat(machineProperties().randomTicks().noOcclusion()));
+    // --- Reactor material blocks (scrubber/graphite/lodestone/etc.; see MatBlocks) ---
+    public static final EnumMap<MatBlocks, DeferredBlock<Block>> MAT_BLOCKS = new EnumMap<>(MatBlocks.class);
+    static {
+        for (MatBlocks m : MatBlocks.matList) {
+            MAT_BLOCKS.put(m, register(m.getRegistryName(), () -> new BlockReactorMat(machineProperties().randomTicks().noOcclusion(), m)));
+        }
+    }
+
+    public static Block matBlock(MatBlocks m) {
+        return MAT_BLOCKS.get(m).get();
+    }
+
     public static final DeferredBlock<Block> CORIUMFLOWING = register("corium", () -> new BlockCoriumFlowing(machineProperties().randomTicks().noOcclusion().strength(100, 500)));
 
     // --- Molten LiFBe thorium fuel pool (finite-fluid replacement; placed/consumed by the fuel dump) ---

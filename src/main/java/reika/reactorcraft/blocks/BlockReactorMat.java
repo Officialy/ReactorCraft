@@ -21,8 +21,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.redstone.Orientation;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -41,34 +39,32 @@ import reika.reactorcraft.registry.ReactorOptions;
 
 public class BlockReactorMat extends Block implements NeutronBlock {
 
-	public static final EnumProperty<MatBlocks> VARIANT = EnumProperty.create("variant", MatBlocks.class);
+	private final MatBlocks type;
 
-	public BlockReactorMat(BlockBehaviour.Properties properties) {
+	public BlockReactorMat(BlockBehaviour.Properties properties, MatBlocks type) {
 		super(properties);
-		this.registerDefaultState(this.stateDefinition.any().setValue(VARIANT, MatBlocks.CONCRETE));
+		this.type = type;
 	}
 
-	@Override
-	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-		builder.add(VARIANT);
+	public MatBlocks getType() {
+		return type;
 	}
 
 	@Override
 	protected void randomTick(BlockState state, ServerLevel world, BlockPos pos, RandomSource rand) {
-		MatBlocks m = state.getValue(VARIANT);
-		if (m == MatBlocks.SLAG) {
+		if (type == MatBlocks.SLAG) {
 			if (ReikaRandomHelper.doWithChance(7.5)) {
 				RadiationEffects.instance.contaminateArea(world, pos.getX(), pos.getY(), pos.getZ(), 4, 0.5F, 0.05, false, RadiationIntensity.HIGHLEVEL);
 			}
 		}
-		else if (m == MatBlocks.LODESTONE) {
+		else if (type == MatBlocks.LODESTONE) {
 			this.doLodestoneTick(world, pos, false);
 		}
 	}
 
 	@Override
 	protected void neighborChanged(BlockState state, Level world, BlockPos pos, Block block, @Nullable Orientation orientation, boolean movedByPiston) {
-		if (state.getValue(VARIANT) == MatBlocks.LODESTONE)
+		if (type == MatBlocks.LODESTONE)
 			this.doLodestoneTick(world, pos, true);
 	}
 
@@ -88,25 +84,25 @@ public class BlockReactorMat extends Block implements NeutronBlock {
 
 	@Override
 	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
-		if (world.getBlockState(pos).getValue(VARIANT) == MatBlocks.GRAPHITE)
+		if (type == MatBlocks.GRAPHITE)
 			e.moderate();
 		return false;
 	}
 
 	@Override
 	public int getFlammability(BlockState state, BlockGetter world, BlockPos pos, Direction face) {
-		return state.getValue(VARIANT) == MatBlocks.GRAPHITE ? 70 : 0;
+		return type == MatBlocks.GRAPHITE ? 70 : 0;
 	}
 
 	@Override
 	public int getFireSpreadSpeed(BlockState state, BlockGetter world, BlockPos pos, Direction face) {
-		return state.getValue(VARIANT) == MatBlocks.GRAPHITE ? 7 : 0;
+		return type == MatBlocks.GRAPHITE ? 7 : 0;
 	}
 
 	@Override
 	protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		// The scrubber is a permeable mesh — no collision (steam passes up through it).
-		return state.getValue(VARIANT) == MatBlocks.SCRUBBER ? Shapes.empty() : Shapes.block();
+		return type == MatBlocks.SCRUBBER ? Shapes.empty() : Shapes.block();
 	}
 
 }

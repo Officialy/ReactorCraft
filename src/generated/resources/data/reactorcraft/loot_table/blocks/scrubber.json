@@ -10,11 +10,11 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "reactorcraft:reactor_mat"
+          "name": "reactorcraft:scrubber"
         }
       ],
       "rolls": 1.0
     }
   ],
-  "random_sequence": "reactorcraft:blocks/reactor_mat"
+  "random_sequence": "reactorcraft:blocks/scrubber"
 }

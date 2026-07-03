@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "reactorcraft:block/reactor_mat"
+    "model": "reactorcraft:block/concrete"
   }
 }
