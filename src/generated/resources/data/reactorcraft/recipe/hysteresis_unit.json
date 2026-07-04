@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "S": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "ISI"
+  ],
+  "result": {
+    "id": "reactorcraft:hysteresis_unit"
+  }
+}

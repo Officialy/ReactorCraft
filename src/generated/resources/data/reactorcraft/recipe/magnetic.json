@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "S": "reactorcraft:ferromagnetic_ingot"
+  },
+  "pattern": [
+    "SSS"
+  ],
+  "result": {
+    "count": 3,
+    "id": "reactorcraft:magnetic"
+  }
+}

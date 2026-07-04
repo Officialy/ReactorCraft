@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:clay",
+    "minecraft:sand",
+    "minecraft:gravel",
+    "minecraft:water_bucket"
+  ],
+  "result": {
+    "count": 4,
+    "id": "reactorcraft:concrete"
+  }
+}

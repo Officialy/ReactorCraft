@@ -23,6 +23,8 @@ import net.minecraft.world.level.ItemLike;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.registry.CraftingItems;
 import reika.reactorcraft.registry.FluoriteTypes;
+import reika.reactorcraft.registry.MatBlocks;
+import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorItems;
 import reika.reactorcraft.registry.ReactorOreType;
 import reika.rotarycraft.auxiliary.recipemanagers.FrictionHeaterRecipe;
@@ -88,7 +90,7 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
             }
             for (FluoriteTypes f : FluoriteTypes.colorList) {
                 smelt("smelt_" + f.getOreBlockName(),
-                        reika.reactorcraft.registry.ReactorBlocks.fluoriteOre(f).asItem(),
+                        ReactorBlocks.fluoriteOre(f).asItem(),
                         ReactorItems.fluorite(f), 0.4F);
             }
             smelt("smelt_calcite_to_lime", ReactorItems.CALCITE.get(), ReactorItems.LIME.get(), 0.2F);
@@ -140,6 +142,94 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
                     .define('d', ReactorItems.DEPLETED_DUST.get())
                     .pattern("dd").pattern("dd")
                     .unlockedBy("has_depleted_dust", has(ReactorItems.DEPLETED_DUST.get()))
+                    .save(out);
+
+            matAndComponentCrafting();
+        }
+
+        // Material-block compaction + the crafting-table component recipes from the original
+        // ReactorRecipes.addCrafting/addMisc. Machine-block recipes and the pipe-gated scrubber/coolant
+        // recipes are deferred (see docs/issues/datagen.md).
+        private void matAndComponentCrafting() {
+            // Concrete: clay + sand + gravel + water bucket -> 4.
+            shapeless(RecipeCategory.MISC, ReactorBlocks.matBlock(MatBlocks.CONCRETE), 4)
+                    .requires(Items.CLAY).requires(Items.SAND).requires(Items.GRAVEL).requires(Items.WATER_BUCKET)
+                    .unlockedBy("has_clay", has(Items.CLAY))
+                    .save(out);
+
+            blockCompaction("calcite_block", ReactorBlocks.matBlock(MatBlocks.CALCITE), ReactorItems.CALCITE.get());
+            blockCompaction("graphite_block", ReactorBlocks.matBlock(MatBlocks.GRAPHITE), ReactorItems.crafting(CraftingItems.GRAPHITE));
+            blockCompaction("lodestone_block", ReactorBlocks.matBlock(MatBlocks.LODESTONE), ReactorItems.LODESTONE.get());
+
+            // Ferromagnetic plate -> magnetic (x3).
+            shaped(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.MAGNETIC), 3)
+                    .define('S', ReactorItems.crafting(CraftingItems.FERROINGOT))
+                    .pattern("SSS")
+                    .unlockedBy("has_ferro", has(ReactorItems.crafting(CraftingItems.FERROINGOT)))
+                    .save(out);
+
+            ringRecipe(CraftingItems.MAGNETCORE, CraftingItems.MAGNETIC);
+            ringRecipe(CraftingItems.HYSTERESISRING, CraftingItems.HYSTERESIS);
+
+            shaped(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.WIRE), 2)
+                    .define('G', Items.GOLD_INGOT)
+                    .pattern("  G").pattern(" G ").pattern("G  ")
+                    .unlockedBy("has_gold", has(Items.GOLD_INGOT))
+                    .save(out);
+
+            shaped(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.HYSTERESIS))
+                    .define('I', Items.IRON_INGOT)
+                    .define('S', RotaryItems.HSLA_STEEL_INGOT.get())
+                    .pattern("ISI")
+                    .unlockedBy("has_steel", has(RotaryItems.HSLA_STEEL_INGOT.get()))
+                    .save(out);
+
+            shaped(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.FABRIC), 3)
+                    .define('D', ReactorItems.DEPLETED_FUEL.get())
+                    .define('L', Items.LEATHER)
+                    .pattern("LDL").pattern("LDL").pattern("LDL")
+                    .unlockedBy("has_depleted", has(ReactorItems.DEPLETED_FUEL.get()))
+                    .save(out);
+            shaped(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.FABRIC))
+                    .define('D', ReactorItems.DEPLETED_PELLET.get())
+                    .define('L', Items.LEATHER)
+                    .pattern("LDL").pattern("LDL").pattern("LDL")
+                    .unlockedBy("has_depleted_pellet", has(ReactorItems.DEPLETED_PELLET.get()))
+                    .save(out, ReactorCraft.MODID + ":radiation_fabric_from_pellet");
+
+            shapeless(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.CARBIDEFLAKES))
+                    .requires(RotaryItems.COAL_DUST.get())
+                    .requires(RotaryItems.TUNGSTEN_FLAKES.get())
+                    .unlockedBy("has_tungsten_flakes", has(RotaryItems.TUNGSTEN_FLAKES.get()))
+                    .save(out);
+
+            shaped(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.TURBCORE))
+                    .define('C', ReactorItems.crafting(CraftingItems.CARBIDE))
+                    .define('T', RotaryItems.COMPOUND_TURBINE.get())
+                    .pattern("CCC").pattern("CTC").pattern("CCC")
+                    .unlockedBy("has_carbide", has(ReactorItems.crafting(CraftingItems.CARBIDE)))
+                    .save(out);
+        }
+
+        // 3x3 item -> block, plus the reverse block -> 9 items.
+        private void blockCompaction(String id, ItemLike block, ItemLike item) {
+            shaped(RecipeCategory.MISC, block)
+                    .define('C', item)
+                    .pattern("CCC").pattern("CCC").pattern("CCC")
+                    .unlockedBy("has_material", has(item))
+                    .save(out);
+            shapeless(RecipeCategory.MISC, item, 9)
+                    .requires(block)
+                    .unlockedBy("has_block", has(block))
+                    .save(out, ReactorCraft.MODID + ":" + id + "_uncraft");
+        }
+
+        // A hollow 3x3 ring of one component -> another (magnetic->core, hysteresis->ring).
+        private void ringRecipe(CraftingItems result, CraftingItems part) {
+            shaped(RecipeCategory.MISC, ReactorItems.crafting(result))
+                    .define('C', ReactorItems.crafting(part))
+                    .pattern("CCC").pattern("C C").pattern("CCC")
+                    .unlockedBy("has_part", has(ReactorItems.crafting(part)))
                     .save(out);
         }
 
