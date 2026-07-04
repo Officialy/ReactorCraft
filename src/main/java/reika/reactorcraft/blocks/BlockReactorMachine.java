@@ -40,12 +40,10 @@ import reika.reactorcraft.registry.ReactorTiles;
 
 public class BlockReactorMachine extends BlockTEBase implements MachineRegistryBlock {
 
-    public boolean hasVerticalPlacement = false;
-
     public static final EnumProperty<Direction> FACING = BlockStateProperties.FACING;
 
     public BlockReactorMachine(BlockBehaviour.Properties properties) {
-        super(properties.strength(4, 15));
+        super(properties);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 
@@ -56,9 +54,6 @@ public class BlockReactorMachine extends BlockTEBase implements MachineRegistryB
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
-        if (hasVerticalPlacement) {
-            return this.defaultBlockState().setValue(FACING, ctx.getNearestLookingDirection().getOpposite());
-        }
         return this.defaultBlockState().setValue(FACING, ctx.getHorizontalDirection().getOpposite());
     }
 

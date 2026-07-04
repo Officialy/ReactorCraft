@@ -208,7 +208,7 @@ public enum ReactorTiles implements TileEnum {
 	}
 
 	public boolean isPipe() {
-		return this == GASPIPE || this == MAGNETPIPE || this == WASTEPIPE;
+		return this == GASPIPE || this == MAGNETPIPE;
 	}
 
 	public boolean isTurbine() {

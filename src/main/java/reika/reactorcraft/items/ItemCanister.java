@@ -11,9 +11,8 @@ package reika.reactorcraft.items;
 
 import reika.reactorcraft.base.ItemReactorTool;
 
-/** Fluid canister; multiple {@code getDamageValue()} variants (one per fluid). Variant count is
- *  supplied at registration. The 1.7.10 self crafting-remainder (emptied canister stays) is a
- *  registration/recipe-level concern in 26.2 (USE_REMAINDER component / recipe design). */
+/** Fluid canister; multiple {@code getDamageValue()} variants (one per fluid), count supplied at
+ *  registration. The emptied-canister crafting remainder is handled at the recipe level. */
 public class ItemCanister extends ItemReactorTool {
 
 	private final int dataValues;

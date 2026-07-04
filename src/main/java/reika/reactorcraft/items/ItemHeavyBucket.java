@@ -11,8 +11,7 @@ package reika.reactorcraft.items;
 
 import reika.reactorcraft.base.ItemReactorTool;
 
-/** Heavy-water/coolant bucket. The empty-bucket crafting remainder is set via
- *  {@code Properties.craftRemainder(Items.BUCKET)} at registration. */
+/** Heavy-water/coolant bucket; empties to a vanilla bucket (craftRemainder set at registration). */
 public class ItemHeavyBucket extends ItemReactorTool {
 
 	public ItemHeavyBucket(Properties properties) {

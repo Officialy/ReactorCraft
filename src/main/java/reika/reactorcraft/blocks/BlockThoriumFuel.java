@@ -9,8 +9,6 @@
  ******************************************************************************/
 package reika.reactorcraft.blocks;
 
-import java.util.Locale;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -60,11 +58,9 @@ public class BlockThoriumFuel extends Block {
 		Block b = s.getBlock();
 		if (b == ReactorBlocks.THORIUM_FUEL.get())
 			return false;
-		// MOD-PORT: legacy BlockRegistry.PIPING explicit allow folded into the duct/pipe name check below.
 		if (ReikaWorldHelper.softBlocks(world, pos))
 			return true;
-		String n = b.getClass().getSimpleName().toLowerCase(Locale.ENGLISH);
-		return n.contains("duct") || n.contains("conduit") || n.contains("cable") || n.contains("pipe");
+		return b instanceof BlockReactorDuct || b instanceof BlockReactorLine;
 	}
 
 }

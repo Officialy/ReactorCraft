@@ -11,8 +11,7 @@ package reika.reactorcraft.items;
 
 import reika.reactorcraft.base.ItemReactorTool;
 
-/** Head-slot radiation goggles. The 1.7.10 {@code isValidArmor(stack,0,e)} (helmet slot) is now the
- *  {@code EQUIPPABLE} data component (HEAD) applied to the Properties at registration. */
+/** Head-slot radiation goggles; worn in the helmet slot via the EQUIPPABLE component set at registration. */
 public class ItemRadiationGoggles extends ItemReactorTool {
 
 	public ItemRadiationGoggles(Properties properties) {

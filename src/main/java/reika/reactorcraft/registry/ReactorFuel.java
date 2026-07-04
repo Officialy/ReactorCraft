@@ -17,7 +17,7 @@ import net.minecraft.world.item.ItemStack;
 public enum ReactorFuel {
 
 	URANIUM(ReactorItems.FUEL_ROD.get(), 25, 3, 5, 20, 0),
-	PLUTONIUM(ReactorItems.FUEL_ROD.get(), 30, 4, 10, 30, 0.025F);
+	PLUTONIUM(ReactorItems.PLUTONIUM_ROD.get(), 30, 4, 10, 30, 0.025F);
 
 	private final Item fuel;
 	public final int fissionChance;

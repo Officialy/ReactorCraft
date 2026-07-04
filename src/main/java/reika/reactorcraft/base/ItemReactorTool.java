@@ -9,8 +9,8 @@
  ******************************************************************************/
 package reika.reactorcraft.base;
 
-/** Base for single-stack ReactorCraft tool/utility items. The 1.7.10 setMaxStackSize(1)/
- *  setMaxDamage(0)/canRepair=false are now expressed on the item {@code Properties} at registration. */
+/** Base for single-stack ReactorCraft tool/utility items (stack size / equippable / remainder are set
+ *  on the item {@code Properties} at registration; see {@code ReactorItems.toolProperties}). */
 public abstract class ItemReactorTool extends ReactorItemBase {
 
 	public ItemReactorTool(Properties properties) {

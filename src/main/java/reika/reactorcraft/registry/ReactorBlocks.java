@@ -63,7 +63,11 @@ public final class ReactorBlocks {
     }
 
     private static Block ore() {
-        return new Block(blockProperties().strength(3.0F, 5.0F).requiresCorrectToolForDrops().sound(SoundType.STONE));
+        return new Block(blockProperties().strength(2.0F, 5.0F).requiresCorrectToolForDrops().sound(SoundType.STONE));
+    }
+
+    private static Block fluoriteOreBlock() {
+        return new Block(blockProperties().strength(1.2F, 4.0F).requiresCorrectToolForDrops().sound(SoundType.STONE));
     }
 
     public static final DeferredBlock<Block> PITCHBLENDE_ORE = register("pitchblende_ore", ReactorBlocks::ore);
@@ -79,7 +83,7 @@ public final class ReactorBlocks {
     public static final EnumMap<FluoriteTypes, DeferredBlock<Block>> FLUORITE_ORE = new EnumMap<>(FluoriteTypes.class);
     static {
         for (FluoriteTypes f : FluoriteTypes.colorList) {
-            FLUORITE_ORE.put(f, register(f.getOreBlockName(), ReactorBlocks::ore));
+            FLUORITE_ORE.put(f, register(f.getOreBlockName(), ReactorBlocks::fluoriteOreBlock));
         }
     }
 
@@ -88,7 +92,20 @@ public final class ReactorBlocks {
     }
 
     private static BlockBehaviour.Properties machineProperties() {
-        return blockProperties().strength(4.0F, 15.0F).requiresCorrectToolForDrops().sound(SoundType.METAL);
+        return blockProperties().strength(2.0F, 10.0F).requiresCorrectToolForDrops().sound(SoundType.METAL);
+    }
+
+    private static BlockBehaviour.Properties matProperties() {
+        return blockProperties().strength(1.5F, 10.0F).requiresCorrectToolForDrops().sound(SoundType.METAL);
+    }
+
+    // Pipes/lines are meant to be near-instant-break and drop by hand (no correct-tool requirement).
+    private static BlockBehaviour.Properties ductProperties() {
+        return blockProperties().strength(1.0F, 1.0F).sound(SoundType.METAL);
+    }
+
+    private static BlockBehaviour.Properties lineProperties() {
+        return blockProperties().strength(0.0F, 1.0F).sound(SoundType.METAL);
     }
 
     private static DeferredBlock<Block> registerMachine(String name, Supplier<Block> factory) {
@@ -126,7 +143,7 @@ public final class ReactorBlocks {
     public static final EnumMap<MatBlocks, DeferredBlock<Block>> MAT_BLOCKS = new EnumMap<>(MatBlocks.class);
     static {
         for (MatBlocks m : MatBlocks.matList) {
-            MAT_BLOCKS.put(m, register(m.getRegistryName(), () -> new BlockReactorMat(machineProperties().randomTicks().noOcclusion(), m)));
+            MAT_BLOCKS.put(m, register(m.getRegistryName(), () -> new BlockReactorMat(matProperties().randomTicks().noOcclusion(), m)));
         }
     }
 
@@ -150,7 +167,7 @@ public final class ReactorBlocks {
     public static final DeferredBlock<Block> CPU = registerMachine("reactor_cpu", () -> new BlockReactorMachine(machineProperties()));
     public static final DeferredBlock<Block> TURBINECORE = registerMachine("turbine_core", () -> new BlockReactorMachineModelled(machineProperties()));
     public static final DeferredBlock<Block> CONDENSER = registerMachine("condenser", () -> new BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> STEAMLINE = registerMachine("steam_line", () -> new BlockReactorLine(machineProperties()));
+    public static final DeferredBlock<Block> STEAMLINE = registerMachine("steam_line", () -> new BlockReactorLine(lineProperties()));
     public static final DeferredBlock<Block> FLUIDEXTRACTOR = registerMachine("heavy_pump", () -> new BlockReactorMachineModelled(machineProperties()));
     public static final DeferredBlock<Block> CENTRIFUGE = registerMachine("isotope_centrifuge", () -> new BlockReactorMachineModelled(machineProperties()));
     public static final DeferredBlock<Block> PROCESSOR = registerMachine("uranium_processor", () -> new BlockReactorMachineModelled(machineProperties()));
@@ -168,8 +185,8 @@ public final class ReactorBlocks {
     public static final DeferredBlock<Block> STORAGE = registerMachine("waste_storage", () -> new BlockReactorMachineModelled(machineProperties()));
     public static final DeferredBlock<Block> INJECTOR = registerMachine("fusion_injector", () -> new BlockReactorMachine(machineProperties()));
     public static final DeferredBlock<Block> HEATER = registerMachine("fusion_heater", () -> new BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> GASPIPE = registerMachine("gas_duct", () -> new BlockReactorDuct(machineProperties()));
-    public static final DeferredBlock<Block> MAGNETPIPE = registerMachine("magnetic_pipe", () -> new BlockReactorDuct(machineProperties()));
+    public static final DeferredBlock<Block> GASPIPE = registerMachine("gas_duct", () -> new BlockReactorDuct(ductProperties()));
+    public static final DeferredBlock<Block> MAGNETPIPE = registerMachine("magnetic_pipe", () -> new BlockReactorDuct(ductProperties()));
     public static final DeferredBlock<Block> ABSORBER = registerMachine("neutron_absorber", () -> new BlockReactorMachine(machineProperties()));
     public static final DeferredBlock<Block> SOLENOID = registerMachine("solenoid_magnet", () -> new BlockReactorMachineModelled(machineProperties()));
     public static final DeferredBlock<Block> COLLECTOR = registerMachine("gas_collector", () -> new BlockReactorMachineModelled(machineProperties()));
@@ -183,12 +200,12 @@ public final class ReactorBlocks {
     public static final DeferredBlock<Block> BIGTURBINE = registerMachine("high_pressure_turbine", () -> new BlockReactorMachineModelled(machineProperties()));
     public static final DeferredBlock<Block> DIFFUSER = registerMachine("steam_diffuser", () -> new BlockReactorMachineModelled(machineProperties()));
     public static final DeferredBlock<Block> THORIUM = registerMachine("thorium_core", () -> new BlockReactorMachine(machineProperties()));
-    public static final DeferredBlock<Block> WASTEPIPE = registerMachine("waste_pipe", () -> new BlockReactorDuct(machineProperties()));
+    public static final DeferredBlock<Block> WASTEPIPE = registerMachine("waste_pipe", () -> new BlockReactorDuct(ductProperties()));
     public static final DeferredBlock<Block> FUELDUMP = registerMachine("fuel_dump", () -> new BlockReactorMachine(machineProperties()));
     public static final DeferredBlock<Block> SOLAR = registerMachine("solar_exchanger", () -> new BlockReactorMachineModelled(machineProperties()));
     public static final DeferredBlock<Block> SOLARTOP = registerMachine("solar_top", () -> new BlockReactorMachineModelled(machineProperties()));
     public static final DeferredBlock<Block> MINITURBINE = registerMachine("mini_turbine", () -> new BlockReactorMachineModelled(machineProperties()));
-    public static final DeferredBlock<Block> HEATPIPE = registerMachine("heat_pipe", () -> new BlockReactorLine(machineProperties()));
+    public static final DeferredBlock<Block> HEATPIPE = registerMachine("heat_pipe", () -> new BlockReactorLine(lineProperties()));
     public static final DeferredBlock<Block> WASTEDECAYER = registerMachine("waste_decayer", () -> new BlockReactorMachine(machineProperties()));
 
     private ReactorBlocks() {}
