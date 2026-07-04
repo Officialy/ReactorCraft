@@ -114,12 +114,14 @@ several of which the in-code comments wrongly call "deferred/blocked" but are ac
   renderers are still 1.7.10 stubs, so routing their item icon through the BER now would break.
 - **[P2] Ammonium loot** — FIXED `6d7d3f3`.
 - **[P2] Component + mat-block recipes** — FIXED `9a5ec2f` (14 recipes, each diffed vs origin).
-- **[P2] ~40 machine-block crafting recipes** — DEFERRED. Not a blind transcription: each needs a
-  RotaryCraft-ingredient-id lookup (silent-error surface — green ≠ correct), some are gated on
-  unported ingredients (e.g. `pipe` — which also blocks the scrubber/coolant component recipes), and
-  several use `addSizedCrafting(DifficultyEffects.X)` counts that need a porting decision. Do as a
-  triaged batch: first inventory each recipe's ingredients vs the current registries, then write only
-  the resolvable subset with a per-recipe origin diff.
+- **[P2] machine-block crafting recipes** — PARTIAL `11eea98`. Triaged all ~44 addMachines() recipes;
+  the 12 whose ingredients fully resolve are done (gas_duct, magnetic_pipe, waste_pipe, heat_pipe,
+  toroid_magnet, fusion_heater, fusion_injector, neutron_absorber ×2, neutron_reflector,
+  reactor_generator, fusion_marker). The remaining ~32 are **ingredient-gated on unported RotaryCraft
+  items** — `basepanel` (~30 recipes), `pipe` (~15), plus prop/shaftitem/pcb/gearunit/silumin/bedrock
+  ingot/igniter/cooling-fin/gearbox-parts. Each unblocks when its ingredient is registered; re-run the
+  triage then. Pipe output counts (`DifficultyEffects.PIPECRAFT`) were fixed at 8 pending a config
+  decision.
 - **[P3] Literal-JSON drift** — open (low priority; not an active bug).
 
 ## Summary (original)
