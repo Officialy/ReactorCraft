@@ -28,8 +28,12 @@ Priority: **P1** = broken / dead feature / crash. **P2** = correctness or faithf
   and `BlockThoriumFuel` pipe-detection corrected (P3). Compiles + datagen + test green.
 - **Datagen display-name lang** — `3f5e889`. `ReactorLang` was reflectively prettifying registry ids
   (Fuel Rod / Reactor Cpu / Slag / Thorium Ore …); now maps every id to the original `en_US.lang`
-  name (Fuel Core / Central Control / Corium / Thorite …). See `datagen.md` for the remaining open
-  datagen items (block tags, machine/component recipes, mat textures, BER item icons, ammonium loot).
+  name (Fuel Core / Central Control / Corium / Thorite …).
+- **Datagen findings — most fixed** — block harvest tags P1 (`6d7d3f3`), mat textures + scrubber
+  multi-side + fusion_marker icon (`abbba1c`), ammonium netherrack drop (`6d7d3f3`), mat-block +
+  crafting-component recipes (`9a5ec2f`, 14 recipes). Still open in `datagen.md`: the ~40 machine-block
+  crafting recipes (deferred — ingredient-gated, needs per-recipe origin diff), ~12 BER item icons
+  (gated on the render port), and the literal-JSON drift (P3).
 
 ---
 

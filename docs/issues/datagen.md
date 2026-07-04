@@ -106,7 +106,23 @@ several of which the in-code comments wrongly call "deferred/blocked" but are ac
 
 ---
 
-## Summary
+## Resolution status
+- **[P1] Block tags** — FIXED `6d7d3f3` (ReactorBlockTagsProvider).
+- **[P2] Mat textures / scrubber multi-side** — FIXED `abbba1c`.
+- **[P2] BER item icons** — PARTIAL `abbba1c`: added `fusion_marker` (the one machine with a
+  registered BER missing from the set). The other ~12 are **gated on the render port** — their
+  renderers are still 1.7.10 stubs, so routing their item icon through the BER now would break.
+- **[P2] Ammonium loot** — FIXED `6d7d3f3`.
+- **[P2] Component + mat-block recipes** — FIXED `9a5ec2f` (14 recipes, each diffed vs origin).
+- **[P2] ~40 machine-block crafting recipes** — DEFERRED. Not a blind transcription: each needs a
+  RotaryCraft-ingredient-id lookup (silent-error surface — green ≠ correct), some are gated on
+  unported ingredients (e.g. `pipe` — which also blocks the scrubber/coolant component recipes), and
+  several use `addSizedCrafting(DifficultyEffects.X)` counts that need a porting decision. Do as a
+  triaged batch: first inventory each recipe's ingredients vs the current registries, then write only
+  the resolvable subset with a per-recipe origin diff.
+- **[P3] Literal-JSON drift** — open (low priority; not an active bug).
+
+## Summary (original)
 - **P1:** 1  (block tags — mod-wide, blocks survival harvesting of everything)
 - **P2:** 5  (machine recipes, component recipes, mat textures, BER item icons, ammonium loot)
 - **P3:** 1  (+ deferred/out-of-scope notes)
