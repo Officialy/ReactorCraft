@@ -25,6 +25,7 @@ public final class ReactorDataProviders {
 
     @SubscribeEvent
     public static void onGatherServer(GatherDataEvent.Server event) {
+        event.createProvider(ReactorBlockTagsProvider::new);
         event.createProvider(ReactorLootProvider::new);
         event.createDatapackRegistryObjects(ReactorWorldGenProvider.buildRegistrySet());
         event.createProvider(ReactorBiomeModifierProvider::new);

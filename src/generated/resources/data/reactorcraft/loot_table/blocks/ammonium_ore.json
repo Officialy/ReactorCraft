@@ -14,6 +14,20 @@
         }
       ],
       "rolls": 1.0
+    },
+    {
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:netherrack"
+        }
+      ],
+      "rolls": 1.0
     }
   ],
   "random_sequence": "reactorcraft:blocks/ammonium_ore"

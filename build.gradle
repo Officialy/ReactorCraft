@@ -81,6 +81,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/data/ReactorLang.java'
     include 'reika/reactorcraft/data/ReactorModelProvider.java'
     include 'reika/reactorcraft/data/ReactorLootProvider.java'
+    include 'reika/reactorcraft/data/ReactorBlockTagsProvider.java'
     include 'reika/reactorcraft/data/ReactorWorldGenProvider.java'
     include 'reika/reactorcraft/data/ReactorBiomeModifierProvider.java'
     include 'reika/reactorcraft/data/ReactorRecipeProvider.java'
