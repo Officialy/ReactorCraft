@@ -15,6 +15,9 @@ import java.util.HashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -34,6 +37,7 @@ import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.auxiliary.ReactorStacks;
 import reika.reactorcraft.base.TileEntityInventoriedReactorBase;
+import reika.reactorcraft.container.MenuSynthesizer;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorTiles;
@@ -313,8 +317,8 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 	}
 
 	@Override
-	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
-		return new reika.reactorcraft.container.MenuSynthesizer(id, inv, this);
+	public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+		return new MenuSynthesizer(id, inv, this);
 	}
 
 	@Override
@@ -344,6 +348,8 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 		super.readSyncTag(NBT);
 
 		timer = NBT.getIntOr("time", 0);
+		steptimer.setTick(NBT.getIntOr("st_tick", 0));
+		steptimer.setCap(NBT.getIntOr("st_cap", 1));
 
 		water.readFromNBT(NBT);
 		tank.readFromNBT(NBT);
@@ -355,6 +361,8 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 		super.writeSyncTag(NBT);
 
 		NBT.putInt("time", timer);
+		NBT.putInt("st_tick", steptimer.getTick());
+		NBT.putInt("st_cap", steptimer.getCap());
 
 		water.writeToNBT(NBT);
 		tank.writeToNBT(NBT);

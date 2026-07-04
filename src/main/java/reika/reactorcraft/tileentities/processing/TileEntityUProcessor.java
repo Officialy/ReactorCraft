@@ -18,10 +18,14 @@ import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
+import net.neoforged.neoforge.fluids.FluidActionResult;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidUtil;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
@@ -36,6 +40,7 @@ import reika.dragonapi.libraries.registry.ReikaItemHelper;
 import reika.reactorcraft.auxiliary.ReactorStacks;
 import reika.reactorcraft.base.TileEntityInventoriedReactorBase;
 import reika.reactorcraft.blocks.BlockReactorMachine;
+import reika.reactorcraft.container.MenuProcessor;
 import reika.reactorcraft.registry.ReactorAchievements;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorFluids;
@@ -285,7 +290,7 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 			return;
 		FluidStack fs = ReikaFluidHelper.getFluidForItem(in);
 		if (!fs.isEmpty() && Processes.processMap.get(fs.getFluid()) != null && this.canAcceptMoreInput(fs.getAmount())) {
-			net.neoforged.neoforge.fluids.FluidActionResult r = FluidUtil.tryEmptyContainer(in, this, fs.getAmount(), null, true);
+			FluidActionResult r = FluidUtil.tryEmptyContainer(in, this, fs.getAmount(), null, true);
 			if (r.isSuccess())
 				itemHandler.setStackInSlot(1, r.getResult());
 		}
@@ -319,8 +324,8 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
-		return new reika.reactorcraft.container.MenuProcessor(id, inv, this);
+	public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+		return new MenuProcessor(id, inv, this);
 	}
 
 	@Override
@@ -422,6 +427,7 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 
 		output_timer = NBT.getIntOr("uf6", 0);
 		intermediate_timer = NBT.getIntOr("hf", 0);
+		timer.load(NBT, "ptmr"); // ticks + caps, so the client progress getters resolve
 
 		input.readFromNBT(NBT);
 		intermediate.readFromNBT(NBT);
@@ -435,6 +441,7 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 
 		NBT.putInt("uf6", output_timer);
 		NBT.putInt("hf", intermediate_timer);
+		timer.saveAdditional(NBT, "ptmr");
 
 		input.writeToNBT(NBT);
 		intermediate.writeToNBT(NBT);

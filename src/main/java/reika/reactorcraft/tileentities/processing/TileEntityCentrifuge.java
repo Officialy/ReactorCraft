@@ -10,7 +10,11 @@
 package reika.reactorcraft.tileentities.processing;
 import net.minecraft.core.BlockPos;
 
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.container.MenuCentrifuge;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 
 import java.util.Collection;
@@ -208,8 +212,8 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 	}
 
 	@Override
-	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
-		return new reika.reactorcraft.container.MenuCentrifuge(id, inv, this);
+	public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+		return new MenuCentrifuge(id, inv, this);
 	}
 
 	@Override
@@ -315,6 +319,7 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 		super.readSyncTag(NBT);
 
 		split = NBT.getIntOr("time", 0);
+		timer.setCap(NBT.getIntOr("cap", 1)); // cap is recipe-dependent (server-only) — sync it for the client scale
 
 		powerHandler.load(NBT);
 
@@ -326,6 +331,7 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 		super.writeSyncTag(NBT);
 
 		NBT.putInt("time", split);
+		NBT.putInt("cap", timer.getCap());
 
 		powerHandler.saveAdditional(NBT);
 

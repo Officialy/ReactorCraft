@@ -15,6 +15,9 @@ import java.util.Collection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -31,6 +34,7 @@ import reika.dragonapi.instantiable.ItemMatch;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.base.TileEntityInventoriedReactorBase;
+import reika.reactorcraft.container.MenuElectrolyzer;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorTiles;
@@ -226,8 +230,8 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable {
 	}
 
 	@Override
-	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
-		return new reika.reactorcraft.container.MenuElectrolyzer(id, inv, this);
+	public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+		return new MenuElectrolyzer(id, inv, this);
 	}
 
 	@Override
@@ -349,6 +353,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable {
 		input.writeToNBT(NBT);
 
 		NBT.putInt("temp", temperature);
+		NBT.putInt("time", time);
 	}
 
 	@Override
@@ -360,6 +365,7 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable {
 		input.readFromNBT(NBT);
 
 		temperature = NBT.getIntOr("temp", 0);
+		time = NBT.getIntOr("time", 0);
 	}
 
 	public boolean addHeavyWater(int amt) {
