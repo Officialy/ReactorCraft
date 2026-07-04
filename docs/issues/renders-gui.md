@@ -1,5 +1,18 @@
 # ReactorCraft renders/GUI audit
 
+## Resolution status
+- **[P1] Progress bars stuck at 0** (Processor/Synthesizer/Electrolyzer/Centrifuge) — FIXED `a7cabcd`.
+  Each getter resolves from a timer that only advances server-side; now the timer state (ticks/cap or
+  the numerator that was never synced) is sent in the sync tag so the client getters resolve.
+- **[P2] RenderTurbine always shows the wheel / ignores damage** — OPEN. Needs in-game-verified render
+  work: when `!hasMultiBlock()` the original draws a flat **cap box** textured with the `turbine_multi`
+  atlas sprite (can't just skip the wheel — the machine block is BER-only/invisible otherwise), and the
+  blade render must skip `getDamage()` blades (thread the damage count through `ModelTurbine.renderBlades`).
+- **[P3] IO-goggles opaque override / dead 1.7.10 Container*+Gui* files** — OPEN (cleanup).
+
+---
+
+
 Scope: `renders/`, `models/`, `container/`, `guis/`, `client/`, plus the registration wiring in
 `registry/ReactorModelLayers.java`, `registry/ReactorMenus.java`, and `ReactorCraft.java`. Audited
 only allowlisted/ported code (`build.gradle` `include` list); the ~16 unported 1.7.10 render stubs
