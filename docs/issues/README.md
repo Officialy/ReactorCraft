@@ -13,7 +13,9 @@ Priority: **P1** = broken / dead feature / crash. **P2** = correctness or faithf
 - `slop-comments.md` — module-wide catalog of AI-slop / port-narration comments to REMOVE or TRIM
   (~56 REMOVE, ~69 TRIM). Complete except the `blocks/` and `registry`/`base`/`api` packages
   (sweep cut off by session limit — re-run those two).
-- *(pending)* `te-cluster.md`, `renders-gui.md` — two audit passes still to run (see "Audits to resume").
+- `renders-gui.md` — renders/models/container/guis/client audit (1 P1 dead-timer progress bars across
+  4 machine screens, 2 P2 turbine renderer faithfulness gaps, 2 P3 cleanup). Open.
+- *(pending)* `te-cluster.md` — audit pass still to run (see "Audits to resume").
 
 ---
 
@@ -39,23 +41,12 @@ Priority: **P1** = broken / dead feature / crash. **P2** = correctness or faithf
 
 ## CONFIRMED OPEN ISSUES (verified this session)
 
-### [P1] No `mineable/pickaxe` (or tier) block tags anywhere — mod-wide
-- **Where:** no block-`TagsProvider` exists in `data/`; datagen emits zero tag JSON.
-- **Why wrong:** every block built with `requiresCorrectToolForDrops()` (all ores, storage blocks,
-  the six mat blocks, and every `machineProperties()` machine) has no `minecraft:mineable/pickaxe`
-  or tool-tier tag, so in survival they **cannot be harvested and drop nothing**. Creative-only.
-- **Fix:** add a `BlockTagsProvider` (mirror RotaryCraft's if it has one) wiring every RC block into
-  `mineable/pickaxe` + the right `needs_*_tool` tier tag; register it in `ReactorDataProviders.Server`.
-- **Size:** M
-
-### [P2] Mat / machine blocks fall back to the `block/steel` texture
-- **Where:** `data/ReactorModelProvider.java` (reflective `cube_all`, texture map).
-- **Why wrong:** concrete/slag/calcite/scrubber/lodestone/graphite and many machines have no mapped
-  texture so they render as steel cubes; `MatBlocks.isMultiSidedTexture()` (SCRUBBER) is not honoured
-  — the scrubber gets plain `cube_all` instead of a mesh/multi-sided model.
-- **Fix:** wire the real 1.7.10 mat/machine sprites into the model provider's texture map; special-case
-  SCRUBBER (and any `cube_column`/oriented block).
-- **Size:** M
+### [P2] ~12 machine blocks still fall back to the `block/steel` texture
+- **Where:** `data/ReactorModelProvider.java` (`BLOCK_TEX` / `MACHINE_ITEM_MODELS`).
+- **Why wrong:** the mat blocks are fixed (`abbba1c`), but the BER-modelled machines whose renderer is
+  still an unported 1.7.10 stub get a flat steel-cube inventory icon. Gated on the render port — see
+  `datagen.md` and `renders-gui.md`.
+- **Size:** M (unblocks per machine as its renderer is ported)
 
 ### [P3] Dead `null` platform fields in EntityNeutron
 - **Where:** `entities/EntityNeutron.java:49-50` — `botaniaPlatform`/`ttPlatform` are `private static
@@ -79,9 +70,8 @@ WASTE/FUEL/PLUTONIUM/fluorite; don't re-enumerate the TE-cluster compile errors,
 
 1. **te-cluster** — `base/` + `tileentities/**`: per-TE port-status checklist, compile-blocker pattern
    counts, and **semantic** bugs in already-ported base classes (diff vs `origin/master:Base/*`).
-2. **renders-gui** — `renders/`, `models/`, `container/`, `guis/`, `client/`: stubbed/dead renderers,
-   `Modelled` blocks with no registered BER, atlas-size/texture-path bugs, missing MenuTypes.
 
 Plus finish the slop sweep for `blocks/` and `registry`+`base`+`api` (see `slop-comments.md` tail).
 
-Done so far: registry-blocks-items (fixed), datagen (findings filed), slop (most packages).
+Done so far: registry-blocks-items (fixed), datagen (findings filed), slop (most packages),
+renders-gui (findings filed).
