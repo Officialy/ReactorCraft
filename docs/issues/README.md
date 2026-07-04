@@ -21,6 +21,11 @@ Priority: **P1** = broken / dead feature / crash. **P2** = correctness or faithf
 - **[P2] Split `reactor_mat` into six per-variant blocks** — `1ffa7f6`. Was one block with an
   `EnumProperty<MatBlocks> VARIANT`; now six registered blocks + a `BlockReactorMat` per variant.
   Also removed the three zero-consumer duplicate storage blocks. Compiles + datagen green.
+- **registry/blocks/items audit — all 10 findings fixed** — `ff01669`. See
+  `registry-blocks-items.md` for detail: uranium/plutonium item split (P1), variant counts
+  (P2), block hardness/resistance restored (P2), single-stack/equippable/remainder item
+  properties (P2), `ItemHeavyBucket` registered (P2), dead components/field removed, `isPipe()`
+  and `BlockThoriumFuel` pipe-detection corrected (P3). Compiles + datagen + test green.
 
 ---
 
