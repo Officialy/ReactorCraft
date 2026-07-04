@@ -8,12 +8,12 @@ Priority: **P1** = broken / dead feature / crash. **P2** = correctness or faithf
 1.7.10 original. **P3** = code quality / cleanup.
 
 ## Files
+- `registry-blocks-items.md` — registry/blocks/items audit (done; all findings fixed in `ff01669`).
+- `datagen.md` — datagen provider audit (1 P1 block-tags, 5 P2, 1 P3). Open.
 - `slop-comments.md` — module-wide catalog of AI-slop / port-narration comments to REMOVE or TRIM
   (~56 REMOVE, ~69 TRIM). Complete except the `blocks/` and `registry`/`base`/`api` packages
   (sweep cut off by session limit — re-run those two).
-- *(pending)* `registry-blocks-items.md`, `datagen.md`, `te-cluster.md`, `renders-gui.md` — four
-  audit passes were **interrupted by a session usage limit before writing their files**. Re-run
-  them (see "Audits to resume" below). Concrete findings already confirmed are seeded here.
+- *(pending)* `te-cluster.md`, `renders-gui.md` — two audit passes still to run (see "Audits to resume").
 
 ---
 
@@ -26,6 +26,10 @@ Priority: **P1** = broken / dead feature / crash. **P2** = correctness or faithf
   (P2), block hardness/resistance restored (P2), single-stack/equippable/remainder item
   properties (P2), `ItemHeavyBucket` registered (P2), dead components/field removed, `isPipe()`
   and `BlockThoriumFuel` pipe-detection corrected (P3). Compiles + datagen + test green.
+- **Datagen display-name lang** — `3f5e889`. `ReactorLang` was reflectively prettifying registry ids
+  (Fuel Rod / Reactor Cpu / Slag / Thorium Ore …); now maps every id to the original `en_US.lang`
+  name (Fuel Core / Central Control / Corium / Thorite …). See `datagen.md` for the remaining open
+  datagen items (block tags, machine/component recipes, mat textures, BER item icons, ammonium loot).
 
 ---
 
@@ -63,20 +67,17 @@ Priority: **P1** = broken / dead feature / crash. **P2** = correctness or faithf
 
 ---
 
-## Audits to resume (interrupted by session limit — no findings file written)
+## Audits to resume (still to run)
 
-Re-dispatch these read-only Sonnet audits; each writes `docs/issues/<name>.md`. Scope in the briefs
-used this session (all: audit **allowlisted/ported** code only; don't flag known-unported 1.7.10 files;
-don't flag deliberate damage-value variant items — WASTE/FUEL/PLUTONIUM/fluorite; don't re-enumerate the
-TE-cluster compile errors, summarize+count instead):
+Read-only Sonnet audits; each writes `docs/issues/<name>.md`. Scope: audit **allowlisted/ported** code
+only; don't flag known-unported 1.7.10 files; don't flag deliberate damage-value variant items —
+WASTE/FUEL/PLUTONIUM/fluorite; don't re-enumerate the TE-cluster compile errors, summarize+count instead.
 
-1. **registry-blocks-items** — `registry/`, `blocks/`, `items/` (allowlisted): duplicate/dead
-   registrations, wrong block/item properties vs original, metadata handling.
-2. **datagen** — `data/` + generated resources: missing lang/models/loot, the tags gap above, recipe
-   gaps vs `git show origin/master:ReactorRecipes.java`, fragile literal-JSON recipes.
-3. **te-cluster** — `base/` + `tileentities/**`: per-TE port-status checklist, compile-blocker pattern
+1. **te-cluster** — `base/` + `tileentities/**`: per-TE port-status checklist, compile-blocker pattern
    counts, and **semantic** bugs in already-ported base classes (diff vs `origin/master:Base/*`).
-4. **renders-gui** — `renders/`, `models/`, `container/`, `guis/`, `client/`: stubbed/dead renderers,
+2. **renders-gui** — `renders/`, `models/`, `container/`, `guis/`, `client/`: stubbed/dead renderers,
    `Modelled` blocks with no registered BER, atlas-size/texture-path bugs, missing MenuTypes.
 
 Plus finish the slop sweep for `blocks/` and `registry`+`base`+`api` (see `slop-comments.md` tail).
+
+Done so far: registry-blocks-items (fixed), datagen (findings filed), slop (most packages).
