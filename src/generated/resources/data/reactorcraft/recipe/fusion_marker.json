@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "F": "reactorcraft:blue_fluorite",
+    "R": "minecraft:redstone_torch"
+  },
+  "pattern": [
+    "F",
+    "R"
+  ],
+  "result": {
+    "id": "reactorcraft:fusion_marker"
+  }
+}

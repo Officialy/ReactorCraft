@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "N": "#minecraft:wool",
+    "P": "minecraft:gold_ingot"
+  },
+  "pattern": [
+    " NP",
+    "NPN",
+    "PN "
+  ],
+  "result": {
+    "count": 6,
+    "id": "reactorcraft:heat_pipe"
+  }
+}

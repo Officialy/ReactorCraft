@@ -13,6 +13,7 @@ import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.recipes.SimpleCookingRecipeBuilder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CookingBookCategory;
@@ -79,7 +80,77 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
         protected void buildRecipes() {
             smelting();
             crafting();
+            machineCrafting();
             crossMod();
+        }
+
+        // The subset of the original addMachines() recipes whose ingredients all resolve in the current
+        // registries. The rest are gated on unported RotaryCraft items (basepanel, pipe, prop, shaftitem,
+        // pcb, gearunit, silumin, bedrock ingot, igniter, cooling fin, gearbox parts) — see datagen.md.
+        // Pipe output counts were DifficultyEffects.PIPECRAFT.getInt() upstream; use a fixed 8 for now.
+        private void machineCrafting() {
+            shaped(RecipeCategory.MISC, ReactorBlocks.GASPIPE.get(), 8)
+                    .define('C', Items.TERRACOTTA).define('G', Items.GLASS)
+                    .pattern("CGC").pattern("CGC").pattern("CGC")
+                    .unlockedBy("has_terracotta", has(Items.TERRACOTTA)).save(out);
+
+            shaped(RecipeCategory.MISC, ReactorBlocks.MAGNETPIPE.get(), 8)
+                    .define('C', Items.GOLD_INGOT).define('G', RotaryBlocks.BLASTGLASS.get())
+                    .pattern("CGC").pattern("CGC").pattern("CGC")
+                    .unlockedBy("has_blastglass", has(RotaryBlocks.BLASTGLASS.get())).save(out);
+
+            shaped(RecipeCategory.MISC, ReactorBlocks.WASTEPIPE.get(), 8)
+                    .define('C', ReactorBlocks.matBlock(MatBlocks.CONCRETE)).define('b', Items.IRON_BARS).define('G', Items.GLASS)
+                    .pattern("CbC").pattern("CGC").pattern("CbC")
+                    .unlockedBy("has_concrete", has(ReactorBlocks.matBlock(MatBlocks.CONCRETE))).save(out);
+
+            shaped(RecipeCategory.MISC, ReactorBlocks.HEATPIPE.get(), 6)
+                    .define('N', ItemTags.WOOL).define('P', Items.GOLD_INGOT)
+                    .pattern(" NP").pattern("NPN").pattern("PN ")
+                    .unlockedBy("has_gold", has(Items.GOLD_INGOT)).save(out);
+
+            shaped(RecipeCategory.MISC, ReactorBlocks.MAGNET.get())
+                    .define('H', ReactorItems.crafting(CraftingItems.HYSTERESISRING))
+                    .define('M', ReactorItems.crafting(CraftingItems.MAGNETCORE))
+                    .define('C', ReactorItems.crafting(CraftingItems.COOLANT))
+                    .pattern("MCM").pattern("CHC").pattern("MCM")
+                    .unlockedBy("has_magnet_core", has(ReactorItems.crafting(CraftingItems.MAGNETCORE))).save(out);
+
+            shaped(RecipeCategory.MISC, ReactorBlocks.HEATER.get())
+                    .define('M', ReactorItems.crafting(CraftingItems.FERROINGOT)).define('P', RotaryBlocks.BLASTGLASS.get())
+                    .pattern("MPM").pattern("P P").pattern("MPM")
+                    .unlockedBy("has_ferro", has(ReactorItems.crafting(CraftingItems.FERROINGOT))).save(out);
+
+            shaped(RecipeCategory.MISC, ReactorBlocks.INJECTOR.get())
+                    .define('P', ReactorBlocks.MAGNETPIPE.get()).define('M', ReactorItems.crafting(CraftingItems.MAGNETIC))
+                    .pattern("PMP").pattern("M M").pattern("PMP")
+                    .unlockedBy("has_magnetic_pipe", has(ReactorBlocks.MAGNETPIPE.get())).save(out);
+
+            shaped(RecipeCategory.MISC, ReactorBlocks.ABSORBER.get())
+                    .define('C', RotaryBlocks.HSLA_STEEL_BLOCK.get()).define('P', ReactorItems.DEPLETED_FUEL.get())
+                    .pattern(" P ").pattern("PCP").pattern(" P ")
+                    .unlockedBy("has_depleted", has(ReactorItems.DEPLETED_FUEL.get())).save(out);
+            shaped(RecipeCategory.MISC, ReactorBlocks.ABSORBER.get())
+                    .define('C', RotaryBlocks.HSLA_STEEL_BLOCK.get()).define('P', ReactorItems.DEPLETED_PELLET.get())
+                    .pattern("PPP").pattern("PCP").pattern("PPP")
+                    .unlockedBy("has_depleted_pellet", has(ReactorItems.DEPLETED_PELLET.get()))
+                    .save(out, ReactorCraft.MODID + ":neutron_absorber_from_pellet");
+
+            shaped(RecipeCategory.MISC, ReactorBlocks.REFLECTOR.get())
+                    .define('G', ReactorItems.crafting(CraftingItems.GRAPHITE)).define('S', RotaryBlocks.HSLA_STEEL_BLOCK.get())
+                    .pattern("GGG").pattern("GSG").pattern("GGG")
+                    .unlockedBy("has_graphite", has(ReactorItems.crafting(CraftingItems.GRAPHITE))).save(out);
+
+            shaped(RecipeCategory.MISC, ReactorBlocks.GENERATOR.get())
+                    .define('G', ReactorItems.crafting(CraftingItems.WIRE)).define('R', Items.REDSTONE)
+                    .define('F', ReactorItems.crafting(CraftingItems.MAGNETCORE))
+                    .pattern("RGR").pattern("GFG").pattern("RGR")
+                    .unlockedBy("has_wire", has(ReactorItems.crafting(CraftingItems.WIRE))).save(out);
+
+            shaped(RecipeCategory.MISC, ReactorBlocks.MARKER.get())
+                    .define('F', ReactorItems.fluorite(FluoriteTypes.BLUE)).define('R', Items.REDSTONE_TORCH)
+                    .pattern("F").pattern("R")
+                    .unlockedBy("has_fluorite", has(ReactorItems.fluorite(FluoriteTypes.BLUE))).save(out);
         }
 
         private void smelting() {

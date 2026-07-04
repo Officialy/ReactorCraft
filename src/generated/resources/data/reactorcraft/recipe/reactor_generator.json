@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "F": "reactorcraft:magnet_core",
+    "G": "reactorcraft:wire",
+    "R": "minecraft:redstone"
+  },
+  "pattern": [
+    "RGR",
+    "GFG",
+    "RGR"
+  ],
+  "result": {
+    "id": "reactorcraft:reactor_generator"
+  }
+}

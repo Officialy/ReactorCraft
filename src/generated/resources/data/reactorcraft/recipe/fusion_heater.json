@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "M": "reactorcraft:ferromagnetic_ingot",
+    "P": "rotarycraft:blastglass"
+  },
+  "pattern": [
+    "MPM",
+    "P P",
+    "MPM"
+  ],
+  "result": {
+    "id": "reactorcraft:fusion_heater"
+  }
+}
