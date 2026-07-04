@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/fusion_marker"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/fusion_marker",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "fusion_marker"
+    }
   }
 }

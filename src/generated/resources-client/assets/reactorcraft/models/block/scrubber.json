@@ -1,6 +1,12 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "minecraft:block/cube",
   "textures": {
-    "all": "reactorcraft:block/steel"
+    "down": "reactorcraft:block/mat/scrubber_0",
+    "east": "reactorcraft:block/mat/scrubber_5",
+    "north": "reactorcraft:block/mat/scrubber_2",
+    "particle": "reactorcraft:block/mat/scrubber_0",
+    "south": "reactorcraft:block/mat/scrubber_3",
+    "up": "reactorcraft:block/mat/scrubber_1",
+    "west": "reactorcraft:block/mat/scrubber_4"
   }
 }

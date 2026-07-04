@@ -54,9 +54,11 @@ public class ReactorModelProvider extends ModelProvider {
 
     // BER-rendered machine blocks whose ITEM icon should use the 3D model via the
     // reactorcraft:machine special renderer (see ReactorMachineItemRenderer). Keyed by block path.
+    // Must stay in sync with the machine BERs registered in ReactorModelLayers. Machines whose renderer
+    // is not yet ported keep the flat cube_all icon until it lands.
     private static final Set<String> MACHINE_ITEM_MODELS = Set.of(
             "control_rod", "toroid_magnet", "solenoid_magnet", "steam_grate", "condenser", "turbine_core",
-            "waste_storage", "electrolyzer", "solar_exchanger");
+            "waste_storage", "electrolyzer", "solar_exchanger", "fusion_marker");
 
     public ReactorModelProvider(PackOutput output) {
         super(output, ReactorCraft.MODID);
@@ -189,6 +191,24 @@ public class ReactorModelProvider extends ModelProvider {
                 continue;
             }
 
+            if (block instanceof reika.reactorcraft.blocks.BlockReactorMat mat
+                    && mat.getType() == reika.reactorcraft.registry.MatBlocks.SCRUBBER) {
+                // Steam scrubber: six distinct faces (scrubber_0..5), not a uniform cube.
+                Identifier scrubberModelId = ModelLocationUtils.getModelLocation(block);
+                modelOut.accept(scrubberModelId, () -> cubeSixModel(
+                        "reactorcraft:block/mat/scrubber_0", "reactorcraft:block/mat/scrubber_1",
+                        "reactorcraft:block/mat/scrubber_2", "reactorcraft:block/mat/scrubber_3",
+                        "reactorcraft:block/mat/scrubber_4", "reactorcraft:block/mat/scrubber_5"));
+                blockStateOut.accept(MultiVariantGenerator.dispatch(block,
+                        new MultiVariant(WeightedList.of(new Variant(scrubberModelId)))));
+                Item scrubberItem = block.asItem();
+                if (scrubberItem != Items.AIR) {
+                    itemModelOut.accept(scrubberItem, ItemModelUtils.plainModel(scrubberModelId));
+                    blockItemsHandled.add(scrubberItem);
+                }
+                continue;
+            }
+
             Identifier blockModelId = ModelTemplates.CUBE_ALL.create(block, TextureMapping.cube(blockTexture(block)), modelOut);
             MultiVariant single = new MultiVariant(WeightedList.of(new Variant(blockModelId)));
             blockStateOut.accept(MultiVariantGenerator.dispatch(block, single));
@@ -231,6 +251,9 @@ public class ReactorModelProvider extends ModelProvider {
         BLOCK_TEX.put("graphite_block", "block/mat/graphite");
         BLOCK_TEX.put("calcite_block", "block/mat/calcite");
         BLOCK_TEX.put("lodestone_block", "block/mat/lodestone");
+        BLOCK_TEX.put("concrete", "block/mat/concrete");
+        BLOCK_TEX.put("slag", "block/mat/slag");
+        // scrubber is six-sided (block/mat/scrubber_0..5) — handled explicitly in the block loop.
         // single-texture machines (registry id differs from texture name)
         BLOCK_TEX.put("control_rod", "block/control");
         BLOCK_TEX.put("reactor_cpu", "block/cpu");
@@ -299,6 +322,22 @@ public class ReactorModelProvider extends ModelProvider {
         JsonObject tex = new JsonObject();
         tex.addProperty("end", endTex);
         tex.addProperty("side", sideTex);
+        root.add("textures", tex);
+        return root;
+    }
+
+    /** {@code cube} model JSON with a distinct sprite per face (side order matches the legacy 0..5 icons). */
+    private static JsonObject cubeSixModel(String down, String up, String north, String south, String west, String east) {
+        JsonObject root = new JsonObject();
+        root.addProperty("parent", "minecraft:block/cube");
+        JsonObject tex = new JsonObject();
+        tex.addProperty("particle", down);
+        tex.addProperty("down", down);
+        tex.addProperty("up", up);
+        tex.addProperty("north", north);
+        tex.addProperty("south", south);
+        tex.addProperty("west", west);
+        tex.addProperty("east", east);
         root.add("textures", tex);
         return root;
     }
