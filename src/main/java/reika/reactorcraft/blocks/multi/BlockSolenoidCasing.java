@@ -120,11 +120,11 @@ public class BlockSolenoidCasing extends BlockReCMultiBlock implements Transduce
 		int midX = mid.getX(), midY = mid.getY(), midZ = mid.getZ();
 		Map<BlockPos, CasingSpec> map = new LinkedHashMap<>();
 
-		// SHELL: 3x2x3 hub around the magnet, Y = mid..mid+1 only (centre excluded -- that's the
-		// SOLENOID block itself). Both original sources (checkCore and SolenoidStructure) agree on
-		// this shape: there is deliberately nothing below the core.
+		// SHELL: full 3x3x3 hub around the magnet (centre excluded -- that's the SOLENOID block
+		// itself). The legacy sources only covered Y = mid..mid+1, but the coil model is sized for
+		// the symmetric shell, so the port requires the full wrap (user-confirmed shape).
 		for (int i = -1; i <= 1; i++)
-			for (int j = 0; j <= 1; j++)
+			for (int j = -1; j <= 1; j++)
 				for (int k = -1; k <= 1; k++)
 					if (i != 0 || j != 0 || k != 0)
 						map.put(new BlockPos(midX + i, midY + j, midZ + k), new CasingSpec(SolenoidPart.SHELL));
