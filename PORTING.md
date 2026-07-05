@@ -1,5 +1,13 @@
 # ReactorCraft → NeoForge 26.2 port
 
+> **STATUS UPDATE (supersedes the "In progress — TE cluster batch" / "~2527 errors" notes below):**
+> the TE cluster is **done** — all 46 concrete TEs + the 10 `base/` classes are on the allowlist and
+> `:ReactorCraft:compileJava` + `:test` build **clean** (0 errors). The remaining work is faithfulness/
+> capability gaps, not compilation. See `docs/issues/` (per-area audits) and especially
+> `docs/issues/te-cluster.md`. Known shared-with-RotaryCraft deferrals (do NOT fix in ReactorCraft
+> alone): sided item-IO not enforced by the item capability, and no external `Capabilities.Fluid.BLOCK`
+> — both mirror `RotaryBlockEntities` and need a shared DragonAPI change.
+
 Status board + conventions for porting ReactorCraft (Reika's original 1.7.10 source) to
 NeoForge 26.2, matching the already-ported siblings (DragonAPI, RotaryCraft, ElectriCraft,
 GeoStrata). **RotaryCraft is the Rosetta Stone** — for any subsystem here there is almost

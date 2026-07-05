@@ -15,7 +15,11 @@ Priority: **P1** = broken / dead feature / crash. **P2** = correctness or faithf
   (sweep cut off by session limit — re-run those two).
 - `renders-gui.md` — renders/models/container/guis/client audit (1 P1 dead-timer progress bars across
   4 machine screens, 2 P2 turbine renderer faithfulness gaps, 2 P3 cleanup). Open.
-- *(pending)* `te-cluster.md` — audit pass still to run (see "Audits to resume").
+- `te-cluster.md` — `base/`+`tileentities/**` audit (done). **Found PORTING.md stale: the cluster
+  now compiles clean (0 errors) and tests pass** — the "~2527 errors" entry below is superseded.
+  2 P1 (sided item-transfer contract never enforced; no external fluid capability registered), 2 P2
+  (tanked-machine generic fill skips side gate; `isConnectionValidForSide` axis-flip dropped), 1 P3
+  (chunk-loading silently disabled, already documented in-code). Open.
 
 ---
 
@@ -54,11 +58,11 @@ Priority: **P1** = broken / dead feature / crash. **P2** = correctness or faithf
 - **Fix:** remove the fields + their dead branches (and the accompanying MOD-PORT comments).
 - **Size:** S
 
-### [P1] TE cluster does not compile (~2527 errors) — tracked, in progress
-- Fully documented in `PORTING.md` ("In progress — TE cluster batch"). ~46 machine TEs + base are
-  mechanically remapped but bodies still hold 1.7.10 API (old fluid-handler sigs, int-coord
-  `getBlockEntity`, `getSizeInventory`, `tank.getLevel()`, `inv[`, `FluidRegistry`). Excluded from the
-  build allowlist so the module still builds. **Not re-enumerated here** — see PORTING.md.
+### ~~[P1] TE cluster does not compile (~2527 errors)~~ — SUPERSEDED, now compiles clean
+- PORTING.md's "~2527 errors" snapshot is stale: as of the `te-cluster.md` audit, all 46 TEs + 10
+  `base/` classes are allowlisted and `:ReactorCraft:compileJava`/`:test` both pass clean (0 errors).
+  See `te-cluster.md` for the real remaining work (2 P1 semantic bugs in the ported base classes,
+  unrelated to compilation).
 
 ---
 
@@ -68,10 +72,8 @@ Read-only Sonnet audits; each writes `docs/issues/<name>.md`. Scope: audit **all
 only; don't flag known-unported 1.7.10 files; don't flag deliberate damage-value variant items —
 WASTE/FUEL/PLUTONIUM/fluorite; don't re-enumerate the TE-cluster compile errors, summarize+count instead.
 
-1. **te-cluster** — `base/` + `tileentities/**`: per-TE port-status checklist, compile-blocker pattern
-   counts, and **semantic** bugs in already-ported base classes (diff vs `origin/master:Base/*`).
-
-Plus finish the slop sweep for `blocks/` and `registry`+`base`+`api` (see `slop-comments.md` tail).
+Finish the slop sweep for `blocks/` and `registry`+`base`+`api` (see `slop-comments.md` tail).
 
 Done so far: registry-blocks-items (fixed), datagen (findings filed), slop (most packages),
-renders-gui (findings filed).
+renders-gui (findings filed), te-cluster (findings filed — also discovered PORTING.md's compile
+status was stale; cluster compiles clean now).
