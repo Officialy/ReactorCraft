@@ -16,6 +16,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLEnvironment;
@@ -55,6 +56,8 @@ public class ReactorCraft {
 
     public ReactorCraft(IEventBus modEventBus, ModContainer modContainer) {
         instance = this;
+
+        modContainer.registerConfig(ModConfig.Type.COMMON, ReactorOptions.SPEC);
 
         ReactorDataComponents.COMPONENTS.register(modEventBus);
 

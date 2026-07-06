@@ -10,6 +10,7 @@
 package reika.reactorcraft.auxiliary;
 
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.SimpleFluidContent;
 
@@ -50,10 +51,28 @@ public class ReactorStacks {
 	public static final ItemStack maxMagnet = ReactorItems.MAGNET.getStackOfMetadata(ReactorItems.MAGNET.getNumberMetadatas() - 1);
 	public static final ItemStack weakerMagnet = ReactorItems.MAGNET.getStackOfMetadata(ReactorItems.MAGNET.getNumberMetadatas() - 2);
 
-	private static ItemStack canister(net.minecraft.world.level.material.Fluid fluid, int amount) {
+	private static ItemStack canister(Fluid fluid, int amount) {
 		ItemStack s = ReactorItems.CANISTER_REF.getStackOf();
 		s.set(ReactorDataComponents.CANISTER_FLUID.get(), SimpleFluidContent.copyOf(new FluidStack(fluid, amount)));
 		return s;
+	}
+
+	public static ItemStack canisterOf(Fluid fluid) {
+		return canister(fluid, 1000);
+	}
+
+	public static boolean isCanisterOf(ItemStack is, Fluid fluid) {
+		if (is.isEmpty() || is.getItem() != ReactorItems.CANISTER.get())
+			return false;
+		SimpleFluidContent c = is.get(ReactorDataComponents.CANISTER_FLUID.get());
+		return c != null && !c.isEmpty() && c.getFluid() == fluid;
+	}
+
+	public static boolean isEmptyCanister(ItemStack is) {
+		if (is.isEmpty() || is.getItem() != ReactorItems.CANISTER.get())
+			return false;
+		SimpleFluidContent c = is.get(ReactorDataComponents.CANISTER_FLUID.get());
+		return c == null || c.isEmpty();
 	}
 
 	private ReactorStacks() {}

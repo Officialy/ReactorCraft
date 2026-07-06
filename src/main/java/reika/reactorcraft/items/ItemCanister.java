@@ -9,10 +9,16 @@
  ******************************************************************************/
 package reika.reactorcraft.items;
 
-import reika.reactorcraft.base.ItemReactorTool;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.fluids.SimpleFluidContent;
 
-/** Fluid canister; multiple {@code getDamageValue()} variants (one per fluid), count supplied at
- *  registration. The emptied-canister crafting remainder is handled at the recipe level. */
+import reika.reactorcraft.base.ItemReactorTool;
+import reika.reactorcraft.registry.ReactorDataComponents;
+
+/** Fluid canister; the contents ride the CANISTER_FLUID component and name the item
+ *  ("Sodium Canister" etc., like the legacy can.* names). The emptied-canister crafting
+ *  remainder is handled at the recipe level. */
 public class ItemCanister extends ItemReactorTool {
 
 	private final int dataValues;
@@ -25,6 +31,14 @@ public class ItemCanister extends ItemReactorTool {
 	@Override
 	public int getDataValues() {
 		return dataValues;
+	}
+
+	@Override
+	public Component getName(ItemStack is) {
+		SimpleFluidContent c = is.get(ReactorDataComponents.CANISTER_FLUID.get());
+		if (c != null && !c.isEmpty())
+			return Component.translatable("item.reactorcraft.canister.filled", c.getFluid().getFluidType().getDescription());
+		return super.getName(is);
 	}
 
 }

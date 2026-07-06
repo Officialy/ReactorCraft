@@ -9,7 +9,15 @@
  ******************************************************************************/
 package reika.reactorcraft.registry;
 
-/** Config defaults until {@code ReactorConfig} is wired to NeoForge {@code ModConfigSpec}. */
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
+
+import net.neoforged.neoforge.common.ModConfigSpec;
+
+/** The ReactorCraft config options, backed by a NeoForge {@link ModConfigSpec} (registered in the
+ *  mod constructor); enum defaults apply until the config file loads. */
 public enum ReactorOptions {
 
 	VISIBLENEUTRONS(true),
@@ -60,16 +68,54 @@ public enum ReactorOptions {
 		isInt = false;
 	}
 
+	public static final ModConfigSpec SPEC;
+	private static final EnumMap<ReactorOptions, ModConfigSpec.ConfigValue<?>> VALUES = new EnumMap<>(ReactorOptions.class);
+	private static final ModConfigSpec.ConfigValue<String> HEAVY_WATER_DIMS;
+
+	static {
+		ModConfigSpec.Builder b = new ModConfigSpec.Builder();
+		b.push("options");
+		for (ReactorOptions o : values()) {
+			String key = o.name().toLowerCase(Locale.ROOT);
+			if (o.isBool)
+				VALUES.put(o, b.define(key, o.boolDefault));
+			else if (o.isInt)
+				VALUES.put(o, b.define(key, o.intDefault));
+			else
+				VALUES.put(o, b.define(key, (double) o.floatDefault));
+		}
+		HEAVY_WATER_DIMS = b.comment("Comma-separated legacy dimension ids where the heavy pump works; empty = all dimensions")
+				.define("heavywaterdimensions", "");
+		b.pop();
+		SPEC = b.build();
+	}
+
 	public boolean getState() {
-		return boolDefault;
+		return SPEC.isLoaded() ? (Boolean) VALUES.get(this).get() : boolDefault;
 	}
 
 	public int getValue() {
-		return intDefault;
+		return SPEC.isLoaded() ? ((Number) VALUES.get(this).get()).intValue() : intDefault;
 	}
 
 	public float getFloat() {
-		return floatDefault;
+		return SPEC.isLoaded() ? ((Number) VALUES.get(this).get()).floatValue() : floatDefault;
+	}
+
+	/** Legacy int dimension ids the heavy pump may extract in; empty = no restriction. */
+	public static Set<Integer> getHeavyWaterDimensions() {
+		if (!SPEC.isLoaded())
+			return Set.of();
+		Set<Integer> out = new HashSet<>();
+		for (String s : HEAVY_WATER_DIMS.get().split(",")) {
+			s = s.trim();
+			if (!s.isEmpty()) {
+				try {
+					out.add(Integer.parseInt(s));
+				} catch (NumberFormatException ignored) {}
+			}
+		}
+		return out;
 	}
 
 	public static int getToroidChargeRate() {

@@ -126,6 +126,18 @@ public abstract class TileEntityNuclearBoiler extends TileEntityTankedReactorMac
 		tank.addLiquid(amt, fluid);
 	}
 
+	public final int getInputFluidLevel() {
+		return tank.getFluidLevel();
+	}
+
+	public final Fluid getBufferedFluid() {
+		return tank.isEmpty() ? null : tank.getActualFluid().getFluid();
+	}
+
+	public final int getInputCapacity() {
+		return tank.getCapacity();
+	}
+
 	@Override
 	public final int getTextureState(Direction side) {
 		if (side.getStepY() != 0)

@@ -352,9 +352,8 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 		}
 
 		private boolean isValidWorld(Level world) {
-			// CONFIG-PORT: ReactorConfig is not yet wired to a NeoForge ModConfigSpec accessor; the legacy
-			// default for heavyWaterDimensions is empty == "all dimensions valid", so honour that default.
-			return true;
+			java.util.Set<Integer> dims = ReactorOptions.getHeavyWaterDimensions();
+			return dims.isEmpty() || dims.contains(dimID(world));
 		}
 
 		@Override

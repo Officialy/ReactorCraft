@@ -96,7 +96,7 @@ public class ReactorLang extends LanguageProvider {
         n("radiation_goggles", "Radiation Goggles");
         n("reactor_book", "ReactorCraft Handbook");
         n("heavy_water_bucket", "Heavy Water Bucket");
-        n("canister", "Fluid Canister");
+        n("canister", "Empty Canister");
         // Crafting components (CraftingItems)
         n("canister_part", "Fuel Canister");
         n("rod", "Absorption Rod");
@@ -123,9 +123,41 @@ public class ReactorLang extends LanguageProvider {
         super(output, ReactorCraft.MODID, locale);
     }
 
+    /** Original fluid.* display names, keyed by the FluidType registry path. */
+    private static final Map<String, String> FLUIDS = new HashMap<>();
+    static {
+        FLUIDS.put("heavy_water", "Heavy Water");
+        FLUIDS.put("hydrofluoric_acid", "Hydrofluoric Acid");
+        FLUIDS.put("uranium_hexafluoride", "Uranium Hexafluoride");
+        FLUIDS.put("ammonia", "Ammonia");
+        FLUIDS.put("sodium", "Molten Sodium");
+        FLUIDS.put("chlorine", "Chlorine Gas");
+        FLUIDS.put("oxygen", "Oxygen Gas");
+        FLUIDS.put("liquid_oxygen", "Liquid Oxygen");
+        FLUIDS.put("low_pressure_ammonia", "Low Pressure Ammonia");
+        FLUIDS.put("low_pressure_water", "Low Pressure Water");
+        FLUIDS.put("hot_sodium", "Superheated Molten Sodium");
+        FLUIDS.put("warm_sodium", "Hot Molten Sodium");
+        FLUIDS.put("deuterium", "Deuterium");
+        FLUIDS.put("tritium", "Tritium");
+        FLUIDS.put("carbon_dioxide", "Carbon Dioxide Gas");
+        FLUIDS.put("hot_carbon_dioxide", "Hot Carbon Dioxide Gas");
+        FLUIDS.put("fusion_plasma", "Fusion Plasma");
+        FLUIDS.put("corium", "Corium");
+        FLUIDS.put("nuclear_waste", "Nuclear Waste");
+        FLUIDS.put("lithium", "Molten Lithium");
+        FLUIDS.put("lifbe", "Lithium Beryllium Fluoride");
+        FLUIDS.put("lifbe_fuel", "Molten Thorium Fuel");
+        FLUIDS.put("lifbe_fuel_preheat", "Preheated Thorium Fuel");
+        FLUIDS.put("hot_lifbe", "Hot Beryllium Fluoride");
+    }
+
     @Override
     protected void addTranslations() {
         add("tab.reactorcraft", "ReactorCraft");
+        add("item.reactorcraft.canister.filled", "%s Canister");
+        for (var e : FLUIDS.entrySet())
+            add("fluid_type.reactorcraft." + e.getKey(), e.getValue());
 
         ReactorBlocks.BLOCKS.getEntries().forEach(holder ->
                 addBlock(holder, nameOf(holder.getId().getPath())));
