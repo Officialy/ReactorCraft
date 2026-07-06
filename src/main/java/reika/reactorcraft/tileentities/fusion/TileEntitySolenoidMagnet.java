@@ -12,15 +12,14 @@ package reika.reactorcraft.tileentities.fusion;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-
 import reika.dragonapi.DragonAPI;
 import reika.dragonapi.libraries.ReikaAABBHelper;
-import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.auxiliary.MultiBlockTile;
 import reika.reactorcraft.auxiliary.NeutronTile;
 import reika.reactorcraft.auxiliary.ReactorPowerReceiver;
@@ -76,6 +75,28 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 	}
 
 	private void fail(Level world, BlockPos pos, float power) {
+		if (world.isClientSide())
+			return;
+		RandomSource rand = world.getRandom();
+		// Un-form every casing first (a FORMED casing renders invisible, so anything the blast
+		// spares must swap back to its visible state), then hurl the near ones as physical debris.
+		for (BlockPos p : BlockSolenoidCasing.layout(pos).keySet()) {
+			BlockState cs = world.getBlockState(p);
+			if (!(cs.getBlock() instanceof BlockSolenoidCasing))
+				continue;
+			if (cs.getValue(BlockSolenoidCasing.FORMED))
+				cs = cs.setValue(BlockSolenoidCasing.FORMED, false);
+			double dx = p.getX()-pos.getX(), dy = p.getY()-pos.getY(), dz = p.getZ()-pos.getZ();
+			double dist = Math.sqrt(dx*dx+dy*dy+dz*dz);
+			if (dist <= power && rand.nextFloat() < 0.6F) {
+				FallingBlockEntity fb = FallingBlockEntity.fall(world, p, cs);
+				double v = 0.3+0.5*rand.nextDouble();
+				fb.setDeltaMovement(dx/dist*v, Math.abs(dy/dist)*v*0.5+0.25+0.35*rand.nextDouble(), dz/dist*v);
+			}
+			else {
+				world.setBlock(p, cs, Block.UPDATE_ALL | Block.UPDATE_SKIP_ON_PLACE);
+			}
+		}
 		world.removeBlock(pos, false);
 		world.explode(null, pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5, power, Level.ExplosionInteraction.BLOCK);
 	}
@@ -101,13 +122,6 @@ public class TileEntitySolenoidMagnet extends TileEntityReactorBase implements R
 			torque = MINTORQUE*8;
 			omega = 4096;
 			power = (long)omega*(long)torque;
-		}
-
-		if (ReactorCraft.LOGGER.isDebugEnabled()) {
-			if (world.isClientSide())
-				ReactorCraft.LOGGER.debug("Clientside "+this+" receiving "+torque+" Nm @ "+omega+" rad/s. Phi="+phi);
-			else
-				ReactorCraft.LOGGER.debug("Serverside "+this+" receiving "+torque+" Nm @ "+omega+" rad/s.");
 		}
 
 		if (DragonAPI.debugtest || hasMultiBlock && checkForToroids && this.arePowerReqsMet()) {
