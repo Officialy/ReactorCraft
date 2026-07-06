@@ -1,5 +1,16 @@
 # Legacy-file cleanup — what was deleted and what to know before you miss it
 
+## Status of the recorded deferrals
+- **OFF-51 fluid interactions** — DONE `3563490` (full interaction map in `BlockReactorMachine`).
+- **Canister per-fluid names (ReactorNames)** — DONE `3563490` (component-driven name + fluid lang).
+- **ReactorConfig → ModConfigSpec** — DONE `3563490` (`ReactorOptions.SPEC`, COMMON config,
+  incl. `heavywaterdimensions` honoured by the heavy pump).
+- **Machine recipes (~32)** — still gated on unported RotaryCraft items (basepanel, pipe, …);
+  that is a RotaryCraft content port, tracked in `datagen.md`.
+- **Handbook** (ReactorBook/Descriptions/GuiReactorBook*) — not started; large standalone feature.
+- **Tritium/fluorite lamp** — not started; needs the block+renderer port (queue behind the BER batches).
+- **Per-machine light values** — not checked yet (see BlockReactorTile note below).
+
 All deleted files are pristine 1.7.10 source, never on the build allowlist, and remain fully
 recoverable: `git show origin/master:<OriginalPath>.java` (Reika's original) or `git log -- <path>`
 for the relocated copy. This file records the still-useful knowledge that lived in them.
