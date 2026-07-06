@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/heavy_pump"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/heavy_pump",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "heavy_pump"
+    }
   }
 }

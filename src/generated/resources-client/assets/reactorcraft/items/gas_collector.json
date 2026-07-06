@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/gas_collector"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/gas_collector",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "gas_collector"
+    }
   }
 }

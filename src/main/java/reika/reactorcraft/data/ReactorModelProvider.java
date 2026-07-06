@@ -58,7 +58,8 @@ public class ReactorModelProvider extends ModelProvider {
     // is not yet ported keep the flat cube_all icon until it lands.
     private static final Set<String> MACHINE_ITEM_MODELS = Set.of(
             "control_rod", "toroid_magnet", "solenoid_magnet", "steam_grate", "condenser", "turbine_core",
-            "waste_storage", "electrolyzer", "solar_exchanger", "fusion_marker");
+            "waste_storage", "electrolyzer", "solar_exchanger", "fusion_marker",
+            "heavy_pump", "isotope_centrifuge", "uranium_processor", "reactor_pump", "heat_exchanger", "gas_collector");
 
     public ReactorModelProvider(PackOutput output) {
         super(output, ReactorCraft.MODID);

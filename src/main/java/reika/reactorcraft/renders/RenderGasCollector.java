@@ -1,126 +1,79 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
- * Distribution of the software in any form is only allowed with
- * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.renders;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
 
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
-import reika.dragonapi.instantiable.data.immutable.WorldLocation;
-import reika.dragonapi.interfaces.tileentity.RenderFetcher;
-import reika.dragonapi.libraries.ReikaAABBHelper;
-import reika.dragonapi.libraries.java.ReikaJavaLibrary;
-import reika.reactorcraft.base.ReactorRenderBase;
-import reika.reactorcraft.base.TileEntityReactorBase;
+import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.base.ReactorTERenderer;
+import reika.reactorcraft.blocks.BlockReactorMachine;
 import reika.reactorcraft.models.ModelGasCollector;
+import reika.reactorcraft.registry.ReactorModelLayers;
 import reika.reactorcraft.tileentities.TileEntityGasCollector;
 
-public class RenderGasCollector extends ReactorRenderBase
-{
+/**
+ * The legacy read-direction target overlay (debug AABB highlight on the adjacent furnace/refrigerator,
+ * {@code renderTarget}/{@code ReikaAABBHelper.renderAABB}) is not ported -- pure debug visual, no
+ * gameplay effect.
+ */
+public class RenderGasCollector extends ReactorTERenderer<TileEntityGasCollector> {
 
-	private ModelGasCollector GasCollectorModel = new ModelGasCollector();
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "textures/tileentity/co2collector.png");
 
-	/**
-	 * Renders the TileEntity for the position.
-	 */
-	public void renderTileEntityGasCollectorAt(TileEntityGasCollector tile, double par2, double par4, double par6, float par8)
-	{
-		int var9;
+    private final ModelGasCollector model;
 
-		if (!tile.isInWorld())
-			var9 = 0;
-		else
-			var9 = tile.getBlockMetadata();
+    public RenderGasCollector(BlockEntityRendererProvider.Context context) {
+        model = new ModelGasCollector(context.bakeLayer(ReactorModelLayers.GAS_COLLECTOR));
+    }
 
-		ModelGasCollector var14;
-		var14 = GasCollectorModel;
+    @Override
+    protected Identifier getSubmitTexture(BlockEntity be) {
+        return TEXTURE;
+    }
 
-		this.bindTextureByName("/Reika/ReactorCraft/Textures/TileEntity/co2collector.png");
+    private static float facingAngle(Direction d) {
+        return switch (d) {
+            case DOWN, NORTH -> 180.0F;
+            case EAST -> 90.0F;
+            case WEST -> 270.0F;
+            default -> 0.0F; // UP, SOUTH
+        };
+    }
 
-		GL11.glPushMatrix();
-		GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-		GL11.glTranslatef((float)par2, (float)par4 + 2.0F, (float)par6 + 1.0F);
-		GL11.glScalef(1.0F, -1.0F, -1.0F);
-		GL11.glTranslatef(0.5F, 0.5F, 0.5F);
-		int var11 = 0;	 //used to rotate the model about metadata
+    @Override
+    protected void renderModel(PoseStack stack, BlockEntity be, VertexConsumer vc, int light) {
+        TileEntityGasCollector te = (TileEntityGasCollector) be;
+        stack.pushPose();
+        stack.translate(0.0, 2.0, 1.0);
+        stack.scale(1.0F, -1.0F, -1.0F);
+        stack.translate(0.5, 0.5, 0.5);
 
-		if (tile.isInWorld()) {
+        Direction facing = be.getBlockState().getValue(BlockReactorMachine.FACING);
+        float angle = facingAngle(facing);
+        if (facing.getAxis() == Direction.Axis.Y) {
+            stack.mulPose(Axis.ZP.rotationDegrees(angle));
+            if (facing == Direction.DOWN)
+                stack.translate(0.0, -2.0, 0.0);
+        }
+        else {
+            stack.mulPose(Axis.XP.rotationDegrees(90F));
+            stack.mulPose(Axis.ZP.rotationDegrees(angle));
+            stack.translate(0.0, -1.0, -1.0);
+        }
 
-			switch(tile.getBlockMetadata()) {
-				case 1:
-					var11 = 0;
-					break;
-				case 0:
-					var11 = 180;
-					break;
-				case 3:
-					var11 = 0;
-					break;
-				case 5:
-					var11 = 90;
-					break;
-				case 2:
-					var11 = 180;
-					break;
-				case 4:
-					var11 = 270;
-					break;
-			}
-
-			if (tile.getBlockMetadata() < 2) {
-				GL11.glRotatef(var11, 0, 0, 1);
-				if (tile.getBlockMetadata() == 0)
-					GL11.glTranslated(0, -2, 0);
-			}
-			else {
-				GL11.glRotatef(90, 1, 0, 0);
-				GL11.glRotatef(var11, 0, 0, 1);
-				GL11.glTranslated(0, -1, -1);
-			}
-		}
-
-		float var13;
-
-		boolean flag = tile.isInWorld();
-		if (flag)
-			flag = tile.hasFurnace();
-		var14.renderAll(tile, ReikaJavaLibrary.makeListFrom(flag), 0, 0);
-
-		if (tile.isInWorld())
-			GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-		GL11.glPopMatrix();
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-	}
-
-	@Override
-	public void renderTileEntityAt(TileEntity tile, double par2, double par4, double par6, float par8)
-	{
-		if (this.doRenderModel((TileEntityReactorBase)tile))
-			this.renderTileEntityGasCollectorAt((TileEntityGasCollector)tile, par2, par4, par6, par8);
-		if (tile.hasWorldObj() && MinecraftForgeClient.getRenderPass() == 1) {
-			this.renderTarget((TileEntityGasCollector)tile, par2, par4, par6);
-		}
-	}
-
-	private void renderTarget(TileEntityGasCollector tile, double par2, double par4, double par6) {
-		WorldLocation loc = tile.getAdjacentLocation(tile.getReadDirection());
-		AxisAlignedBB box = AxisAlignedBB.getBoundingBox(loc.xCoord, loc.yCoord, loc.zCoord, loc.xCoord+1, loc.yCoord+1, loc.zCoord+1).expand(0.03125, 0.03125, 0.03125);
-		ReikaAABBHelper.renderAABB(box, par2, par4, par6, tile.xCoord, tile.yCoord, tile.zCoord, tile.ticks, 0, 127, 255, true);
-	}
-
-	@Override
-	public String getImageFileName(RenderFetcher te) {
-		return "co2collector.png";
-	}
+        model.renderAll(stack, vc, light, te.hasFurnace());
+        stack.popPose();
+    }
 }

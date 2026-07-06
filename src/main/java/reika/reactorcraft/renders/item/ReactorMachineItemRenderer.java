@@ -29,10 +29,16 @@ import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
 import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.models.ModelCentrifuge;
 import reika.reactorcraft.models.ModelControl;
 import reika.reactorcraft.models.ModelCondenser;
 import reika.reactorcraft.models.ModelElectrolyzer;
+import reika.reactorcraft.models.ModelExchanger;
+import reika.reactorcraft.models.ModelGasCollector;
+import reika.reactorcraft.models.ModelHeavyPump;
 import reika.reactorcraft.models.ModelMagnet;
+import reika.reactorcraft.models.ModelProcessor;
+import reika.reactorcraft.models.ModelReactorPump;
 import reika.reactorcraft.models.ModelSolarExchanger;
 import reika.reactorcraft.models.ModelSolenoid;
 import reika.reactorcraft.models.ModelSteamGrate;
@@ -166,6 +172,30 @@ public class ReactorMachineItemRenderer implements NoDataSpecialModelRenderer {
                 case "solar_exchanger" -> {
                     ModelSolarExchanger m = new ModelSolarExchanger(set.bakeLayer(ReactorModelLayers.SOLAR_EXCHANGER));
                     return make((p, vc, l) -> m.renderAll(p, vc, l), tex("solar"));
+                }
+                case "heavy_pump" -> {
+                    ModelHeavyPump m = new ModelHeavyPump(set.bakeLayer(ReactorModelLayers.HEAVY_PUMP));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l, 0F), tex("heavypump"));
+                }
+                case "isotope_centrifuge" -> {
+                    ModelCentrifuge m = new ModelCentrifuge(set.bakeLayer(ReactorModelLayers.CENTRIFUGE));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l, 0F), tex("centrifuge"));
+                }
+                case "uranium_processor" -> {
+                    ModelProcessor m = new ModelProcessor(set.bakeLayer(ReactorModelLayers.PROCESSOR));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l), tex("processor"));
+                }
+                case "reactor_pump" -> {
+                    ModelReactorPump m = new ModelReactorPump(set.bakeLayer(ReactorModelLayers.REACTOR_PUMP));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l, 0F), tex("pump"));
+                }
+                case "heat_exchanger" -> {
+                    ModelExchanger m = new ModelExchanger(set.bakeLayer(ReactorModelLayers.EXCHANGER));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l), tex("exchanger2"));
+                }
+                case "gas_collector" -> {
+                    ModelGasCollector m = new ModelGasCollector(set.bakeLayer(ReactorModelLayers.GAS_COLLECTOR));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l, true), tex("co2collector"));
                 }
                 default -> {
                     ReactorCraft.LOGGER.warn("Unknown machine '{}' for item renderer", machine);

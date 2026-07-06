@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_graphite": {
+      "conditions": {
+        "items": [
+          {
+            "items": "reactorcraft:graphite"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "reactorcraft:neutron_reflector"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_graphite"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "reactorcraft:neutron_reflector"
+    ]
+  }
+}

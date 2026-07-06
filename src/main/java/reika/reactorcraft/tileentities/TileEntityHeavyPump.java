@@ -36,6 +36,7 @@ import reika.reactorcraft.base.TileEntityReactorBase;
 import reika.reactorcraft.registry.ReactorAchievements;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorFluids;
+import reika.reactorcraft.registry.ReactorOptions;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.api.power.PowerTransferHelper;
 import reika.rotarycraft.auxiliary.interfaces.PipeConnector;

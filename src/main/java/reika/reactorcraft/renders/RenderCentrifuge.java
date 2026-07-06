@@ -1,72 +1,83 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
- * Distribution of the software in any form is only allowed with
- * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.renders;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import net.minecraft.tileentity.TileEntity;
-import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
-import reika.dragonapi.interfaces.tileentity.RenderFetcher;
-import reika.reactorcraft.base.ReactorRenderBase;
-import reika.reactorcraft.base.TileEntityReactorBase;
+import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.base.ReactorTERenderer;
 import reika.reactorcraft.models.ModelCentrifuge;
+import reika.reactorcraft.registry.ReactorModelLayers;
 import reika.reactorcraft.tileentities.processing.TileEntityCentrifuge;
-import reika.rotarycraft.auxiliary.IORenderer;
 
-public class RenderCentrifuge extends ReactorRenderBase
-{
-	private ModelCentrifuge CentrifugeModel = new ModelCentrifuge();
+/**
+ * The legacy shaft-IO connector overlay ({@code IORenderer.renderIO}) is not ported — ReactorCraft
+ * tile entities don't yet implement RotaryCraft's {@code BlockEntityIOMachine} interface.
+ */
+public class RenderCentrifuge extends ReactorTERenderer<TileEntityCentrifuge> {
 
-	/**
-	 * Renders the TileEntity for the position.
-	 */
-	public void renderTileEntityCentrifugeAt(TileEntityCentrifuge tile, double par2, double par4, double par6, float par8)
-	{
-		ModelCentrifuge var14;
-		var14 = CentrifugeModel;
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "textures/tileentity/centrifuge.png");
 
-		this.bindTextureByName("/Reika/ReactorCraft/Textures/TileEntity/centrifuge.png");
+    private final ModelCentrifuge model;
 
-		GL11.glPushMatrix();
-		GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-		GL11.glTranslatef((float)par2, (float)par4 + 2.0F, (float)par6 + 1.0F);
-		GL11.glScalef(1.0F, -1.0F, -1.0F);
-		GL11.glTranslatef(0.5F, 0.5F, 0.5F);
-		int var11 = 0;
-		float var13;
+    public RenderCentrifuge(BlockEntityRendererProvider.Context context) {
+        model = new ModelCentrifuge(context.bakeLayer(ReactorModelLayers.CENTRIFUGE));
+    }
 
-		var14.renderAll(tile, null, -tile.phi);
+    @Override
+    protected Identifier getSubmitTexture(BlockEntity be) {
+        return TEXTURE;
+    }
 
-		if (tile.isInWorld())
-			GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-		GL11.glPopMatrix();
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+    @Override
+    protected void renderModel(PoseStack stack, BlockEntity be, VertexConsumer vc, int light) {
+        stack.pushPose();
+        stack.translate(0.0, 2.0, 1.0);
+        stack.scale(1.0F, -1.0F, -1.0F);
+        stack.translate(0.5, 0.5, 0.5);
+        model.renderAll(stack, vc, light, -spinAngle((TileEntityCentrifuge) be));
+        stack.popPose();
+    }
 
-	}
-
-	@Override
-	public void renderTileEntityAt(TileEntity tile, double par2, double par4, double par6, float par8)
-	{
-		if (this.doRenderModel((TileEntityReactorBase)tile))
-			this.renderTileEntityCentrifugeAt((TileEntityCentrifuge)tile, par2, par4, par6, par8);
-		if (((TileEntityReactorBase) tile).isInWorld() && MinecraftForgeClient.getRenderPass() == 1) {
-			IORenderer.renderIO(tile, par2, par4, par6);
-			//IOAPI.renderIO((ShaftMachine)tile, par2, par4, par6);
-		}
-	}
-
-	@Override
-	public String getImageFileName(RenderFetcher te) {
-		return "centrifuge.png";
-	}
+    /**
+     * Client-derived spin angle -- the client BE never ticks, so {@code te.phi} only jumps once per
+     * sync packet. Legacy {@code animateWithTick} accumulated phi per-tick in omega-dependent steps
+     * (each bracket's contribution is cumulative with the two trailing independent {@code if}s);
+     * reproduce that same step function as a degrees-per-tick rate from the game clock.
+     */
+    private static float spinAngle(TileEntityCentrifuge te) {
+        int omega = te.getOmega();
+        float degPerTick = 0F;
+        if (omega >= 262144)
+            degPerTick += 40F;
+        else if (omega >= 65536)
+            degPerTick += 30F;
+        else if (omega >= 16384)
+            degPerTick += 20F;
+        else if (omega >= 4096)
+            degPerTick += 15F;
+        if (omega >= 1024)
+            degPerTick += 10F;
+        if (omega >= 256)
+            degPerTick += 7F;
+        else if (omega > 0)
+            degPerTick += 5F;
+        if (degPerTick <= 0F)
+            return 0F;
+        Minecraft mc = Minecraft.getInstance();
+        double t = (mc.level != null ? mc.level.getGameTime() : 0L)
+                + mc.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        return (float) ((t * degPerTick) % 360.0);
+    }
 }

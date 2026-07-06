@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/isotope_centrifuge"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/isotope_centrifuge",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "isotope_centrifuge"
+    }
   }
 }
