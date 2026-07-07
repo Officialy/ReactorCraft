@@ -1,90 +1,64 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
- * Distribution of the software in any form is only allowed with
- * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.renders;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
 
-import net.minecraft.tileentity.TileEntity;
-import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
-import reika.dragonapi.interfaces.tileentity.RenderFetcher;
-import reika.reactorcraft.base.ReactorRenderBase;
-import reika.reactorcraft.base.TileEntityReactorBase;
+import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.base.ReactorTERenderer;
 import reika.reactorcraft.models.ModelDiffuser;
+import reika.reactorcraft.registry.ReactorModelLayers;
 import reika.reactorcraft.tileentities.TileEntitySteamDiffuser;
-import reika.rotarycraft.auxiliary.IORenderer;
 
-public class RenderSteamDiffuser extends ReactorRenderBase
-{
-	private ModelDiffuser DiffuserModel = new ModelDiffuser();
+/**
+ * 26.2 port of the steam diffuser BER (legacy RenderSteamDiffuser). Static box model, no moving
+ * parts; texture {@code diffuser.png}.
+ */
+public class RenderSteamDiffuser extends ReactorTERenderer<TileEntitySteamDiffuser> {
 
-	/**
-	 * Renders the TileEntity for the position.
-	 */
-	public void renderTileEntityDiffuserAt(TileEntitySteamDiffuser tile, double par2, double par4, double par6, float par8)
-	{
-		ModelDiffuser var14;
-		var14 = DiffuserModel;
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "textures/tileentity/diffuser.png");
 
-		this.bindTextureByName("/Reika/ReactorCraft/Textures/TileEntity/diffuser.png");
+    private final ModelDiffuser model;
 
-		GL11.glPushMatrix();
-		GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-		GL11.glTranslatef((float)par2, (float)par4 + 2.0F, (float)par6 + 1.0F);
-		GL11.glScalef(1.0F, -1.0F, -1.0F);
-		GL11.glTranslatef(0.5F, 0.5F, 0.5F);
-		int var11 = 0;
-		float var13;
+    public RenderSteamDiffuser(BlockEntityRendererProvider.Context context) {
+        model = new ModelDiffuser(context.bakeLayer(ReactorModelLayers.STEAM_DIFFUSER));
+    }
 
-		float angle = 0;
+    @Override
+    protected Identifier getSubmitTexture(BlockEntity be) {
+        return TEXTURE;
+    }
 
-		switch(tile.getBlockMetadata()) {
-		case 0:
-			angle = 90;
-			break;
-		case 1:
-			angle = 270;
-			break;
-		case 2:
-			angle = 180;
-			break;
-		case 3:
-			break;
-		}
+    private static float facingAngle(Direction d) {
+        return switch (d) {
+            case WEST -> 90.0F;
+            case EAST -> 270.0F;
+            case NORTH -> 180.0F;
+            default -> 0.0F; // SOUTH + vertical fallback
+        };
+    }
 
-		GL11.glRotated(angle, 0, 1, 0);
-
-		var14.renderAll(tile, null, -tile.phi);
-
-		if (tile.isInWorld())
-			GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-		GL11.glPopMatrix();
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-
-	}
-
-	@Override
-	public void renderTileEntityAt(TileEntity tile, double par2, double par4, double par6, float par8)
-	{
-		if (this.doRenderModel((TileEntityReactorBase)tile))
-			this.renderTileEntityDiffuserAt((TileEntitySteamDiffuser)tile, par2, par4, par6, par8);
-		if (((TileEntityReactorBase) tile).isInWorld() && MinecraftForgeClient.getRenderPass() == 1) {
-			IORenderer.renderIO(tile, par2, par4, par6);
-			//IOAPI.renderIO((ShaftMachine)tile, par2, par4, par6);
-		}
-	}
-
-	@Override
-	public String getImageFileName(RenderFetcher te) {
-		return "diffuser.png";
-	}
+    @Override
+    protected void renderModel(PoseStack stack, BlockEntity be, VertexConsumer vc, int light) {
+        stack.pushPose();
+        stack.translate(0.0, 2.0, 1.0);
+        stack.scale(1.0F, -1.0F, -1.0F);
+        stack.translate(0.5, 0.5, 0.5);
+        TileEntitySteamDiffuser diffuser = (TileEntitySteamDiffuser) be;
+        stack.mulPose(Axis.YP.rotationDegrees(facingAngle(diffuser.getFacing())));
+        model.renderAll(stack, vc, light);
+        stack.popPose();
+    }
 }

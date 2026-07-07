@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/high_pressure_turbine"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/high_pressure_turbine",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "high_pressure_turbine"
+    }
   }
 }

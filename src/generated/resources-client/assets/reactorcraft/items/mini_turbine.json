@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/mini_turbine"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/mini_turbine",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "mini_turbine"
+    }
   }
 }

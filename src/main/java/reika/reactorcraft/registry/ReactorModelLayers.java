@@ -17,8 +17,10 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.entities.RenderNeutron;
+import reika.reactorcraft.models.ModelBigTurbine;
 import reika.reactorcraft.models.ModelCentrifuge;
 import reika.reactorcraft.models.ModelCondenser;
+import reika.reactorcraft.models.ModelDiffuser;
 import reika.reactorcraft.models.ModelControl;
 import reika.reactorcraft.models.ModelElectrolyzer;
 import reika.reactorcraft.models.ModelExchanger;
@@ -27,15 +29,19 @@ import reika.reactorcraft.models.ModelGenerator;
 import reika.reactorcraft.models.ModelGasCollector;
 import reika.reactorcraft.models.ModelHeavyPump;
 import reika.reactorcraft.models.ModelMagnet;
+import reika.reactorcraft.models.ModelMiniTurbine;
 import reika.reactorcraft.models.ModelProcessor;
+import reika.reactorcraft.models.ModelSolarTop;
 import reika.reactorcraft.models.ModelReactorPump;
 import reika.reactorcraft.models.ModelSolarExchanger;
 import reika.reactorcraft.models.ModelSolenoid;
 import reika.reactorcraft.models.ModelSteamGrate;
 import reika.reactorcraft.models.ModelTurbine;
 import reika.reactorcraft.models.ModelWasteStorage;
+import reika.reactorcraft.renders.RenderBigTurbine;
 import reika.reactorcraft.renders.RenderCentrifuge;
 import reika.reactorcraft.renders.RenderCondenser;
+import reika.reactorcraft.renders.RenderSteamDiffuser;
 import reika.reactorcraft.renders.RenderControl;
 import reika.reactorcraft.renders.RenderElectrolyzer;
 import reika.reactorcraft.renders.RenderExchanger;
@@ -43,7 +49,9 @@ import reika.reactorcraft.renders.RenderFusionMarker;
 import reika.reactorcraft.renders.RenderGasCollector;
 import reika.reactorcraft.renders.RenderHeavyPump;
 import reika.reactorcraft.renders.RenderMagnet;
+import reika.reactorcraft.renders.RenderMiniTurbine;
 import reika.reactorcraft.renders.RenderProcessor;
+import reika.reactorcraft.renders.RenderSolarTop;
 import reika.reactorcraft.renders.RenderReactorPump;
 import reika.reactorcraft.renders.RenderSolarExchanger;
 import reika.reactorcraft.renders.RenderSolenoid;
@@ -84,12 +92,21 @@ public final class ReactorModelLayers {
 	public static final ModelLayerLocation GAS_COLLECTOR = layer("gas_collector");
 	public static final ModelLayerLocation FLYWHEEL = layer("flywheel");
 	public static final ModelLayerLocation GENERATOR = layer("generator");
+	public static final ModelLayerLocation MINI_TURBINE = layer("mini_turbine");
+	public static final ModelLayerLocation STEAM_DIFFUSER = layer("steam_diffuser");
+	public static final ModelLayerLocation SOLAR_TOP = layer("solar_top");
 	// One layer per turbine multiblock stage (0..MAX_STAGE): the blade box size is baked per stage so a
 	// row of cores renders as one tapered turbine. RenderTurbine bakes all and picks by getStage().
 	public static final ModelLayerLocation[] TURBINE_STAGES = new ModelLayerLocation[reika.reactorcraft.models.ModelTurbine.MAX_STAGE + 1];
 	static {
 		for (int i = 0; i < TURBINE_STAGES.length; i++)
 			TURBINE_STAGES[i] = layer("turbine_stage_" + i);
+	}
+	// Same idea for the high-pressure (big) turbine, which has its own max stage (6).
+	public static final ModelLayerLocation[] BIG_TURBINE_STAGES = new ModelLayerLocation[reika.reactorcraft.models.ModelBigTurbine.MAX_STAGE + 1];
+	static {
+		for (int i = 0; i < BIG_TURBINE_STAGES.length; i++)
+			BIG_TURBINE_STAGES[i] = layer("big_turbine_stage_" + i);
 	}
 
 	public static void init(IEventBus bus) {
@@ -106,6 +123,10 @@ public final class ReactorModelLayers {
 		event.registerBlockEntityRenderer(ReactorBlockEntities.GRATE.get(), RenderSteamGrate::new);
 		event.registerBlockEntityRenderer(ReactorBlockEntities.CONTROL.get(), RenderControl::new);
 		event.registerBlockEntityRenderer(ReactorBlockEntities.TURBINECORE.get(), RenderTurbine::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.BIGTURBINE.get(), RenderBigTurbine::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.MINITURBINE.get(), RenderMiniTurbine::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.DIFFUSER.get(), RenderSteamDiffuser::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.SOLARTOP.get(), RenderSolarTop::new);
 		event.registerBlockEntityRenderer(ReactorBlockEntities.STORAGE.get(), RenderWasteStorage::new);
 		event.registerBlockEntityRenderer(ReactorBlockEntities.ELECTROLYZER.get(), RenderElectrolyzer::new);
 		event.registerBlockEntityRenderer(ReactorBlockEntities.SOLAR.get(), RenderSolarExchanger::new);
@@ -159,9 +180,16 @@ public final class ReactorModelLayers {
 		event.registerLayerDefinition(GAS_COLLECTOR, ModelGasCollector::createLayer);
 		event.registerLayerDefinition(FLYWHEEL, ModelFlywheel::createLayer);
 		event.registerLayerDefinition(GENERATOR, ModelGenerator::createLayer);
+		event.registerLayerDefinition(MINI_TURBINE, ModelMiniTurbine::createLayer);
+		event.registerLayerDefinition(STEAM_DIFFUSER, ModelDiffuser::createLayer);
+		event.registerLayerDefinition(SOLAR_TOP, ModelSolarTop::createLayer);
 		for (int i = 0; i < TURBINE_STAGES.length; i++) {
 			final int s = i;
 			event.registerLayerDefinition(TURBINE_STAGES[s], () -> ModelTurbine.createLayer(s));
+		}
+		for (int i = 0; i < BIG_TURBINE_STAGES.length; i++) {
+			final int s = i;
+			event.registerLayerDefinition(BIG_TURBINE_STAGES[s], () -> ModelBigTurbine.createLayer(s));
 		}
 	}
 

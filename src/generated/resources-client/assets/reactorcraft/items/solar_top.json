@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/solar_top"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/solar_top",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "solar_top"
+    }
   }
 }
