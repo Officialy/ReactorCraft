@@ -22,6 +22,8 @@ import reika.reactorcraft.models.ModelCondenser;
 import reika.reactorcraft.models.ModelControl;
 import reika.reactorcraft.models.ModelElectrolyzer;
 import reika.reactorcraft.models.ModelExchanger;
+import reika.reactorcraft.models.ModelFlywheel;
+import reika.reactorcraft.models.ModelGenerator;
 import reika.reactorcraft.models.ModelGasCollector;
 import reika.reactorcraft.models.ModelHeavyPump;
 import reika.reactorcraft.models.ModelMagnet;
@@ -47,6 +49,8 @@ import reika.reactorcraft.renders.RenderSolarExchanger;
 import reika.reactorcraft.renders.RenderSolenoid;
 import reika.reactorcraft.renders.RenderSteamGrate;
 import reika.reactorcraft.renders.RenderTurbine;
+import reika.reactorcraft.renders.RenderTurbineWheel;
+import reika.reactorcraft.renders.RenderGenerator;
 import reika.reactorcraft.renders.RenderWasteStorage;
 
 /**
@@ -78,6 +82,8 @@ public final class ReactorModelLayers {
 	public static final ModelLayerLocation REACTOR_PUMP = layer("reactor_pump");
 	public static final ModelLayerLocation EXCHANGER = layer("exchanger");
 	public static final ModelLayerLocation GAS_COLLECTOR = layer("gas_collector");
+	public static final ModelLayerLocation FLYWHEEL = layer("flywheel");
+	public static final ModelLayerLocation GENERATOR = layer("generator");
 	// One layer per turbine multiblock stage (0..MAX_STAGE): the blade box size is baked per stage so a
 	// row of cores renders as one tapered turbine. RenderTurbine bakes all and picks by getStage().
 	public static final ModelLayerLocation[] TURBINE_STAGES = new ModelLayerLocation[reika.reactorcraft.models.ModelTurbine.MAX_STAGE + 1];
@@ -109,6 +115,8 @@ public final class ReactorModelLayers {
 		event.registerBlockEntityRenderer(ReactorBlockEntities.PUMP.get(), RenderReactorPump::new);
 		event.registerBlockEntityRenderer(ReactorBlockEntities.EXCHANGER.get(), RenderExchanger::new);
 		event.registerBlockEntityRenderer(ReactorBlockEntities.COLLECTOR.get(), RenderGasCollector::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.FLYWHEEL.get(), RenderTurbineWheel::new);
+		event.registerBlockEntityRenderer(ReactorBlockEntities.GENERATOR.get(), RenderGenerator::new);
 
 		// Fluid ducts: the connected pipe + fluid tube (legacy DuctRenderer, ported). Empty in-world model
 		// (BlockReactorDuct is a BlockReactorMachineModelled), so the BER draws the whole pipe from the BE's
@@ -149,6 +157,8 @@ public final class ReactorModelLayers {
 		event.registerLayerDefinition(REACTOR_PUMP, ModelReactorPump::createLayer);
 		event.registerLayerDefinition(EXCHANGER, ModelExchanger::createLayer);
 		event.registerLayerDefinition(GAS_COLLECTOR, ModelGasCollector::createLayer);
+		event.registerLayerDefinition(FLYWHEEL, ModelFlywheel::createLayer);
+		event.registerLayerDefinition(GENERATOR, ModelGenerator::createLayer);
 		for (int i = 0; i < TURBINE_STAGES.length; i++) {
 			final int s = i;
 			event.registerLayerDefinition(TURBINE_STAGES[s], () -> ModelTurbine.createLayer(s));

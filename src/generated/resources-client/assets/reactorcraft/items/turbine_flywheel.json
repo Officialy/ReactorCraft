@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/turbine_flywheel"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/turbine_flywheel",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "turbine_flywheel"
+    }
   }
 }

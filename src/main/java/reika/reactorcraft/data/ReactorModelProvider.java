@@ -59,7 +59,8 @@ public class ReactorModelProvider extends ModelProvider {
     private static final Set<String> MACHINE_ITEM_MODELS = Set.of(
             "control_rod", "toroid_magnet", "solenoid_magnet", "steam_grate", "condenser", "turbine_core",
             "waste_storage", "electrolyzer", "solar_exchanger", "fusion_marker",
-            "heavy_pump", "isotope_centrifuge", "uranium_processor", "reactor_pump", "heat_exchanger", "gas_collector");
+            "heavy_pump", "isotope_centrifuge", "uranium_processor", "reactor_pump", "heat_exchanger", "gas_collector",
+            "turbine_flywheel", "reactor_generator");
 
     public ReactorModelProvider(PackOutput output) {
         super(output, ReactorCraft.MODID);

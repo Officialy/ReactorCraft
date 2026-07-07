@@ -1,146 +1,99 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
- * Distribution of the software in any form is only allowed with
- * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.renders;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
 
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.IIcon;
-import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
-import reika.dragonapi.interfaces.tileentity.RenderFetcher;
-import reika.dragonapi.libraries.io.ReikaTextureHelper;
-import reika.reactorcraft.base.ReactorRenderBase;
-import reika.reactorcraft.base.TileEntityReactorBase;
+import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.base.ReactorTERenderer;
 import reika.reactorcraft.models.ModelFlywheel;
-import reika.reactorcraft.registry.ReactorBlocks;
+import reika.reactorcraft.registry.ReactorModelLayers;
+import reika.reactorcraft.registry.ReactorTiles;
 import reika.reactorcraft.tileentities.TileEntityReactorFlywheel;
-import reika.rotarycraft.auxiliary.IORenderer;
+import reika.reactorcraft.tileentities.powergen.TileEntityTurbineCore;
 
-public class RenderTurbineWheel extends ReactorRenderBase {
+/**
+ * 26.2 port of the flywheel BER. Legacy only rendered the spinning wheel when
+ * {@code hasMultiBlock()} (the multiblock housing formed); the unformed state drew a flat
+ * placeholder quad using the multiblock-shell block's own texture, which needs a BER quad helper
+ * this port doesn't have yet -- rendering nothing unformed is the TODO in its place.
+ */
+public class RenderTurbineWheel extends ReactorTERenderer<TileEntityReactorFlywheel> {
 
-	private ModelFlywheel model = new ModelFlywheel();
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "textures/tileentity/flywheel.png");
 
-	@Override
-	public String getImageFileName(RenderFetcher te) {
-		return "flywheel";
-	}
+    private final ModelFlywheel model;
 
-	public void renderTileEntityReactorFlywheelAt(TileEntityReactorFlywheel tile, double par2, double par4, double par6, float par8)
-	{
-		this.bindTextureByName("/Reika/ReactorCraft/Textures/TileEntity/flywheel.png");
+    public RenderTurbineWheel(BlockEntityRendererProvider.Context context) {
+        model = new ModelFlywheel(context.bakeLayer(ReactorModelLayers.FLYWHEEL));
+    }
 
-		GL11.glPushMatrix();
-		GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-		GL11.glTranslated(par2, par4+2, par6+1);
-		GL11.glScalef(1.0F, -1.0F, -1.0F);
-		GL11.glTranslatef(0.5F, 0.5F, 0.5F);
+    @Override
+    protected Identifier getSubmitTexture(BlockEntity be) {
+        TileEntityReactorFlywheel tile = (TileEntityReactorFlywheel) be;
+        return tile.hasMultiBlock() ? TEXTURE : null;
+    }
 
-		switch(tile.getBlockMetadata()) {
-		case 0:
-			GL11.glRotatef(270, 0, 1, 0);
-			break;
-		case 1:
-			GL11.glRotatef(90, 0, 1, 0);
-			break;
-		case 2:
-			GL11.glRotatef(0, 0, 1, 0);
-			break;
-		case 3:
-			GL11.glRotatef(180, 0, 1, 0);
-			break;
-		}
+    // Legacy meta table (0=EAST,1=WEST,2=SOUTH,3=NORTH -> 270/90/0/180) matches RenderTurbine's
+    // Direction->angle mapping exactly.
+    private static float facingAngle(Direction d) {
+        return switch (d) {
+            case WEST -> 90.0F;
+            case EAST -> 270.0F;
+            case NORTH -> 180.0F;
+            default -> 0.0F; // SOUTH + vertical fallback
+        };
+    }
 
-		if (tile.isInWorld()) {
-			if (tile.hasMultiBlock())
-				model.renderAll(tile, null, tile.phi);
-			else {
-				GL11.glTranslated(-0.5, -0.5, -0.5);
-				Tessellator v5 = Tessellator.instance;
-				IIcon ico = ReactorBlocks.FLYWHEELMULTI.getBlockInstance().getIcon(0, 1);
-				ReikaTextureHelper.bindTerrainTexture();
-				float u = ico.getMinU();
-				float v = ico.getMinV();
-				float du = ico.getMaxU();
-				float dv = ico.getMaxV();
-				v5.startDrawingQuads();
-				v5.setNormal(0, -1, 0);
-				v5.addVertexWithUV(0, 1, 0, u, v);
-				v5.addVertexWithUV(1, 1, 0, du, v);
-				v5.addVertexWithUV(1, 1, 1, du, dv);
-				v5.addVertexWithUV(0, 1, 1, u, dv);
+    @Override
+    protected void renderModel(PoseStack stack, BlockEntity be, VertexConsumer vc, int light) {
+        TileEntityReactorFlywheel tile = (TileEntityReactorFlywheel) be;
+        stack.pushPose();
+        stack.translate(0.0, 2.0, 1.0);
+        stack.scale(1.0F, -1.0F, -1.0F);
+        stack.translate(0.5, 0.5, 0.5);
+        stack.mulPose(Axis.YP.rotationDegrees(facingAngle(tile.getFacing())));
+        model.renderAll(stack, vc, light, spinAngle(tile));
+        stack.popPose();
+    }
 
-				v5.setNormal(0, -0.1F, 0);
-				v5.addVertexWithUV(0, 2, 1, u, dv);
-				v5.addVertexWithUV(1, 2, 1, du, dv);
-				v5.addVertexWithUV(1, 2, 0, du, v);
-				v5.addVertexWithUV(0, 2, 0, u, v);
-
-				v5.setNormal(0, -0.25F, 0);
-				v5.addVertexWithUV(1, 2, 1, du, dv);
-				v5.addVertexWithUV(1, 1, 1, du, v);
-				v5.addVertexWithUV(1, 1, 0, u, v);
-				v5.addVertexWithUV(1, 2, 0, u, dv);
-
-				v5.setNormal(0, -0.5F, 0);
-				v5.addVertexWithUV(0, 2, 1, u, dv);
-				v5.addVertexWithUV(0, 1, 1, u, v);
-				v5.addVertexWithUV(1, 1, 1, du, v);
-				v5.addVertexWithUV(1, 2, 1, du, dv);
-
-				v5.addVertexWithUV(1, 2, 0, du, dv);
-				v5.addVertexWithUV(1, 1, 0, du, v);
-				v5.addVertexWithUV(0, 1, 0, u, v);
-				v5.addVertexWithUV(0, 2, 0, u, dv);
-
-				v5.setNormal(0, -0.25F, 0);
-				v5.addVertexWithUV(0, 2, 0, u, dv);
-				v5.addVertexWithUV(0, 1, 0, u, v);
-				v5.addVertexWithUV(0, 1, 1, du, v);
-				v5.addVertexWithUV(0, 2, 1, du, dv);
-				v5.draw();
-			}
-		}
-		else {
-			GL11.glRotatef(180, 0, 1, 0);
-			double sc = 0.25;
-			double a = 0;
-			double b = 0.75;
-			double c = 0;
-			GL11.glTranslated(a, b, c);
-			GL11.glScaled(sc, sc, sc);
-			model.renderAll(tile, null, -tile.phi);
-			GL11.glScaled(1D/sc, 1D/sc, 1D/sc);
-			GL11.glTranslated(-a, -b, -c);
-			GL11.glRotatef(-180, 0, 1, 0);
-		}
-
-		if (tile.isInWorld())
-			GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-		GL11.glPopMatrix();
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-
-	}
-
-	@Override
-	public void renderTileEntityAt(TileEntity tile, double par2, double par4, double par6, float par8)
-	{
-		if (this.doRenderModel((TileEntityReactorBase)tile))
-			this.renderTileEntityReactorFlywheelAt((TileEntityReactorFlywheel)tile, par2, par4, par6, par8);
-		if (((TileEntityReactorBase) tile).isInWorld() && MinecraftForgeClient.getRenderPass() == 1) {
-			IORenderer.renderIO(tile, par2, par4, par6);
-			//IOAPI.renderIO((ShaftMachine)tile, par2, par4, par6);
-		}
-	}
-
+    /**
+     * The flywheel's own {@code omega}/sync tag doesn't carry the turbine's speed to the client fast
+     * enough to look right (legacy {@code animateWithTick} read {@code turbine.phi*6} directly); derive
+     * the spin from the adjacent turbine core's synced {@code getRenderOmega()} instead, exactly like
+     * {@code RenderTurbine.spinAngle}, scaled by the legacy 6x factor.
+     */
+    private static float spinAngle(TileEntityReactorFlywheel te) {
+        Level level = te.getLevel();
+        if (level == null)
+            return 0F;
+        BlockPos tp = te.getBlockPos().relative(te.getFacing());
+        ReactorTiles r = ReactorTiles.getTE(level, tp);
+        if (r == null || !r.isTurbine())
+            return 0F;
+        TileEntityTurbineCore turbine = (TileEntityTurbineCore) level.getBlockEntity(tp);
+        int omega = turbine.getRenderOmega();
+        if (omega <= 0)
+            return 0F;
+        double degPerTick = 6.0 * 0.2 * Math.pow(Math.log(omega + 1) / Math.log(2), 1.05);
+        Minecraft mc = Minecraft.getInstance();
+        double t = (mc.level != null ? mc.level.getGameTime() : 0L)
+                + mc.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        return (float) ((t * degPerTick) % 360.0);
+    }
 }

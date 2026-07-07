@@ -1,6 +1,10 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "reactorcraft:item/reactor_generator"
+    "type": "minecraft:special",
+    "base": "reactorcraft:item/reactor_generator",
+    "model": {
+      "type": "reactorcraft:machine",
+      "machine": "reactor_generator"
+    }
   }
 }
