@@ -45,12 +45,9 @@ Priority: **P1** = broken / dead feature / crash. **P2** = correctness or faithf
 
 ## CONFIRMED OPEN ISSUES (verified this session)
 
-### [P2] ~12 machine blocks still fall back to the `block/steel` texture
-- **Where:** `data/ReactorModelProvider.java` (`BLOCK_TEX` / `MACHINE_ITEM_MODELS`).
-- **Why wrong:** the mat blocks are fixed (`abbba1c`), but the BER-modelled machines whose renderer is
-  still an unported 1.7.10 stub get a flat steel-cube inventory icon. Gated on the render port — see
-  `datagen.md` and `renders-gui.md`.
-- **Size:** M (unblocks per machine as its renderer is ported)
+### ~~[P2] ~12 machine blocks fall back to the `block/steel` texture~~ — RESOLVED
+- The machine renderer port is complete (`ae8840e`, `9e55904`, `0e2802d`): every
+  `BlockReactorMachineModelled` machine has a registered BER and a 3D item icon.
 
 ### [P3] Dead `null` platform fields in EntityNeutron
 - **Where:** `entities/EntityNeutron.java:49-50` — `botaniaPlatform`/`ttPlatform` are `private static

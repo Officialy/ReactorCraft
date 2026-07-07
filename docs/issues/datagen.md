@@ -109,9 +109,8 @@ several of which the in-code comments wrongly call "deferred/blocked" but are ac
 ## Resolution status
 - **[P1] Block tags** — FIXED `6d7d3f3` (ReactorBlockTagsProvider).
 - **[P2] Mat textures / scrubber multi-side** — FIXED `abbba1c`.
-- **[P2] BER item icons** — PARTIAL `abbba1c`: added `fusion_marker` (the one machine with a
-  registered BER missing from the set). The other ~12 are **gated on the render port** — their
-  renderers are still 1.7.10 stubs, so routing their item icon through the BER now would break.
+- **[P2] BER item icons** — DONE. The machine renderer port completed (`ae8840e`, `9e55904`,
+  `0e2802d`); every modelled machine has a registered BER and its item icon routes through it.
 - **[P2] Ammonium loot** — FIXED `6d7d3f3`.
 - **[P2] Component + mat-block recipes** — FIXED `9a5ec2f` (14 recipes, each diffed vs origin).
 - **[P2] machine-block crafting recipes** — PARTIAL `11eea98`. Triaged all ~44 addMachines() recipes;
