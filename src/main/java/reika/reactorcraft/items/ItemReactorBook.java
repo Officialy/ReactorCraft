@@ -1,35 +1,34 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
  * Distribution of the software in any form is only allowed with
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.items;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
-import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.base.ReactorItemBase;
-import reika.reactorcraft.registry.ReactorAchievements;
+import reika.reactorcraft.guis.GuiReactorBook;
 
 public class ItemReactorBook extends ReactorItemBase {
 
-	public ItemReactorBook(int tex) {
-		super(tex);
-		maxStackSize = 1;
+	public ItemReactorBook(Properties properties) {
+		super(properties);
 	}
 
 	@Override
-	public ItemStack onItemRightClick(ItemStack itemstack, World world, EntityPlayer ep)
-	{
-		ep.openGui(ReactorCraft.instance, 10, world, 0, 0, 0);
-		ReactorAchievements.RECUSEBOOK.triggerAchievement(ep);
-		return itemstack;
+	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+		if (level.isClientSide() && hand.equals(InteractionHand.MAIN_HAND)) {
+			Minecraft.getInstance().gui.setScreen(new GuiReactorBook(player, level, 0, 0));
+		}
+		return super.use(level, player, hand);
 	}
-
 }

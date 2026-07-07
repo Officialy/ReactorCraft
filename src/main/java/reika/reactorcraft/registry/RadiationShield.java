@@ -27,6 +27,15 @@ public enum RadiationShield {
 
 	public static final RadiationShield[] shieldList = values();
 
+	public static String getDataAsString() {
+		StringBuilder sb = new StringBuilder();
+		for (RadiationShield type : shieldList) {
+			sb.append(type.displayName + ": " + type.neutronAbsorbChance + "% neutron absorption, " + type.radiationDeflectChance + " radiation containment");
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
+
 	RadiationShield(String s, double n, double r, BlockKey... bks) {
 		displayName = s;
 		neutronAbsorbChance = n;

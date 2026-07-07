@@ -101,6 +101,11 @@ sourceSets.main.java {
     include 'reika/reactorcraft/blocks/BlockReactorMachineModelled.java'
     include 'reika/reactorcraft/blocks/BlockReactorDuct.java'
     include 'reika/reactorcraft/blocks/BlockTritiumLamp.java'
+    include 'reika/reactorcraft/registry/ReactorBook.java'
+    include 'reika/reactorcraft/auxiliary/ReactorBookData.java'
+    include 'reika/reactorcraft/auxiliary/ReactorDescriptions.java'
+    include 'reika/reactorcraft/guis/GuiReactorBook.java'
+    include 'reika/reactorcraft/items/ItemReactorBook.java'
     include 'reika/reactorcraft/command/SolenoidDebugCommand.java'
     // GUI / menu / screen port (OFF-26 ff.)
     include 'reika/reactorcraft/registry/ReactorMenus.java'

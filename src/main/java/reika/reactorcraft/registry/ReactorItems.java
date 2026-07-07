@@ -28,6 +28,7 @@ import reika.reactorcraft.base.ItemReactorMulti;
 import reika.reactorcraft.items.ItemCanister;
 import reika.reactorcraft.items.ItemHeavyBucket;
 import reika.reactorcraft.items.ItemRadiationGoggles;
+import reika.reactorcraft.items.ItemReactorBook;
 import reika.reactorcraft.items.ItemReactorFuel;
 
 /**
@@ -127,7 +128,7 @@ public final class ReactorItems {
 
     // --- TE-cluster items + compatibility refs (mirrors old enum API) ---
     public static final DeferredItem<Item> WASTE_ITEM = reg("waste", () -> new Item(itemProperties()));
-    public static final DeferredItem<Item> REACTOR_BOOK = reg("reactor_book", () -> new Item(itemProperties()));
+    public static final DeferredItem<ItemReactorBook> REACTOR_BOOK = reg("reactor_book", () -> new ItemReactorBook(toolProperties()));
     public static final DeferredItem<Item> MAGNET_ITEM = reg("magnet", () -> new ItemReactorMulti(itemProperties(), 8));
     public static final DeferredItem<ItemRadiationGoggles> GOGGLES_ITEM = reg("radiation_goggles",
             () -> new ItemRadiationGoggles(toolProperties().component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD).build())));
