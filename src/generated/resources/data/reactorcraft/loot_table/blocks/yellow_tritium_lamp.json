@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "reactorcraft:yellow_tritium_lamp"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "reactorcraft:blocks/yellow_tritium_lamp"
+}

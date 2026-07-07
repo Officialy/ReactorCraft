@@ -1,279 +1,73 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
  * Distribution of the software in any form is only allowed with
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.blocks;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.Packet;
-import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.util.IIcon;
-import net.minecraft.world.BlockGetter;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.phys.BlockHitResult;
 
-import reika.dragonapi.ModList;
-import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
-import reika.dragonapi.instantiable.data.immutable.Coordinate;
-import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
-import reika.dragonapi.libraries.mathsci.ReikaTimeHelper;
-import reika.dragonapi.libraries.rendering.ReikaColorAPI;
-import reika.reactorcraft.ReactorCraft;
-import reika.reactorcraft.TritiumLampRenderer;
+import reika.reactorcraft.auxiliary.ReactorStacks;
 import reika.reactorcraft.registry.FluoriteTypes;
-import reika.rotarycraft.registry.BlockRegistry;
+import reika.reactorcraft.registry.ReactorFluids;
+import reika.reactorcraft.registry.ReactorItems;
 
+/**
+ * The tritium lamp: crafted dark, then charged with a tritium canister (right-click) to glow at
+ * full brightness. One block per fluorite colour.
+ *
+ * TODO: the legacy lamp burned out after ~98 Minecraft years (TileEntityTritiumLamp.LIFESPAN) and
+ * reverted to its unlit state; the timer TE is not ported (the lifespan is effectively eternal in
+ * real play).
+ */
 public class BlockTritiumLamp extends Block {
 
-	private final IIcon[] icons = new IIcon[FluoriteTypes.colorList.length];
-	private IIcon bottom;
-	private IIcon top;
-	private IIcon frame;
+	public static final BooleanProperty LIT = BlockStateProperties.LIT;
 
-	public BlockTritiumLamp(Material mat) {
-		super(mat);
-		this.setCreativeTab(ReactorCraft.tabRctr);
-		this.setHardness(1.5F);
-		this.setResistance(8);
-		stepSound = soundTypeGlass;
+	private final FluoriteTypes color;
+
+	public BlockTritiumLamp(BlockBehaviour.Properties properties, FluoriteTypes color) {
+		super(properties);
+		this.color = color;
+		this.registerDefaultState(this.stateDefinition.any().setValue(LIT, false));
+	}
+
+	public FluoriteTypes getColor() {
+		return color;
 	}
 
 	@Override
-	public int getLightValue(BlockGetter iba, int x, int y, int z) {
-		if (iba.getBlockMetadata(x, y, z) < FluoriteTypes.colorList.length)
-			return 0;
-		int color = this.getColor(iba, x, y, z).getColor();
-		return ModList.COLORLIGHT.isLoaded() ? ReikaColorAPI.getPackedIntForColoredLight(color, 15) : 15;
-	}
-
-	private FluoriteTypes getColor(BlockGetter iba, int x, int y, int z) {
-		//TileEntityTritiumLamp te = (TileEntityTritiumLamp)iba.getBlockEntity(x, y, z);
-		//return te != null ? te.getColor() : FluoriteTypes.WHITE;
-		return FluoriteTypes.colorList[iba.getBlockMetadata(x, y, z)%FluoriteTypes.colorList.length];
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+		builder.add(LIT);
 	}
 
 	@Override
-	public int damageDropped(int meta) {
-		return meta;
-	}
-
-	@Override
-	public int getRenderBlockPass() {
-		return 1;
-	}
-
-	@Override
-	public boolean canRenderInPass(int pass) {
-		TritiumLampRenderer.renderPass = pass;
-		return pass <= 1;
-	}
-
-	@Override
-	public boolean isOpaqueCube() {
-		return false;
-	}
-
-	@Override
-	public int getRenderType() {
-		return ReactorCraft.proxy.lampRender;
-	}
-
-	@Override
-	public boolean renderAsNormalBlock() {
-		return false;
-	}
-
-	@Override
-	public void registerBlockIcons(IIconRegister ico) {
-		for (int i = 0; i < icons.length; i++) {
-			icons[i] = ico.registerIcon("reactorcraft:lamp/"+FluoriteTypes.colorList[i].getColorName());
-		}
-		frame = ico.registerIcon("reactorcraft:lamp/frame");
-		top = ico.registerIcon("reactorcraft:lamp/top");
-		bottom = ico.registerIcon("reactorcraft:lamp/bottom");
-	}
-
-	@Override
-	public IIcon getIcon(int s, int meta) {
-		return icons[meta%FluoriteTypes.colorList.length];
-	}
-
-	public IIcon getFrameIcon() {
-		return frame;
-	}
-
-	public IIcon getTopIcon() {
-		return top;
-	}
-
-	public IIcon getBottomIcon() {
-		return bottom;
-	}
-
-	@Override
-	public TileEntity createTileEntity(World world, int meta) {
-		return new TileEntityTritiumLamp();
-	}
-
-	@Override
-	public boolean hasTileEntity(int meta) {
-		return true;
-	}
-
-	@Override
-	public void onBlockAdded(World world, int x, int y, int z) {
-
-	}
-
-	@Override
-	public void breakBlock(World world, int x, int y, int z, Block old, int oldmeta) {
-		TileEntityTritiumLamp te = (TileEntityTritiumLamp)world.getBlockEntity(x, y, z);
-		te.onBreak();
-		super.breakBlock(world, x, y, z, old, oldmeta);
-	}
-
-	@Override
-	public int getDamageValue(World world, int x, int y, int z) {
-		return world.getBlockMetadata(x, y, z);
-	}
-
-	public static class TileEntityTritiumLamp extends TileEntity {
-
-		private BlockArray blocks = new BlockArray();
-
-		private int ticks;
-
-		private long createdTime;
-
-		public static final long LIFESPAN = (long)(ReikaTimeHelper.YEAR.getMinecraftDuration()*98.4);
-
-		@Override
-		public boolean canUpdate() {
-			return true;
-		}
-
-		@Override
-		public void updateEntity() {
-			if (ticks == 0 && level.getBlockMetadata(xCoord, yCoord, zCoord) >= FluoriteTypes.colorList.length) {
-				this.onCreate();
+	protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+		if (!state.getValue(LIT) && ReactorStacks.isCanisterOf(stack, ReactorFluids.TRITIUM.get())) {
+			if (!level.isClientSide()) {
+				level.setBlock(pos, state.setValue(LIT, true), Block.UPDATE_ALL);
+				if (!player.getAbilities().instabuild)
+					player.setItemInHand(hand, ReactorItems.CANISTER_REF.getStackOf());
 			}
-			if (!level.isRemote) {
-				if (level.getTotalWorldTime()-createdTime >= LIFESPAN) {
-					this.onBreak();
-					level.setBlockMetadataWithNotify(xCoord, yCoord, zCoord, level.getBlockMetadata(xCoord, yCoord, zCoord)%FluoriteTypes.colorList.length, 3);
-				}
-			}
-			ticks++;
+			return InteractionResult.SUCCESS;
 		}
-
-		@Override
-		public void saveAdditional(/*PORT*/CompoundTag NBT) {
-			super.saveAdditional(/*PORT*/NBT);
-
-			//ReikaJavaLibrary.pConsole("NBT write: "+this+" % "+FMLEnvironment.dist+"/"+blocks);
-			blocks.saveAdditional(/*PORT*/"blocks", NBT);
-			NBT.setLong("created", createdTime);
-		}
-
-		@Override
-		public void loadAdditional(/*PORT*/CompoundTag NBT) {
-			super.loadAdditional(/*PORT*/NBT);
-
-			blocks.loadAdditional(/*PORT*/"blocks", NBT);
-			createdTime = NBT.getLong("created");
-			//ReikaJavaLibrary.pConsole("NBT read: "+this+" % "+blocks);
-		}
-
-		@Override
-		public Packet getDescriptionPacket() {
-			CompoundTag NBT = new CompoundTag();
-			this.saveAdditional(/*PORT*/NBT);
-			S35PacketUpdateTileEntity pack = new S35PacketUpdateTileEntity(xCoord, yCoord, zCoord, 0, NBT);
-			return pack;
-		}
-
-		@Override
-		public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity p)  {
-			this.loadAdditional(/*PORT*/p.field_148860_e);
-		}
-
-		private void onBreak() {
-			if (!level.isRemote) {
-				//ReikaJavaLibrary.pConsole("Break: "+this+" % "+blocks);
-				for (int i = 0; i < blocks.getSize(); i++) {
-					Coordinate c = blocks.getNthBlock(i);
-					int x = c.xCoord;
-					int y = c.yCoord;
-					int z = c.zCoord;
-					if (level.getBlock(x, y, z) == BlockRegistry.LIGHT.getBlockInstance()) {
-						level.removeBlock(x, y, z);
-					}
-				}
-
-				/*
-				int r = 24;
-				for (int i = -r; i <= r; i++) {
-					for (int j = -r; j <= r; j++) {
-						for (int k = -r; k <= r; k++) {
-							int x = xCoord+i;
-							int y = yCoord+j;
-							int z = zCoord+k;
-							if (level.getBlock(x, y, z) == BlockRegistry.LIGHT.getBlockInstance()) {
-								level.removeBlock(x, y, z);
-							}
-						}
-					}
-				}
-				 */
-			}
-		}
-
-		private void onCreate() {
-			if (!level.isRemote) {
-
-				if (createdTime == 0)
-					createdTime = level.getTotalWorldTime();
-
-				if (level.getTotalWorldTime()-createdTime < LIFESPAN) {
-					int r = 16;
-					for (int i = -r; i <= r; i++) {
-						for (int j = -r; j <= r; j++) {
-							for (int k = -r; k <= r; k++) {
-								if (ReikaMathLibrary.py3d(i, j, k) <= r) {
-									int x = xCoord+i;
-									int y = yCoord+j;
-									int z = zCoord+k;
-									if (level.getBlock(x, y, z).isAir(level, x, y, z)) {
-										level.setBlock(x, y, z, BlockRegistry.LIGHT.getBlockInstance(), 15, 3);
-										level.markBlockForUpdate(x, y, z);
-										blocks.addBlockCoordinate(x, y, z);
-									}
-									else {
-
-									}
-								}
-							}
-						}
-					}
-				}
-				//ReikaJavaLibrary.pConsole("Create: "+this+" % "+blocks);
-			}
-		}
-
-		@Override
-		public boolean shouldRefresh(Block oldBlock, Block newBlock, int oldMeta, int newMeta, World world, int x, int y, int z) {
-			return oldBlock != newBlock || oldMeta%FluoriteTypes.colorList.length != newMeta%FluoriteTypes.colorList.length;
-		}
-
+		return super.useItemOn(stack, state, level, pos, player, hand, hit);
 	}
 
 }

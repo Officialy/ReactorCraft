@@ -151,6 +151,20 @@ public final class ReactorBlocks {
         return MAT_BLOCKS.get(m).get();
     }
 
+    // --- Tritium lamps (one per fluorite colour; LIT blockstate charged via tritium canister) ---
+    public static final EnumMap<FluoriteTypes, DeferredBlock<Block>> TRITIUM_LAMPS = new EnumMap<>(FluoriteTypes.class);
+    static {
+        for (FluoriteTypes f : FluoriteTypes.colorList) {
+            TRITIUM_LAMPS.put(f, register(f.getColorName() + "_tritium_lamp",
+                    () -> new BlockTritiumLamp(blockProperties().strength(1.5F, 8.0F).sound(SoundType.GLASS)
+                            .noOcclusion().lightLevel(s -> s.getValue(BlockTritiumLamp.LIT) ? 15 : 0), f)));
+        }
+    }
+
+    public static Block tritiumLamp(FluoriteTypes f) {
+        return TRITIUM_LAMPS.get(f).get();
+    }
+
     public static final DeferredBlock<Block> CORIUMFLOWING = register("corium", () -> new BlockCoriumFlowing(machineProperties().randomTicks().noOcclusion().strength(100, 500)));
 
     // --- Molten LiFBe thorium fuel pool (finite-fluid replacement; placed/consumed by the fuel dump) ---

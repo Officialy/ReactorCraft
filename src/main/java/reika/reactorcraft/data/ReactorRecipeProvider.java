@@ -280,6 +280,16 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
                     .pattern("CCC").pattern("CTC").pattern("CCC")
                     .unlockedBy("has_carbide", has(ReactorItems.crafting(CraftingItems.CARBIDE)))
                     .save(out);
+
+            for (FluoriteTypes f : FluoriteTypes.colorList) {
+                shaped(RecipeCategory.MISC, ReactorBlocks.tritiumLamp(f))
+                        .define('C', ReactorItems.fluorite(f))
+                        .define('S', RotaryItems.HSLA_STEEL_INGOT.get())
+                        .define('O', Items.OBSIDIAN)
+                        .pattern("SCS").pattern("C C").pattern("SOS")
+                        .unlockedBy("has_fluorite", has(ReactorItems.fluorite(f)))
+                        .save(out);
+            }
         }
 
         // 3x3 item -> block, plus the reverse block -> 9 items.

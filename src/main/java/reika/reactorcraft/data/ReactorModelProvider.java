@@ -194,6 +194,28 @@ public class ReactorModelProvider extends ModelProvider {
                 continue;
             }
 
+            if (block instanceof reika.reactorcraft.blocks.BlockTritiumLamp lamp) {
+                // Colour panes on the sides, top/bottom plates, and the frame as a slightly expanded
+                // cutout shell (the legacy renderer drew the frame offset outward around the cube).
+                String c = lamp.getColor().getColorName();
+                Identifier lampModelId = ModelLocationUtils.getModelLocation(block);
+                modelOut.accept(lampModelId, () -> lampModel(
+                        "reactorcraft:block/lamp/" + c,
+                        "reactorcraft:block/lamp/top",
+                        "reactorcraft:block/lamp/bottom",
+                        "reactorcraft:block/lamp/frame"));
+                MultiVariant lampVariant = new MultiVariant(WeightedList.of(new Variant(lampModelId)));
+                blockStateOut.accept(MultiVariantGenerator.dispatch(block)
+                        .with(PropertyDispatch.initial(reika.reactorcraft.blocks.BlockTritiumLamp.LIT)
+                                .generate(lit -> lampVariant)));
+                Item lampItem = block.asItem();
+                if (lampItem != Items.AIR) {
+                    itemModelOut.accept(lampItem, ItemModelUtils.plainModel(lampModelId));
+                    blockItemsHandled.add(lampItem);
+                }
+                continue;
+            }
+
             if (block instanceof reika.reactorcraft.blocks.BlockReactorMat mat
                     && mat.getType() == reika.reactorcraft.registry.MatBlocks.SCRUBBER) {
                 // Steam scrubber: six distinct faces (scrubber_0..5), not a uniform cube.
@@ -327,6 +349,51 @@ public class ReactorModelProvider extends ModelProvider {
         tex.addProperty("side", sideTex);
         root.add("textures", tex);
         return root;
+    }
+
+    /** Tritium lamp: colour cube (sides = colour, plates top/bottom) + an expanded cutout frame shell. */
+    private static JsonObject lampModel(String colorTex, String topTex, String bottomTex, String frameTex) {
+        JsonObject root = new JsonObject();
+        root.addProperty("render_type", "minecraft:cutout");
+        JsonObject tex = new JsonObject();
+        tex.addProperty("particle", colorTex);
+        tex.addProperty("color", colorTex);
+        tex.addProperty("top", topTex);
+        tex.addProperty("bottom", bottomTex);
+        tex.addProperty("frame", frameTex);
+        root.add("textures", tex);
+        com.google.gson.JsonArray elements = new com.google.gson.JsonArray();
+        elements.add(lampElement(0, 0, 0, 16, 16, 16, "#color", "#top", "#bottom"));
+        elements.add(lampElement(-0.1F, -0.1F, -0.1F, 16.1F, 16.1F, 16.1F, "#frame", "#frame", "#frame"));
+        root.add("elements", elements);
+        return root;
+    }
+
+    private static JsonObject lampElement(float x1, float y1, float z1, float x2, float y2, float z2,
+                                          String side, String up, String down) {
+        JsonObject e = new JsonObject();
+        com.google.gson.JsonArray from = new com.google.gson.JsonArray();
+        from.add(x1); from.add(y1); from.add(z1);
+        com.google.gson.JsonArray to = new com.google.gson.JsonArray();
+        to.add(x2); to.add(y2); to.add(z2);
+        e.add("from", from);
+        e.add("to", to);
+        JsonObject faces = new JsonObject();
+        for (String d : new String[]{"north", "south", "west", "east"})
+            faces.add(d, lampFace(side));
+        faces.add("up", lampFace(up));
+        faces.add("down", lampFace(down));
+        e.add("faces", faces);
+        return e;
+    }
+
+    private static JsonObject lampFace(String tex) {
+        JsonObject f = new JsonObject();
+        com.google.gson.JsonArray uv = new com.google.gson.JsonArray();
+        uv.add(0); uv.add(0); uv.add(16); uv.add(16);
+        f.add("uv", uv);
+        f.addProperty("texture", tex);
+        return f;
     }
 
     /** {@code cube} model JSON with a distinct sprite per face (side order matches the legacy 0..5 icons). */

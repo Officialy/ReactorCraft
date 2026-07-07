@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "C": "reactorcraft:blue_fluorite",
+    "O": "minecraft:obsidian",
+    "S": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "SCS",
+    "C C",
+    "SOS"
+  ],
+  "result": {
+    "id": "reactorcraft:blue_tritium_lamp"
+  }
+}

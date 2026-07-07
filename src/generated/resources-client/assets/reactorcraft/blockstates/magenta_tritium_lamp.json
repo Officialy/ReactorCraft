@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "reactorcraft:block/magenta_tritium_lamp"
+    },
+    "lit=true": {
+      "model": "reactorcraft:block/magenta_tritium_lamp"
+    }
+  }
+}

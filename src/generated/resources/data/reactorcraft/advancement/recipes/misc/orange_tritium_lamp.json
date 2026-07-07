@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_fluorite": {
+      "conditions": {
+        "items": [
+          {
+            "items": "reactorcraft:orange_fluorite"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "reactorcraft:orange_tritium_lamp"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_fluorite"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "reactorcraft:orange_tritium_lamp"
+    ]
+  }
+}
