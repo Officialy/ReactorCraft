@@ -161,7 +161,7 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
         // The original addMachines() recipes. The old "gated on unported RotaryCraft items" list is
         // resolved — every legacy ingredient now exists under a port name: basepanel→HSLA_PLATE,
         // pipe→FLUID_PIPE block, prop→PROPELLER_BLADE, shaftitem→HSLA_SHAFT, pcb→CIRCUIT_BOARD,
-        // gearunit→HSLA_STEEL_GEAR_2x, silumin→ALUMINUM_ALLOY_INGOT, bedingot→BEDROCK_ALLOY_INGOT,
+        // gearunit→HSLA_STEEL_GEAR_2x, bedingot→BEDROCK_ALLOY_INGOT,
         // igniter→IGNITION_UNIT, cooling fin→RotaryBlocks.COOLING_FIN, gearbox parts→*_GEAR_16x /
         // *_SHAFT_CORE. Pipe output counts were DifficultyEffects.PIPECRAFT.getInt() upstream; fixed 8.
         private void machineCrafting() {
@@ -269,6 +269,9 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
                     .pattern("SPS").pattern("GPG").pattern("SPS")
                     .unlockedBy("has_blastglass", has(RotaryBlocks.BLASTGLASS.get())).save(out);
 
+            // TODO(silumin): legacy 'S' is ItemStacks.silumin (COMPACTS[11]) — a distinct Al-Si casting
+            // alloy the port hasn't registered yet (aluminum_alloy_ingot is legacy aluminumingot,
+            // COMPACTS[4], NOT silumin). Using it as a placeholder until a real silumin item exists.
             shaped(RecipeCategory.MISC, ReactorBlocks.WASTEDECAYER.get())
                     .define('H', Items.HOPPER).define('G', RotaryBlocks.BLASTGLASS.get())
                     .define('P', ReactorBlocks.WASTECONTAINER.get()).define('S', RotaryItems.ALUMINUM_ALLOY_INGOT.get())
@@ -348,6 +351,7 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
                     .pattern("BBB").pattern("DPD").pattern("BBB")
                     .unlockedBy("has_diffuser", has(RotaryItems.DIFFUSER.get())).save(out);
 
+            // TODO(silumin): 'a' is legacy ItemStacks.silumin — placeholder aluminum_alloy_ingot (see above).
             shaped(RecipeCategory.MISC, ReactorBlocks.THORIUM.get())
                     .define('t', RotaryItems.TUNGSTEN_INGOT.get()).define('a', RotaryItems.ALUMINUM_ALLOY_INGOT.get())
                     .define('P', RotaryItems.HSLA_PLATE.get()).define('S', RotaryItems.HSLA_STEEL_INGOT.get())
