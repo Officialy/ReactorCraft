@@ -113,14 +113,16 @@ several of which the in-code comments wrongly call "deferred/blocked" but are ac
   `0e2802d`); every modelled machine has a registered BER and its item icon routes through it.
 - **[P2] Ammonium loot** — FIXED `6d7d3f3`.
 - **[P2] Component + mat-block recipes** — FIXED `9a5ec2f` (14 recipes, each diffed vs origin).
-- **[P2] machine-block crafting recipes** — PARTIAL `11eea98`. Triaged all ~44 addMachines() recipes;
-  the 12 whose ingredients fully resolve are done (gas_duct, magnetic_pipe, waste_pipe, heat_pipe,
-  toroid_magnet, fusion_heater, fusion_injector, neutron_absorber ×2, neutron_reflector,
-  reactor_generator, fusion_marker). The remaining ~32 are **ingredient-gated on unported RotaryCraft
-  items** — `basepanel` (~30 recipes), `pipe` (~15), plus prop/shaftitem/pcb/gearunit/silumin/bedrock
-  ingot/igniter/cooling-fin/gearbox-parts. Each unblocks when its ingredient is registered; re-run the
-  triage then. Pipe output counts (`DifficultyEffects.PIPECRAFT`) were fixed at 8 pending a config
-  decision.
+- **[P2] machine-block crafting recipes** — FIXED. All ~44 addMachines() recipes are in
+  (2026-07-08). The old "ingredient-gated on unported RotaryCraft items" list turned out stale —
+  every legacy ingredient exists under a port name (basepanel→hsla_steel_plate, pipe→fluid_pipe
+  block, prop→propeller_blade, shaftitem→hsla_steel_rod, pcb→circuit_board,
+  gearunit→hsla_steel_gear_2x, silumin→aluminum_alloy_ingot, bedingot→bedrock_alloy_ingot,
+  igniter→ignition_unit, cooling fin→cooling_fin block, gearbox parts→*_gear_16x/*_shaft_core).
+  The pipe-gated scrubber + coolant-pack component recipes are in too. Pipe output counts
+  (`DifficultyEffects.PIPECRAFT`) remain fixed at 8 pending a config decision. Note:
+  `reactorcraft:control_rod` is the CraftingItems.ROD component; the machine block recipe is
+  `control_rod_block`.
 - **[P3] Literal-JSON drift** — open (low priority; not an active bug).
 
 ## Summary (original)
