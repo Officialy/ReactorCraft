@@ -306,6 +306,20 @@ public class ReactorModelProvider extends ModelProvider {
         BLOCK_TEX.put("steam", "block/steam");
         // lines: were falling through to the generic steel fallback (same as every unmapped
         // machine), giving the steam line and heat pipe identical, thematically blank item icons.
+        BLOCK_TEX.put("laser_concentration_lens", "block/multi/heater_0");
+        BLOCK_TEX.put("thermal_insulation_core", "block/multi/heater_1");
+        BLOCK_TEX.put("preheater_housing_corner", "block/multi/heater_11");
+        BLOCK_TEX.put("preheater_housing_edge", "block/multi/heater_12");
+        BLOCK_TEX.put("preheater_housing_face", "block/multi/heater_10");
+        // Injector casings use the non-connected defaults of the legacy neighbour-aware sprite table.
+        BLOCK_TEX.put("plasma_injector_base", "block/multi/injector_4");
+        BLOCK_TEX.put("plasma_injector_lower_corner", "block/multi/injector_9");
+        BLOCK_TEX.put("plasma_injector_side_panel", "block/multi/injector_9");
+        BLOCK_TEX.put("plasma_injector_top", "block/multi/injector_3");
+        BLOCK_TEX.put("plasma_injector_upper_corner", "block/multi/injector_9");
+        BLOCK_TEX.put("plasma_injector_induction_coil", "block/multi/injector_22");
+        BLOCK_TEX.put("plasma_injector_column", "block/multi/injector_1");
+        BLOCK_TEX.put("plasma_injector_hysteresis_core", "block/multi/injector_0");
         BLOCK_TEX.put("steam_line", "block/steam");
         BLOCK_TEX.put("heat_pipe", "block/fluid/sodiumhot");
     }

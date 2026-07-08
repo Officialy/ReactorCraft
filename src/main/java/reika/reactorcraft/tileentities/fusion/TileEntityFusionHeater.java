@@ -62,6 +62,12 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 		return hasMultiBlock && !this.exposedToAir();
 	}
 
+	@Override
+	protected void onFirstTick(Level world, BlockPos pos) {
+		if (!world.isClientSide())
+			this.setHasMultiBlock(reika.reactorcraft.blocks.multi.BlockHeaterMulti.isComplete(world, pos));
+	}
+
 	public void setHasMultiBlock(boolean has) {
 		hasMultiBlock = has && !this.exposedToAir();
 	}

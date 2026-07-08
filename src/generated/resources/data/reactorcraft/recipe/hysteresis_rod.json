@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "M": "reactorcraft:ferromagnetic_ingot",
+    "S": "reactorcraft:hysteresis_unit"
+  },
+  "pattern": [
+    "SSS",
+    "MMM",
+    "SSS"
+  ],
+  "result": {
+    "id": "reactorcraft:hysteresis_rod"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "H": "reactorcraft:wire",
+    "M": "reactorcraft:magnetic",
+    "W": "reactorcraft:thermal_insulation_core"
+  },
+  "pattern": [
+    "MWM",
+    "HHH",
+    "MWM"
+  ],
+  "result": {
+    "id": "reactorcraft:plasma_injector_induction_coil"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "reactorcraft:thermal_insulation_core"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "reactorcraft:blocks/thermal_insulation_core"
+}

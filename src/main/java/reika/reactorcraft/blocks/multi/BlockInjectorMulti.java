@@ -9,489 +9,222 @@
  ******************************************************************************/
 package reika.reactorcraft.blocks.multi;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.BlockGetter;
-import net.minecraft.world.level.Level;
-import net.minecraft.core.Direction;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import reika.dragonapi.instantiable.data.blockstruct.BlockArray;
-import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
-import reika.dragonapi.instantiable.data.blockstruct.StructuredBlockArray;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+
 import reika.dragonapi.instantiable.data.immutable.BlockKey;
-import reika.dragonapi.instantiable.data.immutable.Coordinate;
-import reika.dragonapi.libraries.ReikaDirectionHelper;
-import reika.dragonapi.libraries.level.ReikaWorldHelper;
-import reika.reactorcraft.auxiliary.NeutronBlock;
+import reika.dragonapi.instantiable.data.blockstruct.filledblockarray.BlockMatchFailCallback;
 import reika.reactorcraft.base.BlockReCMultiBlock;
-import reika.reactorcraft.entities.EntityNeutron;
-import reika.reactorcraft.registry.ReactorTiles;
+import reika.reactorcraft.blocks.BlockReactorMachine;
+import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.tileentities.fusion.TileEntityFusionInjector;
 
-public class BlockInjectorMulti extends BlockReCMultiBlock implements NeutronBlock {
+/**
+ * Fusion plasma injector casing. Eight part blocks forming the directional ramp assembly from the
+ * InjectorStructure blueprint: a stepped roof (top/upper-corner lines descending toward the muzzle),
+ * base and lower-corner floor lines, side panels, the induction-coil column behind the injector, the
+ * corner columns, the hysteresis-core interior line, and the magnetic-pipe barrel out the front.
+ * {@link #layout(BlockPos, Direction)} (injector machine position + its facing) is the single source
+ * of truth. The structure is mirror-symmetric so left/right handedness does not matter.
+ */
+public class BlockInjectorMulti extends BlockReCMultiBlock {
 
-	public BlockInjectorMulti(Material par2Material) {
-		super(par2Material);
-	}
+	public enum InjectorPart implements StringRepresentable {
+		BASE("plasma_injector_base"),
+		LOWER_CORNER("plasma_injector_lower_corner"),
+		SIDE_PANEL("plasma_injector_side_panel"),
+		TOP("plasma_injector_top"),
+		UPPER_CORNER("plasma_injector_upper_corner"),
+		INDUCTION_COIL("plasma_injector_induction_coil"),
+		COLUMN("plasma_injector_column"),
+		HYSTERESIS_CORE("plasma_injector_hysteresis_core");
 
-	@Override
-	public int getNumberVariants() {
-		return 8;
-	}
+		public static final InjectorPart[] list = values();
 
-	@Override
-	public Boolean checkForFullMultiBlock(World world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
-		dir = ReikaWorldHelper.checkForAdjBlock(world, x, y, z, this, 7);
-		if (dir == null)
-			return false;
-		Direction left = ReikaDirectionHelper.getLeftBy90(dir);
-		StructuredBlockArray blocks = new StructuredBlockArray(world);
-		blocks.recursiveAddWithBounds(world, x, y, z, this, x-8, y-5, z-8, x+8, y+5, z+8);
-		while (world.getBlock(x, y-1, z) == this && world.getBlockMetadata(x, y-1, z) == 5)
-			y--;
-		if (!this.checkTop(world, x, y, z, dir, left, blocks, call))
-			return false;
-		if (!this.checkBottom(world, x, y, z, dir, left, blocks, call))
-			return false;
-		if (!this.checkSides(world, x, y, z, dir, left, blocks, call))
-			return false;
-		if (!this.checkCorners(world, x, y, z, dir, left, blocks, call))
-			return false;
-		if (!this.checkFiller(world, x, y, z, dir, left, blocks, call))
-			return false;
-		if (!this.checkPipes(world, x, y, z, dir, left, blocks, call))
-			return false;
-		return true;
-	}
+		private final String id;
 
-	private boolean checkAt(World world, int dx, int dy, int dz, int metas, BlockMatchFailCallback call) {
-		return this.checkAt(world, dx, dy, dz, this, metas, call);
-	}
-
-	private boolean checkAt(World world, int dx, int dy, int dz, Block bs, int metas, BlockMatchFailCallback call) {
-		Block b = world.getBlock(dx, dy, dz);
-		int meta = world.getBlockMetadata(dx, dy, dz);
-		if (b != bs || meta != metas) {
-			if (call != null)
-				call.onBlockFailure(world, dx, dy, dz, new BlockKey(bs, metas));
-			return false;
+		InjectorPart(String s) {
+			id = s;
 		}
-		return true;
+
+		public String id() {
+			return id;
+		}
+
+		@Override
+		public String getSerializedName() {
+			return id;
+		}
 	}
 
-	private boolean checkCorners(World world, int x, int y, int z, Direction dir, Direction left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
-		for (int i = 0; i <= 4; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i+left.offsetX, y+3, z+dir.offsetZ*i+left.offsetZ, 4, call)) {
-				return false;
-			}
+	private static final int SCAN = 9;
 
-			if (!this.checkAt(world, x+dir.offsetX*i-left.offsetX, y+3, z+dir.offsetZ*i-left.offsetZ, 4, call)) {
-				return false;
-			}
+	private final InjectorPart part;
+
+	public BlockInjectorMulti(BlockBehaviour.Properties properties, InjectorPart part) {
+		super(properties);
+		this.part = part;
+	}
+
+	public InjectorPart getPart() {
+		return part;
+	}
+
+	public static Block blockFor(InjectorPart p) {
+		return ReactorBlocks.INJECTOR_CASINGS.get(p).get();
+	}
+
+	/**
+	 * Every non-machine position of an injector assembly whose INJECTOR machine sits at
+	 * {@code injector} firing toward {@code dir}. Blueprint anchor = injector - dir*2; later writes
+	 * win, matching the blueprint's overwrites.
+	 */
+	public static Map<BlockPos, Block> layout(BlockPos injector, Direction dir) {
+		BlockPos o = injector.relative(dir, -2);
+		Direction left = dir.getCounterClockWise();
+		Map<BlockPos, Block> map = new LinkedHashMap<>();
+
+		// Stepped roof side lines (upper corners) and floor side lines (lower corners).
+		for (int i = 0; i <= 4; i++) {
+			map.put(o.relative(dir, i).relative(left, 1).above(3), blockFor(InjectorPart.UPPER_CORNER));
+			map.put(o.relative(dir, i).relative(left, -1).above(3), blockFor(InjectorPart.UPPER_CORNER));
 		}
 		for (int i = 5; i <= 6; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i+left.offsetX, y+2, z+dir.offsetZ*i+left.offsetZ, 4, call)) {
-				return false;
-			}
-
-			if (!this.checkAt(world, x+dir.offsetX*i-left.offsetX, y+2, z+dir.offsetZ*i-left.offsetZ, 4, call)) {
-				return false;
-			}
+			map.put(o.relative(dir, i).relative(left, 1).above(2), blockFor(InjectorPart.UPPER_CORNER));
+			map.put(o.relative(dir, i).relative(left, -1).above(2), blockFor(InjectorPart.UPPER_CORNER));
 		}
 		for (int i = 7; i <= 8; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i+left.offsetX, y+1, z+dir.offsetZ*i+left.offsetZ, 4, call)) {
-				return false;
-			}
-
-			if (!this.checkAt(world, x+dir.offsetX*i-left.offsetX, y+1, z+dir.offsetZ*i-left.offsetZ, 4, call)) {
-				return false;
-			}
-		}
-
-		for (int i = 0; i <= 8; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i+left.offsetX, y-1, z+dir.offsetZ*i+left.offsetZ, 1, call)) {
-				return false;
-			}
+			map.put(o.relative(dir, i).relative(left, 1).above(1), blockFor(InjectorPart.UPPER_CORNER));
+			map.put(o.relative(dir, i).relative(left, -1).above(1), blockFor(InjectorPart.UPPER_CORNER));
 		}
 		for (int i = 0; i <= 8; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i-left.offsetX, y-1, z+dir.offsetZ*i-left.offsetZ, 1, call)) {
-				return false;
-			}
+			map.put(o.relative(dir, i).relative(left, 1).below(1), blockFor(InjectorPart.LOWER_CORNER));
+			map.put(o.relative(dir, i).relative(left, -1).below(1), blockFor(InjectorPart.LOWER_CORNER));
 		}
-
-
-
+		// Rear corner columns + muzzle columns.
 		for (int k = 0; k <= 2; k++) {
-			if (!this.checkAt(world, x+left.offsetX, y+k, z+left.offsetZ, 6, call)) {
-				return false;
-			}
-
-			if (!this.checkAt(world, x-left.offsetX, y+k, z-left.offsetZ, 6, call)) {
-				return false;
-			}
+			map.put(o.relative(left, 1).above(k), blockFor(InjectorPart.COLUMN));
+			map.put(o.relative(left, -1).above(k), blockFor(InjectorPart.COLUMN));
 		}
-
-		if (!this.checkAt(world, x+left.offsetX+dir.offsetX*8, y, z+left.offsetZ+dir.offsetZ*8, 6, call)) {
-			return false;
-		}
-
-		if (!this.checkAt(world, x-left.offsetX+dir.offsetX*8, y, z-left.offsetZ+dir.offsetZ*8, 6, call)) {
-			return false;
-		}
-
-		return true;
-	}
-
-	private boolean checkTop(World world, int x, int y, int z, Direction dir, Direction left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
-		for (int i = 0; i <= 4; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i, y+3, z+dir.offsetZ*i, 3, call)) {
-				return false;
-			}
-		}
-		for (int i = 5; i <= 6; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i, y+2, z+dir.offsetZ*i, 3, call)) {
-				return false;
-			}
-		}
-		for (int i = 7; i <= 8; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i, y+1, z+dir.offsetZ*i, 3, call)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private boolean checkBottom(World world, int x, int y, int z, Direction dir, Direction left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
-		for (int i = 0; i <= 8; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i, y-1, z+dir.offsetZ*i, 0, call))
-				return false;
-		}
-		return true;
-	}
-
-	private boolean checkSides(World world, int x, int y, int z, Direction dir, Direction left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
-		for (int i = 1; i <= 1; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i+left.offsetX, y, z+dir.offsetZ*i+left.offsetZ, 2, call))
-				return false;
-
-			if (!this.checkAt(world, x+dir.offsetX*i-left.offsetX, y, z+dir.offsetZ*i-left.offsetZ, 2, call))
-				return false;
-		}
+		map.put(o.relative(dir, 8).relative(left, 1), blockFor(InjectorPart.COLUMN));
+		map.put(o.relative(dir, 8).relative(left, -1), blockFor(InjectorPart.COLUMN));
+		// Stepped roof centre line (tops) and floor centre line (bases).
+		for (int i = 0; i <= 4; i++)
+			map.put(o.relative(dir, i).above(3), blockFor(InjectorPart.TOP));
+		for (int i = 5; i <= 6; i++)
+			map.put(o.relative(dir, i).above(2), blockFor(InjectorPart.TOP));
+		for (int i = 7; i <= 8; i++)
+			map.put(o.relative(dir, i).above(1), blockFor(InjectorPart.TOP));
+		for (int i = 0; i <= 8; i++)
+			map.put(o.relative(dir, i).below(1), blockFor(InjectorPart.BASE));
+		// Side panels.
+		map.put(o.relative(dir, 1).relative(left, 1), blockFor(InjectorPart.SIDE_PANEL));
+		map.put(o.relative(dir, 1).relative(left, -1), blockFor(InjectorPart.SIDE_PANEL));
 		for (int i = 3; i <= 7; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i+left.offsetX, y, z+dir.offsetZ*i+left.offsetZ, 2, call))
-				return false;
-
-			if (!this.checkAt(world, x+dir.offsetX*i-left.offsetX, y, z+dir.offsetZ*i-left.offsetZ, 2, call))
-				return false;
+			map.put(o.relative(dir, i).relative(left, 1), blockFor(InjectorPart.SIDE_PANEL));
+			map.put(o.relative(dir, i).relative(left, -1), blockFor(InjectorPart.SIDE_PANEL));
 		}
 		for (int i = 1; i <= 6; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i+left.offsetX, y+1, z+dir.offsetZ*i+left.offsetZ, 2, call))
-				return false;
-
-			if (!this.checkAt(world, x+dir.offsetX*i-left.offsetX, y+1, z+dir.offsetZ*i-left.offsetZ, 2, call))
-				return false;
+			map.put(o.relative(dir, i).relative(left, 1).above(1), blockFor(InjectorPart.SIDE_PANEL));
+			map.put(o.relative(dir, i).relative(left, -1).above(1), blockFor(InjectorPart.SIDE_PANEL));
 		}
 		for (int i = 1; i <= 4; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i+left.offsetX, y+2, z+dir.offsetZ*i+left.offsetZ, 2, call))
-				return false;
-
-			if (!this.checkAt(world, x+dir.offsetX*i-left.offsetX, y+2, z+dir.offsetZ*i-left.offsetZ, 2, call))
-				return false;
+			map.put(o.relative(dir, i).relative(left, 1).above(2), blockFor(InjectorPart.SIDE_PANEL));
+			map.put(o.relative(dir, i).relative(left, -1).above(2), blockFor(InjectorPart.SIDE_PANEL));
 		}
-		for (int i = 0; i <= 2; i++) {
-			if (!this.checkAt(world, x, y+i, z, 5, call))
-				return false;
-		}
-
-		if (!this.checkAt(world, x+dir.offsetX*2+left.offsetX, y, z+dir.offsetZ*2+left.offsetZ, Blocks.air, 0, call))
-			return false;
-		if (!this.checkAt(world, x+dir.offsetX*2-left.offsetX, y, z+dir.offsetZ*2-left.offsetZ, Blocks.air, 0, call))
-			return false;
-
-		return true;
+		// Induction coil column (rear centre) + hysteresis core interior line.
+		for (int k = 0; k <= 2; k++)
+			map.put(o.above(k), blockFor(InjectorPart.INDUCTION_COIL));
+		map.put(o.relative(dir, 1), blockFor(InjectorPart.HYSTERESIS_CORE));
+		for (int i = 1; i <= 6; i++)
+			map.put(o.relative(dir, i).above(1), blockFor(InjectorPart.HYSTERESIS_CORE));
+		for (int i = 1; i <= 4; i++)
+			map.put(o.relative(dir, i).above(2), blockFor(InjectorPart.HYSTERESIS_CORE));
+		// Magnetic-pipe barrel out the muzzle.
+		for (int i = 3; i <= 8; i++)
+			map.put(o.relative(dir, i), ReactorBlocks.MAGNETPIPE.get());
+		// The injector machine itself sits at o + dir*2.
+		map.remove(o.relative(dir, 2));
+		return map;
 	}
 
-	private boolean checkFiller(World world, int x, int y, int z, Direction dir, Direction left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
-		for (int i = 1; i <= 1; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i, y, z+dir.offsetZ*i, 7, call))
-				return false;
-		}
-		for (int i = 1; i <= 6; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i, y+1, z+dir.offsetZ*i, 7, call))
-				return false;
-		}
-		for (int i = 1; i <= 4; i++) {
-			if (!this.checkAt(world, x+dir.offsetX*i, y+2, z+dir.offsetZ*i, 7, call))
-				return false;
-		}
-		return true;
-	}
-
-	private boolean checkPipes(World world, int x, int y, int z, Direction dir, Direction left, StructuredBlockArray blocks, BlockMatchFailCallback call) {
-		for (int i = 3; i <= 8; i++) {
-			Block b = world.getBlock(x+dir.offsetX*i, y, z+dir.offsetZ*i);
-			int meta = world.getBlockMetadata(x+dir.offsetX*i, y, z+dir.offsetZ*i);
-			if (ReactorTiles.getMachineFromIDandMetadata(b, meta) != ReactorTiles.MAGNETPIPE) {
-				if (call != null)
-					call.onBlockFailure(world, x+dir.offsetX*i, y, z+dir.offsetZ*i, new BlockKey(ReactorTiles.MAGNETPIPE));
-				return false;
-			}
-		}
-		if (ReactorTiles.getTE(world, x+dir.offsetX*2, y, z+dir.offsetZ*2) != ReactorTiles.INJECTOR) {
-			if (call != null)
-				call.onBlockFailure(world, x+dir.offsetX*2, y, z+dir.offsetZ*2, new BlockKey(ReactorTiles.INJECTOR));
-			return false;
-		}
-		return true;
-	}
-
-	@Override
-	public void onCreateFullMultiBlock(World world, int x, int y, int z, Boolean complete) {
-		BlockArray blocks = new BlockArray();
-		blocks.recursiveAddWithBounds(world, x, y, z, this, x-8, y-5, z-8, x+8, y+5, z+8);
-		for (int i = 0; i < blocks.getSize(); i++) {
-			Coordinate c = blocks.getNthBlock(i);
-			int meta = c.getBlockMetadata(world);
-			if (meta < 8) {
-				world.setBlockMetadataWithNotify(c.xCoord, c.yCoord, c.zCoord, meta+8, 3);
-			}
-			if (meta == 0) {
-				if (ReactorTiles.getTE(world, c.xCoord, c.yCoord+1, c.zCoord) == ReactorTiles.INJECTOR) {
-					TileEntityFusionInjector te = (TileEntityFusionInjector)world.getBlockEntity(c.xCoord, c.yCoord+1, c.zCoord);
-					te.setHasMultiBlock(true);
-				}
-			}
-		}
-	}
-
-	@Override
-	public void breakMultiBlock(World world, int x, int y, int z) {
-		BlockArray blocks = new BlockArray();
-		blocks.recursiveAddWithBounds(world, x, y, z, this, x-8, y-5, z-8, x+8, y+5, z+8);
-		for (int i = 0; i < blocks.getSize(); i++) {
-			Coordinate c = blocks.getNthBlock(i);
-			int meta = c.getBlockMetadata(world);
-			if (meta >= 8) {
-				world.setBlockMetadataWithNotify(c.xCoord, c.yCoord, c.zCoord, meta-8, 3);
-			}
-			if (meta == 8) {
-				if (ReactorTiles.getTE(world, c.xCoord, c.yCoord+1, c.zCoord) == ReactorTiles.INJECTOR) {
-					TileEntityFusionInjector te = (TileEntityFusionInjector)world.getBlockEntity(c.xCoord, c.yCoord+1, c.zCoord);
-					te.setHasMultiBlock(false);
-				}
-			}
-		}
-	}
-
-	@Override
-	protected String getIconBaseName() {
-		return "injector";
-	}
-
-	@Override
-	public int getTextureIndex(BlockGetter world, int x, int y, int z, int side, int meta) {
-		if (meta >= 8) {
-			if (meta == 13)
-				return 0;
-			int index = 10+this.getTextureIndex(world, x, y, z, side, meta-8);
-			if (side > 1 && (index == 19 || index == 23 || index == 24 || index == 25))
-				index = 9;
-			if (meta == 12 && side == 1) {
-				boolean s = world.getBlock(x+1, y, z) == this && world.getBlockMetadata(x+1, y, z) == 11;
-				boolean s0 = world.getBlock(x-1, y, z) == this && world.getBlockMetadata(x-1, y, z) == 11;
-				boolean s1 = world.getBlock(x, y, z+1) == this && world.getBlockMetadata(x, y, z+1) == 11;
-				int a = 25;
-				int b = 23;
-				if (!s && !s0) {
-					a = 19;
-					b = 24;
-				}
-				index = (s || s1) ? a : b;
-			}
-			if (meta == 11 && side == 1)
-				index = 9;
-			return index;
-		}
-		switch(meta) {
-			case 0:
-				if (side == 0)
-					return 9;
-				return side < 2 ? 0 : 4;
-			case 1:
-				if (side == 1)
-					return 9;
-				if (side == 3 || side == 2) {
-					if (world.getBlock(x+1, y, z) == this && (world.getBlockMetadata(x+1, y, z)&7) == 0)
-						return side == 3 ? 5 : 6;
-					if (world.getBlock(x-1, y, z) == this && (world.getBlockMetadata(x-1, y, z)&7) == 0)
-						return side == 3 ? 6 : 5;
-				}
-				if (side == 4 || side == 5) {
-					if (world.getBlock(x, y, z+1) == this && (world.getBlockMetadata(x, y, z+1)&7) == 0)
-						return side == 4 ? 5 : 6;
-					if (world.getBlock(x, y, z-1) == this && (world.getBlockMetadata(x, y, z-1)&7) == 0)
-						return side == 4 ? 6 : 5;
-				}
-				return 9;
-			case 2:
-				Direction dir = dirs[side];
-				int dx = x+dir.offsetX;
-				int dy = y+dir.offsetY;
-				int dz = z+dir.offsetZ;
-				Block b = world.getBlock(dx, dy, dz);
-				if (b == Blocks.air)
-					return 9;
-				return b == ReactorTiles.MAGNETPIPE.getBlock() ? 0 : 9;
-			case 3:
-				if (side == 1)
-					return 9;
-				return side < 2 ? 0 : 3;
-			case 4:
-				if (side == 1)
-					return 9;
-				if (side == 3 || side == 2) {
-					if (world.getBlock(x+1, y, z) == this && (world.getBlockMetadata(x+1, y, z)&7) == 3)
-						return side == 3 ? 8 : 7;
-					if (world.getBlock(x-1, y, z) == this && (world.getBlockMetadata(x-1, y, z)&7) == 3)
-						return side == 3 ? 7 : 8;
-				}
-				if (side == 4 || side == 5) {
-					if (world.getBlock(x, y, z+1) == this && (world.getBlockMetadata(x, y, z+1)&7) == 3)
-						return side == 4 ? 8 : 7;
-					if (world.getBlock(x, y, z-1) == this && (world.getBlockMetadata(x, y, z-1)&7) == 3)
-						return side == 4 ? 7 : 8;
-				}
-				return 9;
-			case 5:
-				return 22;
-			case 6:
-				if (world.getBlock(x+1, y, z) == this && (world.getBlockMetadata(x+1, y, z)&7) == 5) {
-					if (side == 3)
-						return 2;
-					if (side == 2)
-						return 1;
-				}
-				if (world.getBlock(x-1, y, z) == this && (world.getBlockMetadata(x-1, y, z)&7) == 5) {
-					if (side == 3)
-						return 1;
-					if (side == 2)
-						return 2;
-				}
-				if (world.getBlock(x, y, z+1) == this && (world.getBlockMetadata(x, y, z+1)&7) == 5) {
-					if (side == 5)
-						return 1;
-					if (side == 4)
-						return 2;
-				}
-				if (world.getBlock(x, y, z-1) == this && (world.getBlockMetadata(x, y, z-1)&7) == 5) {
-					if (side == 4)
-						return 1;
-					if (side == 5)
-						return 2;
-				}
-
-				if (world.getBlock(x+1, y, z) != this && world.getBlock(x-1, y, z) != this) {
-					if (ReactorTiles.getTE(world, x+1, y, z) == ReactorTiles.MAGNETPIPE) {
-						if (side == 3)
-							return 2;
-						if (side == 2)
-							return 1;
-						if (side == 5)
-							return 0;
-					}
-					if (ReactorTiles.getTE(world, x-1, y, z) == ReactorTiles.MAGNETPIPE) {
-						if (side == 3)
-							return 1;
-						if (side == 2)
-							return 2;
-						if (side == 4)
-							return 0;
-					}
-				}
-				if (world.getBlock(x, y, z+1) != this && world.getBlock(x, y, z-1) != this) {
-					if (ReactorTiles.getTE(world, x, y, z+1) == ReactorTiles.MAGNETPIPE) {
-						if (side == 5)
-							return 1;
-						if (side == 4)
-							return 2;
-						if (side == 3)
-							return 0;
-					}
-					if (ReactorTiles.getTE(world, x, y, z-1) == ReactorTiles.MAGNETPIPE) {
-						if (side == 4)
-							return 1;
-						if (side == 5)
-							return 2;
-						if (side == 2)
-							return 0;
-					}
-				}
-				return 9;
-			case 7:
-				return 0;
-			default:
-				return 0;
-		}
-	}
-
-	@Override
-	public int getItemTextureIndex(int meta, int side) {
-		meta = meta&7;
-		if (meta == 0) {
-			return side == 0 ? 9 : side == 1 ? 0 : 4;
-		}
-		if (meta == 1) {
-			return side == 1 ? 0 : side == 0 ? 9 : 28;
-		}
-		if (meta == 4) {
-			return side == 0 ? 0 : side == 1 ? 9 : 27;
-		}
-		if (meta == 3) {
-			return side == 1 ? 9 : side == 0 ? 0 : 3;
-		}
-		if (meta == 6) {
-			return side < 2 ? 21 : 26;
-		}
-		if (meta == 2)
-			return 9;
-		if (meta == 7)
-			return 0;
-		if (meta == 5)
-			return 22;
-		if (meta == 5 || meta == 7 || meta == 3 || meta == 0 || meta == 2)
-			return 22;
-		return 21;
-	}
-
-	@Override
-	public boolean canTriggerMultiBlockCheck(World world, int x, int y, int z, int meta) {
-		return meta == 5;
-	}
-
-	@Override
-	public int getNumberTextures() {
-		return 29;
-	}
-
-	@Override
-	protected TileEntity getTileEntityForPosition(World world, int x, int y, int z) {
-		BlockArray blocks = new BlockArray();
-		blocks.recursiveAddWithBounds(world, x, y, z, this, x-8, y-5, z-8, x+8, y+5, z+8);
-		for (int i = 0; i < blocks.getSize(); i++) {
-			Coordinate c = blocks.getNthBlock(i);
-			if (ReactorTiles.getTE(world, c.xCoord, c.yCoord+1, c.zCoord) == ReactorTiles.INJECTOR) {
-				TileEntityFusionInjector te = (TileEntityFusionInjector)world.getBlockEntity(c.xCoord, c.yCoord+1, c.zCoord);
-				return te;
-			}
+	/** Scan around {@code near} for the injector machine block; null if none. */
+	public static BlockPos findInjector(Level world, BlockPos near) {
+		Block injector = ReactorBlocks.INJECTOR.get();
+		for (BlockPos p : BlockPos.betweenClosed(near.offset(-SCAN, -SCAN, -SCAN), near.offset(SCAN, SCAN, SCAN))) {
+			if (world.getBlockState(p).is(injector))
+				return p.immutable();
 		}
 		return null;
 	}
 
-	@Override
-	public boolean onNeutron(EntityNeutron e, World world, int x, int y, int z) {
-		return false;
+	private static Direction facingOf(Level world, BlockPos injector) {
+		BlockState state = world.getBlockState(injector);
+		Direction d = state.hasProperty(BlockReactorMachine.FACING) ? state.getValue(BlockReactorMachine.FACING) : Direction.NORTH;
+		return d.getAxis().isHorizontal() ? d : Direction.NORTH;
 	}
 
+	public static boolean isComplete(Level world, BlockPos injector) {
+		Direction dir = facingOf(world, injector);
+		for (Map.Entry<BlockPos, Block> e : layout(injector, dir).entrySet()) {
+			if (world.getBlockState(e.getKey()).getBlock() != e.getValue())
+				return false;
+		}
+		return true;
+	}
+
+	@Override
+	public Boolean checkForFullMultiBlock(Level world, int x, int y, int z, Direction dir, BlockMatchFailCallback call) {
+		BlockPos injector = findInjector(world, new BlockPos(x, y, z));
+		if (injector == null) {
+			if (call != null)
+				call.onBlockFailure(world, x, y, z, new BlockKey(ReactorBlocks.INJECTOR.get()));
+			return false;
+		}
+		Direction facing = facingOf(world, injector);
+		for (Map.Entry<BlockPos, Block> e : layout(injector, facing).entrySet()) {
+			if (world.getBlockState(e.getKey()).getBlock() != e.getValue()) {
+				if (call != null)
+					call.onBlockFailure(world, e.getKey().getX(), e.getKey().getY(), e.getKey().getZ(), new BlockKey(e.getValue()));
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	protected void onCreateFullMultiBlock(Level world, int x, int y, int z, Boolean ret) {
+		this.setFormed(world, new BlockPos(x, y, z), true);
+	}
+
+	@Override
+	public void breakMultiBlock(Level world, int x, int y, int z) {
+		this.setFormed(world, new BlockPos(x, y, z), false);
+	}
+
+	private void setFormed(Level world, BlockPos near, boolean formed) {
+		BlockPos injector = findInjector(world, near);
+		if (injector != null && world.getBlockEntity(injector) instanceof TileEntityFusionInjector te)
+			te.setHasMultiBlock(formed && isComplete(world, injector));
+	}
+
+	@Override
+	public boolean canTriggerMultiBlockCheck(Level world, BlockPos pos, BlockState state) {
+		return true;
+	}
+
+	@Override
+	protected BlockEntity getTileEntityForPosition(Level world, int x, int y, int z) {
+		BlockPos injector = findInjector(world, new BlockPos(x, y, z));
+		return injector == null ? null : world.getBlockEntity(injector);
+	}
 }

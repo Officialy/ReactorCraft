@@ -101,6 +101,8 @@ sourceSets.main.java {
     include 'reika/reactorcraft/blocks/BlockReactorMachineModelled.java'
     include 'reika/reactorcraft/blocks/BlockReactorDuct.java'
     include 'reika/reactorcraft/blocks/BlockTritiumLamp.java'
+    include 'reika/reactorcraft/blocks/multi/BlockHeaterMulti.java'
+    include 'reika/reactorcraft/blocks/multi/BlockInjectorMulti.java'
     include 'reika/reactorcraft/registry/ReactorBook.java'
     include 'reika/reactorcraft/auxiliary/ReactorBookData.java'
     include 'reika/reactorcraft/auxiliary/ReactorDescriptions.java'

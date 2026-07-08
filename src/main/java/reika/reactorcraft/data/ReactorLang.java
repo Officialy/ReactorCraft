@@ -58,6 +58,10 @@ public class ReactorLang extends LanguageProvider {
         n("solar_exchanger", "Solar Tower Sodium Heat Exchanger");
         n("waste_decayer", "Forced Fission Chamber");
         n("mini_turbine", "Miniature Turbine");
+        n("preheater_housing_corner", "Preheater Unit Housing Corner");
+        n("preheater_housing_edge", "Preheater Unit Housing Edge");
+        n("preheater_housing_face", "Preheater Unit Housing Face");
+        n("plasma_injector_column", "Plasma Injector Column Piece");
         // Multiblock casings (single blocks in the port)
         n("generator_multi", "Generator Housing");
         n("flywheel_multi", "Turbine Flywheel Frame");

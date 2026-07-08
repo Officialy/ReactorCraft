@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "H": "reactorcraft:hysteresis_unit",
+    "M": "reactorcraft:magnetic",
+    "W": "reactorcraft:thermal_insulation_core"
+  },
+  "pattern": [
+    "MWM",
+    "MHM",
+    "MMM"
+  ],
+  "result": {
+    "id": "reactorcraft:plasma_injector_lower_corner"
+  }
+}

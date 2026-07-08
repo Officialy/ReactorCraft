@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "O": "reactorcraft:thermal_insulation_core",
+    "S": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "SOS",
+    "OSO",
+    "SOS"
+  ],
+  "result": {
+    "id": "reactorcraft:preheater_housing_corner"
+  }
+}

@@ -19,6 +19,8 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.blocks.*;
 import reika.reactorcraft.blocks.multi.BlockFlywheelMulti;
+import reika.reactorcraft.blocks.multi.BlockHeaterMulti;
+import reika.reactorcraft.blocks.multi.BlockInjectorMulti;
 import reika.reactorcraft.blocks.multi.BlockGeneratorMulti;
 import reika.reactorcraft.blocks.multi.BlockSolenoidCasing;
 import reika.reactorcraft.blocks.multi.BlockSolenoidCasing.SolenoidPart;
@@ -138,6 +140,21 @@ public final class ReactorBlocks {
     public static final DeferredBlock<Block> HYSTERESIS_ROD = registerMachine("hysteresis_rod", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.SPOKE));
     public static final DeferredBlock<Block> SOLENOID_HUB = registerMachine("solenoid_hub", () -> new BlockSolenoidCasing(machineProperties().noOcclusion(), SolenoidPart.SHELL));
     public static final DeferredBlock<Block> TURBINEMULTI = registerMachine("turbine_multi", () -> new BlockTurbineMulti(machineProperties().noOcclusion()));
+
+    // Fusion preheater + plasma injector casings (one block per legacy metadata part).
+    public static final EnumMap<BlockHeaterMulti.HeaterPart, DeferredBlock<Block>> HEATER_CASINGS = new EnumMap<>(BlockHeaterMulti.HeaterPart.class);
+    static {
+        for (BlockHeaterMulti.HeaterPart p : BlockHeaterMulti.HeaterPart.list) {
+            HEATER_CASINGS.put(p, register(p.id(), () -> new BlockHeaterMulti(machineProperties().noOcclusion(), p)));
+        }
+    }
+
+    public static final EnumMap<BlockInjectorMulti.InjectorPart, DeferredBlock<Block>> INJECTOR_CASINGS = new EnumMap<>(BlockInjectorMulti.InjectorPart.class);
+    static {
+        for (BlockInjectorMulti.InjectorPart p : BlockInjectorMulti.InjectorPart.list) {
+            INJECTOR_CASINGS.put(p, register(p.id(), () -> new BlockInjectorMulti(machineProperties().noOcclusion(), p)));
+        }
+    }
 
     // --- Reactor material blocks (scrubber/graphite/lodestone/etc.; see MatBlocks) ---
     public static final EnumMap<MatBlocks, DeferredBlock<Block>> MAT_BLOCKS = new EnumMap<>(MatBlocks.class);

@@ -24,6 +24,8 @@ import net.minecraft.world.level.ItemLike;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.registry.CraftingItems;
 import reika.reactorcraft.registry.FluoriteTypes;
+import reika.reactorcraft.blocks.multi.BlockHeaterMulti;
+import reika.reactorcraft.blocks.multi.BlockInjectorMulti;
 import reika.reactorcraft.registry.MatBlocks;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorItems;
@@ -81,7 +83,79 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
             smelting();
             crafting();
             machineCrafting();
+            multiblockCrafting();
             crossMod();
+        }
+
+        // The fusion preheater / plasma injector / solenoid casing part recipes, transcribed from the
+        // original addMultiblocks(). "insulCore" upstream is the thermal insulation core block itself.
+        private void multiblockCrafting() {
+            var core = ReactorBlocks.HEATER_CASINGS.get(BlockHeaterMulti.HeaterPart.CORE).get();
+            var steel = RotaryItems.HSLA_STEEL_INGOT.get();
+
+            shaped(RecipeCategory.MISC, ReactorBlocks.HEATER_CASINGS.get(BlockHeaterMulti.HeaterPart.LENS).get())
+                    .define('B', RotaryBlocks.BLASTGLASS.get()).define('S', RotaryItems.TUNGSTEN_INGOT.get()).define('L', RotaryItems.LENS.get())
+                    .pattern("SBS").pattern("BLB").pattern("SBS")
+                    .unlockedBy("has_lens", has(RotaryItems.LENS.get())).save(out);
+            shaped(RecipeCategory.MISC, core)
+                    .define('W', ItemTags.WOOL).define('S', steel)
+                    .pattern("WWW").pattern("WSW").pattern("WWW")
+                    .unlockedBy("has_steel", has(steel)).save(out);
+            shaped(RecipeCategory.MISC, ReactorBlocks.HEATER_CASINGS.get(BlockHeaterMulti.HeaterPart.CORNER).get())
+                    .define('O', core).define('S', steel)
+                    .pattern("SOS").pattern("OSO").pattern("SOS")
+                    .unlockedBy("has_core", has(core)).save(out);
+            shaped(RecipeCategory.MISC, ReactorBlocks.HEATER_CASINGS.get(BlockHeaterMulti.HeaterPart.EDGE).get())
+                    .define('O', core).define('S', steel)
+                    .pattern("OSO").pattern("SSS").pattern("OSO")
+                    .unlockedBy("has_core", has(core)).save(out);
+            shaped(RecipeCategory.MISC, ReactorBlocks.HEATER_CASINGS.get(BlockHeaterMulti.HeaterPart.FACE).get())
+                    .define('O', core).define('S', steel)
+                    .pattern("SSS").pattern("SOS").pattern("SSS")
+                    .unlockedBy("has_core", has(core)).save(out);
+
+            injectorPart(BlockInjectorMulti.InjectorPart.BASE, core, "WWW", "HHH", "MMM", false);
+            injectorPart(BlockInjectorMulti.InjectorPart.LOWER_CORNER, core, "MWM", "MHM", "MMM", false);
+            injectorPart(BlockInjectorMulti.InjectorPart.SIDE_PANEL, core, "WMW", "MHM", "WMW", false);
+            injectorPart(BlockInjectorMulti.InjectorPart.TOP, core, "MMM", "HHH", "WWW", false);
+            injectorPart(BlockInjectorMulti.InjectorPart.UPPER_CORNER, core, "MMM", "MHM", "MWM", false);
+            injectorPart(BlockInjectorMulti.InjectorPart.INDUCTION_COIL, core, "MWM", "HHH", "MWM", true);
+            injectorPart(BlockInjectorMulti.InjectorPart.COLUMN, core, "MWM", "MHM", "MWM", false);
+            injectorPart(BlockInjectorMulti.InjectorPart.HYSTERESIS_CORE, core, "HWH", "WMW", "HWH", false);
+
+            solenoidPart(ReactorBlocks.FERROMAGNETIC_BASE.get(), b -> b
+                    .define('S', ReactorItems.crafting(CraftingItems.FERROINGOT))
+                    .pattern("SSS").pattern("SSS").pattern("SSS"));
+            solenoidPart(ReactorBlocks.MAGNETIC_LINKAGE.get(), b -> b
+                    .define('S', ReactorItems.crafting(CraftingItems.FERROINGOT)).define('B', RotaryItems.HSLA_STEEL_INGOT.get())
+                    .pattern("SSS").pattern("SBS").pattern("SSS"));
+            // TODO: the central (fully-charged magnet) and auxiliary (weaker magnet) recipes differ only
+            // by the magnet's damage-value charge, which plain Ingredient cannot match — only the central
+            // one is emitted until a component-aware ingredient carries the charge distinction.
+            solenoidPart(ReactorBlocks.CENTRAL_MAGNET.get(), b -> b
+                    .define('M', ReactorItems.MAGNET_ITEM.get()).define('S', ReactorItems.crafting(CraftingItems.MAGNETIC))
+                    .pattern("SSS").pattern("MMM").pattern("SSS"));
+            solenoidPart(ReactorBlocks.HYSTERESIS_ROD.get(), b -> b
+                    .define('M', ReactorItems.crafting(CraftingItems.FERROINGOT)).define('S', ReactorItems.crafting(CraftingItems.HYSTERESIS))
+                    .pattern("SSS").pattern("MMM").pattern("SSS"));
+            solenoidPart(ReactorBlocks.SOLENOID_HUB.get(), b -> b
+                    .define('W', ReactorItems.crafting(CraftingItems.WIRE)).define('P', ReactorItems.crafting(CraftingItems.MAGNETIC))
+                    .define('S', ReactorItems.crafting(CraftingItems.FERROINGOT))
+                    .pattern("SSS").pattern("WPW").pattern("SSS"));
+        }
+
+        private void injectorPart(BlockInjectorMulti.InjectorPart part, ItemLike core, String r1, String r2, String r3, boolean wireH) {
+            var b = shaped(RecipeCategory.MISC, ReactorBlocks.INJECTOR_CASINGS.get(part).get())
+                    .define('H', wireH ? ReactorItems.crafting(CraftingItems.WIRE) : ReactorItems.crafting(CraftingItems.HYSTERESIS))
+                    .define('M', ReactorItems.crafting(CraftingItems.MAGNETIC))
+                    .define('W', core)
+                    .pattern(r1).pattern(r2).pattern(r3);
+            b.unlockedBy("has_magnetic", has(ReactorItems.crafting(CraftingItems.MAGNETIC))).save(out);
+        }
+
+        private void solenoidPart(ItemLike result, java.util.function.UnaryOperator<net.minecraft.data.recipes.ShapedRecipeBuilder> shape) {
+            shape.apply(shaped(RecipeCategory.MISC, result))
+                    .unlockedBy("has_ferro", has(ReactorItems.crafting(CraftingItems.FERROINGOT))).save(out);
         }
 
         // The subset of the original addMachines() recipes whose ingredients all resolve in the current

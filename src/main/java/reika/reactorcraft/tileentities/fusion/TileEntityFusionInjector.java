@@ -57,6 +57,12 @@ ToggleTile, NeutronTile {
 		return hasMultiBlock;
 	}
 
+	@Override
+	protected void onFirstTick(Level world, BlockPos pos) {
+		if (!world.isClientSide())
+			this.setHasMultiBlock(reika.reactorcraft.blocks.multi.BlockInjectorMulti.isComplete(world, pos));
+	}
+
 	public void setHasMultiBlock(boolean has) {
 		hasMultiBlock = has;
 	}

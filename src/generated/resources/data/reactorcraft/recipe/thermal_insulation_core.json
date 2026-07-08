@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "S": "rotarycraft:hsla_steel_ingot",
+    "W": "#minecraft:wool"
+  },
+  "pattern": [
+    "WWW",
+    "WSW",
+    "WWW"
+  ],
+  "result": {
+    "id": "reactorcraft:thermal_insulation_core"
+  }
+}

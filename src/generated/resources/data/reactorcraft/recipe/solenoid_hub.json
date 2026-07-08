@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "P": "reactorcraft:magnetic",
+    "S": "reactorcraft:ferromagnetic_ingot",
+    "W": "reactorcraft:wire"
+  },
+  "pattern": [
+    "SSS",
+    "WPW",
+    "SSS"
+  ],
+  "result": {
+    "id": "reactorcraft:solenoid_hub"
+  }
+}

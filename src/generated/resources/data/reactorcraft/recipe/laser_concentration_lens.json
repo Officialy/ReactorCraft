@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": "rotarycraft:blastglass",
+    "L": "rotarycraft:lens",
+    "S": "rotarycraft:tungsten_ingot"
+  },
+  "pattern": [
+    "SBS",
+    "BLB",
+    "SBS"
+  ],
+  "result": {
+    "id": "reactorcraft:laser_concentration_lens"
+  }
+}
