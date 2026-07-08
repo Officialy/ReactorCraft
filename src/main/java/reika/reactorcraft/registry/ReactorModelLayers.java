@@ -152,15 +152,13 @@ public final class ReactorModelLayers {
 		event.registerBlockEntityRenderer(ReactorBlockEntities.HEATPIPE.get(), reika.reactorcraft.renders.ReactorLineRenderer::new);
 
 		// Entity renderers MUST be registered for every spawnable entity type or the client NPEs in
-		// EntityRenderDispatcher.shouldRender the moment one spawns (e.g. a neutron burst when a fission
-		// core is fuelled). The legacy billboard-quad effect renderers (RenderNeutron/Plasma/Fusion/
-		// Radiation) aren't ported yet, so use NoopRenderer for now — the entities stay invisible but the
-		// reactor logic (neutron fission, radiation, plasma) is fully server-side and unaffected.
+		// EntityRenderDispatcher.shouldRender the moment one spawns.
 		event.registerEntityRenderer(ReactorEntities.NEUTRON.get(), RenderNeutron::new);
-		event.registerEntityRenderer(ReactorEntities.RADIATION.get(), NoopRenderer::new);
-		event.registerEntityRenderer(ReactorEntities.PLASMA.get(), NoopRenderer::new);
-		event.registerEntityRenderer(ReactorEntities.FUSION.get(), NoopRenderer::new);
-		event.registerEntityRenderer(ReactorEntities.NUCLEARWASTE.get(), NoopRenderer::new);
+		event.registerEntityRenderer(ReactorEntities.RADIATION.get(), reika.reactorcraft.entities.RenderRadiation::new);
+		event.registerEntityRenderer(ReactorEntities.PLASMA.get(), reika.reactorcraft.entities.RenderPlasma::new);
+		event.registerEntityRenderer(ReactorEntities.FUSION.get(), reika.reactorcraft.entities.RenderFusion::new);
+		// Dropped nuclear waste is an ItemEntity subclass; the vanilla item renderer draws it.
+		event.registerEntityRenderer(ReactorEntities.NUCLEARWASTE.get(), net.minecraft.client.renderer.entity.ItemEntityRenderer::new);
 	}
 
 	public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {

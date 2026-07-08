@@ -1,98 +1,72 @@
 /*******************************************************************************
  * @author Reika Kalseki
- * 
+ *
  * Copyright 2017
- * 
+ *
  * All rights reserved.
  * Distribution of the software in any form is only allowed with
  * explicit, prior permission from the owner.
  ******************************************************************************/
 package reika.reactorcraft.entities;
 
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.resources.Identifier;
 
-import reika.dragonapi.libraries.io.ReikaTextureHelper;
-import reika.dragonapi.libraries.java.reikaglhelper.BlendMode;
-import reika.dragonapi.libraries.rendering.ReikaRenderHelper;
 import reika.reactorcraft.ReactorCraft;
 
-public class RenderPlasma extends Render {
+/** Camera-facing fullbright plasma billboard (the legacy additive quad, plasma7.png). */
+public class RenderPlasma extends EntityRenderer<EntityPlasma, RenderPlasma.PlasmaRenderState> {
 
-	public void renderEntity(EntityPlasma er, double par2, double par4, double par6, float par8, float par9)
-	{
-		GL11.glPushMatrix();
-		GL11.glTranslatef((float)par2, (float)par4, (float)par6);
-		Tessellator v5 = Tessellator.instance;
-		float var16 = 1.0F;
-		float var17 = 0.5F;
-		float var18 = 0.25F;
-		GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.5F);
-		float var26 = 255.0F;
-		ReikaRenderHelper.disableEntityLighting();
-		GL11.glRotatef(180.0F - renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
-		GL11.glRotatef(-renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
-		double size = this.getSize(er);
-		ReikaTextureHelper.bindTexture(ReactorCraft.class, "/Reika/ReactorCraft/Textures/plasma7.png");
-		GL11.glScaled(size, size, 1);
-		GL11.glTranslated(-0.5, -0.5, 0);
-		GL11.glDisable(GL11.GL_LIGHTING);
-		//GL11.glDisable(GL11.GL_CULL_FACE);
-		//GL11.glDisable(GL11.GL_DEPTH_TEST);
-		GL11.glEnable(GL11.GL_BLEND);
-		BlendMode.ADDITIVE.apply();
-		//GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-		//GL11.glBlendFunc(GL11.GL_SRC_COLOR, GL11.GL_ONE);
-		v5.startDrawingQuads();
-		v5.setNormal(0.0F, 1.0F, 0.0F);
-		v5.addVertexWithUV(0, 0, 0, 0, 0);
-		v5.addVertexWithUV(1, 0, 0, 1, 0);
-		v5.addVertexWithUV(1, 1, 0, 1, 1);
-		v5.addVertexWithUV(0, 1, 0, 0, 1);
-		v5.draw();
-		//ReikaJavaLibrary.pConsole(er.getRange());
+	private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "textures/plasma7.png");
 
-		GL11.glTranslated(0.5, 0.5, 0);
-		GL11.glScaled(1D/size, 1D/size, 1);
-		GL11.glEnable(GL11.GL_LIGHTING);
-		ReikaRenderHelper.enableEntityLighting();
-		//GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		//GL11.glEnable(GL11.GL_CULL_FACE);
-		//GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-		GL11.glPopMatrix();
-	}
-
-	private double getSize(EntityPlasma er) {/*
-		int base = 2;
-		double time = (er.ticksExisted/2D)%50/5D;
-		double amt = 0;
-		if (time >= 5) { //0-4
-			amt = base+time/4D-0.25-1;
-		}
-		else { //5-9
-			double add = time-5;
-			amt = base+1-add/4D-0.25-1;
-		}
-		return amt/2+1;*/
-		return 1.5;
+	public RenderPlasma(EntityRendererProvider.Context context) {
+		super(context);
 	}
 
 	@Override
-	public void doRender(Entity entity, double par2, double par4, double par6, float par8, float par10) {
-		//if (ReactorOptions.VISIBLENEUTRONS.getState() && false)
-		this.renderEntity((EntityPlasma)entity, par2, par4, par6, par8, par10);
+	public PlasmaRenderState createRenderState() {
+		return new PlasmaRenderState();
 	}
 
 	@Override
-	protected ResourceLocation getEntityTexture(Entity entity) {
-		return null;
+	public void extractRenderState(EntityPlasma entity, PlasmaRenderState state, float partialTicks) {
+		super.extractRenderState(entity, state, partialTicks);
+		state.size = 2.0F;
 	}
 
+	@Override
+	public void submit(PlasmaRenderState state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState camera) {
+		submitBillboard(state.size, TEXTURE, poseStack, collector, camera);
+	}
+
+	/** Shared camera-facing textured quad for the plasma/fusion/radiation effect entities. */
+	static void submitBillboard(float size, Identifier texture, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState camera) {
+		if (size <= 0)
+			return;
+		poseStack.pushPose();
+		poseStack.mulPose(camera.orientation);
+		float h = size / 2F;
+		collector.submitCustomGeometry(poseStack, RenderTypes.entityTranslucentEmissive(texture), (pose, buf) -> emitQuad(pose, buf, h));
+		poseStack.popPose();
+	}
+
+	private static void emitQuad(PoseStack.Pose pose, VertexConsumer b, float h) {
+		int light = 0xF000F0;
+		b.addVertex(pose, -h, -h, 0).setColor(255, 255, 255, 200).setUv(0, 1).setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, 0, 1, 0);
+		b.addVertex(pose, h, -h, 0).setColor(255, 255, 255, 200).setUv(1, 1).setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, 0, 1, 0);
+		b.addVertex(pose, h, h, 0).setColor(255, 255, 255, 200).setUv(1, 0).setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, 0, 1, 0);
+		b.addVertex(pose, -h, h, 0).setColor(255, 255, 255, 200).setUv(0, 0).setOverlay(net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, 0, 1, 0);
+	}
+
+	public static class PlasmaRenderState extends EntityRenderState {
+		public float size = 2.0F;
+	}
 }
