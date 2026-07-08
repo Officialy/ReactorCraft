@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "P": "rotarycraft:hsla_steel_plate",
+    "a": "reactorcraft:alloy",
+    "c": "rotarycraft:condenser",
+    "s": "rotarycraft:hsla_steel_ingot",
+    "t": "rotarycraft:tungsten_ingot"
+  },
+  "pattern": [
+    "aPa",
+    "tct",
+    "sPs"
+  ],
+  "result": {
+    "id": "reactorcraft:solar_top"
+  }
+}

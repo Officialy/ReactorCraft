@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "reactorcraft:turbine_core"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    },
+    "has_turbine_core_part": {
+      "conditions": {
+        "items": [
+          {
+            "items": "reactorcraft:turbine_core_part"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_turbine_core_part"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "reactorcraft:turbine_core"
+    ]
+  }
+}

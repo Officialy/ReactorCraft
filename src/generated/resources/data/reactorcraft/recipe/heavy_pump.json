@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "G": "minecraft:glass",
+    "I": "rotarycraft:impeller",
+    "P": "rotarycraft:hsla_steel_plate",
+    "S": "rotarycraft:hsla_steel_rod",
+    "p": "rotarycraft:fluid_pipe"
+  },
+  "pattern": [
+    "PpP",
+    "GIG",
+    "PSP"
+  ],
+  "result": {
+    "id": "reactorcraft:heavy_pump"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "I": "minecraft:iron_bars",
+    "P": "rotarycraft:fluid_pipe",
+    "W": "#minecraft:wool"
+  },
+  "pattern": [
+    "IWI",
+    "WPW",
+    "IWI"
+  ],
+  "result": {
+    "id": "reactorcraft:scrubber"
+  }
+}

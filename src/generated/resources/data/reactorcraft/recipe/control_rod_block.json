@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "G": "rotarycraft:hsla_steel_gear_2x",
+    "P": "rotarycraft:hsla_steel_plate",
+    "R": "reactorcraft:rod",
+    "S": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "SGS",
+    "RRR",
+    "PPP"
+  ],
+  "result": {
+    "id": "reactorcraft:control_rod"
+  }
+}

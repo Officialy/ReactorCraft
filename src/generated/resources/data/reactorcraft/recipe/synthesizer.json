@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "M": "rotarycraft:mixer",
+    "S": "rotarycraft:hsla_steel_ingot",
+    "h": "rotarycraft:ignition_unit",
+    "p": "rotarycraft:hsla_steel_plate"
+  },
+  "pattern": [
+    "SpS",
+    "pMp",
+    "ShS"
+  ],
+  "result": {
+    "id": "reactorcraft:synthesizer"
+  }
+}

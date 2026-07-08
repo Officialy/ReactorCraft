@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "G": "minecraft:glass",
+    "P": "rotarycraft:fluid_pipe",
+    "R": "rotarycraft:reservoir",
+    "S": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "SPS",
+    "GRG",
+    "SPS"
+  ],
+  "result": {
+    "id": "reactorcraft:coolant_cell"
+  }
+}

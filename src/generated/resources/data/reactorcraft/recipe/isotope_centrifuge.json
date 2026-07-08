@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": "rotarycraft:bedrock_alloy_ingot",
+    "G": "rotarycraft:bedrock_alloy_gear_16x",
+    "P": "rotarycraft:hsla_steel_plate",
+    "S": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "SPS",
+    "B B",
+    "PGP"
+  ],
+  "result": {
+    "id": "reactorcraft:isotope_centrifuge"
+  }
+}

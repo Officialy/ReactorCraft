@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "I": "minecraft:iron_bars",
+    "P": "rotarycraft:fluid_pipe",
+    "S": "rotarycraft:hsla_steel_ingot",
+    "p": "rotarycraft:hsla_steel_plate"
+  },
+  "pattern": [
+    "SIS",
+    "p p",
+    "SPS"
+  ],
+  "result": {
+    "id": "reactorcraft:steam_grate"
+  }
+}

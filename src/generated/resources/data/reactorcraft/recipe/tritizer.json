@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "G": "rotarycraft:blastglass",
+    "P": "rotarycraft:fluid_pipe",
+    "S": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "SPS",
+    "GPG",
+    "SPS"
+  ],
+  "result": {
+    "id": "reactorcraft:tritizer"
+  }
+}

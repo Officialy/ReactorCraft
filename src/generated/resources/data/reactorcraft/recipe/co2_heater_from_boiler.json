@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "b": "reactorcraft:reactor_boiler",
+    "i": "rotarycraft:hsla_steel_plate"
+  },
+  "pattern": [
+    " i ",
+    "ibi",
+    " i "
+  ],
+  "result": {
+    "id": "reactorcraft:co2_heater"
+  }
+}

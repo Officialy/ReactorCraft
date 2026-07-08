@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "E": "reactorcraft:heat_exchanger",
+    "P": "rotarycraft:hsla_steel_plate",
+    "p": "rotarycraft:fluid_pipe",
+    "s": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "sPs",
+    "pEp",
+    "sPs"
+  ],
+  "result": {
+    "id": "reactorcraft:solar_exchanger"
+  }
+}

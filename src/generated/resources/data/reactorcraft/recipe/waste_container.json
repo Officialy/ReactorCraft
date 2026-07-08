@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "C": "rotarycraft:cooling_fin",
+    "S": "rotarycraft:hsla_steel_ingot",
+    "c": "minecraft:chest"
+  },
+  "pattern": [
+    "SCS",
+    "CcC",
+    "SCS"
+  ],
+  "result": {
+    "id": "reactorcraft:waste_container"
+  }
+}

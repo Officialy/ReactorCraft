@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "C": "rotarycraft:compressor",
+    "P": "rotarycraft:hsla_steel_plate",
+    "g": "minecraft:glass_pane",
+    "p": "rotarycraft:fluid_pipe",
+    "s": "rotarycraft:hsla_steel_rod"
+  },
+  "pattern": [
+    "PpP",
+    "gCg",
+    "PsP"
+  ],
+  "result": {
+    "id": "reactorcraft:reactor_pump"
+  }
+}

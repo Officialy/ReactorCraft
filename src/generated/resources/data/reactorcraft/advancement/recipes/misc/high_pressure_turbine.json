@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "reactorcraft:high_pressure_turbine"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    },
+    "has_turbine": {
+      "conditions": {
+        "items": [
+          {
+            "items": "reactorcraft:turbine_core"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_turbine"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "reactorcraft:high_pressure_turbine"
+    ]
+  }
+}

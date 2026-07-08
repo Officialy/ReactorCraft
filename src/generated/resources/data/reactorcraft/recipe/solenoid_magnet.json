@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "C": "reactorcraft:magnet_core",
+    "G": "rotarycraft:tungsten_alloy_gear_16x",
+    "I": "reactorcraft:ferromagnetic_ingot",
+    "M": "reactorcraft:magnetic",
+    "P": "rotarycraft:hsla_steel_plate",
+    "S": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "SPS",
+    "MCM",
+    "IGI"
+  ],
+  "result": {
+    "id": "reactorcraft:solenoid_magnet"
+  }
+}

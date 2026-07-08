@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "P": "rotarycraft:hsla_steel_plate",
+    "S": "rotarycraft:hsla_steel_ingot",
+    "r": "rotarycraft:reservoir"
+  },
+  "pattern": [
+    "SPS",
+    "PrP",
+    "SPS"
+  ],
+  "result": {
+    "id": "reactorcraft:reactor_boiler"
+  }
+}

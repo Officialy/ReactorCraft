@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_tank": {
+      "conditions": {
+        "items": [
+          {
+            "items": "reactorcraft:tank"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "reactorcraft:uranium_processor"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_tank"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "reactorcraft:uranium_processor"
+    ]
+  }
+}

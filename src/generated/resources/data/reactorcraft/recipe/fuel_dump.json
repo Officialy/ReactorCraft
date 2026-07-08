@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": "rotarycraft:hsla_steel_plate",
+    "I": "rotarycraft:impeller",
+    "P": "rotarycraft:bedrock_pipe",
+    "b": "minecraft:iron_bars",
+    "p": "rotarycraft:fluid_pipe"
+  },
+  "pattern": [
+    "pIp",
+    "BPB",
+    "pbp"
+  ],
+  "result": {
+    "id": "reactorcraft:fuel_dump"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_canister_part": {
+      "conditions": {
+        "items": [
+          {
+            "items": "reactorcraft:canister_part"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "reactorcraft:fuel_rod"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_canister_part"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "reactorcraft:fuel_rod"
+    ]
+  }
+}

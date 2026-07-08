@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "G": "rotarycraft:blastglass",
+    "H": "minecraft:hopper",
+    "P": "reactorcraft:waste_container",
+    "S": "rotarycraft:aluminum_alloy_ingot"
+  },
+  "pattern": [
+    "SHS",
+    "GPG",
+    "SHS"
+  ],
+  "result": {
+    "id": "reactorcraft:waste_decayer"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": "rotarycraft:hsla_steel_block",
+    "S": "rotarycraft:hsla_steel_rod",
+    "T": "rotarycraft:tungsten_alloy_shaft_core"
+  },
+  "pattern": [
+    "BBB",
+    "STS",
+    "BBB"
+  ],
+  "result": {
+    "id": "reactorcraft:turbine_flywheel"
+  }
+}

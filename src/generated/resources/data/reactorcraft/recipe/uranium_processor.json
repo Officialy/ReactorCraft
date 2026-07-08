@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "M": "rotarycraft:mixer",
+    "O": "reactorcraft:tank",
+    "P": "rotarycraft:fluid_pipe"
+  },
+  "pattern": [
+    "POP",
+    "OMO"
+  ],
+  "result": {
+    "id": "reactorcraft:uranium_processor"
+  }
+}

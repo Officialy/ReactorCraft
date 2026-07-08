@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "reactorcraft:waste_decayer"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    },
+    "has_waste_container": {
+      "conditions": {
+        "items": [
+          {
+            "items": "reactorcraft:waste_container"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_waste_container"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "reactorcraft:waste_decayer"
+    ]
+  }
+}

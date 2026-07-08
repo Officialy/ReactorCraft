@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": "rotarycraft:propeller_blade",
+    "C": "reactorcraft:turbine_core"
+  },
+  "pattern": [
+    "BBB",
+    "BCB",
+    "BBB"
+  ],
+  "result": {
+    "id": "reactorcraft:high_pressure_turbine"
+  }
+}

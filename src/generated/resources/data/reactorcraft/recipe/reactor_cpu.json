@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "C": "rotarycraft:circuit_board",
+    "G": "rotarycraft:hsla_steel_gear_2x",
+    "S": "rotarycraft:hsla_steel_plate"
+  },
+  "pattern": [
+    "SCS",
+    "CGC",
+    "SCS"
+  ],
+  "result": {
+    "id": "reactorcraft:reactor_cpu"
+  }
+}

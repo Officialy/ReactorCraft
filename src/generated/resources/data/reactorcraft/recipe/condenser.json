@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "F": "rotarycraft:cooling_fin",
+    "P": "rotarycraft:hsla_steel_plate",
+    "R": "rotarycraft:reservoir",
+    "S": "rotarycraft:hsla_steel_ingot",
+    "p": "rotarycraft:fluid_pipe"
+  },
+  "pattern": [
+    "SPS",
+    "pRp",
+    "FFF"
+  ],
+  "result": {
+    "id": "reactorcraft:condenser"
+  }
+}

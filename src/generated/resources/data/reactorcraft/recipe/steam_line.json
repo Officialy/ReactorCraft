@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "N": "#minecraft:wool",
+    "P": "rotarycraft:fluid_pipe"
+  },
+  "pattern": [
+    "NPN",
+    "NPN",
+    "NPN"
+  ],
+  "result": {
+    "count": 3,
+    "id": "reactorcraft:steam_line"
+  }
+}

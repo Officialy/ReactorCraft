@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": "rotarycraft:hsla_steel_plate",
+    "P": "rotarycraft:fluid_pipe",
+    "R": "rotarycraft:reservoir",
+    "S": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "SPS",
+    "PRP",
+    "BPB"
+  ],
+  "result": {
+    "id": "reactorcraft:electrolyzer"
+  }
+}

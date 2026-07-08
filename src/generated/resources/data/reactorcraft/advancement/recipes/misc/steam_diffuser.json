@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_diffuser": {
+      "conditions": {
+        "items": [
+          {
+            "items": "rotarycraft:diffuser"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "reactorcraft:steam_diffuser"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_diffuser"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "reactorcraft:steam_diffuser"
+    ]
+  }
+}

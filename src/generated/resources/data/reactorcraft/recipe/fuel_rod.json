@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "C": "reactorcraft:canister_part",
+    "H": "minecraft:hopper",
+    "P": "rotarycraft:hsla_steel_plate",
+    "S": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "SHS",
+    "PCP",
+    "SCS"
+  ],
+  "result": {
+    "id": "reactorcraft:fuel_rod"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "b": "reactorcraft:reactor_boiler",
+    "i": "minecraft:iron_ingot"
+  },
+  "pattern": [
+    " i ",
+    "ibi",
+    " i "
+  ],
+  "result": {
+    "id": "reactorcraft:sodium_boiler"
+  }
+}

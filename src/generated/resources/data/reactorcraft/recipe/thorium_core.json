@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "C": "reactorcraft:fuel_rod",
+    "P": "rotarycraft:hsla_steel_plate",
+    "S": "rotarycraft:hsla_steel_ingot",
+    "a": "rotarycraft:aluminum_alloy_ingot",
+    "t": "rotarycraft:tungsten_ingot"
+  },
+  "pattern": [
+    "aSa",
+    "PCP",
+    "tPt"
+  ],
+  "result": {
+    "id": "reactorcraft:thorium_core"
+  }
+}

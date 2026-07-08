@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": "rotarycraft:hsla_steel_plate",
+    "D": "rotarycraft:diffuser",
+    "P": "rotarycraft:fluid_pipe"
+  },
+  "pattern": [
+    "BBB",
+    "DPD",
+    "BBB"
+  ],
+  "result": {
+    "id": "reactorcraft:steam_diffuser"
+  }
+}
