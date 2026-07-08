@@ -59,7 +59,11 @@ public class ReactorLineRenderer extends ReactorTERenderer<TileEntityLine> {
     @Override
     protected void renderModel(PoseStack stack, BlockEntity be, VertexConsumer vc, int light) {
         TileEntityLine te = (TileEntityLine) be;
-        int tint = te instanceof TileEntityHeatPipe ? 0xFFFFA64C : 0xFFFFFFFF; // legacy heat-pipe warm tint
+        // Steam line draws at half brightness (the legacy 0.5 grey); the heat pipe takes its
+        // live temperature colour from the TE.
+        int tint = 0xFF808080;
+        if (te instanceof TileEntityHeatPipe pipe)
+            tint = 0xFF000000 | (pipe.getRenderColor() & 0xFFFFFF);
         int overlay = OverlayTexture.NO_OVERLAY;
         Matrix4f m = stack.last().pose();
         for (Direction dir : Direction.values()) {

@@ -37,18 +37,18 @@ import reika.reactorcraft.base.TileEntityReactorPiping;
 import reika.reactorcraft.tileentities.TileEntityGasDuct;
 import reika.reactorcraft.tileentities.TileEntityMagneticPipe;
 import reika.reactorcraft.tileentities.waste.TileEntityWastePipe;
+import reika.rotarycraft.renders.PipeShellRenderer;
 
 /**
  * 26.2 BER for the ReactorCraft fluid ducts (gas duct, magnetic pipe, waste pipe). Port of the legacy
- * {@code DuctRenderer} → {@code PipeRenderer.renderLiquid}: the iron-cross shell is drawn by the
- * multipart blockstate JSON (reusing RotaryCraft's {@code block/pipe/*} models), and ONLY the fluid
- * surface is BER-rendered here because it updates every tick from the BE's {@code fluid}/{@code level}.
- *
- * <p>For each side, draws either a sealed cap at the pipe inner edge (side not connected) or four
- * "tube wall" quads extending to the block face (side connected) — exactly the legacy geometry, so
- * the visual is the slim translucent fluid tube. Geometry is copied verbatim from
- * {@link reika.rotarycraft.renders.PipeRenderer}; only the connection source ({@link
- * TileEntityReactorPiping#isConnectedDirectly}) and the per-fluid tint/sprite differ.</p>
+ * {@code DuctRenderer}, which was literally RotaryCraft's {@code PipeBodyRenderer} pointed at the
+ * duct's own icons — so this renderer draws the same flat shell frame + glass windows via the shared
+ * {@link PipeShellRenderer} geometry, using the legacy {@code BlockDuct} texture set (gas duct =
+ * terracotta + glass; magnetic pipe = gold — glowgold while charged — + dark glass; waste pipe =
+ * concrete + leaf-pane windows), and then the fluid surface inside: a sealed cap at the pipe inner
+ * edge on unconnected sides, four "tube wall" quads extending to the block face on connected sides —
+ * exactly the legacy {@code renderLiquid} geometry, driven by
+ * {@link TileEntityReactorPiping#isConnectedDirectly} and the per-fluid tint/sprite.
  */
 public class ReactorPipeRenderer extends ReactorTERenderer<TileEntityReactorPiping> {
 
@@ -74,9 +74,9 @@ public class ReactorPipeRenderer extends ReactorTERenderer<TileEntityReactorPipi
         Fluid fluid = tile.getFluidType();
         boolean hasFluid = fluid != null && fluid != Fluids.EMPTY && tile.getFluidLevel() > 0;
 
-        // Full pipe → translucent fluid tube; empty pipe → the duct's own shell texture (untinted --
-        // it already carries its real colour, unlike the fluid sprites which need a tint).
-        TextureAtlasSprite sprite = hasFluid ? stillSpriteFor(fluid) : shellSprite(tile);
+        TextureAtlasSprite shell = shellSprite(tile);
+        TextureAtlasSprite glass = glassSprite(tile);
+        TextureAtlasSprite fluidSprite = hasFluid ? stillSpriteFor(fluid) : null;
         int tint = hasFluid ? fluidTint(fluid) : 0xFFFFFFFF;
 
         int light = state.lightCoords;
@@ -87,16 +87,22 @@ public class ReactorPipeRenderer extends ReactorTERenderer<TileEntityReactorPipi
         snapped.last().set(poseStack.last());
 
         collector.submitCustomGeometry(poseStack, rt, (pose2, vc) -> {
-            float u = sprite.getU0();
-            float v = sprite.getV0();
-            float u2 = sprite.getU1();
-            float v2 = sprite.getV1();
+            Matrix4f m = snapped.last().pose();
+
+            boolean[] conn = new boolean[6];
+            for (Direction d : Direction.values()) conn[d.ordinal()] = tile.isConnectedDirectly(d);
+
+            PipeShellRenderer.emitShell(m, vc, conn, shell, glass, 0xFFFFFFFF, light, overlay);
+
+            if (!hasFluid) return;
+            float u = fluidSprite.getU0();
+            float v = fluidSprite.getV0();
+            float u2 = fluidSprite.getU1();
+            float v2 = fluidSprite.getV1();
             double du = DD2 * (u2 - u) / 4D;
 
-            Matrix4f m = snapped.last().pose();
             for (Direction dir : Direction.values()) {
-                boolean connected = tile.isConnectedDirectly(dir);
-                if (connected)
+                if (conn[dir.ordinal()])
                     emitConnectedFluid(m, vc, dir, u, v, u2, v2, (float) du, IN, IN2, tint, light, overlay);
                 else
                     emitCap(m, vc, dir, u, v, u2, v2, IN, IN2, tint, light, overlay);
@@ -177,9 +183,9 @@ public class ReactorPipeRenderer extends ReactorTERenderer<TileEntityReactorPipi
     }
 
     /**
-     * Empty-pipe shell texture, per duct type -- matches the legacy {@code getBlockIcon()} overrides
-     * on each TE (gas duct = orange terracotta, magnetic pipe = gold/glowgold when charged, waste
-     * pipe = concrete). All three previously fell through to a single hardcoded iron-block texture.
+     * Shell frame texture, per duct type -- matches the legacy {@code BlockDuct.registerBlockIcons}
+     * body icons: gas duct = plain terracotta ({@code Blocks.hardened_clay}), magnetic pipe =
+     * gold block ({@code reactorcraft:glowgold} while charged), waste pipe = concrete.
      */
     private TextureAtlasSprite shellSprite(TileEntityReactorPiping tile) {
         Identifier id;
@@ -188,12 +194,28 @@ public class ReactorPipeRenderer extends ReactorTERenderer<TileEntityReactorPipi
                     ? Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "block/glowgold")
                     : Identifier.withDefaultNamespace("block/gold_block");
         } else if (tile instanceof TileEntityGasDuct) {
-            id = Identifier.withDefaultNamespace("block/orange_terracotta");
+            id = Identifier.withDefaultNamespace("block/terracotta");
         } else if (tile instanceof TileEntityWastePipe) {
             id = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "block/mat/concrete");
         } else {
             id = Identifier.withDefaultNamespace("block/iron_block");
         }
+        return sprites.get(new SpriteId(TextureAtlas.LOCATION_BLOCKS, id));
+    }
+
+    /**
+     * Window texture, per duct type -- the legacy glass icons: gas duct = vanilla glass, magnetic
+     * pipe = the dark {@code rotarycraft:obsidiglass} (stood in for by vanilla tinted glass — the
+     * original texture never shipped in the port), waste pipe = the untinted (grey) leaf pane.
+     */
+    private TextureAtlasSprite glassSprite(TileEntityReactorPiping tile) {
+        Identifier id;
+        if (tile instanceof TileEntityMagneticPipe)
+            id = Identifier.withDefaultNamespace("block/tinted_glass");
+        else if (tile instanceof TileEntityWastePipe)
+            id = Identifier.withDefaultNamespace("block/spruce_leaves");
+        else
+            id = Identifier.withDefaultNamespace("block/glass");
         return sprites.get(new SpriteId(TextureAtlas.LOCATION_BLOCKS, id));
     }
 
