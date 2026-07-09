@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "F": "reactorcraft:radiation_fabric"
+  },
+  "pattern": [
+    "FFF",
+    "F F"
+  ],
+  "result": {
+    "id": "reactorcraft:hazmat_helmet"
+  }
+}

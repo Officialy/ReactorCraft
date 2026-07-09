@@ -133,6 +133,18 @@ public final class ReactorItems {
     public static final DeferredItem<ItemRadiationGoggles> GOGGLES_ITEM = reg("radiation_goggles",
             () -> new ItemRadiationGoggles(toolProperties().component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD).build())));
 
+    // Hazmat suit: the radiation-shielding armour (a full worn set makes RadiationEffects.hasHazmatSuit
+    // true, so the wearer survives reactor radiation). Registered as equippable radiation-fabric gear;
+    // protection is the radiation immunity, not damage reduction.
+    public static final DeferredItem<Item> HAZMAT_HELMET = reg("hazmat_helmet",
+            () -> new Item(toolProperties().component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD).build())));
+    public static final DeferredItem<Item> HAZMAT_CHESTPLATE = reg("hazmat_chestplate",
+            () -> new Item(toolProperties().component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.CHEST).build())));
+    public static final DeferredItem<Item> HAZMAT_LEGGINGS = reg("hazmat_leggings",
+            () -> new Item(toolProperties().component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.LEGS).build())));
+    public static final DeferredItem<Item> HAZMAT_BOOTS = reg("hazmat_boots",
+            () -> new Item(toolProperties().component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.FEET).build())));
+
     public static final ItemRef FUEL = ref(FUEL_ROD, 100);
     public static final ItemRef PLUTONIUM = ref(PLUTONIUM_ROD, 100);
     public static final ItemRef DEPLETED = ref(DEPLETED_FUEL);

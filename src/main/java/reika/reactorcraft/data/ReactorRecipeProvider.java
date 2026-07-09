@@ -465,6 +465,21 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
         }
 
         private void crafting() {
+            // Hazmat suit — radiation-shielding fabric armour (legacy ReactorRecipes hazmat set).
+            var fabric = ReactorItems.crafting(CraftingItems.FABRIC);
+            shaped(RecipeCategory.COMBAT, ReactorItems.HAZMAT_HELMET.get())
+                    .define('F', fabric).pattern("FFF").pattern("F F")
+                    .unlockedBy("has_fabric", has(fabric)).save(out);
+            shaped(RecipeCategory.COMBAT, ReactorItems.HAZMAT_CHESTPLATE.get())
+                    .define('F', fabric).pattern("F F").pattern("FFF").pattern("FFF")
+                    .unlockedBy("has_fabric", has(fabric)).save(out);
+            shaped(RecipeCategory.COMBAT, ReactorItems.HAZMAT_LEGGINGS.get())
+                    .define('F', fabric).pattern("FFF").pattern("F F").pattern("F F")
+                    .unlockedBy("has_fabric", has(fabric)).save(out);
+            shaped(RecipeCategory.COMBAT, ReactorItems.HAZMAT_BOOTS.get())
+                    .define('F', fabric).pattern("F F").pattern("F F")
+                    .unlockedBy("has_fabric", has(fabric)).save(out);
+
             shaped(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.TANK))
                     .define('O', RotaryBlocks.BLASTGLASS.get())
                     .pattern("OOO").pattern("O O").pattern("OOO")

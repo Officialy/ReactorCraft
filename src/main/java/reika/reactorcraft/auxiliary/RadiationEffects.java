@@ -26,6 +26,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
@@ -89,9 +90,8 @@ public class RadiationEffects {
 	}
 
 	private boolean isValidHazmatItem(ItemStack is) {
-		// ITEM-PORT: the hazmat suit pieces (ItemHazmatSuit) are not yet ported/registered, so nothing
-		// qualifies as hazmat gear yet. Re-enable by matching the registered hazmat armor items once ported.
-		return false;
+		return is.is(ReactorItems.HAZMAT_HELMET.get()) || is.is(ReactorItems.HAZMAT_CHESTPLATE.get())
+				|| is.is(ReactorItems.HAZMAT_LEGGINGS.get()) || is.is(ReactorItems.HAZMAT_BOOTS.get());
 	}
 
 	public double contaminateArea(Level world, int x, int y, int z, int range, float density, double force, boolean los, RadiationIntensity ri) {
@@ -144,7 +144,7 @@ public class RadiationEffects {
 			if (state.is(BlockTags.LEAVES) || ModWoodList.isModLeaf(id)) {
 				world.removeBlock(pos, false);
 			}
-			else if (id instanceof net.minecraft.world.level.block.SaplingBlock) {
+			else if (id instanceof SaplingBlock) {
 				world.setBlockAndUpdate(pos, Blocks.DEAD_BUSH.defaultBlockState());
 			}
 			else if (id == Blocks.SHORT_GRASS || id == Blocks.FERN || id == Blocks.TALL_GRASS) {
