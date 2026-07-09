@@ -120,14 +120,15 @@ public class BlockSolenoidCasing extends BlockReCMultiBlock implements Transduce
 		int midX = mid.getX(), midY = mid.getY(), midZ = mid.getZ();
 		Map<BlockPos, CasingSpec> map = new LinkedHashMap<>();
 
-		// SHELL: 3x3x3 hub with the magnet at the BOTTOM-centre (Y = mid..mid+2), NOT the geometric
-		// centre. The magnet is powered from directly below (canReadFrom == DOWN), so the block at
-		// (mid, mid-1, mid) MUST stay open for a shaft -- a shell block there blocks the power input
-		// and the assembly is unpowerable. Legacy was Y = mid..mid+1 (a 3x2x3 shell); the port keeps
-		// the magnet at the bottom (so the coil render, tuned to that, still lines up) but extends to
-		// a full 3-tall shell to match the coil model's size (user-confirmed 3x3x3 + bottom-centre).
+		// SHELL: 3x2x3 hub with the magnet at the BOTTOM-centre (Y = mid..mid+1), exactly as legacy
+		// SolenoidStructure. The magnet is powered from directly below (canReadFrom == DOWN), so the
+		// block at (mid, mid-1, mid) MUST stay open -- a shell block there blocks the power input and
+		// the assembly is unpowerable. (The port previously centred the magnet at Y = mid-1..mid+1,
+		// which put a shell block below it; that was the unpowerable/unformable bug.) The coil render
+		// is tuned to the magnet-at-bottom base transform, so it lines up. The model can *look* a block
+		// too tall in-world, but that is a render-scale artefact -- the structure is 3x2x3, not 3x3x3.
 		for (int i = -1; i <= 1; i++)
-			for (int j = 0; j <= 2; j++)
+			for (int j = 0; j <= 1; j++)
 				for (int k = -1; k <= 1; k++)
 					if (i != 0 || j != 0 || k != 0)
 						map.put(new BlockPos(midX + i, midY + j, midZ + k), new CasingSpec(SolenoidPart.SHELL));

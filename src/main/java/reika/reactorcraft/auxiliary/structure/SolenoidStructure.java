@@ -17,11 +17,11 @@ public class SolenoidStructure extends ReactorStructureBase {
 
 		Block b = ReactorBlocks.SOLENOIDMULTI.getBlockInstance();
 
-		// 3x3x3 shell with the magnet at the BOTTOM-centre (Y = y..y+2). Must match
+		// 3x2x3 shell with the magnet at the BOTTOM-centre (Y = y..y+1), exactly as legacy. Must match
 		// BlockSolenoidCasing.layout exactly, and must leave (x, y-1, z) open so the magnet can be
 		// powered from below.
 		for (int i = -1; i <= 1; i++) {
-			for (int j = 0; j <= 2; j++) {
+			for (int j = 0; j <= 1; j++) {
 				for (int k = -1; k <= 1; k++) {
 					if (i != 0 || j != 0 || k != 0) {
 						array.setBlock(x+i, y+j, z+k, b, 5);
