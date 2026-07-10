@@ -760,6 +760,13 @@ public class ModelSolenoid {
         shape6c.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape6d.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape6e.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
+        // The hub column (shape7*/shape8*) is authored 3 blocks tall (model Y -8..40); the original
+        // renderAll Y-squashes it (glTranslated(0, -0.1875, 0); glScaled(1, 0.67, 1)) so it fits the
+        // 2-block hub with its base at the magnet TE. Without this the raw column extends one block
+        // below the TE, clipping into the drive shaft under the hub.
+        stack.pushPose();
+        stack.translate(0.0, -0.1875, 0.0);
+        stack.scale(1.0F, 0.67F, 1.0F);
         shape7.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape7a.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape7b.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
@@ -768,12 +775,6 @@ public class ModelSolenoid {
         shape8a.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape8b.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape8c.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
-        // ANIM (wire phi/theta from the renderer; original used GL transforms):
-        // GL11.glRotated(phi, 0, 1, 0);
-        // GL11.glTranslated(0, d, 0);
-        // GL11.glScaled(1, s, 1);
-        // GL11.glScaled(1, 1/s, 1);
-        // GL11.glTranslated(0, -d, 0);
-        // GL11.glRotated(-phi, 0, 1, 0);
+        stack.popPose();
     }
 }
