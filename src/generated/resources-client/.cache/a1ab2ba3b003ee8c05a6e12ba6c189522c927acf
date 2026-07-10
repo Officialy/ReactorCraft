@@ -1,4 +1,4 @@
-// 26.2	2026-07-09T20:11:59.4900861	Model Definitions - reactorcraft
+// 26.2	2026-07-10T18:15:15.2895311	Model Definitions - reactorcraft
 c914679cb80d0e2d9d4e6bb4c35fc813a9cbaf7a assets/reactorcraft/blockstates/ammonium_ore.json
 815ecc6c365920816171da9878e7cb3ffac9b8f8 assets/reactorcraft/blockstates/blue_fluorite_ore.json
 5045023341d76f2d2ab82e0b2002e8f6eada5cb5 assets/reactorcraft/blockstates/blue_tritium_lamp.json
@@ -142,6 +142,7 @@ a15f5afa91b8e804fc5cb9c41db4ffad8193810a assets/reactorcraft/items/fusion_inject
 29ef9369fd6c5904ae2b20824e794649113bd025 assets/reactorcraft/items/fusion_marker.json
 a19d6e5d806ca176ecaeecc121f3787039edb160 assets/reactorcraft/items/gas_collector.json
 803e7fbb20010fa10608c5530d3420190dbe3090 assets/reactorcraft/items/gas_duct.json
+b13cf173c222247b4711eee5944bc6cd0e872bde assets/reactorcraft/items/geiger_counter.json
 4c5107cf0595c451facf4e422e3f55cd8ae0ace3 assets/reactorcraft/items/generator_multi.json
 afbb2dac626a9a2cb704277d0fecaeb4b2c9c523 assets/reactorcraft/items/graphite.json
 4289f647087a09bad47aa25176d0dd97994f918f assets/reactorcraft/items/graphite_block.json
@@ -199,6 +200,7 @@ e4d45ad73917f9b39354f67cd946a05ad22edf4f assets/reactorcraft/items/plutonium.jso
 f3ba810f23205f5a4538dcb633df73616d8cd267 assets/reactorcraft/items/preheater_housing_corner.json
 897b83a907e4142f055eba505590390bd0d769d9 assets/reactorcraft/items/preheater_housing_edge.json
 082d7e64c68e55128e6cc6cf533e61dfe789e9e5 assets/reactorcraft/items/preheater_housing_face.json
+96ed3c250eab053e408be6b812d229cd04a49746 assets/reactorcraft/items/radiation_cleaner.json
 665918d3adc459a8c4b861adededee2511d54cbd assets/reactorcraft/items/radiation_fabric.json
 789b29bc94500b8596e36c7804a8bc7eb43f55e3 assets/reactorcraft/items/radiation_goggles.json
 1cbdd35245210eefb36299b4c2b71ba4aa5126ff assets/reactorcraft/items/reactor_boiler.json
@@ -381,6 +383,7 @@ c1370e9b05546a5bd2953153123ca7fc9bad4f3d assets/reactorcraft/models/item/fuel_pe
 71976240fde307a3a42adbef9eb0427659c7636c assets/reactorcraft/models/item/fusion_marker.json
 71976240fde307a3a42adbef9eb0427659c7636c assets/reactorcraft/models/item/gas_collector.json
 71976240fde307a3a42adbef9eb0427659c7636c assets/reactorcraft/models/item/gas_duct.json
+b7561f45d1a0a1766c4d9710c6006a3e6ca0d561 assets/reactorcraft/models/item/geiger_counter.json
 ddb589e7a4319403e4aa2dd104e654829c12f659 assets/reactorcraft/models/item/graphite.json
 c094c1c4ccf5ed31eb51d662bb65573a0da08ce7 assets/reactorcraft/models/item/green_fluorite.json
 098f8dbb89dc144d588f8f451946347563f10038 assets/reactorcraft/models/item/hazmat_boots.json
@@ -407,6 +410,7 @@ f24ecde14704689bd5791f7863deeda0fc069cb6 assets/reactorcraft/models/item/magnet_
 e450155567d32553ebf1ed0109ce5669be9d1cd9 assets/reactorcraft/models/item/orange_fluorite.json
 0562aca493869287f0b99d2fc1a730579a98100b assets/reactorcraft/models/item/pink_fluorite.json
 e34b9cd0b02396625f9db927849e7dfc3275ddaf assets/reactorcraft/models/item/plutonium.json
+14068e6ac90c4f68461fb42499a705f4997fd797 assets/reactorcraft/models/item/radiation_cleaner.json
 cdb266e441f0442ff15876868d162bf73bffd165 assets/reactorcraft/models/item/radiation_fabric.json
 9e4c2e6bd0285411ab1c44ae220fd84e717102c2 assets/reactorcraft/models/item/radiation_goggles.json
 0d1ecb41be072faf7977eb7f0f956b28d00e73a1 assets/reactorcraft/models/item/reactor_book.json

@@ -98,6 +98,8 @@ public class ReactorLang extends LanguageProvider {
         n("waste", "Nuclear Waste");
         n("magnet", "Permanent Magnet");
         n("radiation_goggles", "Radiation Goggles");
+        n("geiger_counter", "Geiger Counter");
+        n("radiation_cleaner", "Radiation Cleanup Tool");
         n("reactor_book", "ReactorCraft Handbook");
         n("heavy_water_bucket", "Heavy Water Bucket");
         n("canister", "Empty Canister");

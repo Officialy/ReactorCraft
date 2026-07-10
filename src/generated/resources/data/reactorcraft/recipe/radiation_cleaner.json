@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "b": "minecraft:water_bucket",
+    "p": "rotarycraft:fluid_pipe",
+    "s": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    " sp",
+    "sbs",
+    "ss "
+  ],
+  "result": {
+    "id": "reactorcraft:radiation_cleaner"
+  }
+}

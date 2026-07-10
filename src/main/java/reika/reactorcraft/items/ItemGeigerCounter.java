@@ -11,6 +11,7 @@ package reika.reactorcraft.items;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -21,6 +22,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.phys.AABB;
 
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
@@ -67,8 +69,8 @@ public class ItemGeigerCounter extends ItemReactorTool implements ChargeableTool
 	}
 
 	@Override
-	public void appendHoverText(ItemStack is, Item.TooltipContext ctx, List<Component> li, TooltipFlag flag) {
-		li.add(Component.literal("Charge: "+is.getDamageValue()+" kJ"));
+	public void appendHoverText(ItemStack is, Item.TooltipContext ctx, TooltipDisplay display, Consumer<Component> li, TooltipFlag flag) {
+		li.accept(Component.literal("Charge: "+is.getDamageValue()+" kJ"));
 	}
 
 }

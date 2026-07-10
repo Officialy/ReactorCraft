@@ -480,6 +480,18 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
                     .define('F', fabric).pattern("F F").pattern("F F")
                     .unlockedBy("has_fabric", has(fabric)).save(out);
 
+            // Coil-charged radiation tools (legacy: " r ","sSs","sgs" and " sp","sbs","ss ").
+            shaped(RecipeCategory.TOOLS, ReactorItems.GEIGER_COUNTER.get())
+                    .define('r', RotaryItems.RADAR_UNIT.get()).define('s', RotaryItems.HSLA_STEEL_INGOT.get())
+                    .define('S', RotaryItems.SCREEN.get()).define('g', RotaryItems.HSLA_STEEL_GEAR.get())
+                    .pattern(" r ").pattern("sSs").pattern("sgs")
+                    .unlockedBy("has_screen", has(RotaryItems.SCREEN.get())).save(out);
+            shaped(RecipeCategory.TOOLS, ReactorItems.RADIATION_CLEANER.get())
+                    .define('b', Items.WATER_BUCKET).define('s', RotaryItems.HSLA_STEEL_INGOT.get())
+                    .define('p', RotaryBlocks.FLUID_PIPE.get())
+                    .pattern(" sp").pattern("sbs").pattern("ss ")
+                    .unlockedBy("has_steel", has(RotaryItems.HSLA_STEEL_INGOT.get())).save(out);
+
             shaped(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.TANK))
                     .define('O', RotaryBlocks.BLASTGLASS.get())
                     .pattern("OOO").pattern("O O").pattern("OOO")

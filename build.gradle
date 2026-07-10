@@ -52,6 +52,8 @@ sourceSets.main.java {
     include 'reika/reactorcraft/items/ItemHeavyBucket.java'
     include 'reika/reactorcraft/items/ItemRadiationGoggles.java'
     include 'reika/reactorcraft/items/ItemCanister.java'
+    include 'reika/reactorcraft/items/ItemGeigerCounter.java'
+    include 'reika/reactorcraft/items/ItemRadiationCleaner.java'
 
     // Content slice (26.2): main class + DeferredRegister registries + custom recipe type system.
     include 'reika/reactorcraft/ReactorCraft.java'

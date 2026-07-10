@@ -26,7 +26,9 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.base.ItemReactorMulti;
 import reika.reactorcraft.items.ItemCanister;
+import reika.reactorcraft.items.ItemGeigerCounter;
 import reika.reactorcraft.items.ItemHeavyBucket;
+import reika.reactorcraft.items.ItemRadiationCleaner;
 import reika.reactorcraft.items.ItemRadiationGoggles;
 import reika.reactorcraft.items.ItemReactorBook;
 import reika.reactorcraft.items.ItemReactorFuel;
@@ -144,6 +146,13 @@ public final class ReactorItems {
             () -> new Item(toolProperties().component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.LEGS).build())));
     public static final DeferredItem<Item> HAZMAT_BOOTS = reg("hazmat_boots",
             () -> new Item(toolProperties().component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.FEET).build())));
+
+    // Coil-charged radiation tools (RotaryCraft ChargeableTool: charge is stored as the damage value,
+    // exactly as upstream -- max charge 32 kJ, so durability 32000; the "damage bar" is the charge gauge).
+    public static final DeferredItem<ItemGeigerCounter> GEIGER_COUNTER = reg("geiger_counter",
+            () -> new ItemGeigerCounter(toolProperties().durability(32000)));
+    public static final DeferredItem<ItemRadiationCleaner> RADIATION_CLEANER = reg("radiation_cleaner",
+            () -> new ItemRadiationCleaner(toolProperties().durability(32000)));
 
     public static final ItemRef FUEL = ref(FUEL_ROD, 100);
     public static final ItemRef PLUTONIUM = ref(PLUTONIUM_ROD, 100);

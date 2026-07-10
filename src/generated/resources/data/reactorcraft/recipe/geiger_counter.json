@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "S": "rotarycraft:screen",
+    "g": "rotarycraft:hsla_steel_gear",
+    "r": "rotarycraft:radar_unit",
+    "s": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    " r ",
+    "sSs",
+    "sgs"
+  ],
+  "result": {
+    "id": "reactorcraft:geiger_counter"
+  }
+}

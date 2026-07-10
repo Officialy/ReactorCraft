@@ -10,6 +10,7 @@
 package reika.reactorcraft.items;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -23,6 +24,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -111,8 +113,8 @@ public class ItemRadiationCleaner extends ItemReactorTool implements ChargeableT
 	}
 
 	@Override
-	public void appendHoverText(ItemStack is, Item.TooltipContext ctx, List<Component> li, TooltipFlag flag) {
-		li.add(Component.literal(String.format("Water: %d/%d mB", this.getWater(is), CAPACITY)));
+	public void appendHoverText(ItemStack is, Item.TooltipContext ctx, TooltipDisplay display, Consumer<Component> li, TooltipFlag flag) {
+		li.accept(Component.literal(String.format("Water: %d/%d mB", this.getWater(is), CAPACITY)));
 	}
 
 	private int getWater(ItemStack is) {
