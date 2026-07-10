@@ -1,4 +1,4 @@
-// 26.2	2026-07-10T18:15:15.2895311	Model Definitions - reactorcraft
+// 26.2	2026-07-10T18:26:11.6400891	Model Definitions - reactorcraft
 c914679cb80d0e2d9d4e6bb4c35fc813a9cbaf7a assets/reactorcraft/blockstates/ammonium_ore.json
 815ecc6c365920816171da9878e7cb3ffac9b8f8 assets/reactorcraft/blockstates/blue_fluorite_ore.json
 5045023341d76f2d2ab82e0b2002e8f6eada5cb5 assets/reactorcraft/blockstates/blue_tritium_lamp.json
@@ -163,6 +163,7 @@ b26293816748cd9ac7800a371b6b888e7223677e assets/reactorcraft/items/heavy_pump.js
 335ad6f58fca78987993db861b111c1a7852fa7c assets/reactorcraft/items/hysteresis_unit.json
 ae94d203f03d0b0ecee6b1c3bf2f0fd4bc4f9dc4 assets/reactorcraft/items/indium_ingot.json
 fa4da78e7f07c0c86da75e934cfcbad3c7c2613d assets/reactorcraft/items/indium_ore.json
+a96f3719b0ebcb82c37b84cb83f0f2e8ba9d5da9 assets/reactorcraft/items/iron_finder.json
 7a9d18b6066473eca747aa4eba3b8c71851fc421 assets/reactorcraft/items/isotope_centrifuge.json
 977f2003334e3cddfb34d3f456b9d23482f28aff assets/reactorcraft/items/laser_concentration_lens.json
 c736822b620a92b962c837cc8eb9d69021472c86 assets/reactorcraft/items/lime.json
@@ -398,6 +399,7 @@ d55cd44e42b25b184b41872a4c97a645504ea0b3 assets/reactorcraft/models/item/hazmat_
 00789fb5ec0ba4539014407b0cf3c3a0a6a88bf3 assets/reactorcraft/models/item/hysteresis_ring.json
 e97fdfc18972311232ec635597b3f48a127832ce assets/reactorcraft/models/item/hysteresis_unit.json
 593131f583829ef1c61bdd47e112a3a7da476924 assets/reactorcraft/models/item/indium_ingot.json
+d7c8c1c17e19456eb9289a12c401039c7deb68e3 assets/reactorcraft/models/item/iron_finder.json
 71976240fde307a3a42adbef9eb0427659c7636c assets/reactorcraft/models/item/isotope_centrifuge.json
 9a2b4f189bfd1d056b3a1ba02df9ea10625e606d assets/reactorcraft/models/item/lime.json
 8b6c49d7fc9995b8165a603e8b0a634304a747cc assets/reactorcraft/models/item/lodestone.json

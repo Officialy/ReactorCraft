@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "L": "reactorcraft:lodestone",
+    "S": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "L L",
+    "S S",
+    "SSS"
+  ],
+  "result": {
+    "id": "reactorcraft:iron_finder"
+  }
+}

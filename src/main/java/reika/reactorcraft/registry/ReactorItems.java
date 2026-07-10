@@ -28,6 +28,7 @@ import reika.reactorcraft.base.ItemReactorMulti;
 import reika.reactorcraft.items.ItemCanister;
 import reika.reactorcraft.items.ItemGeigerCounter;
 import reika.reactorcraft.items.ItemHeavyBucket;
+import reika.reactorcraft.items.ItemIronFinder;
 import reika.reactorcraft.items.ItemRadiationCleaner;
 import reika.reactorcraft.items.ItemRadiationGoggles;
 import reika.reactorcraft.items.ItemReactorBook;
@@ -153,6 +154,10 @@ public final class ReactorItems {
             () -> new ItemGeigerCounter(toolProperties().durability(32000)));
     public static final DeferredItem<ItemRadiationCleaner> RADIATION_CLEANER = reg("radiation_cleaner",
             () -> new ItemRadiationCleaner(toolProperties().durability(32000)));
+
+    // Magnetic Ore Finder: held-item HUD marking nearby magnetic ores (IronFinderOverlay).
+    public static final DeferredItem<ItemIronFinder> IRON_FINDER = reg("iron_finder",
+            () -> new ItemIronFinder(toolProperties()));
 
     public static final ItemRef FUEL = ref(FUEL_ROD, 100);
     public static final ItemRef PLUTONIUM = ref(PLUTONIUM_ROD, 100);

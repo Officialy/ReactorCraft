@@ -54,6 +54,9 @@ sourceSets.main.java {
     include 'reika/reactorcraft/items/ItemCanister.java'
     include 'reika/reactorcraft/items/ItemGeigerCounter.java'
     include 'reika/reactorcraft/items/ItemRadiationCleaner.java'
+    include 'reika/reactorcraft/items/ItemIronFinder.java'
+    include 'reika/reactorcraft/api/MagneticOreOverride.java'
+    include 'reika/reactorcraft/auxiliary/IronFinderOverlay.java'
 
     // Content slice (26.2): main class + DeferredRegister registries + custom recipe type system.
     include 'reika/reactorcraft/ReactorCraft.java'

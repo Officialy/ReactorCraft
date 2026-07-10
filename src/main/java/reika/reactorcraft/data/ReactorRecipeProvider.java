@@ -491,6 +491,11 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
                     .define('p', RotaryBlocks.FLUID_PIPE.get())
                     .pattern(" sp").pattern("sbs").pattern("ss ")
                     .unlockedBy("has_steel", has(RotaryItems.HSLA_STEEL_INGOT.get())).save(out);
+            // Magnetic Ore Finder (legacy: "L L","S S","SSS", L=lodestone, S=steel).
+            shaped(RecipeCategory.TOOLS, ReactorItems.IRON_FINDER.get())
+                    .define('L', ReactorItems.LODESTONE.get()).define('S', RotaryItems.HSLA_STEEL_INGOT.get())
+                    .pattern("L L").pattern("S S").pattern("SSS")
+                    .unlockedBy("has_lodestone", has(ReactorItems.LODESTONE.get())).save(out);
 
             shaped(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.TANK))
                     .define('O', RotaryBlocks.BLASTGLASS.get())

@@ -1,14 +1,16 @@
 package reika.reactorcraft.api;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.IIcon;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
+/**
+ * Blocks implementing this show up on the Magnetic Ore Finder HUD regardless of the built-in ore
+ * list. 26.2 port: the legacy {@code getRenderIcons} (IIcon array) is gone -- the HUD draws the
+ * block's item icon instead.
+ */
 public interface MagneticOreOverride {
 
-	public boolean showOnHUD(World world, int x, int y, int z, EntityPlayer ep);
-
-	public IIcon[] getRenderIcons(IBlockAccess world, int x, int y, int z);
+	boolean showOnHUD(Level world, BlockPos pos, Player ep);
 
 }

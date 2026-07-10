@@ -1,4 +1,4 @@
-// 26.2	2026-07-10T18:15:04.1392571	ReactorCraft Recipes
+// 26.2	2026-07-10T18:26:00.7933091	ReactorCraft Recipes
 90e69a31dda37bc7bbc6b112ee919778ecce46dc data/reactorcraft/advancement/recipes/combat/hazmat_boots.json
 10e0429a7ab57f4d5ba158badf2772c15b8f122a data/reactorcraft/advancement/recipes/combat/hazmat_chestplate.json
 7a6994c950bd535010bd91062cbb0fa13ea58011 data/reactorcraft/advancement/recipes/combat/hazmat_helmet.json
@@ -118,6 +118,7 @@ d225148c04b1fa4c41b389585c27c1c84cefcc00 data/reactorcraft/advancement/recipes/m
 8bb9b609532cf3c73a902ae30bd872999092952e data/reactorcraft/advancement/recipes/misc/wire.json
 fb5a4f892c1d2653ffa619af9d691c4c037195ed data/reactorcraft/advancement/recipes/misc/yellow_tritium_lamp.json
 99375c7d486b99d1148f54ffd8b170f51a6ea3a6 data/reactorcraft/advancement/recipes/tools/geiger_counter.json
+2345421c712128446bc154f2e5ba92e723b1cbe5 data/reactorcraft/advancement/recipes/tools/iron_finder.json
 c76d938994aea9b9a35baee6b88f74fe90ee1054 data/reactorcraft/advancement/recipes/tools/radiation_cleaner.json
 e3c3a71afd331bb2d0bf14e5dba2bb7f37d9c803 data/reactorcraft/recipe/alloy.json
 01dd358af08d99dbe68b05a6c5717b43f64fd86a data/reactorcraft/recipe/blue_tritium_lamp.json
@@ -164,6 +165,7 @@ c5ee00e30b7885687a8a58c3376f649d1ec6ec44 data/reactorcraft/recipe/high_pressure_
 a231e2781af19b9ff68cf4aa7a9e0db8ed1b7136 data/reactorcraft/recipe/hysteresis_ring.json
 09effc97e9237728fdf65ffc6d0ee827c29dc515 data/reactorcraft/recipe/hysteresis_rod.json
 e3885e08ecfaccb0ba157e0e320803f9ddff7d30 data/reactorcraft/recipe/hysteresis_unit.json
+4bfc645bbe9c91b0daa114db558db8eab542a6e3 data/reactorcraft/recipe/iron_finder.json
 7ba6c8166215388f1fe7280620e06e99dbcf2f37 data/reactorcraft/recipe/isotope_centrifuge.json
 8e1034525c76b5e3fc86281f5391dc5607099341 data/reactorcraft/recipe/laser_concentration_lens.json
 c6e11dc38b006f5f7bc0e25b2c94abafd1ea32e3 data/reactorcraft/recipe/lodestone_block.json

@@ -9,148 +9,76 @@
  ******************************************************************************/
 package reika.reactorcraft.items;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
-// CHROMA-PORT: import reika.chromaticraft.items.tools.ItemAuraPouch;
-// CHROMA-PORT: import reika.chromaticraft.registry.ChromaItems;
-import reika.dragonapi.ModList;
-import reika.dragonapi.asm.dependentmethodstripper.ModDependent;
-import reika.dragonapi.instantiable.data.immutable.Coordinate;
-import reika.dragonapi.instantiable.data.maps.PlayerMap;
-import reika.dragonapi.interfaces.registry.OreType;
-import reika.dragonapi.libraries.java.ReikaJavaLibrary;
-import reika.dragonapi.libraries.registry.ReikaOreHelper;
-import reika.dragonapi.modregistry.ModOreList;
 import reika.reactorcraft.api.MagneticOreOverride;
 import reika.reactorcraft.base.ReactorItemBase;
+import reika.reactorcraft.registry.ReactorBlocks;
 
+/**
+ * Magnetic Ore Finder: while held, magnetically-susceptible ores near the player show on the HUD
+ * (see {@code IronFinderOverlay}). 26.2 port notes: the legacy ore set was vanilla iron/redstone
+ * plus a dozen mod ores via ModOreList (nickel, cobalt, magnetite, ...) -- of those only
+ * ReactorCraft's own magnetite exists here, so the set is the iron/redstone ore TAGS (which also
+ * cover deepslate variants) + magnetite + any {@link MagneticOreOverride} block. The ChromatiCraft
+ * aura-pouch interop is gated out (mod not ported).
+ */
 public class ItemIronFinder extends ReactorItemBase {
 
-	private static final PlayerMap<OreCollection> cache = new PlayerMap();
+	// CHROMA-PORT: aura pouch "works in pouch" effect + tickAuraPouch entity-data timestamp.
 
-	private static final HashSet<OreType> ores = new HashSet(ReikaJavaLibrary.makeListFrom(
-			ReikaOreHelper.IRON,
-			ReikaOreHelper.REDSTONE,
-			ModOreList.NICKEL,
-			ModOreList.COBALT,
-			ModOreList.CERTUSQUARTZ,
-			ModOreList.NIKOLITE,
-			ModOreList.MAGNETITE,
-			ModOreList.NETHERIRON,
-			ModOreList.NETHERREDSTONE,
-			ModOreList.NETHERNICKEL,
-			ModOreList.NETHERNIKOLITE,
-			ModOreList.TESLATITE,
-			ModOreList.SILICON,
-			ModOreList.DILITHIUM,
-			ModOreList.MIMICHITE
-			));
+	/** Legacy scan cache: at most one volume scan per player per 500 ms. */
+	private static final Map<UUID, OreCollection> cache = new HashMap<>();
 
-	public ItemIronFinder(int tex) {
-		super(tex);
-		if (ModList.CHROMATICRAFT.isLoaded())
-			this.setAuraPouchEffect();
+	public ItemIronFinder(Properties properties) {
+		super(properties);
 	}
 
-	@ModDependent(ModList.CHROMATICRAFT)
-	private void setAuraPouchEffect() {
-		ItemAuraPouch.setSpecialEffect(ItemAuraPouch.WORKS_IN_POUCH_EFFECT_DESC, this);
+	private static boolean isMagneticOre(Level world, BlockPos pos, BlockState state, Player ep) {
+		if (state.getBlock() instanceof MagneticOreOverride m)
+			return m.showOnHUD(world, pos, ep);
+		return state.is(BlockTags.IRON_ORES)
+				|| state.is(Blocks.REDSTONE_ORE) || state.is(Blocks.DEEPSLATE_REDSTONE_ORE)
+				|| state.is(ReactorBlocks.MAGNETITE_ORE.get());
 	}
 
-	@Override
-	public ItemStack onItemRightClick(ItemStack is, World world, EntityPlayer ep) {/*
-		//ReikaChatHelper.writeString(String.format("%.3f", look.xCoord)+" "+String.format("%.3f", look.yCoord)+" "+String.format("%.3f", look.zCoord));
-		int iron = 0;
-		for (float i = 0; i <= 12; i += 0.2) {
-			int[] xyz = ReikaVectorHelper.getPlayerLookBlockCoords(ep, i);
-			Block b = world.getBlock(xyz[0], xyz[1], xyz[2]);
-			int meta = world.getBlockMetadata(xyz[0], xyz[1], xyz[2]);
-			ItemStack ore = new ItemStack(id, 1, meta);
-			if (id == Blocks.iron_ore.blockID) {
-				iron++;
-			}
-			if (ReikaItemHelper.listContainsItemStack(OreDictionary.getOres("oreIron"), ore)) {
-				iron++;
-			}
-		}
-		ReikaChatHelper.write(iron+" Iron Ore Detected Within 12m!");*/
-		return is;
-	}
-
-	@Override
-	public void onUpdate(ItemStack is, World world, Entity e, int slot, boolean selected) {
-		if (ModList.CHROMATICRAFT.isLoaded()) {
-			this.tickAuraPouch(is, world, e, slot, selected);
-		}
-	}
-
-	@ModDependent(ModList.CHROMATICRAFT)
-	private void tickAuraPouch(ItemStack is, World world, Entity e, int slot, boolean selected) {
-		if (e instanceof EntityPlayer && ChromaItems.AURAPOUCH.matchWith(((EntityPlayer)e).inventory.mainInventory[slot]) && world.getTotalWorldTime()%8 == 0)
-			e.getEntityData().setLong("ironfinder", world.getTotalWorldTime());
-	}
-
-	public static Set<Coordinate> getOreNearby(EntityPlayer ep, int range) {
-		OreCollection c = cache.get(ep);
-		if (c == null || System.currentTimeMillis()-c.time >= 500) {
-			c = new OreCollection(ep, findOreNearby(ep, range));
-			cache.put(ep, c);
+	public static Set<BlockPos> getOreNearby(Player ep, int range) {
+		OreCollection c = cache.get(ep.getUUID());
+		if (c == null || System.currentTimeMillis() - c.time >= 500) {
+			c = new OreCollection(findOreNearby(ep, range));
+			cache.put(ep.getUUID(), c);
 		}
 		return Collections.unmodifiableSet(c.locations);
 	}
 
-	private static HashSet<Coordinate> findOreNearby(EntityPlayer ep, int range) {
-		HashSet<Coordinate> m = new HashSet();
-		World world = ep.worldObj;
-		int x = MathHelper.floor_double(ep.posX);
-		int y = MathHelper.floor_double(ep.posY+ep.getEyeHeight());
-		int z = MathHelper.floor_double(ep.posZ);
-		Collection<Coordinate> c = new ArrayList();
-		for (int i = -range; i <= range; i++) {
-			for (int j = -range; j <= range; j++) {
-				for (int k = -range; k <= range; k++) {
-					int dx = x+i;
-					int dy = y+j;
-					int dz = z+k;
-					Block b = world.getBlock(dx, dy, dz);
-					if (b instanceof MagneticOreOverride) {
-						if (((MagneticOreOverride)b).showOnHUD(world, dx, dy, dz, ep))
-							m.add(new Coordinate(dx, dy, dz));
-					}
-					OreType ore = ReikaOreHelper.getFromVanillaOre(b);
-					if (ore == null)
-						ore = ModOreList.getModOreFromOre(b, world.getBlockMetadata(dx, dy, dz));
-					if (ores.contains(ore))
-						m.add(new Coordinate(dx, dy, dz));
-				}
-			}
+	private static HashSet<BlockPos> findOreNearby(Player ep, int range) {
+		HashSet<BlockPos> m = new HashSet<>();
+		Level world = ep.level();
+		BlockPos eye = BlockPos.containing(ep.getX(), ep.getY() + ep.getEyeHeight(), ep.getZ());
+		for (BlockPos p : BlockPos.betweenClosed(eye.offset(-range, -range, -range), eye.offset(range, range, range))) {
+			BlockState state = world.getBlockState(p);
+			if (isMagneticOre(world, p, state, ep))
+				m.add(p.immutable());
 		}
 		return m;
 	}
 
-	private static class OreCollection {
-
-		public final long time;
-		public final HashSet<Coordinate> locations;
-		public final String player;
-
-		private OreCollection(EntityPlayer ep, HashSet<Coordinate> c) {
-			locations = c;
-			player = ep.getCommandSenderName();
-			time = System.currentTimeMillis();
+	private record OreCollection(long time, HashSet<BlockPos> locations) {
+		private OreCollection(HashSet<BlockPos> locations) {
+			this(System.currentTimeMillis(), locations);
 		}
-
 	}
 
 }
