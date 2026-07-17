@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeCategory;
@@ -14,12 +16,14 @@ import net.minecraft.data.recipes.SimpleCookingRecipeBuilder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.ItemLike;
+import net.neoforged.neoforge.common.crafting.DataComponentIngredient;
 
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.registry.CraftingItems;
@@ -30,6 +34,7 @@ import reika.reactorcraft.registry.MatBlocks;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorItems;
 import reika.reactorcraft.registry.ReactorOreType;
+import reika.rotarycraft.auxiliary.recipemanagers.CompactorRecipe;
 import reika.rotarycraft.auxiliary.recipemanagers.FrictionHeaterRecipe;
 import reika.rotarycraft.auxiliary.recipemanagers.GrinderRecipe;
 import reika.rotarycraft.auxiliary.recipemanagers.ShapelessBlastFurnaceRecipe;
@@ -129,11 +134,19 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
             solenoidPart(ReactorBlocks.MAGNETIC_LINKAGE.get(), b -> b
                     .define('S', ReactorItems.crafting(CraftingItems.FERROINGOT)).define('B', RotaryItems.HSLA_STEEL_INGOT.get())
                     .pattern("SSS").pattern("SBS").pattern("SSS"));
-            // TODO: the central (fully-charged magnet) and auxiliary (weaker magnet) recipes differ only
-            // by the magnet's damage-value charge, which plain Ingredient cannot match — only the central
-            // one is emitted until a component-aware ingredient carries the charge distinction.
+            // Central (fully-charged magnet) and auxiliary (one-below-max magnet) permanent-magnet
+            // casings differ only by the magnet's damage-value charge (legacy ReactorRecipes: central =
+            // maxMagnet = charge 7, auxiliary = weakerMagnet = charge 6). Plain Ingredient is charge-blind,
+            // so match the DAMAGE component with a NeoForge DataComponentIngredient (partial match on the
+            // exact charge). Both feed off the compactor-charged magnet (see magnetCompactor()).
+            int maxCharge = ReactorItems.MAGNET.getNumberMetadatas() - 1;
             solenoidPart(ReactorBlocks.CENTRAL_MAGNET.get(), b -> b
-                    .define('M', ReactorItems.MAGNET_ITEM.get()).define('S', ReactorItems.crafting(CraftingItems.MAGNETIC))
+                    .define('M', DataComponentIngredient.of(false, DataComponents.DAMAGE, maxCharge, ReactorItems.MAGNET_ITEM.get()))
+                    .define('S', ReactorItems.crafting(CraftingItems.MAGNETIC))
+                    .pattern("SSS").pattern("MMM").pattern("SSS"));
+            solenoidPart(ReactorBlocks.AUXILIARY_MAGNET.get(), b -> b
+                    .define('M', DataComponentIngredient.of(false, DataComponents.DAMAGE, maxCharge - 1, ReactorItems.MAGNET_ITEM.get()))
+                    .define('S', ReactorItems.crafting(CraftingItems.MAGNETIC))
                     .pattern("SSS").pattern("MMM").pattern("SSS"));
             solenoidPart(ReactorBlocks.HYSTERESIS_ROD.get(), b -> b
                     .define('M', ReactorItems.crafting(CraftingItems.FERROINGOT)).define('S', ReactorItems.crafting(CraftingItems.HYSTERESIS))
@@ -728,6 +741,31 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
             accept("grinder/emerald_to_dust", new GrinderRecipe(
                     Ingredient.of(Items.EMERALD),
                     new ItemStackTemplate(ReactorItems.EMERALD_DUST.get())));
+
+            magnetCompactor();
+        }
+
+        // The magnet charge chain in the RotaryCraft compactor (legacy ReactorRecipes lines 97-99):
+        //   lodestone -> 2x magnet(charge 0)          @ 5000 kPa / 100 C
+        //   magnet(charge i) -> 2x magnet(charge i+1) @ 10000*(1+i) kPa / 100 C   for i = 0..N-2
+        // The compactor squeezes a 2x2 (4-item) input per operation, so 4 lodestone -> 2 magnet(0) and
+        // 4 magnet(i) -> 2 magnet(i+1). The magnet is the ONLY source of the solenoid magnets, and the
+        // compactor is its ONLY producer. Charge rides the stack DAMAGE component (ItemReactorMulti):
+        // input charge is disambiguated by CompactorRecipe.inputDamage, output charge by outputDamage.
+        // All required pressures (<= 70000 kPa) sit far below the coal chain's 550000, so any compactor
+        // able to run the carbon chain makes magnets trivially — faithful to upstream.
+        private void magnetCompactor() {
+            Item magnet = ReactorItems.MAGNET_ITEM.get();
+            compactor("magnet_lodestone", Ingredient.of(ReactorItems.LODESTONE.get()), magnet, 2, 5000, 100, -1, 0);
+            int steps = ReactorItems.MAGNET.getNumberMetadatas() - 1;
+            for (int i = 0; i < steps; i++)
+                compactor("magnet_charge_" + i, Ingredient.of(magnet), magnet, 2, 10000 * (1 + i), 100, i, i + 1);
+        }
+
+        private void compactor(String name, Ingredient input, Item output, int count, int pressure,
+                               int temperature, int inputDamage, int outputDamage) {
+            accept("compactor/" + name, new CompactorRecipe(input, BuiltInRegistries.ITEM.wrapAsHolder(output),
+                    count, pressure, temperature, inputDamage, outputDamage));
         }
 
         private void accept(String path, Recipe<?> recipe) {

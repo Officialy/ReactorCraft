@@ -1,0 +1,8 @@
+{
+  "type": "rotarycraft:compactor",
+  "count": 2,
+  "input": "reactorcraft:lodestone",
+  "output": "reactorcraft:magnet",
+  "pressure": 5000,
+  "temperature": 100
+}

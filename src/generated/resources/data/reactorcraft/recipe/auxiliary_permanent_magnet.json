@@ -4,7 +4,7 @@
     "M": {
       "neoforge:ingredient_type": "neoforge:components",
       "components": {
-        "minecraft:damage": 7
+        "minecraft:damage": 6
       },
       "items": "reactorcraft:magnet"
     },
@@ -16,6 +16,6 @@
     "SSS"
   ],
   "result": {
-    "id": "reactorcraft:central_permanent_magnet"
+    "id": "reactorcraft:auxiliary_permanent_magnet"
   }
 }

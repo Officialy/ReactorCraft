@@ -1,0 +1,10 @@
+{
+  "type": "rotarycraft:compactor",
+  "count": 2,
+  "input": "reactorcraft:magnet",
+  "input_damage": 1,
+  "output": "reactorcraft:magnet",
+  "output_damage": 2,
+  "pressure": 20000,
+  "temperature": 100
+}

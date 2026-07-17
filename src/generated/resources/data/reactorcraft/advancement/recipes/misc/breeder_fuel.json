@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_fuel_rod": {
+      "conditions": {
+        "items": [
+          {
+            "items": "reactorcraft:fuel"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "reactorcraft:breeder_fuel"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_fuel_rod"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "reactorcraft:breeder_fuel"
+    ]
+  }
+}
