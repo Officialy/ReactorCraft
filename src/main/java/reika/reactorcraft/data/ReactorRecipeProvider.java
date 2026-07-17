@@ -33,8 +33,10 @@ import reika.reactorcraft.blocks.multi.BlockInjectorMulti;
 import reika.reactorcraft.registry.MatBlocks;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorItems;
+import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorOreType;
 import reika.rotarycraft.auxiliary.recipemanagers.CompactorRecipe;
+import reika.rotarycraft.auxiliary.recipemanagers.CrystallizerRecipe;
 import reika.rotarycraft.auxiliary.recipemanagers.FrictionHeaterRecipe;
 import reika.rotarycraft.auxiliary.recipemanagers.GrinderRecipe;
 import reika.rotarycraft.auxiliary.recipemanagers.PulseFurnaceRecipe;
@@ -754,6 +756,17 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
             accept("grinder/emerald_to_dust", new GrinderRecipe(
                     Ingredient.of(Items.EMERALD),
                     new ItemStackTemplate(ReactorItems.EMERALD_DUST.get())));
+
+            // Nuclear-waste reprocessing entry point (legacy ReactorRecipes.addRCInterface:88):
+            //   RecipesCrystallizer.addRecipe(FluidRegistry.getFluid("rc nuclear waste"), 50, wastedust)
+            // — 50 mB of the reactor's nuclear-waste fluid freezes into one waste_dust in RotaryCraft's
+            // Crystallizer. This is the ONLY producer of waste_dust and the head of the reprocessing loop
+            // (waste_dust is then meant to be split into thorium/element-group byproducts by the centrifuge).
+            // Emitted in the reactorcraft namespace with RotaryCraft's crystallizer recipe type, exactly
+            // like the grinder/friction-heater cross-mod recipes above.
+            accept("crystallizer/waste_dust", new CrystallizerRecipe(
+                    BuiltInRegistries.FLUID.wrapAsHolder(ReactorFluids.WASTE.get()), 50,
+                    BuiltInRegistries.ITEM.wrapAsHolder(ReactorItems.WASTE_DUST.get()), 1));
 
             magnetCompactor();
         }

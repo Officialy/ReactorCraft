@@ -1,0 +1,6 @@
+{
+  "type": "rotarycraft:crystallizer",
+  "amount": 50,
+  "fluid": "reactorcraft:nuclear_waste",
+  "output": "reactorcraft:waste_dust"
+}
