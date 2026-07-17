@@ -1,4 +1,4 @@
-// 26.2	2026-07-18T00:11:51.5270327	ReactorCraft Recipes
+// 26.2	2026-07-18T00:48:01.5810863	ReactorCraft Recipes
 90e69a31dda37bc7bbc6b112ee919778ecce46dc data/reactorcraft/advancement/recipes/combat/hazmat_boots.json
 10e0429a7ab57f4d5ba158badf2772c15b8f122a data/reactorcraft/advancement/recipes/combat/hazmat_chestplate.json
 7a6994c950bd535010bd91062cbb0fa13ea58011 data/reactorcraft/advancement/recipes/combat/hazmat_helmet.json
@@ -133,6 +133,7 @@ bfd6b2c1a86557763df4f65b1548633a929ed4d1 data/reactorcraft/recipe/breeder_fuel.j
 f6493b801341f1d335201687d891c62b09d60c55 data/reactorcraft/recipe/calcite_block_uncraft.json
 10f00f9e653fb2a23fe8e23910643118349ced46 data/reactorcraft/recipe/canister.json
 3143e615500068ae932775243e298ae56de2ecd2 data/reactorcraft/recipe/canister_part.json
+dca8bd0cca06da7b5588c4b5dd98b3a2fc2be043 data/reactorcraft/recipe/carbide.json
 e8685d5900bbc7f9c05183db4e398b15d5730b5b data/reactorcraft/recipe/carbide_flakes.json
 6e289a498a1e24b7e7c8ded3c327729edac8de1a data/reactorcraft/recipe/central_permanent_magnet.json
 3e69567882155dde2176013f3c2aabd5d75972ea data/reactorcraft/recipe/co2_heater_from_boiler.json
@@ -150,6 +151,7 @@ cfa2d3058488a106f270565a3cbf77d8cd780825 data/reactorcraft/recipe/compactor/magn
 c59c51a8c4355d8b747323cee527e485bb8b970d data/reactorcraft/recipe/control_rod_block.json
 0bf69eee347c27354a574b452a0a07e02e71389b data/reactorcraft/recipe/coolant.json
 8a10d6802ea02d864092f5297e728f12028567d5 data/reactorcraft/recipe/coolant_cell.json
+7e635b1007e24b35878e1428f9f215f74d3436fe data/reactorcraft/recipe/crystallizer/waste_dust.json
 b04d500bca542ef4382e491903ec254ef548c571 data/reactorcraft/recipe/depleted_fuel.json
 cd3ba689f9d53da5ace4c616f49c4e4b8ae56cf0 data/reactorcraft/recipe/electrolyzer.json
 81bf612600c213cbd45d420952521d207c06323a data/reactorcraft/recipe/ferromagnetic_base.json
