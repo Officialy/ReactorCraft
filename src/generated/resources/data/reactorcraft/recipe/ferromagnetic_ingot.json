@@ -1,0 +1,15 @@
+{
+  "type": "rotarycraft:blast_furnace_shapeless",
+  "additives": [],
+  "experience": 0.0,
+  "ingredients": [
+    "rotarycraft:hsla_steel_ingot",
+    "minecraft:iron_ingot",
+    "reactorcraft:lodestone"
+  ],
+  "output": {
+    "id": "reactorcraft:ferromagnetic_ingot"
+  },
+  "temperature": 1200.0,
+  "timeMultiplier": 1.0
+}

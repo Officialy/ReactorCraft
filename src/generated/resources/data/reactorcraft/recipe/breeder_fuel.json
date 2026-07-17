@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "D": "reactorcraft:depleted_fuel",
+    "E": "reactorcraft:fuel"
+  },
+  "pattern": [
+    " D ",
+    "DED",
+    " D "
+  ],
+  "result": {
+    "count": 4,
+    "id": "reactorcraft:breeder_fuel"
+  }
+}

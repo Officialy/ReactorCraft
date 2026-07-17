@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "P": "minecraft:paper",
+    "R": "reactorcraft:white_fluorite",
+    "S": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "RSR",
+    "PPP",
+    "PPP"
+  ],
+  "result": {
+    "id": "reactorcraft:reactor_book"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "type": "rotarycraft:blast_furnace_shapeless",
+  "additives": [],
+  "experience": 0.0,
+  "ingredients": [
+    "minecraft:egg"
+  ],
+  "output": {
+    "id": "reactorcraft:lime"
+  },
+  "temperature": 850.0,
+  "timeMultiplier": 1.0
+}

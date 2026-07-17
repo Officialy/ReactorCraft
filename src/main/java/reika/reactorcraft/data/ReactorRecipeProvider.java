@@ -537,6 +537,24 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
                     .unlockedBy("has_depleted_dust", has(ReactorItems.DEPLETED_DUST.get()))
                     .save(out);
 
+            // Breeder fuel — a fuel rod ringed by depleted fuel (ReactorRecipes.addItems:
+            // " D ","DED"," D " → BREEDERFUEL x4, D=DEPLETED, E=FUEL). Fresh (damage 0) result.
+            shaped(RecipeCategory.MISC, ReactorItems.BREEDER_FUEL.get(), 4)
+                    .define('D', ReactorItems.DEPLETED_FUEL.get())
+                    .define('E', ReactorItems.FUEL_ROD.get())
+                    .pattern(" D ").pattern("DED").pattern(" D ")
+                    .unlockedBy("has_fuel_rod", has(ReactorItems.FUEL_ROD.get()))
+                    .save(out);
+
+            // Reactor handbook (ReactorRecipes.addItems: "RSR","PPP","PPP", R=fluorite, S=steel, P=paper).
+            shaped(RecipeCategory.MISC, ReactorItems.REACTOR_BOOK.get())
+                    .define('R', ReactorItems.fluorite(FluoriteTypes.WHITE))
+                    .define('S', RotaryItems.HSLA_STEEL_INGOT.get())
+                    .define('P', Items.PAPER)
+                    .pattern("RSR").pattern("PPP").pattern("PPP")
+                    .unlockedBy("has_fluorite", has(ReactorItems.fluorite(FluoriteTypes.WHITE)))
+                    .save(out);
+
             matAndComponentCrafting();
         }
 
@@ -567,6 +585,14 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
                     .unlockedBy("has_clay", has(Items.CLAY))
                     .save(out);
 
+            // Leather from lime + rotten flesh (ReactorRecipes.addMisc: shapeless(leather, lime, rotten_flesh)).
+            // Explicit id so the vanilla result does not claim the minecraft:leather recipe id.
+            shapeless(RecipeCategory.MISC, Items.LEATHER)
+                    .requires(ReactorItems.LIME.get())
+                    .requires(Items.ROTTEN_FLESH)
+                    .unlockedBy("has_lime", has(ReactorItems.LIME.get()))
+                    .save(out, ReactorCraft.MODID + ":leather_from_lime");
+
             blockCompaction("calcite_block", ReactorBlocks.matBlock(MatBlocks.CALCITE), ReactorItems.CALCITE.get());
             blockCompaction("graphite_block", ReactorBlocks.matBlock(MatBlocks.GRAPHITE), ReactorItems.crafting(CraftingItems.GRAPHITE));
             blockCompaction("lodestone_block", ReactorBlocks.matBlock(MatBlocks.LODESTONE), ReactorItems.LODESTONE.get());
@@ -587,7 +613,10 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
                     .unlockedBy("has_gold", has(Items.GOLD_INGOT))
                     .save(out);
 
-            shaped(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.HYSTERESIS))
+            // Count was DifficultyEffects.PARTCRAFT.getInt() upstream (easy 6 / med 3 / hard 2); fixed 2
+            // to stay consistent with the port's hard-tier choice for PIPECRAFT (fixed 8). The prior
+            // value 1 matched no difficulty tier.
+            shaped(RecipeCategory.MISC, ReactorItems.crafting(CraftingItems.HYSTERESIS), 2)
                     .define('I', Items.IRON_INGOT)
                     .define('S', RotaryItems.HSLA_STEEL_INGOT.get())
                     .pattern("ISI")
@@ -663,6 +692,29 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
                     alloyIns, List.of(),
                     new ItemStackTemplate(ReactorItems.crafting(CraftingItems.ALLOY), 3),
                     1600F, 0F, 1.0F, 0, 0, 0));
+
+            // Ferromagnetic ingot — steel + iron + lodestone alloyed in the blast furnace @ 1200°.
+            // (ReactorRecipes.addCrafting: addAlloyingRecipe(FERROINGOT, 1200, steel+iron+lodestone).
+            // The commented-out crafting-table variant is the disabled path; the alloying one is live.)
+            // This is FERROINGOT's only production recipe — without it the whole magnetic-parts line
+            // (magnetic/magnetcore/hysteresis/solenoid/heater) had no source. The nickel-substituting
+            // variant is ore-dict-gated (ingotNickel) and omitted like the other ore-dict alternates.
+            List<Ingredient> ferroIns = new ArrayList<>();
+            ferroIns.add(Ingredient.of(RotaryItems.HSLA_STEEL_INGOT.get()));
+            ferroIns.add(Ingredient.of(Items.IRON_INGOT));
+            ferroIns.add(Ingredient.of(ReactorItems.LODESTONE.get()));
+            accept("ferromagnetic_ingot", new ShapelessBlastFurnaceRecipe(
+                    ferroIns, List.of(),
+                    new ItemStackTemplate(ReactorItems.crafting(CraftingItems.FERROINGOT)),
+                    1200F, 0F, 1.0F, 0, 0, 0));
+
+            // Lime from an egg in the blast furnace @ 850° (ReactorRecipes.addSmelting:
+            // addRecipe(lime, 850, shapeless(lime, egg))). Smelting calcite→lime is the primary source;
+            // this is the secondary egg route.
+            accept("lime_from_egg", new ShapelessBlastFurnaceRecipe(
+                    List.of(Ingredient.of(Items.EGG)), List.of(),
+                    new ItemStackTemplate(ReactorItems.LIME.get()),
+                    850F, 0F, 1.0F, 0, 0, 0));
 
             accept("graphite", new FrictionHeaterRecipe(
                     Ingredient.of(RotaryItems.COAL_DUST.get()),
