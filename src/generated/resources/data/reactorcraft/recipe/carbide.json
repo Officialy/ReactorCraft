@@ -1,0 +1,8 @@
+{
+  "type": "rotarycraft:pulse_furnace",
+  "input": "reactorcraft:carbide_flakes",
+  "output": {
+    "id": "reactorcraft:carbide"
+  },
+  "temperature": 400.0
+}

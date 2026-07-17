@@ -37,6 +37,7 @@ import reika.reactorcraft.registry.ReactorOreType;
 import reika.rotarycraft.auxiliary.recipemanagers.CompactorRecipe;
 import reika.rotarycraft.auxiliary.recipemanagers.FrictionHeaterRecipe;
 import reika.rotarycraft.auxiliary.recipemanagers.GrinderRecipe;
+import reika.rotarycraft.auxiliary.recipemanagers.PulseFurnaceRecipe;
 import reika.rotarycraft.auxiliary.recipemanagers.ShapelessBlastFurnaceRecipe;
 import reika.rotarycraft.registry.RotaryBlocks;
 import reika.rotarycraft.registry.RotaryItems;
@@ -733,6 +734,18 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
                     Ingredient.of(RotaryItems.COAL_DUST.get()),
                     new ItemStackTemplate(ReactorItems.crafting(CraftingItems.GRAPHITE)),
                     400F, 100));
+
+            // Tungsten carbide flakes -> ingot in the RotaryCraft pulse-jet furnace (legacy ReactorRecipes:95,
+            // RecipesPulseFurnace.addSmelting(carbideflakes, carbide) with no explicit temperature). The
+            // 2-arg addSmelting derives its temperature from PulseJetRecipe(in,out) -> getDefaultMeltingTemp =
+            // clamp(ItemMaterialController.getMeltingPoint(in)/2, 400, 850). carbideflakes carries NO material
+            // data in any mod, so getMeltingPoint returns 0 and the temperature clamps to the 400 floor.
+            // CARBIDE is the ONLY gate on TURBCORE -> TURBINECORE (the reactor steam turbine), so without this
+            // the reactor->power path is uncraftable in survival.
+            accept("carbide", new PulseFurnaceRecipe(
+                    Ingredient.of(ReactorItems.crafting(CraftingItems.CARBIDEFLAKES)),
+                    new ItemStackTemplate(ReactorItems.crafting(CraftingItems.CARBIDE)),
+                    400F));
 
             accept("grinder/uranium_to_udust", new GrinderRecipe(
                     Ingredient.of(ReactorItems.URANIUM_INGOT.get()),
