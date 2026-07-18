@@ -2,9 +2,11 @@ package reika.reactorcraft.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -25,7 +27,10 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.ItemLike;
 import net.neoforged.neoforge.common.crafting.DataComponentIngredient;
 
+import reika.dragonapi.libraries.mathsci.Isotopes.ElementGroup;
 import reika.reactorcraft.ReactorCraft;
+import reika.reactorcraft.auxiliary.WasteManager;
+import reika.reactorcraft.auxiliary.WasteManager.WasteChance;
 import reika.reactorcraft.registry.CraftingItems;
 import reika.reactorcraft.registry.FluoriteTypes;
 import reika.reactorcraft.blocks.multi.BlockHeaterMulti;
@@ -35,6 +40,8 @@ import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorItems;
 import reika.reactorcraft.registry.ReactorFluids;
 import reika.reactorcraft.registry.ReactorOreType;
+import reika.rotarycraft.auxiliary.recipemanagers.CentrifugeRecipe;
+import reika.rotarycraft.auxiliary.recipemanagers.CentrifugeRecipe.ChancedOutput;
 import reika.rotarycraft.auxiliary.recipemanagers.CompactorRecipe;
 import reika.rotarycraft.auxiliary.recipemanagers.CrystallizerRecipe;
 import reika.rotarycraft.auxiliary.recipemanagers.FrictionHeaterRecipe;
@@ -768,7 +775,47 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
                     BuiltInRegistries.FLUID.wrapAsHolder(ReactorFluids.WASTE.get()), 50,
                     BuiltInRegistries.ITEM.wrapAsHolder(ReactorItems.WASTE_DUST.get()), 1));
 
+            wasteCentrifuge();
+
             magnetCompactor();
+        }
+
+        // The waste-reprocessing cascade in the RotaryCraft centrifuge (legacy ReactorRecipes 90-92):
+        //   waste_dust                        -> chanced ELEMENT-GROUP waste  (WasteManager.getThoriumOutputs(true))
+        //   group-waste (per ElementGroup g)  -> chanced ISOTOPE waste        (WasteManager.getThoriumGroupOutputs(g))
+        // Both stages emit ReactorItems.WASTE_ITEM whose isotope/group identity rides the DAMAGE variant
+        // (individual isotope = Isotopes.ordinal(); mixed group = 1000+g.ordinal()) — see ItemNuclearWaste.
+        // Chances come from the ported WasteManager math as 0..100 percentages; RotaryCraft's
+        // CentrifugeRecipe.rollItems uses 0..1, so divide by 100 (group chances then sum to ~1.0, and each
+        // group's isotope chances sum to ~1.0). The group-waste INPUT is a specific WASTE_ITEM damage, which
+        // a plain Ingredient cannot distinguish, so it is matched with a DAMAGE-component DataComponentIngredient
+        // (exactly like the magnet central/auxiliary casings). Result damage rides an ItemStackTemplate
+        // DataComponentPatch (never a live ItemStack — that NPEs at datagen, "Components not bound yet").
+        private void wasteCentrifuge() {
+            List<ChancedOutput> groupOuts = new ArrayList<>();
+            for (WasteChance wc : WasteManager.getGroupChancesForDatagen())
+                groupOuts.add(new ChancedOutput(wasteTemplate(wc.damage()), wc.chance()/100F));
+            accept("centrifuge/waste_dust", new CentrifugeRecipe(
+                    Ingredient.of(ReactorItems.WASTE_DUST.get()), groupOuts, Optional.empty()));
+
+            for (ElementGroup g : ElementGroup.values()) {
+                List<WasteChance> isotopes = WasteManager.getGroupIsotopeChancesForDatagen(g);
+                if (isotopes.isEmpty())
+                    continue;
+                List<ChancedOutput> isoOuts = new ArrayList<>();
+                for (WasteChance wc : isotopes)
+                    isoOuts.add(new ChancedOutput(wasteTemplate(wc.damage()), wc.chance()/100F));
+                Ingredient in = DataComponentIngredient.of(false, DataComponents.DAMAGE, 1000+g.ordinal(), ReactorItems.WASTE_ITEM.get());
+                accept("centrifuge/group_"+g.name().toLowerCase(), new CentrifugeRecipe(in, isoOuts, Optional.empty()));
+            }
+        }
+
+        // A WASTE_ITEM template carrying its isotope/group identity in the DAMAGE component patch.
+        private static ItemStackTemplate wasteTemplate(int damage) {
+            DataComponentPatch patch = DataComponentPatch.builder()
+                    .set(DataComponents.DAMAGE, damage)
+                    .build();
+            return new ItemStackTemplate(ReactorItems.WASTE_ITEM.get(), patch);
         }
 
         // The magnet charge chain in the RotaryCraft compactor (legacy ReactorRecipes lines 97-99):

@@ -1,0 +1,42 @@
+{
+  "type": "rotarycraft:centrifuge",
+  "input": "reactorcraft:waste_dust",
+  "outputs": [
+    {
+      "chance": 0.10604929,
+      "item": {
+        "components": {
+          "minecraft:damage": 1002
+        },
+        "id": "reactorcraft:waste"
+      }
+    },
+    {
+      "chance": 0.3681852,
+      "item": {
+        "components": {
+          "minecraft:damage": 1003
+        },
+        "id": "reactorcraft:waste"
+      }
+    },
+    {
+      "chance": 0.27035102,
+      "item": {
+        "components": {
+          "minecraft:damage": 1001
+        },
+        "id": "reactorcraft:waste"
+      }
+    },
+    {
+      "chance": 0.2554145,
+      "item": {
+        "components": {
+          "minecraft:damage": 1000
+        },
+        "id": "reactorcraft:waste"
+      }
+    }
+  ]
+}

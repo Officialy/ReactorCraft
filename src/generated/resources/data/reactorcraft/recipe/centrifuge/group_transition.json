@@ -1,0 +1,48 @@
+{
+  "type": "rotarycraft:centrifuge",
+  "input": {
+    "neoforge:ingredient_type": "neoforge:components",
+    "components": {
+      "minecraft:damage": 1001
+    },
+    "items": "reactorcraft:waste"
+  },
+  "outputs": [
+    {
+      "chance": 0.679558,
+      "item": {
+        "components": {
+          "minecraft:damage": 15
+        },
+        "id": "reactorcraft:waste"
+      }
+    },
+    {
+      "chance": 0.21685082,
+      "item": {
+        "components": {
+          "minecraft:damage": 30
+        },
+        "id": "reactorcraft:waste"
+      }
+    },
+    {
+      "chance": 0.069060765,
+      "item": {
+        "components": {
+          "minecraft:damage": 32
+        },
+        "id": "reactorcraft:waste"
+      }
+    },
+    {
+      "chance": 0.034530383,
+      "item": {
+        "components": {
+          "minecraft:damage": 20
+        },
+        "id": "reactorcraft:waste"
+      }
+    }
+  ]
+}

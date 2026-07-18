@@ -196,4 +196,50 @@ public class WasteManager {
 		return c;
 	}
 
+	/**
+	 * A single chanced waste output as a (damage-value, percentage-chance) pair — the datagen-safe form
+	 * of the {@link ChancedOutputList} entries above. The ItemStack-building variants ({@link #getThoriumOutputs},
+	 * {@link #getThoriumGroupOutputs}) NPE at datagen ("Components not bound yet"), so the recipe provider
+	 * consumes these pairs and stamps the damage onto an {@code ItemStackTemplate} component patch instead.
+	 * {@code chance} is a 0..100 percentage (as upstream); the RotaryCraft centrifuge wants 0..1, so the
+	 * caller divides by 100.
+	 */
+	public record WasteChance(int damage, float chance) {}
+
+	/**
+	 * Datagen-safe mirror of {@code getThoriumOutputs(true)}: the wastedust→element-group split. Damage
+	 * is {@code 1000+g.ordinal()}; chance is {@code 100 * group-weight-fraction} (so the four group
+	 * chances sum to ~100%). Uses the identical {@link #getChancesByGroup()} math.
+	 */
+	public static List<WasteChance> getGroupChancesForDatagen() {
+		List<WasteChance> li = new ArrayList<WasteChance>();
+		HashMap<ElementGroup, Float> map = getChancesByGroup();
+		for (Entry<ElementGroup, Float> e : map.entrySet()) {
+			if (e.getValue() > 0)
+				li.add(new WasteChance(1000+e.getKey().ordinal(), 100*e.getValue()));
+		}
+		return li;
+	}
+
+	/**
+	 * Datagen-safe mirror of {@code getThoriumGroupOutputs(g)}: the per-group waste→isotope split. Damage
+	 * is {@code isotope.ordinal()}; chance uses the same normalized {@code 100*f*weight/totalWeight} math,
+	 * so the isotopes within a group sum to ~100%. Returns an empty list for a group with no thorium waste.
+	 */
+	public static List<WasteChance> getGroupIsotopeChancesForDatagen(ElementGroup g) {
+		List<WasteChance> li = new ArrayList<WasteChance>();
+		Float groupFraction = getChancesByGroup().get(g);
+		if (groupFraction == null || groupFraction <= 0)
+			return li;
+		float f = 1F/groupFraction;
+		for (Isotopes i : thoriumWastes) {
+			if (i.group == g) {
+				float ch = (float)(100F*f*thoriumYields.getWeight(i)/thoriumYields.getTotalWeight());
+				if (ch > 0)
+					li.add(new WasteChance(i.ordinal(), ch));
+			}
+		}
+		return li;
+	}
+
 }

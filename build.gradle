@@ -49,6 +49,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/items/ItemReactorBasic.java'
     include 'reika/reactorcraft/base/ItemReactorTool.java'
     include 'reika/reactorcraft/items/ItemReactorFuel.java'
+    include 'reika/reactorcraft/items/ItemNuclearWaste.java'
     include 'reika/reactorcraft/items/ItemHeavyBucket.java'
     include 'reika/reactorcraft/items/ItemRadiationGoggles.java'
     include 'reika/reactorcraft/items/ItemCanister.java'

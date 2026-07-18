@@ -3,6 +3,7 @@ package reika.reactorcraft.test;
 import java.util.HashSet;
 import java.util.Set;
 
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.material.Fluid;
@@ -10,6 +11,9 @@ import net.minecraft.world.level.material.FlowingFluid;
 
 import org.junit.jupiter.api.Test;
 
+import reika.dragonapi.libraries.mathsci.Isotopes;
+import reika.dragonapi.libraries.mathsci.Isotopes.ElementGroup;
+import reika.reactorcraft.items.ItemNuclearWaste;
 import reika.reactorcraft.registry.FluoriteTypes;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorFluids;
@@ -70,6 +74,31 @@ public class RegistryIntegrityTest {
             assertNotNull(ore.getProduct(), ore + " has null product");
             assertTrue(ore.maxY >= ore.minY, ore + " has an inverted Y band");
         }
+    }
+
+    /**
+     * The waste item's {@code getMaxDamage} must be wide enough to carry every waste variant in the
+     * DAMAGE value. This was a live bug: a plain {@code Item} has {@code getMaxDamage()==0}, so the
+     * {@code setDamageValue} clamp (which {@code TileEntityNuclearCore}/{@code TileEntityWasteUnit} and
+     * the centrifuge recipes both rely on) pinned every waste stack to 0 — all reactor waste identical,
+     * no isotopes. The ported item must report a ceiling covering the widest value used: mixed
+     * element-group waste at {@code 1000 + (ElementGroup.count-1)} (= 1003), plus all isotope ordinals.
+     * ({@code ItemReactorMulti.getMaxDamage} ignores the stack argument, so this exercises the real
+     * clamp ceiling without constructing an ItemStack — the JUnit harness leaves item components unbound.)
+     */
+    @Test
+    void wasteItemMaxDamageCoversIsotopeAndGroupRange() {
+        Item waste = ReactorItems.WASTE_ITEM.get();
+        assertTrue(waste instanceof ItemNuclearWaste, "WASTE_ITEM must be the ported ItemNuclearWaste");
+        int max = waste.getMaxDamage(null);
+        int widestGroup = 1000 + ElementGroup.values().length - 1; // 4th element group = 1003
+        assertTrue(max >= widestGroup, "waste getMaxDamage " + max + " < " + widestGroup
+                + "; mixed-group waste would clamp and reactor waste would lose element-group identity");
+        int widestIsotope = 0;
+        for (Isotopes iso : Isotopes.values())
+            widestIsotope = Math.max(widestIsotope, iso.ordinal());
+        assertTrue(max >= widestIsotope, "waste getMaxDamage " + max + " < highest isotope ordinal "
+                + widestIsotope + "; per-isotope waste identity would clamp");
     }
 
     /** All eight fluorite colours must have a distinct ore block and gem item. */

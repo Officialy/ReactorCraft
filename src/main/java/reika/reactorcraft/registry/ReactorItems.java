@@ -29,6 +29,7 @@ import reika.reactorcraft.items.ItemCanister;
 import reika.reactorcraft.items.ItemGeigerCounter;
 import reika.reactorcraft.items.ItemHeavyBucket;
 import reika.reactorcraft.items.ItemIronFinder;
+import reika.reactorcraft.items.ItemNuclearWaste;
 import reika.reactorcraft.items.ItemRadiationCleaner;
 import reika.reactorcraft.items.ItemRadiationGoggles;
 import reika.reactorcraft.items.ItemReactorBook;
@@ -130,7 +131,9 @@ public final class ReactorItems {
     }
 
     // --- TE-cluster items + compatibility refs (mirrors old enum API) ---
-    public static final DeferredItem<Item> WASTE_ITEM = reg("waste", () -> new Item(itemProperties()));
+    // Waste isotope/element-group identity rides the DAMAGE variant (see ItemNuclearWaste); registered
+    // as the real item so WasteManager.getStackOfMetadata(ordinal / 1000+group) no longer collapses to 0.
+    public static final DeferredItem<ItemNuclearWaste> WASTE_ITEM = reg("waste", () -> new ItemNuclearWaste(itemProperties()));
     public static final DeferredItem<ItemReactorBook> REACTOR_BOOK = reg("reactor_book", () -> new ItemReactorBook(toolProperties()));
     public static final DeferredItem<Item> MAGNET_ITEM = reg("magnet", () -> new ItemReactorMulti(itemProperties(), 8));
     public static final DeferredItem<ItemRadiationGoggles> GOGGLES_ITEM = reg("radiation_goggles",
