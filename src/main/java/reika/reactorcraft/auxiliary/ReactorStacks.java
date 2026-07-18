@@ -20,16 +20,22 @@ import reika.reactorcraft.registry.ReactorItems;
 
 public class ReactorStacks {
 
-	public static final ItemStack hf = ReactorItems.RAW.getStackOfMetadata(0);
-	public static final ItemStack fueldust = ReactorItems.RAW.getStackOfMetadata(1);
-	public static final ItemStack depdust = ReactorItems.RAW.getStackOfMetadata(2);
-	public static final ItemStack ammonium = ReactorItems.RAW.getStackOfMetadata(3);
-	public static final ItemStack lime = ReactorItems.RAW.getStackOfMetadata(4);
-	public static final ItemStack calcite = ReactorItems.RAW.getStackOfMetadata(5);
-	public static final ItemStack lodestone = ReactorItems.RAW.getStackOfMetadata(6);
-	public static final ItemStack thordust = ReactorItems.RAW.getStackOfMetadata(7);
+	// The legacy 1.7.10 "raw materials" item was a single metadata item (ReactorItems.RAW,
+	// meta 0-9). The port split it into distinct items, but these refs were left pointing at
+	// RAW.getStackOfMetadata(n) — and since RAW's backing item carries no durability,
+	// setDamageValue clamps every meta>0 to 0, collapsing them all to fuel_dust. That silently
+	// broke the isotope centrifuge (depleted output), ore drops (ammonium/calcite/lodestone/
+	// thorium), and ammonia synthesis. Point each ref at its real distinct item instead.
+	public static final ItemStack hf = ReactorItems.RAW.getStackOfMetadata(0); // meta 0: no distinct item, unused
+	public static final ItemStack fueldust = ReactorItems.FUEL_DUST.toStack();
+	public static final ItemStack depdust = ReactorItems.DEPLETED_DUST.toStack();
+	public static final ItemStack ammonium = ReactorItems.AMMONIUM_DUST.toStack();
+	public static final ItemStack lime = ReactorItems.LIME.toStack();
+	public static final ItemStack calcite = ReactorItems.CALCITE.toStack();
+	public static final ItemStack lodestone = ReactorItems.LODESTONE.toStack();
+	public static final ItemStack thordust = ReactorItems.THORIUM_DUST.toStack();
 	public static final ItemStack emeralddust = ReactorItems.EMERALD_DUST.toStack();
-	public static final ItemStack wastedust = ReactorItems.RAW.getStackOfMetadata(9);
+	public static final ItemStack wastedust = ReactorItems.WASTE_DUST.toStack();
 
 	public static final ItemStack emptycan = ReactorItems.CANISTER_REF.getStackOf();
 	public static final ItemStack uf6can = canister(ReactorFluids.UF6.get(), 1000);
