@@ -218,6 +218,9 @@ public class WasteManager {
 			if (e.getValue() > 0)
 				li.add(new WasteChance(1000+e.getKey().ordinal(), 100*e.getValue()));
 		}
+		// getChancesByGroup() is a HashMap, so its iteration order is unstable — sort by damage
+		// (group ordinal) so the generated recipe JSON is deterministic across datagen runs.
+		li.sort(java.util.Comparator.comparingInt(WasteChance::damage));
 		return li;
 	}
 
