@@ -1,0 +1,63 @@
+{
+  "turbine-vol": {
+    "sounds": [
+      {
+        "name": "reactorcraft:turbine-vol",
+        "type": "file",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "fusion": {
+    "sounds": [
+      {
+        "name": "reactorcraft:fusion",
+        "type": "file",
+        "attenuation_distance": 32
+      }
+    ]
+  },
+  "control": {
+    "sounds": [
+      {
+        "name": "reactorcraft:control",
+        "type": "file"
+      }
+    ]
+  },
+  "gen_rf": {
+    "sounds": [
+      {
+        "name": "reactorcraft:gen_rf",
+        "type": "file",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "gen_eu": {
+    "sounds": [
+      {
+        "name": "reactorcraft:gen_eu",
+        "type": "file",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "gen_elc": {
+    "sounds": [
+      {
+        "name": "reactorcraft:gen_elc",
+        "type": "file",
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "scram": {
+    "sounds": [
+      {
+        "name": "reactorcraft:scram",
+        "type": "file"
+      }
+    ]
+  }
+}
