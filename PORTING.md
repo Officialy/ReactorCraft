@@ -26,6 +26,7 @@ Use the ORIGINAL recipes from upstream as the source of truth — never invent r
 - **Use sources.** Original 1.7.10 is `git show upstream/master:<Path>` here is not set up
 (origin = ReikaKalseki). Read original via the working tree (it IS the original until ported)
 or `git show HEAD:<path>`. Reference RC port for the target shape.
+- **Concrete colour identities.** When a V33a metadata family represented separately obtainable colour variants, register one stable block/item id per colour in 26.2; never recreate metadata as an integer/property on one block. ChromatiCraft cave crystals/dye trees and GeoStrata luminous crystals establish the rule for all future integrations.
 - No AI-slop comments narrating what changed.
 
 ## Mechanical state already done (this scaffolding pass)
@@ -375,3 +376,351 @@ int variant). Already used this way in `TileEntityWasteUnit` + `EntityNeutron` (
 Imports neutralized now. Usage sites (mostly `WorldRift`, `ChromatiAPI`, adjacency-upgrade,
 `CrystalElement`) are gated/removed when each owning file is ported. ChromatiCraft is not in
 this build (commented in `settings.gradle`).
+## Shared DragonAPI seam update — 2026-07-24
+
+DragonAPI now has a real NeoForge 26.2 `ChunkManager` backed by a persistent scoped
+`TicketController`. It validates block-entity ticket owners on reload, reconciles exact requested
+chunk sets, and supports load/unload plus the original block-coordinate `getChunkSquare` API.
+ReactorCraft's existing `CHUNKLOAD-PORT` sites are therefore no longer blocked on a missing manager;
+when their owning tile files are next accepted, restore the preserved calls and verify their
+activity/removal lifecycle rather than leaving the comments dormant.
+
+## Shared ChromatiCraft tile-persistence seam update — 2026-07-24
+
+ChromatiCraft's modern generic tile block now restores the old `NBTTile` placement/drop contract:
+custom data is applied after placer assignment, copied back onto loot drops, and owner-gated tiles reject
+unauthorized mining. The new pylon Power Crystal uses that path for its multi-owner UUID set. This is
+a ChromatiCraft-local implementation, but it confirms the 26.2 `CUSTOM_DATA` + loot-context pattern to
+reuse when ReactorCraft ports any equivalent owner/configuration-bearing block entities; do not lose
+machine data by relying on a plain `dropSelf` table alone.
+
+## Shared ChromatiCraft structure/link seam update — 2026-07-25
+
+ChromatiCraft's active pylon, repeater, compound-repeater, and pylon-broadcast multiblocks now use
+canonical generated Minecraft structure NBT; runtime `FilledBlockArray` matching is an adapter derived
+from those templates. The broadcast template records not-yet-registered chroma-fluid cells as
+`structure_void` and overlays exact registry-ID checks at runtime, preserving the dependency without
+inventing a substitute block or allowing a false-positive match.
+Use the same NBT-first approach for ReactorCraft structures or monuments instead of rebuilding geometry
+in Java. ChromatiCraft also now proves a server-global codec-backed `SavedData` web keyed by owner and
+colour, with durable resource-key `WorldLocation` nodes, chunk-loaded link tiles, and focused donation /
+throughput GameTests. This is the current reference for any ReactorCraft cross-dimension linked-machine data.
+
+## Shared ChromatiCraft dynamic-drop/datagen seam update — 2026-07-26
+
+ChromatiCraft's NBT-backed encrusted crystal proves the 26.2 pattern for blocks whose synchronized
+block-entity state determines drops: register an explicit empty loot table so validation remains
+data-driven, then emit the authoritative per-face, growth-scaled items from the removal callback.
+Its sixteen shard sprites were mechanically cropped from the V33a item sheet and its names/models are
+datagen-owned. Reuse this split for ReactorCraft machines whose persisted state cannot be represented by
+a static loot table.
+
+## Shared ChromatiCraft server-behavior checkpoint — 2026-07-26
+
+The active pylon now proves two more 26.2 translations of V33a world behavior: colour-specific combat
+effects are delegated to the already-ported `CrystalPotionController`, and anti-capture rejection checks
+all 26 neighbouring cells before clearing the shell without drops, applying entity momentum/fall state,
+disabling player flight, seeding fires, and damaging its booster set. The combined suite is green at 35
+required tests. ReactorCraft ports should likewise keep gameplay effects in their owning controller and
+keep audiovisual payloads clientbound without weakening server authority.
+
+## Shared ChromatiCraft payload/render/casting seam — 2026-07-26
+
+ChromatiCraft now supplies the reference 26.2 split for server-authoritative machine effects: typed
+clientbound payload records, radius/player distribution, client particle handling, and a registered
+submit-pipeline entity renderer. Its six active network blocks also pass client model datagen.
+
+The casting-table work establishes the modern structure rule for machine upgrade tiers: each tier is
+generated as canonical Minecraft structure NBT, while Java adds only alternative matches a single NBT
+palette cannot encode. The focused contract now round-trips all three tiers and their alternative
+matches. Use the same template-first and managed-container persistence seam here.
+
+## Shared ChromatiCraft casting-recipe/container seam — 2026-07-26
+
+ChromatiCraft now proves the complete 26.2 custom-recipe registration path: a typed recipe/input,
+map and network codecs, DeferredRegister recipe type/serializer, registry-aware server datagen, and
+exact physical matching. The first 24 V33a CrystalStone recipes are generated as datapack JSON rather
+than runtime maps. Its owner-bound casting stand also demonstrates a modern inert one-slot
+`WorldlyContainer`, `ValueInput`/`ValueOutput` persistence, `CUSTOM_DATA` owner round-trip, dynamic
+contents drops, and server-authoritative interaction/spread behavior. The combined suite is green at
+40/40. Reuse these patterns for ReactorCraft custom machine recipes and owner/configuration-bearing
+auxiliary inventories; do not regress to hardcoded recipe tables or item metadata.
+
+## Shared ChromatiCraft atomic-controller/receiver seam — 2026-07-26
+
+ChromatiCraft's casting table now supplies the complete machine-controller companion to that recipe
+and container seam. A registered ten-slot receiver selects data-driven recipes by physical tier,
+validates NBT-backed structures, links and locks external inventories, waits a declared duration,
+requests missing network energy, and commits inputs, crafting remainders, aura, output, XP,
+progression, and history atomically. Active work and history use modern `ValueInput`/`ValueOutput`
+persistence, dynamic inventory drops are retained, and all visual/data assets remain datagen-owned.
+The focused GameTest proves that no inventory state changes before the final tick.
+
+The shared crystal receiver also now caps delivery against its current stored value, returns the exact
+accepted amount, avoids mutating request tags, reports compound-request results correctly, and uses the
+modern adjacent-update interface. ReactorCraft energy/fluid/item receivers should copy these invariants:
+capacity checks must use current state, requested values must be bounded before routing, caller-owned
+value objects must not be mutated, and multi-resource operations need meaningful aggregate success.
+
+## Shared ChromatiCraft metadata-split/progression seam — 2026-07-26
+
+ChromatiCraft has now converted the complete 13-variant V33a `CLUSTER` metadata family into distinct
+registered item identities while retaining original ordinal order, names, and authoritative sprite
+indices. Recipes consume those stable identities through datapack JSON; client definitions and language
+remain datagen-owned. This is the preferred pattern for small, finite metadata families. ReactorCraft's
+very large isotope space still follows its documented single-item data-component decision, but small
+finite families should use distinct registry identities when doing so makes recipes and persistence
+unambiguous.
+
+The casting controller also restores the V33a distinction between machine capability and player
+permission: table XP plus NBT structure controls the physical tier, while `CRYSTALS`, `RUNEUSE`,
+`MULTIBLOCK`, `PYLON`, and `REPEATER` progression gates the player who starts the recipe. Completion
+awards both full table XP and the original quarter-rate player XP. ReactorCraft machines with research,
+achievement, owner, or operator gates should preserve the same separation instead of treating a valid
+multiblock or upgraded machine as implicit player authorization. The combined suite is green at 41/41.
+
+## Shared ChromatiCraft live-network casting seam — 2026-07-28
+
+ChromatiCraft now exercises its machine-controller and receiver contracts against a real routed source:
+a registered pylon outside direct table range selects a colour-matched repeater, pays attenuation, and
+fills the casting table's exact aura deficit before the 400-tick recipe advances. Completion atomically
+drains the aura and all 24 auxiliary stands, emits the source-exact high-energy core, and awards table
+XP. This closes the persistence/path/receiver/controller chain as an integrated server loop rather than
+as isolated unit seams.
+
+The recipe dependency work also confirms two reusable migration rules. Small finite metadata families
+(charged shards and tiered resources) should become stable registered item identities with authoritative
+legacy sprites; recipes remain generated datapack data. Construction-order overwrites in old Java recipe
+builders must be audited as executable behavior: port the final coordinate map, not every transient
+assignment and not a guessed symmetric layout. The combined required GameTest target is now 47/47.
+
+ReactorCraft's future network-fed or multiblock recipes should use the same NBT-first structures,
+bounded difference requests, asynchronous delivery, and atomic completion invariants. Its large isotope
+families remain the documented data-component exception; this small-family identity pattern does not
+supersede that decision.
+
+## Shared ChromatiCraft cancellation/reload seam — 2026-07-28
+
+ChromatiCraft now validates both failure and persistence paths for long-running external-inventory
+crafts. Removing a mandatory block from the canonical NBT structure cancels the operation without
+consuming the center or auxiliary inventories, awarding progress, or leaving external slots locked.
+Separately, a pylon-fed craft is saved and reconstructed after routed aura delivery, retaining the
+active recipe key, timer, energy, and inputs through modern block-entity persistence before committing
+atomically. The combined suite is green at 48/48.
+
+ReactorCraft multiblock machines should adopt the same invariants: structural invalidation must be a
+lossless cancellation boundary, external inventory locks must always be released, and persisted work
+must resume from an explicit recipe/process identity rather than recomputing against potentially
+changed inputs or consuming resources a second time.
+
+## Shared ChromatiCraft multi-resource atomicity seam — 2026-07-28
+
+ChromatiCraft's casting controller now has a focused three-resource transaction boundary. The V33a
+Lumen Core recipe matches its canonical NBT-backed L3 structure and exact final 24-stand map, requires
+60000 BLACK, YELLOW, and BLUE lumens concurrently, and commits all three energy debits, every external
+inventory input, output, and XP as one operation. The companion chained MULTIBLOCK regression proves
+that a controller can complete successive external-inventory recipes without retaining stale stand
+contents or XP state. The combined required suite is green at 50/50.
+
+ReactorCraft processes that combine multiple tanks, energy stores, inventories, or catalysts should
+copy this invariant: validate the entire resource vector before beginning and again before commit,
+then mutate it as one server-authoritative transaction. A partial debit in one resource followed by a
+failure in another is data loss, even when every individual capacity check is correct.
+
+The dependency audit also reinforces the no-placeholder boundary. ChromatiCraft's Element Unit was
+not accepted merely because its Binding Crystal input exists; all sixteen behavioral Elemental Stones
+and their chroma-fluid charging/deposit semantics must land first. ReactorCraft dependency slices must
+likewise be defined by complete behavior, not only by the presence of registry identities.
+
+## Shared ChromatiCraft NBT-alternative and GUI seam — 2026-07-28
+
+ChromatiCraft's L3 casting monument remains canonical generated structure NBT. A source-parity test
+identified and corrected its outer repeater stalks to two smooth-stone blocks beneath each rune and
+repeater. Runtime matching now overlays colour-agnostic rune checks for the sixteen functional outer
+positions without moving geometry back into Java. This is the required pattern for ReactorCraft
+monuments too: generated NBT owns coordinates and palette; Java contributes only semantic alternatives
+that a single palette cannot encode.
+
+The casting-table controller also restores V33a's exact four-side repeater grouping and bounded
+throughput formula, with grouping state and multiplier persisted and covered by the live routed-network
+suite. The combined required GameTest boundary is now 56/56.
+
+ChromatiCraft's first 26.2 GUI vertical supplies the companion client/server pattern: a registered
+typed `MenuType`, a `MenuProvider` block entity, `ServerPlayer.openMenu(provider, pos)`, an owner/range
+validated server menu, and a screen bound by `RegisterMenuScreensEvent`. The initially recorded
+casting screen was only a diagnostic dashboard and has since been replaced by the real V33a layout,
+source textures, overlays, stand preview, and lumen bars; diagnostic presentation is not accepted as
+a GUI port. Display-only screen queries must not mutate machine state, and gameplay-dependent overlay
+state must be synchronized from the server. ReactorCraft's existing menu system follows the same
+contract. Future GUI ports in either module must carry their real configuration/progress
+synchronization and gameplay actions, not merely recreate a slot layout or render a decorative shell.
+
+## Shared ChromatiCraft renderer/worldgen seam — 2026-07-28
+
+ChromatiCraft's item stand now demonstrates the Minecraft 26.2 submit-render boundary for dynamic
+block-entity contents: its exact legacy model geometry is a registered model layer using the original
+texture, synchronized server inventory state is extracted into render-state objects, and held items
+are resolved through `ItemModelResolver` before immutable model/item/text nodes are submitted. ReactorCraft render ports should use the same split and
+must not force block remeshes merely to update dynamic contents.
+
+The first ChromatiCraft overworld generator is also fully data-driven. Cave crystals use a registered
+feature plus generated configured/placed registries and NeoForge biome modifiers, while the feature
+itself retains the legacy per-chunk scatter and placement contract. The focused test suite verifies
+support, liquid, exposure, and colour semantics; all 57 required tests pass. This is the model for
+ReactorCraft generators that own nonstandard scatter algorithms: datapack registration and biome
+selection remain data, while a small feature class may preserve the original algorithm. Structures
+and monuments in both modules remain NBT-template-first; Java owns placement policy and semantic
+alternatives, not canonical coordinate geometry.
+
+- 2026-07-28: ChromatiCraft render follow-up landed: registered sound playback for casting stands, direct-texture stand BER + special item model, correct casting-table top/bottom/side datagen, and a dynamic chunk-mesh cave-crystal renderer. See ChromatiCraft/PORTING.md.
+
+## Shared block-entity sync and NBT pylon-generation seam — 2026-07-28
+
+A ChromatiCraft item-stand rendering failure exposed a DragonAPI-wide persistence bug: full
+block-entity synchronization called the compatibility `saveAdditional(CompoundTag)` overload and
+therefore bypassed subclasses using the Minecraft 26.2 `ValueOutput` override. Full sync and update
+packets now originate from `saveWithoutMetadata(registryAccess)`. ReactorCraft block entities with
+inventories, tanks, owners, or custom fields inherit the corrected behavior and must continue to
+serialize through the modern override rather than parallel packet-only state.
+
+ChromatiCraft natural pylons now demonstrate the required worldgen split for both active ports:
+generated NBT owns canonical monument geometry; a registered configured/placed feature and biome
+modifier own datapack visibility; Java owns the legacy shuffled-grid policy, terrain clearance,
+adaptive foundation, colour substitution, optional damage, and post-placement block-entity setup.
+The focused NBT placement regression passes as part of the **58/58 required GameTest** suite.
+ReactorCraft monuments and large machines should follow this boundary rather than duplicating their
+coordinate palettes inside a feature class.
+
+The same checkpoint restores registered pylon ambient sound and client particles, corrects cave
+crystals to the single V33a outline texture plus runtime tint, and permanently renames the item-stand
+renderer without a `Port` suffix. Forced Java compilation plus client/server datagen are green.
+
+- ChromatiCraft client sound datagen now emits all 87 active event-to-OGG mappings; validation found zero missing audio assets.
+### 2026-07-29 — non-recipe-book machine recipe classification
+
+`ProcessorRecipe` and `CentrifugeRecipe` now report `isSpecial()`. Their intentional
+`PlacementInfo.NOT_PLACEABLE` contracts describe fluid/machine processing, not invalid empty
+crafting ingredients; this prevents Minecraft 26.2 recipe finalization from warning and ignoring
+them. The same foundational correction was applied to ChromatiCraft casting recipes and
+RotaryCraft crystallizer/drying-bed recipes. All three modules compile, and the headless integrated
+recipe load emits none of the prior empty-ingredient warnings.
+## Shared translucent custom-model lesson — 2026-07-29
+
+ChromatiCraft's cave-crystal correction establishes an important 26.2 rendering rule: vertex alpha
+does not by itself select a translucent chunk layer when the source sprite is opaque. Custom baked
+geometry that depended on a legacy translucent render pass must explicitly force translucent material
+classification, while preserving the source's complete face topology; a visually similar primitive
+substitute is not source parity. The corrected cave crystal combines forced translucency, alpha-220
+vertices, full emission, and the exact neighbor-sensitive V33a mesh.
+
+
+## Shared positional-audio and menu-container lessons — 2026-07-29
+
+ChromatiCraft's pylon audit exposed two cross-module porting traps. A registered positional
+`SoundEvent` still cannot attenuate correctly when its OGG is stereo; ambient machine and structure
+loops that were spatial in 1.7.10 must use mono assets while preserving their original samples and
+event attenuation. Also, DragonAPI's item-handler slot helper intentionally ignores block entities
+that only implement vanilla `Container`; menus for those inventories must register vanilla `Slot`
+instances directly. The casting table now proves that seam with a focused 46-slot GameTest.
+
+## Shared legacy-variant registry lesson — 2026-07-29
+
+ChromatiCraft's cave-crystal audit found an interim port pattern that must not be copied into
+ReactorCraft: one modern block plus a sixteen-way `color` state property recreated 1.7.10 metadata
+instead of giving independently obtainable variants stable registry identities. The accepted
+ChromatiCraft cave-crystal, lamp, super-crystal, rune, and encrusted families now use one block and
+block item per colour; structure matchers accept the relevant family where the original ignored
+metadata. ReactorCraft legacy metadata families should make the same distinction explicitly: use
+concrete registry identities for independently named/obtainable variants, and reserve block-state
+properties for actual placed-state behavior. Do not introduce generic metadata-emulation adapters.
+
+The same checkpoint reinforces the custom-model rendering rule recorded above: exact legacy geometry
+can still show seams under modern backface culling. Where the source effectively rendered both sides,
+emit both windings (with matching inverse normals) rather than inventing corrective rotations.
+## Shared custom-model interaction-shape boundary — 2026-07-29
+
+ChromatiCraft's cave crystal now demonstrates the complete custom-model block contract: the rendered
+position seed and neighbor decisions live in common code, `getShape` supplies the matching mining
+ray/hover outline, collision deliberately shares or specializes that silhouette, and translucent
+blocks publish separate empty occlusion/visual-light shapes with the intended shade/skylight values.
+Do not call client model or block-entity-renderer classes from a common block to derive bounds; that
+will fail on a dedicated server. ReactorCraft model ports with non-cubic or state-dependent geometry
+must instead expose a server-safe geometry recipe consumed by both rendering and voxel-shape code.
+Voxel shapes may approximate angled faces with cached stepped boxes, but their extrema and dynamic
+variant selection must agree with the visible model.
+## Shared exact-outline versus voxel-collision rule — 2026-07-29
+
+NeoForge 26.2 custom block-outline renderers can replace vanilla's axis-aligned `VoxelShape` outline
+with arbitrary submitted line geometry. ChromatiCraft cave crystals now extract edges directly from
+the selected baked model quads, which prevents the exact diagonal client outline from drifting away
+from the visible model. This changes presentation only: standard block collision and ray clipping
+remain `VoxelShape`/axis-aligned-AABB based. ReactorCraft non-cubic model ports may use the same
+client-only outline technique, but must retain a common-code voxel approximation for physical
+collision, mining targeting, pathfinding, and dedicated-server behavior.
+## Shared client-outline, reusable-FX, and biome-foundation lessons — 2026-07-29
+
+ChromatiCraft's casting stand extends the exact-outline rule from dynamic baked blocks to Techne-style
+block-entity models: bake the same `LayerDefinition`, walk model-part polygons, apply the renderer's
+identical pose transform, and deduplicate polygon edges before submitting a custom outline. Keep the
+common-code `VoxelShape` separate and authoritative for physical collision.
+
+Its FX pass also demonstrates that legacy particle families should be ported once as reusable modern
+`SingleQuadParticle` primitives, then configured by packet/tile call sites with the original lifetime,
+gravity, blend, velocity, colour, and size parameters. Replacing distinct full-bright/additive effects
+with generic dust or vanilla sparks may compile but is behavior loss.
+
+For custom overworld biomes, use a datagen `Registries.BIOME` bootstrap plus generated biome tags and
+a TerraBlender region registered during common setup. Treat the biome definition/placement seam as a
+foundation only when its decorator blocks, entities, or features are not yet ported; enumerate those
+dependencies explicitly and never fill the gap with invented vegetation. Legacy independently
+obtainable colour variants used by decorators must receive concrete registry identities, matching the
+crystal-family rule above.
+
+- **Biome feature-order rule (2026-07-29):** custom biomes must preserve the relative ordering of every
+  placed feature shared with vanilla biomes. Rainbow Stream originally put river seagrass before the
+  ordinary vegetation shared with vanilla River, producing a `FeatureSorter` cycle; it now follows the
+  vanilla River order with seagrass last.
+- **BER-only block-model rule (2026-07-29):** a block drawn entirely by a block-entity renderer needs a
+  genuinely geometry-free local baked model. `builtin/entity` is not a safe modern blank stand-in and can
+  draw the missing-model overlay alongside the BER; GeoStrata Ocean Spike now uses an empty-elements model.
+
+- **Animated legacy strip rule (2026-07-29):** tall V33a animated PNG strips must be sampled as
+  `TextureAtlasSprite`s from their stitched atlas. Binding a strip directly as a standalone render-type
+  texture can exceed the GPU maximum texture height (`roundflare` is 256x46080) and crash during upload.
+### 2026-07-29 — reversed-depth and legacy emissive-pass lesson
+
+ChromatiCraft's pylon correction establishes two additional 26.2 port rules. Custom pipelines must follow Minecraft's reversed-depth convention (`GREATER_THAN_OR_EQUAL`); carrying legacy/conventional `LESS_THAN_OR_EQUAL` makes additive geometry appear through occluders while disappearing in clear view. Legacy full-bright second render passes should become separate model elements with `light_emission: 15`, preserving their animated overlay assets and face selection rather than flattening each variant to a cube-all base texture. Direction formerly inferred from neighbouring metadata variants should be represented by an explicit modern blockstate where placement direction is gameplay-visible.
+
+## Shared ElectriCraft dynamic-conductor and BER asset rule — 2026-07-30
+
+ElectriCraft's renderer audit confirms that legacy dynamic conductors must remain dynamic in 26.2:
+use a particle-only generated world model and a `BlockEntityRenderer` which emits the original
+centre/end sprites and connection geometry. Do not substitute a cube-all model behind that renderer.
+The 1.7.10 material/insulation metadata wire family is now eighteen concrete block and BlockItem
+registrations (one per conductor and insulation state), with matching generated recipes, loot,
+translations, item models, and BE type coverage; development ports may make this identity break
+without a compatibility tag bridge. The RF cable uses the same centre-plus-arm renderer with its
+original `rf`/`rf_end` textures. For legacy Techne machines, remove the static steel world cube
+entirely (particle-only) and submit the original model through the 26.2 BER pipeline; retain source
+textures and any live overlays/text such as fuse heat, transformer pulse, battery charge, and meter
+readouts.
+
+
+### Cross-port note — ChromatiCraft Luminous Cliffs flora (2026-07-30)
+
+ChromatiCraft's reported Luminous Cliffs/Rainbow Stream feature-order cycle is corrected, and the
+Luminous Cliffs Glow Daisy/Glow Root feature slice is active. Both flowers are concrete 26.2 block
+identities. The remaining V33a Glow Root ambient-drop dependency requires Fertility Seed to become
+seven concrete item identities; do not recreate its former item-damage metadata.
+### Cross-module DragonAPI progressive breaker registration — 2026-08-02
+
+`ProgressiveRecursiveBreaker` was ported but absent from `TickRegistry`; DragonAPI common setup now
+registers it. This was found through ChromatiCraft's Manipulator cliff reveal and restores execution
+for every queued progressive recursive operation used by the Reika modules.
+### Cross-module DragonAPI modern Container insertion — 2026-08-02
+
+`ReikaInventoryHelper.addToIInv(ItemStack, Container)` now uses `ItemStack.EMPTY`, real container/item
+stack limits, whole-stack capacity preflight, and an exact remainder check. The inherited 1.7.10
+null-slot and slot-count logic could reject empty inventories or truncate transfers on 26.2. The fix
+was proven by ChromatiCraft casting a full 64-item result directly into an adjacent chest and applies
+to every Reika module still using the shared `Container` insertion path.
