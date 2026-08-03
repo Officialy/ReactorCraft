@@ -9,14 +9,12 @@
  ******************************************************************************/
 package reika.reactorcraft.items;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 import reika.reactorcraft.base.ReactorItemBase;
-import reika.reactorcraft.guis.GuiReactorBook;
 
 public class ItemReactorBook extends ReactorItemBase {
 
@@ -27,7 +25,7 @@ public class ItemReactorBook extends ReactorItemBase {
 	@Override
 	public InteractionResult use(Level level, Player player, InteractionHand hand) {
 		if (level.isClientSide() && hand.equals(InteractionHand.MAIN_HAND)) {
-			Minecraft.getInstance().gui.setScreen(new GuiReactorBook(player, level, 0, 0));
+			reika.reactorcraft.client.ClientScreens.openReactorBook(player, level);
 		}
 		return super.use(level, player, hand);
 	}

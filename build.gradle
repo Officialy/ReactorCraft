@@ -113,6 +113,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/auxiliary/ReactorBookData.java'
     include 'reika/reactorcraft/auxiliary/ReactorDescriptions.java'
     include 'reika/reactorcraft/guis/GuiReactorBook.java'
+    include 'reika/reactorcraft/client/ClientScreens.java'
     include 'reika/reactorcraft/items/ItemReactorBook.java'
     include 'reika/reactorcraft/command/SolenoidDebugCommand.java'
     // GUI / menu / screen port (OFF-26 ff.)
