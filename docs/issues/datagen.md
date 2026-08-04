@@ -136,3 +136,36 @@ several of which the in-code comments wrongly call "deferred/blocked" but are ac
    despite all blocks + ingredients existing now.
 3. **Crafting-component recipes missing** — intermediates uncraftable, which also blocks the machine
    recipes that consume them.
+
+## `processor/uf6` and `centrifuge/uf6` fail to parse — root cause found, fix NOT applied
+
+Every server boot logs:
+
+```
+Couldn't parse data file 'reactorcraft:processor/uf6': DataResult.Error['Fluid
+reactorcraft:uranium_hexafluoride does not have components yet; ...']
+Couldn't parse data file 'reactorcraft:centrifuge/uf6': ...
+```
+
+The generated JSON is correct — this is a *parse-order* problem, not a datagen problem. Both recipe
+codecs hold a `FluidStack` field decoded with `FluidStack.CODEC`
+(`ProcessorRecipe` x3: `input_fluid`, `intermediate_fluid`, `output_fluid`; `CentrifugeRecipe` x1:
+`input`). **A `FluidStack` cannot be constructed while recipes are being parsed** — its constructor
+needs data components bound, and they are not bound yet at that point.
+
+Proven the hard way on 2026-08-04: swapping in a hand-written component-free codec
+(`BuiltInRegistries.FLUID.byNameCodec()` + an int amount, same wire shape) does **not** work, because
+the failure is in `new FluidStack(...)` inside the decode lambda, not in the component patch codec.
+It turned two logged errors into a **fatal startup crash**
+(`NullPointerException: Components not bound yet` → `Couldn't find Minecraft server thread`).
+That attempt was fully reverted; boot is healthy and the two errors are back as they were.
+
+The real fix is therefore a small refactor, not a codec swap: **stop storing `FluidStack` on the
+recipe objects**. Decode and store `Holder<Fluid>` plus an `int` amount, and build the `FluidStack`
+lazily in the getters, which run at machine-tick time when components are long since bound. The
+generated JSON shape (`{"id": ..., "amount": ...}`) is already compatible, so nothing needs
+regenerating. Consumers of `ProcessorRecipe`/`CentrifugeRecipe`'s fluid getters need checking, since
+the field type changes even though the getter signatures need not.
+
+Impact while unfixed: the UF6 processor and centrifuge recipes do not load, so that step of the
+uranium chain is unavailable. Off the ChromatiCraft casting arc entirely.
