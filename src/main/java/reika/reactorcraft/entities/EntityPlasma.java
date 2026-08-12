@@ -13,6 +13,7 @@ import java.util.List;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -95,7 +96,7 @@ public class EntityPlasma extends ParticleEntity implements CustomFanEntity {
 	public void applyEntityCollision(Entity e) {
 		float dmg = e instanceof LivingEntity && ((LivingEntity)e).hasEffect(MobEffects.FIRE_RESISTANCE) ? 4 : Integer.MAX_VALUE;
 		// MOD-PORT: legacy ReactorCraft.fusionDamage custom DamageSource -> vanilla hot source.
-		if (e.level() instanceof net.minecraft.server.level.ServerLevel sl)
+		if (e.level() instanceof ServerLevel sl)
 			e.hurtServer(sl, sl.damageSources().inFire(), dmg);
 		if (e instanceof Player) {
 			if (!e.isAlive() || ((LivingEntity)e).getHealth() <= 0) {

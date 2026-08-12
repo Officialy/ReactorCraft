@@ -11,11 +11,6 @@ package reika.reactorcraft.registry;
 
 import java.util.Locale;
 
-/**
- * The eight fluorite colours. In 26.2 each colour is a separate ore block + gem item
- * (see {@code ReactorBlocks}/{@code ReactorItems}) rather than a block/item metadata variant,
- * so this enum now only carries the colour identity used for naming, models and tint.
- */
 public enum FluoriteTypes {
 
     BLUE(0, 38, 255),

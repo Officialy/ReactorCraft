@@ -50,6 +50,7 @@ import reika.reactorcraft.tileentities.powergen.TileEntityHiPTurbine;
 import reika.reactorcraft.tileentities.powergen.TileEntityReactorPump;
 import reika.reactorcraft.tileentities.powergen.TileEntitySolarExchanger;
 import reika.reactorcraft.tileentities.powergen.TileEntitySteamGrate;
+import reika.reactorcraft.tileentities.powergen.TileEntitySteamInjector;
 import reika.reactorcraft.tileentities.powergen.TileEntitySteamLine;
 import reika.reactorcraft.tileentities.powergen.TileEntityTurbineCore;
 import reika.reactorcraft.tileentities.processing.TileEntityCentrifuge;
@@ -76,7 +77,7 @@ public final class ReactorBlockEntities {
 	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityWaterCell>> COOLANT = register("coolant_cell", TileEntityWaterCell.class, ReactorBlocks.COOLANT);
 	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityCPU>> CPU = register("reactor_cpu", TileEntityCPU.class, ReactorBlocks.CPU);
 	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityTurbineCore>> TURBINECORE = register("turbine_core", TileEntityTurbineCore.class, ReactorBlocks.TURBINECORE);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<reika.reactorcraft.tileentities.powergen.TileEntitySteamInjector>> STEAMINJECTOR = register("steam_injector", reika.reactorcraft.tileentities.powergen.TileEntitySteamInjector.class, ReactorBlocks.TURBINEMULTI);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySteamInjector>> STEAMINJECTOR = register("steam_injector", TileEntitySteamInjector.class, ReactorBlocks.TURBINEMULTI);
 	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityCondenser>> CONDENSER = register("condenser", TileEntityCondenser.class, ReactorBlocks.CONDENSER);
 	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySteamLine>> STEAMLINE = register("steam_line", TileEntitySteamLine.class, ReactorBlocks.STEAMLINE);
 	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityHeavyPump>> FLUIDEXTRACTOR = register("heavy_pump", TileEntityHeavyPump.class, ReactorBlocks.FLUIDEXTRACTOR);

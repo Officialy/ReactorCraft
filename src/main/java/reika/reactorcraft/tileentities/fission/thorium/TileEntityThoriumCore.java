@@ -12,6 +12,9 @@ package reika.reactorcraft.tileentities.fission.thorium;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -29,6 +32,7 @@ import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
 import reika.reactorcraft.auxiliary.TemperaturedReactorTyped;
 import reika.reactorcraft.base.TileEntityNuclearCore;
+import reika.reactorcraft.container.MenuThoriumCore;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.entities.EntityNeutron.NeutronType;
 import reika.reactorcraft.registry.ReactorAchievements;
@@ -407,8 +411,8 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 
 	// Override the inherited NuclearCore menu (hasGui() stays true from the parent).
 	@Override
-	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
-		return new reika.reactorcraft.container.MenuThoriumCore(id, inv, this);
+	public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+		return new MenuThoriumCore(id, inv, this);
 	}
 
 	@Override

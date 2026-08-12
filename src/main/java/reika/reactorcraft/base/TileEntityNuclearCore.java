@@ -43,6 +43,7 @@ import reika.reactorcraft.auxiliary.LinkableReactorCore;
 import reika.reactorcraft.auxiliary.RadiationEffects;
 import reika.reactorcraft.auxiliary.RadiationEffects.RadiationIntensity;
 import reika.reactorcraft.auxiliary.WasteManager;
+import reika.reactorcraft.container.MenuNuclearCore;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.entities.EntityNeutron.NeutronType;
 import reika.reactorcraft.event.ReactorMeltdownEvent;
@@ -189,7 +190,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 
 	@Override
 	public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-		return new reika.reactorcraft.container.MenuNuclearCore(id, inv, this);
+		return new MenuNuclearCore(id, inv, this);
 	}
 
 	@Override

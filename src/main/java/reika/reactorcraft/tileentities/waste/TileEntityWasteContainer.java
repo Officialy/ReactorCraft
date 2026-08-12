@@ -14,6 +14,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -31,6 +34,7 @@ import reika.reactorcraft.auxiliary.NeutronTile;
 import reika.reactorcraft.auxiliary.RadiationEffects;
 import reika.reactorcraft.auxiliary.RadiationEffects.RadiationIntensity;
 import reika.reactorcraft.base.TileEntityWasteUnit;
+import reika.reactorcraft.container.MenuWasteContainer;
 import reika.reactorcraft.entities.EntityNeutron;
 import reika.reactorcraft.registry.ReactorAchievements;
 import reika.reactorcraft.registry.ReactorBlockEntities;
@@ -131,8 +135,8 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 	}
 
 	@Override
-	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
-		return new reika.reactorcraft.container.MenuWasteContainer(id, inv, this);
+	public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+		return new MenuWasteContainer(id, inv, this);
 	}
 
 	@Override

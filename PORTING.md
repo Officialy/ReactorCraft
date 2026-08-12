@@ -724,3 +724,118 @@ stack limits, whole-stack capacity preflight, and an exact remainder check. The 
 null-slot and slot-count logic could reject empty inventories or truncate transfers on 26.2. The fix
 was proven by ChromatiCraft casting a full 64-item result directly into an adjacent chest and applies
 to every Reika module still using the shared `Container` insertion path.
+
+## Shared ElectriCraft source-parity model checkpoint — 2026-08-09
+
+The complete ElectriCraft client-asset pass is now source-parity audited against V31a. All eight
+Techne machine BlockItems use 26.2 `SpecialModelRenderer`s backed by the same model layers and
+unmodified legacy textures as their BERs, rather than generated steel cubes. Motor rotor/coils/fins,
+transformer winding density, resistor colour bands, fuse heat textures, generator flip orientation,
+and meter readout transforms preserve their runtime source behavior. The two battery items and all
+five wireless-charger tiers likewise use component-aware special casing models; the placed charger
+has a six-way facing state and selects the original front/back/tier-side sprites at runtime.
+
+Dynamic wire and RF-cable world models remain particle-only plus BER geometry. Their renderer must
+retain the legacy non-X direction inversion which paired the connection query with the opposite-side
+visual branch; removing only the visual compensation puts north/south/up/down arms on the wrong
+faces. Inventory conductors use the original three contiguous 0.4-block segments for every bare and
+insulated material, with centre/end sprites selected by generated model templates.
+
+Runtime six-face geometry follows vanilla 26.2 `FaceInfo` winding, UV-corner order, transformed
+normals, and render-type culling. This is required for directional artwork: arbitrary quad winding
+can cull the battery bottom or mirror the wireless-charger front even when every texture path exists.
+The battery glow artwork is always present, matching V31a; stored energy selects normal versus
+full-bright lighting instead of deleting the empty-battery layer.
+
+Validation for this checkpoint covers 184 ElectriCraft client JSON files, 88 mod model references,
+70 mod texture references, all 138 packaged PNGs, and all four animation metadata files. No model or
+texture reference is unresolved. The eleven Techne texture blobs, three GUI/sheet blobs, and eighteen
+modern item sprites extracted from the legacy sheet are byte/pixel-identical to V31a. Ores retain the
+legacy ore artwork composited onto the corresponding modern vanilla stone/deepslate bases. Client
+datagen, Java compilation, and the packaged ElectriCraft jar all complete successfully.
+
+## Shared ElectriCraft survival GameTest checkpoint — 2026-08-09
+
+ElectriCraft now registers eight in-code 26.2 GameTests and a datagen-owned 11×6×11 arena. The
+suite runs on the real dedicated-server classpath and covers every machine BlockEntity registration
+and first tick, block/item/machine registry round-trips, mixed wire variants and connectivity,
+negative-Y survival battery placement and item consumption, sided transactional FE battery access,
+state-preserving battery/fuse/charge-pad drops, vanilla's post-removal machine-break lifecycle, and
+the core survival recipe catalog.
+
+The first run exposed four production failures: normal machine/world lookup still returned null,
+item lookup collapsed most content to the generator, battery placement rejected all modern negative-Y
+terrain and duplicated its item, and the precise resistor BlockEntityType accepted the ordinary
+resistor block instead of its own. The stateful-drop pass additionally replaced legacy world lookups
+performed after block removal with loot-context state/BlockEntity data, so ordinary machines now
+drop reliably and fuse, battery, RF-battery, and wireless-charge-pad configuration survives a
+break/place cycle. The final dedicated-server run reports all eight required tests passing.
+
+## Shared ElectriCraft interaction/render stabilization — 2026-08-09
+
+The follow-up survival pass moves all eighteen wire BlockItems onto a registered 26.2 special-model
+renderer. It emits the same V31a three-segment geometry and per-material centre/end textures as the
+world conductor; normals are transformed through the active pose, removing the inventory shading
+artifact that occurred when raw normals survived GUI transforms. Generated item definitions retain
+the legacy JSON mesh as the safe base model and select `electricraft:wire` for live rendering.
+
+Wire selection and collision shapes now join a material-width centre to only the connected faces,
+rather than presenting an invisible full cube or a single inflated envelope. The original dynamic
+component envelopes are restored for resistor, precise resistor, fuse, relay, and transformer. The
+transformer port must construct its AABB directly: modern AABBs are immutable, so discarded legacy
+setter return values silently restore a full cube. All eight Techne machines additionally register a
+polygon-derived custom block-outline renderer, cached by block and horizontal facing, so hover and
+mining outlines match the model geometry without making its detailed mesh the physical collision.
+
+Meter text is submitted only through `SubmitNodeCollector.submitText`; sending glyph vertices into
+the meter texture's entity-cutout consumer caused `IllegalStateException: Missing elements in vertex`
+on placement. Motor cooling fins retain ordinary world lighting at the cool base colour and become
+full-bright only when their temperature-derived colour changes. ElectriCraft now has a
+server-authoritative Jade provider for conductor values/limits, storage, conversion, transformer,
+relay/fuse, and charger state, and its descriptor is verified to load on a dedicated server.
+
+The GameTest suite is now nine tests. Its new shape contract caught the immutable transformer-AABB
+regression on the first run; after correction all nine required tests pass on `runServer`. Client
+datagen and `:ElectriCraft:compileJava` also pass. DragonAPI's shuffled-grid warning now checks the
+actual overlap condition (`2 * deviation >= separation`), so ChromatiCraft's valid 55/20 warp-node
+grid no longer emits a false warning or stack dump.
+
+## Shared ElectriCraft concrete identity and live-power checkpoint — 2026-08-09
+
+ElectriCraft's six V31a battery metadata tiers and four fuse ratings are now ten concrete 26.2
+block/BlockItem identities. Battery energy remains custom stack data, while tier and fuse amperage
+come exclusively from the registered block. Datagen owns every corresponding blockstate, item
+special-model definition, translation, recipe output, and loot table. The creative tab emits an
+empty and a fully charged presentation stack for every battery tier. The old metadata-packed and
+misnamed registry identities were removed; the port intentionally makes no compatibility aliases.
+
+The misleading converter/motor identities are now `induction_generator` and `induction_motor`, with
+source-faithful names. Placement initializes the internal V31a I/O direction from the modern facing
+blockstate: conversion/wire-component tiles use the player's look direction and transformers use the
+right-angle winding direction. This fixes east/west transformer ports without regressing north/south.
+Generator and resistor model parts now use `OverlayTexture.NO_OVERLAY`; packed overlay zero was the
+cause of the false red/hurt tint on cool placed machines.
+
+The RF cable now resolves its tall animated `rf`/`rf_end` strips through the stitched block atlas in
+both the BER and a dedicated special item renderer, preserving animation frames and the isolated
+quarter-block item silhouette. Its selectable/collision geometry follows the centre and connected
+arms. The RF limit GUI again uses V31a's 197×103 texture, six paired decimal-step buttons, shift
+acceleration, Reset, labels, and immediate server packets; zero is the source-faithful zero limit.
+
+Two independent server defects had made electrical networks inert. `TickRegistry` now supplies the
+active `MinecraftServer` to SERVER handlers, allowing `ElectriNetworkManager` to run queued network
+ticks/repaths in the overworld, and `NetworkBlockEntity.isConnectable` now calls
+`Level.hasChunkAt(BlockPos)`. The old call passed block coordinates into `hasChunk(int, int)`, whose
+parameters are chunk coordinates, so almost every machine outside the origin rejected network
+membership. Wire-network removals also use their `WorldLocation` map keys instead of tile objects.
+
+The dedicated-server suite now contains twelve tests, including ten concrete battery/fuse identity
+checks, all four transformer orientations, and a real RotaryCraft creative-coil → induction generator
+→ copper wire → redstone battery transfer. The first power test reproduced empty `0SR/0W/0SN`
+networks and directly found the chunk-coordinate bug. After correction all twelve required tests pass;
+client/server datagen and `:ElectriCraft:compileJava` pass as well.
+
+The fuse BER now uses the culling cutout render pipeline. The Techne cuboids intentionally meet at
+coplanar internal joins; submitting them through the no-cull pipeline rendered both sides of those
+joins and caused side-seam z-fighting. Culling restores the closed-box behavior while retaining the
+binary-alpha regions of the source-identical fuse textures.

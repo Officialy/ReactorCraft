@@ -9,6 +9,7 @@
  ******************************************************************************/
 package reika.reactorcraft.auxiliary.recipe;
 
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
@@ -84,8 +85,9 @@ public class ProcessorRecipe implements Recipe<RecipeInput> {
         return ItemStack.EMPTY;
     }
 
-    @Override
-    public boolean showNotification() {
+    @Override public boolean isSpecial() { return true; }
+
+    @Override public boolean showNotification() {
         return false;
     }
 
@@ -119,10 +121,10 @@ public class ProcessorRecipe implements Recipe<RecipeInput> {
             Ingredient.CODEC.fieldOf("input_item").forGetter(r -> r.inputItem),
             FluidStack.CODEC.fieldOf("input_fluid").forGetter(r -> r.inputFluid),
             FluidStack.CODEC.fieldOf("intermediate_fluid").forGetter(r -> r.intermediateFluid),
-            com.mojang.serialization.Codec.INT.fieldOf("intermediate_consumed").forGetter(r -> r.intermediateConsumed),
+            Codec.INT.fieldOf("intermediate_consumed").forGetter(r -> r.intermediateConsumed),
             FluidStack.CODEC.fieldOf("output_fluid").forGetter(r -> r.outputFluid),
-            com.mojang.serialization.Codec.INT.fieldOf("intermediate_time").forGetter(r -> r.intermediateTime),
-            com.mojang.serialization.Codec.INT.fieldOf("output_time").forGetter(r -> r.outputTime)
+            Codec.INT.fieldOf("intermediate_time").forGetter(r -> r.intermediateTime),
+            Codec.INT.fieldOf("output_time").forGetter(r -> r.outputTime)
     ).apply(inst, ProcessorRecipe::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ProcessorRecipe> STREAM_CODEC = StreamCodec.of(

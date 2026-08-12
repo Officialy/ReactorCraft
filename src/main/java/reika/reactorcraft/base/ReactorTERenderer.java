@@ -31,6 +31,7 @@ import reika.dragonapi.base.BlockEntityBase;
 import reika.dragonapi.base.BlockEntityRenderBase;
 import reika.dragonapi.base.DragonAPIMod;
 import reika.reactorcraft.ReactorCraft;
+import reika.rotarycraft.RotaryCraft;
 
 /**
  * 26.2 base for ReactorCraft machine block-entity renderers — the ReactorCraft analogue of
@@ -61,7 +62,7 @@ public abstract class ReactorTERenderer<TE extends BlockEntity> extends BlockEnt
 	// dependency) provides one.
 	@Override
 	protected final DragonAPIMod getOwnerMod() {
-		return reika.rotarycraft.RotaryCraft.getInstance();
+		return RotaryCraft.getInstance();
 	}
 
 	@Override

@@ -10,7 +10,11 @@
 package reika.reactorcraft.tileentities.htgr;
 import net.minecraft.core.BlockPos;
 
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.state.BlockState;
+import reika.reactorcraft.container.MenuPebbleBed;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 
 import net.minecraft.sounds.SoundEvents;
@@ -69,8 +73,8 @@ public class TileEntityPebbleBed extends TileEntityInventoriedReactorBase implem
 	}
 
 	@Override
-	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
-		return new reika.reactorcraft.container.MenuPebbleBed(id, inv, this);
+	public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+		return new MenuPebbleBed(id, inv, this);
 	}
 
 	public int getInventoryStackLimit() {

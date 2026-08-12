@@ -13,6 +13,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -26,6 +29,7 @@ import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
 import reika.dragonapi.libraries.registry.ReikaItemHelper;
 import reika.dragonapi.modregistry.ModOreList;
 import reika.reactorcraft.auxiliary.ReactorCoreTE;
+import reika.reactorcraft.container.MenuWasteDecayer;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.base.TileEntityInventoriedReactorBase;
 import reika.reactorcraft.base.TileEntityWasteUnit;
@@ -222,8 +226,8 @@ public class TileEntityWasteDecayer extends TileEntityInventoriedReactorBase imp
 	}
 
 	@Override
-	public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, net.minecraft.world.entity.player.Inventory inv, net.minecraft.world.entity.player.Player player) {
-		return new reika.reactorcraft.container.MenuWasteDecayer(id, inv, this);
+	public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+		return new MenuWasteDecayer(id, inv, this);
 	}
 
 	@Override

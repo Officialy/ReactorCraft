@@ -16,6 +16,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.level.Level;
 
+import net.minecraft.world.level.block.entity.BlockEntity;
 import reika.dragonapi.instantiable.gui.ImagedGuiButton;
 import reika.dragonapi.instantiable.io.PacketTarget;
 import reika.dragonapi.libraries.io.ReikaPacketHelper;
@@ -74,7 +75,7 @@ public class ScreenCPU extends ReactorGuiBase<TileEntityCPU, MenuCPU> {
         }));
     }
 
-    private void sendCPU(int ordinal, net.minecraft.world.level.block.entity.BlockEntity target) {
+    private void sendCPU(int ordinal, BlockEntity target) {
         ReikaPacketHelper.sendUpdatePacket(ReactorCraft.packetChannel, ordinal, target, PacketTarget.server);
     }
 
