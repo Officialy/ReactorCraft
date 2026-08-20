@@ -9,9 +9,6 @@
  ******************************************************************************/
 package reika.reactorcraft.registry;
 
-import java.util.EnumMap;
-import java.util.function.Supplier;
-
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -22,18 +19,12 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.equipment.Equippable;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
-
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.base.ItemReactorMulti;
-import reika.reactorcraft.items.ItemCanister;
-import reika.reactorcraft.items.ItemGeigerCounter;
-import reika.reactorcraft.items.ItemHeavyBucket;
-import reika.reactorcraft.items.ItemIronFinder;
-import reika.reactorcraft.items.ItemNuclearWaste;
-import reika.reactorcraft.items.ItemRadiationCleaner;
-import reika.reactorcraft.items.ItemRadiationGoggles;
-import reika.reactorcraft.items.ItemReactorBook;
-import reika.reactorcraft.items.ItemReactorFuel;
+import reika.reactorcraft.items.*;
+
+import java.util.EnumMap;
+import java.util.function.Supplier;
 
 /**
  * 26.2 item registry for the ore→fuel slice, replacing the 1.7.10 metadata-variant
@@ -89,10 +80,6 @@ public final class ReactorItems {
     public static final DeferredItem<Item> DEPLETED_DUST = reg("depleted_dust", () -> new Item(itemProperties()));
     public static final DeferredItem<Item> WASTE_DUST = reg("waste_dust", () -> new Item(itemProperties()));
 
-    // --- Fuel rods (burnup carried in ItemStack.getDamageValue(); one damage per burnup step) ---
-    // Registry id "fuel" (matches the 1.7.10 "item.fuel"); the machine block keeps "fuel_rod". Uranium
-    // and plutonium fuel are distinct items upstream (ItemReactorFuel vs ItemPlutonium), so they must
-    // register separately — a shared item collapses ReactorFuel.getFrom()'s per-item lookup.
     public static final DeferredItem<ItemReactorFuel> FUEL_ROD = reg("fuel", () -> new ItemReactorFuel(itemProperties(), 100));
     public static final DeferredItem<ItemReactorFuel> PLUTONIUM_ROD = reg("plutonium", () -> new ItemReactorFuel(itemProperties(), 100));
     public static final DeferredItem<ItemReactorFuel> FUEL_PELLET = reg("fuel_pellet", () -> new ItemReactorFuel(itemProperties(), 25));
