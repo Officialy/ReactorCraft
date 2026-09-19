@@ -839,3 +839,76 @@ The fuse BER now uses the culling cutout render pipeline. The Techne cuboids int
 coplanar internal joins; submitting them through the no-cull pipeline rendered both sides of those
 joins and caused side-seam z-fighting. Culling restores the closed-box behavior while retaining the
 binary-alpha regions of the source-identical fuse textures.
+
+## Shared GameTest harness hardening (2026-08-20)
+
+DragonAPI now bounds and diagnoses every headless family GameTest run. Suites are split into
+12-test batches, completed structures/chunks and synthetic players are released between batches,
+and mock players are not persisted as random playerdata files. A wall-clock watchdog reports
+effective fast-forward ticks/s, wall MSPT, progress, active tests, heap use, player count and the
+time since the server thread last completed a tick; it dumps the wedged thread after 30 seconds and
+terminates only the test JVM after 180 seconds without progress. Direct runs use a 512 MiB/4 GiB
+heap envelope and INFO console logging. Spark, Jade and JEI are omitted from headless runs unless
+explicitly requested, removing Spark's duplicate `test-mock-player` crash and Jade's incomplete
+GameTest registry callback. Full usage and tuning notes are in the root `GAMETESTS.md`.
+Each owning mod's test server also uses an isolated `run-gametest` directory, and the watchdog
+disarms once assertions complete so final world saving is never treated as a hung server tick.
+
+Jade 26.2.9 asserts that every registered provider UID has its own config translation while a
+screen initializes. ElectriCraft's `electricraft:machine_data` provider had only registered the
+parent category label, causing title-screen initialization to abort after the panorama and logo but
+before vanilla added its buttons. Its datagen provider now emits both
+`config.jade.plugin_electricraft` and `config.jade.plugin_electricraft.machine_data`.
+
+ElectriCraft now owns a direct `runGameTest` configuration and defaults to `electricraft:*`.
+`wire_and_machine_shapes` also found a real far-coordinate regression: wire-component AABBs added
+float fractions to GameTest's +/-15-million coordinates, rounding 3/4-width components into full
+cubes. World-space AABB construction now uses doubles and the focused shape test passes.
+
+ChromatiCraft's 2026-08-20 Proxima pass restored the Portal Rift and Void Rift renderers, End Crystal
+mover, portal/casting command Structures, Ender-fluid collision callback, source-faithful Ethereal
+Luma mosaic, stable aurora animation, bounded Sky River chunk readiness, fissure write-window
+preflight, six creative tabs and Heat Lamp edit debounce. Its compile plus client/server datagen pass;
+see `ChromatiCraft/PORTING.md` for behavioral details and the focused in-world verification scope.
+
+The 2026-08-21 ChromatiCraft correction pass fixed the Portal Rift's vertical-strip UV sampling,
+restored the original 16x16 particle-atlas row selection and Ethereal Luma `aether_flow2` sprite,
+restored the portal's source-authentic positional sound event and Minecraft-owned attenuation,
+corrected a Proxima-entry static initializer crash, and made the three command casting temples
+terrain-safe with tiered tables. The ChromatiCraft compile passes; see its ledger for the exact
+in-world checks.
+
+The later 2026-08-21 source-parity audit found V33a's server-authoritative positional portal event.
+The 2026-08-22 ChromatiCraft acceptance correction supersedes that literal 90-tick playback because
+it caused a 0-4.5-second approach delay: the portal now uses the pylon-style position-bound tickable
+loop with continuous distance fade and formed-pad teardown. The same work retained grouped/centered V33a
+repeater beams, periodic Power Crystal connection synchronization and
+its item renderer, real portal/Dimension Core/Void Rift effect assets, translucent particle ordering,
+separate Luma/Chroma/Ender fluid movement and an Ethereal Luma bucket. It also centered Proxima tree
+cluster placement to eliminate far-chunk half-trees, raised monuments over their full footprint,
+restored L2/L3 Item Casting Stands, and reduced Glow Cave locate probing. ChromatiCraft compile and
+client datagen pass; only the three directly affected portal/casting/monument GameTests were run, and
+all passed. See `ChromatiCraft/PORTING.md` for the full acceptance checklist and the intentional
+sixteen-core monument gate.
+
+The 2026-08-22 follow-up restores player-placement priming for the sixteen-core monument ensemble,
+moves extended ChromatiCraft effects into 26.2's actual post-terrain phase, clips Void Rift aura strips
+behind opaque terrain, replaces the Item Casting Stand's per-cuboid outline with its exposed union,
+adds Liquid Ender's bucket, separates thin/non-swimming Ethereal Luma travel, removes black Dimension
+Core item backgrounds, restores active Power Crystal inventory animation and exact socket discovery,
+and removes square pylon flare borders. ChromatiCraft compile/client datagen and the two focused
+monument/power-crystal tests pass; render, fluid-feel and audio acceptance remains in-world.
+
+The later 2026-08-22 monument follow-up fixed a shared 26.2 persistence seam in DragonAPI:
+`BlockEntityBase` chunk/update tags now dispatch modern `ValueOutput`/`ValueInput` subclass state
+instead of directly selecting the obsolete `CompoundTag` compatibility overload. ChromatiCraft's
+vanilla-based Structure Controller now has the same explicit update packet/tag contract, restoring
+the partial Dimension Core ensemble before the sixteen-core ritual gate. The Portal Rift's vanilla
+texture reference was also updated for 26.2's nested End-portal asset path and its V33a special item
+renderer was ported. ChromatiCraft compile/client datagen and the single focused
+`monument_client_sync_contract` GameTest pass.
+
+The 2026-09-13 ChromatiCraft Vibrant Pod follow-up fixes legacy 0..16 UVs being passed to the
+26.2 normalized sprite API and restores the animated overlay's texture-derived transparency.
+ChromatiCraft and dependency compilation pass. See `ChromatiCraft/PORTING.md` for details;
+in-world visual verification remains after a client restart.
