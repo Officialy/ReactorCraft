@@ -1287,6 +1287,27 @@ recompile finds no remaining NeoForge for-removal usage that would break: `Machi
 NeoForge drops its versions. GameTests: RotaryCraft 48/48, ReactorCraft 6/6, ElectriCraft 12/12.
 ChromatiCraft and GeoStrata reference none of the changed classes.
 
+`-Xlint:removal` only covers `forRemoval` markers, while PR #3489 removed *every* deprecated
+NeoForge member. So each member that PR deleted outside the transfer packages was also
+cross-checked against our source:
+- `Font`/glyph `renderType`, `GlyphRenderTypes`, `NeoForgeRenderTypes`
+- `AbstractContainerScreen` getters, `getSlotUnderMouse`
+- `CreativeModeTab` tabs image
+- `FlowerPotBlock` pot map
+- `ConditionContext` / `IContext.registryAccess`
+- `AddServerReloadListenersEvent`, `ModifyDefaultComponentsEvent.modify`, `TagsUpdatedEvent` getters
+- the four-argument fluid `move`
+
+None is used. `ChromaFluids` overrides the kept three-argument `move`, and `BoxRecipeCondition`
+does not call `registryAccess`. A `-Xlint:deprecation` pass shows only vanilla Mojang
+"do not call directly" markers and library deprecations.
+
+Deviation to revisit: the Lua RF methods no longer carry a required class, so they apply to any
+block entity and throw when it has no energy capability. 1.7.10 limited them to RF tiles. This is
+dormant for now: no ComputerCraft or OpenComputers integration is in the build, and the RotaryCraft
+handbook already lists every documented method because its class filter is commented out. When
+Lua integration returns, add a capability-based validity hook to `LuaMethod`.
+
 Remaining for-removal warnings belong to other owners:
 - JEI API deprecations (about 180 uses in the RotaryCraft and ReactorCraft JEI plugins).
 - Vanilla `GameTestHelper.makeMockServerPlayerInLevel` (45 uses in `ChromaGameTests`).
