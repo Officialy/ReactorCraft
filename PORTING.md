@@ -1253,6 +1253,44 @@ Still outside this checkpoint:
 - The item and energy legacy APIs (`IItemHandler`, `SlotItemHandler`, `ItemStackHandler`,
   `IEnergyStorage`) are also deleted in 26.3 and are a separate migration.
 
+### Legacy item and energy API removed from all compiled code (2026-09-27)
+
+NeoForge 26.3 also deletes `items.*` (`IItemHandler`, `ItemStackHandler`, `SlotItemHandler`, the
+wrappers) and `energy.*` (`IEnergyStorage`, `EnergyStorage`). A bytecode scan found six compiled
+classes still using them; all six are ported.
+
+- **Cannons** (`BlockEntityInventoriedCannon`: AA Gun, Freeze Gun, Multi Cannon, Railgun) no
+  longer `implements IItemHandler`. They are a `WorldlyContainer`, the modern form of their 1.7.10
+  `ISidedInventory`: automation inserts only what `isItemValid` accepts (nothing for an
+  `InertIInv`), through any face, and never extracts. `RotaryBlockEntities` now exposes any
+  `WorldlyContainer` block entity as `Capabilities.Item.BLOCK` through NeoForge's
+  `WorldlyContainerWrapper`. Before this, cannons had no item capability at all, and hoppers
+  bypassed the ammo filter. The new GameTest `aa_gun_ammo_capability` checks that gunpowder is
+  accepted, sticks are refused, and extraction yields nothing.
+- `ReikaEnergyStorage` extends `SimpleEnergyHandler`. The owner is marked changed on committed
+  energy changes (and on `setEnergy`), not on simulations.
+- `ReikaRFHelper.drainStorage` follows the 1.7.10 shape again. It takes a block entity, extracts
+  through `Capabilities.Energy.BLOCK` on all six faces, then drains `EnergyHandler` fields, then
+  lowers int fields named "energy". An `EnergyHandler` overload keeps the port's storage-level
+  entry point.
+- The Lua `getStoredRF` and `getMaxStoredRF` methods read the energy capability on the requested
+  compass side ("unknown" means unsided, as 1.7.10's `ForgeDirection.UNKNOWN` did) instead of
+  casting the block entity to `IEnergyStorage`. `LuaMethod.hashCode` no longer throws for
+  methods without a required class.
+- Magnet Engine `isValidSupplier` checks for an FE capability on the facing side. Its missing FE
+  *input* capability is pre-existing unported work and stays marked as a todo.
+
+Verification: all six modules compile. The bytecode scan finds no reference to
+`neoforge/items/*`, `neoforge/energy/*`, or the removed fluid API. A full `-Xlint:removal`
+recompile finds no remaining NeoForge for-removal usage that would break: `MachineScreen` and
+`ReactorGuiBase` only *define* `getGuiLeft`-style getters, which become ordinary methods once
+NeoForge drops its versions. GameTests: RotaryCraft 48/48, ReactorCraft 6/6, ElectriCraft 12/12.
+ChromatiCraft and GeoStrata reference none of the changed classes.
+
+Remaining for-removal warnings belong to other owners:
+- JEI API deprecations (about 180 uses in the RotaryCraft and ReactorCraft JEI plugins).
+- Vanilla `GameTestHelper.makeMockServerPlayerInLevel` (45 uses in `ChromaGameTests`).
+
 ## ReactorCraft Jade and JEI integration checkpoint (2026-09-27)
 
 ReactorCraft now registers a Jade provider on its machine blocks and formed multiblock blocks.
