@@ -10,6 +10,7 @@
 package reika.reactorcraft.auxiliary;
 
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.SimpleFluidContent;
@@ -60,6 +61,7 @@ public class ReactorStacks {
 	private static ItemStack canister(Fluid fluid, int amount) {
 		ItemStack s = ReactorItems.CANISTER_REF.getStackOf();
 		s.set(ReactorDataComponents.CANISTER_FLUID.get(), SimpleFluidContent.copyOf(new FluidStack(fluid, amount)));
+		s.set(DataComponents.MAX_STACK_SIZE, 1);
 		return s;
 	}
 

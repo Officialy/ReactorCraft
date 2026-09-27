@@ -1,16 +1,19 @@
 {
   "type": "rotarycraft:blast_furnace_shapeless",
   "additives": [],
+  "exactCount": true,
   "experience": 0.0,
   "ingredients": [
     "reactorcraft:cadmium_ingot",
     "reactorcraft:indium_ingot",
     "reactorcraft:silver_ingot"
   ],
+  "mainCount": 3,
   "output": {
     "count": 3,
     "id": "reactorcraft:alloy"
   },
+  "requiresEmptyOutput": false,
   "temperature": 1600.0,
   "timeMultiplier": 1.0
 }

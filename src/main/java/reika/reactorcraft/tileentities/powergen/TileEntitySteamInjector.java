@@ -17,10 +17,13 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.dragonapi.base.BlockEntityBase;
 import reika.dragonapi.instantiable.HybridTank;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
+import reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorFluids;
@@ -28,9 +31,18 @@ import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
 import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
-public class TileEntitySteamInjector extends BlockEntityBase implements IFluidHandler, PipeConnector {
+public class TileEntitySteamInjector extends BlockEntityBase implements PipeConnector, HasFluidResourceHandler {
 
 	private final HybridTank tank = new HybridTank("injector", 1000);
+	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(
+			new HybridTank[] {tank},
+			(index, resource) -> resource.getFluid() == ReactorFluids.getLegacyFluid("rc lubricant"),
+			(index, resource) -> false, this::setChanged);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return fluidHandler;
+	}
 
 	public TileEntitySteamInjector(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.STEAMINJECTOR.get(), pos, state);
@@ -80,51 +92,14 @@ public class TileEntitySteamInjector extends BlockEntityBase implements IFluidHa
 		return Flow.INPUT;
 	}
 
-	@Override
-	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
-		return this.isLube(resource) ? tank.fill(resource, action) : 0;
-	}
 
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction action) {
-		return FluidStack.EMPTY;
-	}
 
-	// --- NeoForge IFluidHandler (input-only lubricant tank) ---
-	@Override
-	public int getTanks() {
-		return 1;
-	}
 
-	@Override
-	public FluidStack getFluidInTank(int t) {
-		return tank.getFluid();
-	}
 
-	@Override
-	public int getTankCapacity(int t) {
-		return tank.getCapacity();
-	}
 
-	@Override
-	public boolean isFluidValid(int t, FluidStack stack) {
-		return this.isLube(stack);
-	}
 
-	@Override
-	public int fill(FluidStack resource, FluidAction action) {
-		return this.isLube(resource) ? tank.fill(resource, action) : 0;
-	}
 
-	@Override
-	public FluidStack drain(FluidStack resource, FluidAction action) {
-		return FluidStack.EMPTY;
-	}
 
-	@Override
-	public FluidStack drain(int maxDrain, FluidAction action) {
-		return FluidStack.EMPTY;
-	}
 
 	@Override
 	protected void readSyncTag(CompoundTag NBT) {

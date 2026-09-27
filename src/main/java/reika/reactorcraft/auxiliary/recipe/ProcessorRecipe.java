@@ -27,6 +27,7 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStackTemplate;
 
 import reika.reactorcraft.registry.ReactorRecipeSerializers;
 import reika.reactorcraft.registry.ReactorRecipeTypes;
@@ -39,23 +40,26 @@ import reika.reactorcraft.registry.ReactorRecipeTypes;
  *   <li><b>Output</b> (every {@code outputTime} ticks): {@code inputItem} (uranium ingot) +
  *       {@code intermediateConsumed} of the intermediate fluid → {@code outputFluid}.</li>
  * </ol>
- * Data-only: the consuming {@code TileEntityUProcessor} (deferred with the TE cluster) reads these
- * by input fluid; the recipe is registered as a custom {@link RecipeType} purely so the values live
- * in JSON (datagen) rather than a hardcoded enum.
+ * The consuming {@code TileEntityUProcessor} looks these up by input fluid.
  */
 public class ProcessorRecipe implements Recipe<RecipeInput> {
 
+    public record FluidInput(FluidStack fluid) implements RecipeInput {
+        @Override public ItemStack getItem(int slot) { throw new IndexOutOfBoundsException(slot); }
+        @Override public int size() { return 0; }
+    }
+
     private final Ingredient catalyst;
     private final Ingredient inputItem;
-    private final FluidStack inputFluid;
-    private final FluidStack intermediateFluid;
+    private final FluidStackTemplate inputFluid;
+    private final FluidStackTemplate intermediateFluid;
     private final int intermediateConsumed;
-    private final FluidStack outputFluid;
+    private final FluidStackTemplate outputFluid;
     private final int intermediateTime;
     private final int outputTime;
 
-    public ProcessorRecipe(Ingredient catalyst, Ingredient inputItem, FluidStack inputFluid, FluidStack intermediateFluid,
-                           int intermediateConsumed, FluidStack outputFluid, int intermediateTime, int outputTime) {
+    public ProcessorRecipe(Ingredient catalyst, Ingredient inputItem, FluidStackTemplate inputFluid, FluidStackTemplate intermediateFluid,
+                           int intermediateConsumed, FluidStackTemplate outputFluid, int intermediateTime, int outputTime) {
         this.catalyst = catalyst;
         this.inputItem = inputItem;
         this.inputFluid = inputFluid;
@@ -68,16 +72,17 @@ public class ProcessorRecipe implements Recipe<RecipeInput> {
 
     public Ingredient getCatalyst() { return catalyst; }
     public Ingredient getInputItem() { return inputItem; }
-    public FluidStack getInputFluid() { return inputFluid; }
-    public FluidStack getIntermediateFluid() { return intermediateFluid; }
+    public FluidStack getInputFluid() { return inputFluid.create(); }
+    public FluidStack getIntermediateFluid() { return intermediateFluid.create(); }
     public int getIntermediateConsumed() { return intermediateConsumed; }
-    public FluidStack getOutputFluid() { return outputFluid; }
+    public FluidStack getOutputFluid() { return outputFluid.create(); }
     public int getIntermediateTime() { return intermediateTime; }
     public int getOutputTime() { return outputTime; }
 
     @Override
     public boolean matches(RecipeInput in, Level level) {
-        return false;
+        return in instanceof FluidInput fluidInput && !fluidInput.fluid().isEmpty()
+                && fluidInput.fluid().getFluid().isSame(inputFluid.create().getFluid());
     }
 
     @Override
@@ -119,10 +124,10 @@ public class ProcessorRecipe implements Recipe<RecipeInput> {
     public static final MapCodec<ProcessorRecipe> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
             Ingredient.CODEC.fieldOf("catalyst").forGetter(r -> r.catalyst),
             Ingredient.CODEC.fieldOf("input_item").forGetter(r -> r.inputItem),
-            FluidStack.CODEC.fieldOf("input_fluid").forGetter(r -> r.inputFluid),
-            FluidStack.CODEC.fieldOf("intermediate_fluid").forGetter(r -> r.intermediateFluid),
+            FluidStackTemplate.CODEC.fieldOf("input_fluid").forGetter(r -> r.inputFluid),
+            FluidStackTemplate.CODEC.fieldOf("intermediate_fluid").forGetter(r -> r.intermediateFluid),
             Codec.INT.fieldOf("intermediate_consumed").forGetter(r -> r.intermediateConsumed),
-            FluidStack.CODEC.fieldOf("output_fluid").forGetter(r -> r.outputFluid),
+            FluidStackTemplate.CODEC.fieldOf("output_fluid").forGetter(r -> r.outputFluid),
             Codec.INT.fieldOf("intermediate_time").forGetter(r -> r.intermediateTime),
             Codec.INT.fieldOf("output_time").forGetter(r -> r.outputTime)
     ).apply(inst, ProcessorRecipe::new));
@@ -131,20 +136,20 @@ public class ProcessorRecipe implements Recipe<RecipeInput> {
             (buf, r) -> {
                 Ingredient.CONTENTS_STREAM_CODEC.encode(buf, r.catalyst);
                 Ingredient.CONTENTS_STREAM_CODEC.encode(buf, r.inputItem);
-                FluidStack.STREAM_CODEC.encode(buf, r.inputFluid);
-                FluidStack.STREAM_CODEC.encode(buf, r.intermediateFluid);
+                FluidStackTemplate.STREAM_CODEC.encode(buf, r.inputFluid);
+                FluidStackTemplate.STREAM_CODEC.encode(buf, r.intermediateFluid);
                 ByteBufCodecs.VAR_INT.encode(buf, r.intermediateConsumed);
-                FluidStack.STREAM_CODEC.encode(buf, r.outputFluid);
+                FluidStackTemplate.STREAM_CODEC.encode(buf, r.outputFluid);
                 ByteBufCodecs.VAR_INT.encode(buf, r.intermediateTime);
                 ByteBufCodecs.VAR_INT.encode(buf, r.outputTime);
             },
             buf -> new ProcessorRecipe(
                     Ingredient.CONTENTS_STREAM_CODEC.decode(buf),
                     Ingredient.CONTENTS_STREAM_CODEC.decode(buf),
-                    FluidStack.STREAM_CODEC.decode(buf),
-                    FluidStack.STREAM_CODEC.decode(buf),
+                    FluidStackTemplate.STREAM_CODEC.decode(buf),
+                    FluidStackTemplate.STREAM_CODEC.decode(buf),
                     ByteBufCodecs.VAR_INT.decode(buf),
-                    FluidStack.STREAM_CODEC.decode(buf),
+                    FluidStackTemplate.STREAM_CODEC.decode(buf),
                     ByteBufCodecs.VAR_INT.decode(buf),
                     ByteBufCodecs.VAR_INT.decode(buf))
     );

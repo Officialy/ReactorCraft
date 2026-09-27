@@ -13,6 +13,17 @@ neoForge {
         enable()
         testedMod = mods.named(project.mod_id).get()
     }
+    runs {
+        gameTest {
+            type = "gameTestServer"
+            gameDirectory = file('run-gametest')
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            def selector = project.hasProperty('gameTestSelector')
+                    ? project.property('gameTestSelector').toString()
+                    : "${project.mod_id}:*"
+            programArguments.addAll '--tests', selector
+        }
+    }
 }
 
 test {
@@ -34,6 +45,7 @@ dependencies {
 // done-tracker: add a file here the moment it is ported, and the build verifies it. Remove this
 // whole block once the entire mod is ported.
 sourceSets.main.java {
+    include 'reika/reactorcraft/ReactorGameTests.java'
     include 'reika/reactorcraft/api/NeutronShield.java'
     include 'reika/reactorcraft/api/RadiationHandler.java'
     include 'reika/reactorcraft/auxiliary/ReactorBlock.java'
@@ -205,6 +217,9 @@ sourceSets.main.java {
     include 'reika/reactorcraft/client/ReactorClientExtensions.java'
     include 'reika/reactorcraft/client/ReactorMachineTooltips.java'
     include 'reika/reactorcraft/modinterface/jei/ReactorJEIPlugin.java'
+    include 'reika/reactorcraft/modinterface/jei/ReactorProcessJEICategories.java'
+    include 'reika/reactorcraft/modinterface/jei/ReactorRecipeSync.java'
+    include 'reika/reactorcraft/modinterface/jade/ReactorJadePlugin.java'
     include 'reika/reactorcraft/blocks/BlockReactorLine.java'
     include 'reika/reactorcraft/base/BlockReCMultiBlock.java'
     include 'reika/reactorcraft/blocks/multi/BlockGeneratorMulti.java'

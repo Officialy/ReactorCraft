@@ -28,9 +28,13 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.dragonapi.instantiable.HybridTank;
+import reika.dragonapi.instantiable.storage.FilteredFluidResourceHandler;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
+import reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.instantiable.recipe.FlexibleIngredient;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
@@ -46,7 +50,7 @@ import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
 import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
-public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase implements IFluidHandler, ThermalMachine, PipeConnector {
+public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase implements ThermalMachine, PipeConnector, HasFluidResourceHandler {
 
 	public TileEntitySynthesizer(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.SYNTHESIZER.get(), pos, state);
@@ -64,6 +68,21 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 
 	private final HybridTank tank = new HybridTank("synthout", 24000);
 	private final HybridTank water = new HybridTank("synthwater", 24000);
+	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(
+			new HybridTank[] {tank, water},
+			(index, resource) -> index == 1 && fluidMap.containsKey(resource.getFluid()),
+			(index, resource) -> index == 0, this::setChanged);
+	private final ResourceHandler<FluidResource> inputView = new FilteredFluidResourceHandler(
+			fluidHandler, index -> index == 1, (index, resource) -> true,
+			(index, resource) -> false);
+	private final ResourceHandler<FluidResource> outputView = new FilteredFluidResourceHandler(
+			fluidHandler, index -> index == 0, (index, resource) -> false,
+			(index, resource) -> true);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null ? fluidHandler : side.getAxis().isHorizontal() ? inputView : outputView;
+	}
 
 	private StepTimer steptimer = new StepTimer(1800);
 	private StepTimer tempTimer = new StepTimer(20);
@@ -258,48 +277,12 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 
 	}
 
-	// --- NeoForge IFluidHandler (0=output product, 1=water input) ---
-	@Override
-	public int getTanks() {
-		return 2;
-	}
 
-	@Override
-	public FluidStack getFluidInTank(int t) {
-		return t == 0 ? tank.getFluid() : water.getFluid();
-	}
 
-	@Override
-	public int getTankCapacity(int t) {
-		return 24000;
-	}
 
-	@Override
-	public boolean isFluidValid(int t, FluidStack stack) {
-		return t == 1 && fluidMap.containsKey(stack.getFluid());
-	}
 
-	@Override
-	public int fill(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty() || !fluidMap.containsKey(resource.getFluid()))
-			return 0;
-		return water.fill(resource, action);
-	}
 
-	@Override
-	public FluidStack drain(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty())
-			return FluidStack.EMPTY;
-		FluidStack out = tank.getFluid();
-		if (out.isEmpty() || !FluidStack.isSameFluidSameComponents(resource, out))
-			return FluidStack.EMPTY;
-		return tank.drain(resource.getAmount(), action);
-	}
 
-	@Override
-	public FluidStack drain(int maxDrain, FluidAction action) {
-		return tank.drain(maxDrain, action);
-	}
 
 	@Override
 	public boolean canRemoveItem(int i, ItemStack itemstack) {
@@ -426,15 +409,7 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 		return this.canConnectToPipe(m);
 	}
 
-	@Override
-	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
-		return from.getStepY() == 0 && !resource.isEmpty() && fluidMap.containsKey(resource.getFluid()) ? water.fill(resource, action) : 0;
-	}
 
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction action) {
-		return from.getStepY() != 0 ? tank.drain(maxDrain, action) : FluidStack.EMPTY;
-	}
 
 	@Override
 	public Flow getFlowForSide(Direction side) {

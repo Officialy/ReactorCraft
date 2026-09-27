@@ -32,11 +32,15 @@ import net.minecraft.world.phys.BlockHitResult;
 
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.material.Fluids;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.minecraft.world.level.material.Fluid;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 
 import reika.dragonapi.base.BlockEntityBase;
 import reika.dragonapi.base.BlockTEBase;
 import reika.dragonapi.interfaces.block.MachineRegistryBlock;
+import reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler;
 import reika.dragonapi.interfaces.registry.TileEnum;
 import reika.reactorcraft.auxiliary.ReactorStacks;
 import reika.reactorcraft.base.TileEntityNuclearBoiler;
@@ -125,6 +129,22 @@ public class BlockReactorMachine extends BlockTEBase implements MachineRegistryB
     private static void give(Player player, InteractionHand hand, ItemStack out) {
         if (!player.getAbilities().instabuild)
             player.setItemInHand(hand, out);
+    }
+
+    private static boolean transferContainer(HasFluidResourceHandler machine, Fluid fluid,
+            boolean fillingMachine, Level level, Player player, InteractionHand hand, ItemStack result) {
+        ResourceHandler<FluidResource> handler = machine.getFluidHandler(null);
+        if (handler == null) return false;
+        FluidResource resource = FluidResource.of(fluid);
+        if (level.isClientSide()) return true;
+        try (Transaction transaction = Transaction.openRoot()) {
+            int moved = fillingMachine ? handler.insert(resource, 1000, transaction)
+                    : handler.extract(resource, 1000, transaction);
+            if (moved != 1000) return false;
+            transaction.commit();
+        }
+        give(player, hand, result);
+        return true;
     }
 
     /**
@@ -220,97 +240,75 @@ public class BlockReactorMachine extends BlockTEBase implements MachineRegistryB
         }
 
         if (be instanceof TileEntitySynthesizer synth && is.getItem() == Items.WATER_BUCKET) {
-            if (!level.isClientSide() && synth.addWater(1000))
-                give(player, hand, new ItemStack(Items.BUCKET));
+            transferContainer(synth, Fluids.WATER, true, level, player, hand, new ItemStack(Items.BUCKET));
             return InteractionResult.SUCCESS;
         }
 
         if (be instanceof TileEntityElectrolyzer lyzer && is.getItem() == ReactorItems.HEAVY_BUCKET.get()) {
-            if (!level.isClientSide() && lyzer.addHeavyWater(1000))
-                give(player, hand, new ItemStack(Items.BUCKET));
+            transferContainer(lyzer, ReactorFluids.HEAVY_WATER.get(), true,
+                    level, player, hand, new ItemStack(Items.BUCKET));
             return InteractionResult.SUCCESS;
         }
 
         if (be instanceof TileEntityHeavyPump pump && pump.hasABucket()) {
             if (is.getItem() == Items.BUCKET && pump.getFluid() == ReactorFluids.HEAVY_WATER.get()) {
-                if (!level.isClientSide()) {
-                    pump.subtractBucket();
-                    player.setItemInHand(hand, new ItemStack(ReactorItems.HEAVY_BUCKET.get()));
-                }
+                transferContainer(pump, ReactorFluids.HEAVY_WATER.get(), false,
+                        level, player, hand, new ItemStack(ReactorItems.HEAVY_BUCKET.get()));
                 return InteractionResult.SUCCESS;
             }
             if (ReactorStacks.isEmptyCanister(is) && pump.getFluid() == ReactorFluids.LITHIUM.get()) {
-                if (!level.isClientSide()) {
-                    pump.subtractBucket();
-                    player.setItemInHand(hand, ReactorStacks.canisterOf(ReactorFluids.LITHIUM.get()));
-                }
+                transferContainer(pump, ReactorFluids.LITHIUM.get(), false,
+                        level, player, hand, ReactorStacks.canisterOf(ReactorFluids.LITHIUM.get()));
                 return InteractionResult.SUCCESS;
             }
             return null;
         }
 
         if (be instanceof TileEntitySodiumHeater heater && ReactorStacks.isCanisterOf(is, ReactorFluids.SODIUM.get())) {
-            if (!level.isClientSide() && heater.getInputFluidLevel() + 1000 <= heater.getInputCapacity()
-                    && (heater.getInputFluidLevel() <= 0 || heater.getBufferedFluid() == ReactorFluids.SODIUM.get())) {
-                heater.addLiquid(1000, ReactorFluids.SODIUM.get());
-                give(player, hand, ReactorItems.CANISTER_REF.getStackOf());
-            }
+            transferContainer(heater, ReactorFluids.SODIUM.get(), true,
+                    level, player, hand, ReactorItems.CANISTER_REF.getStackOf());
             return InteractionResult.SUCCESS;
         }
 
         if (be instanceof TileEntityReactorBoiler boiler) {
-            if (boiler.getInputFluidLevel() + 1000 > boiler.getInputCapacity())
-                return null;
             if (is.getItem() == Items.WATER_BUCKET) {
-                if (!level.isClientSide() && (boiler.getInputFluidLevel() <= 0 || boiler.getBufferedFluid() == Fluids.WATER)) {
-                    boiler.addLiquid(1000, Fluids.WATER);
-                    give(player, hand, new ItemStack(Items.BUCKET));
-                }
+                transferContainer(boiler, Fluids.WATER, true,
+                        level, player, hand, new ItemStack(Items.BUCKET));
                 return InteractionResult.SUCCESS;
             }
             if (ReactorStacks.isCanisterOf(is, ReactorFluids.AMMONIA.get())) {
-                if (!level.isClientSide() && (boiler.getInputFluidLevel() <= 0 || boiler.getBufferedFluid() == ReactorFluids.AMMONIA.get())) {
-                    boiler.addLiquid(1000, ReactorFluids.AMMONIA.get());
-                    give(player, hand, ReactorItems.CANISTER_REF.getStackOf());
-                }
+                transferContainer(boiler, ReactorFluids.AMMONIA.get(), true,
+                        level, player, hand, ReactorItems.CANISTER_REF.getStackOf());
                 return InteractionResult.SUCCESS;
             }
             return null;
         }
 
         if (be instanceof TileEntityUProcessor proc && is.getItem() == ReactorItems.CANISTER.get()) {
-            if (!level.isClientSide()) {
-                if (ReactorStacks.isEmptyCanister(is) && proc.getOutput() >= 1000) {
-                    give(player, hand, ReactorStacks.canisterOf(proc.getOutputFluid()));
-                    proc.drain(1000, IFluidHandler.FluidAction.EXECUTE);
-                }
-                else if (ReactorStacks.isCanisterOf(is, ReactorFluids.HF.get()) && proc.canAcceptMoreIntermediate(1000)) {
-                    give(player, hand, ReactorItems.CANISTER_REF.getStackOf());
-                    proc.addIntermediate(1000, ReactorFluids.HF.get());
-                }
+            if (ReactorStacks.isEmptyCanister(is) && proc.getOutput() >= 1000) {
+                transferContainer(proc, proc.getOutputFluid(), false,
+                        level, player, hand, ReactorStacks.canisterOf(proc.getOutputFluid()));
+            } else if (ReactorStacks.isCanisterOf(is, ReactorFluids.HF.get())) {
+                transferContainer(proc, ReactorFluids.HF.get(), true,
+                        level, player, hand, ReactorItems.CANISTER_REF.getStackOf());
             }
             return InteractionResult.SUCCESS;
         }
 
         if (be instanceof TileEntityCentrifuge fuge && is.getItem() == ReactorItems.CANISTER.get()) {
-            if (!level.isClientSide()) {
-                if (ReactorStacks.isEmptyCanister(is) && fuge.getUF6() >= 1000) {
-                    give(player, hand, ReactorStacks.canisterOf(ReactorFluids.UF6.get()));
-                    fuge.removeFluid(1000);
-                }
-                else if (ReactorStacks.isCanisterOf(is, ReactorFluids.UF6.get()) && fuge.canAcceptMoreUF6(1000)) {
-                    give(player, hand, ReactorItems.CANISTER_REF.getStackOf());
-                    fuge.addUF6(1000);
-                }
+            if (ReactorStacks.isEmptyCanister(is) && fuge.getUF6() >= 1000) {
+                transferContainer(fuge, ReactorFluids.UF6.get(), false,
+                        level, player, hand, ReactorStacks.canisterOf(ReactorFluids.UF6.get()));
+            } else if (ReactorStacks.isCanisterOf(is, ReactorFluids.UF6.get())) {
+                transferContainer(fuge, ReactorFluids.UF6.get(), true,
+                        level, player, hand, ReactorItems.CANISTER_REF.getStackOf());
             }
             return InteractionResult.SUCCESS;
         }
 
         if (be instanceof TileEntityTurbineCore turbine && is.getItem() == RotaryItems.LUBE_BUCKET.get()) {
-            if (!level.isClientSide() && turbine.canAcceptLubricant(1000)) {
-                turbine.addLubricant(1000);
-                give(player, hand, new ItemStack(Items.BUCKET));
-            }
+            transferContainer(turbine, ReactorFluids.getLegacyFluid("rc lubricant"), true,
+                    level, player, hand, new ItemStack(Items.BUCKET));
             return InteractionResult.SUCCESS;
         }
 

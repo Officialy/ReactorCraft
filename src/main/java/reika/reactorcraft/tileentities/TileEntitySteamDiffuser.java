@@ -16,9 +16,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.reactorcraft.auxiliary.SteamTile;
+import reika.dragonapi.instantiable.HybridTank;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
 import reika.reactorcraft.base.TileEntityTankedReactorMachine;
 import reika.reactorcraft.blocks.BlockReactorMachine;
 import reika.reactorcraft.registry.ReactorBlockEntities;
@@ -29,6 +32,14 @@ import reika.rotarycraft.base.blockentity.BlockEntityPiping;
 import reika.rotarycraft.registry.MachineRegistry;
 
 public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine implements SteamTile {
+	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(
+			new HybridTank[] {tank}, (index, resource) -> false,
+			(index, resource) -> true, this::setChanged);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null || side == this.getFacing().getOpposite() ? fluidHandler : null;
+	}
 
 	public TileEntitySteamDiffuser(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.DIFFUSER.get(), pos, state);
@@ -102,11 +113,6 @@ public class TileEntitySteamDiffuser extends TileEntityTankedReactorMachine impl
 		NBT.putInt("energy", steam);
 	}
 
-	// The condensed working fluid is drained out of the face opposite the steam intake.
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
-		return from == this.getFacing().getOpposite() ? tank.drain(maxDrain, doDrain) : FluidStack.EMPTY;
-	}
 
 	@Override
 	public BlockEntityPiping.Flow getFlowForSide(Direction side) {

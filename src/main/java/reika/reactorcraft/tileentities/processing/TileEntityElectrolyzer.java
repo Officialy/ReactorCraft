@@ -25,9 +25,13 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.dragonapi.instantiable.HybridTank;
+import reika.dragonapi.instantiable.storage.FilteredFluidResourceHandler;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
+import reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.instantiable.data.KeyedItemStack;
 import reika.dragonapi.instantiable.ItemMatch;
@@ -46,8 +50,7 @@ import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 import reika.rotarycraft.registry.RotaryItems;
 
-public class TileEntityElectrolyzer extends TileEntityInventoriedReactorBase implements IFluidHandler,
-PipeConnector, TemperatureTE, ThermalMachine, Shockable {
+public class TileEntityElectrolyzer extends TileEntityInventoriedReactorBase implements PipeConnector, TemperatureTE, ThermalMachine, Shockable, HasFluidResourceHandler {
 
 	public TileEntityElectrolyzer(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.ELECTROLYZER.get(), pos, state);
@@ -65,6 +68,34 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable {
 	private final HybridTank tankH = new HybridTank("heavytank", this.getCapacity());
 
 	private final HybridTank input = new HybridTank("input", this.getCapacity()*2);
+	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(
+			new HybridTank[] {tankH, tankL, input},
+			(index, resource) -> index == 2 && isElectrolysisInput(resource.getFluid()),
+			(index, resource) -> index != 2, this::setChanged);
+	/** Whether any electrolysis recipe consumes this fluid; only such fluids enter the input tank. */
+	private static boolean isElectrolysisInput(Fluid f) {
+		for (Electrolysis e : Electrolysis.recipes) {
+			if (e.uses(f))
+				return true;
+		}
+		return false;
+	}
+
+	private final ResourceHandler<FluidResource> inputView = new FilteredFluidResourceHandler(
+			fluidHandler, index -> index == 2, (index, resource) -> true,
+			(index, resource) -> false);
+	private final ResourceHandler<FluidResource> heavyView = new FilteredFluidResourceHandler(
+			fluidHandler, index -> index == 0, (index, resource) -> false,
+			(index, resource) -> true);
+	private final ResourceHandler<FluidResource> lightView = new FilteredFluidResourceHandler(
+			fluidHandler, index -> index == 1, (index, resource) -> false,
+			(index, resource) -> true);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null ? fluidHandler : side == Direction.DOWN ? heavyView
+				: side == Direction.UP ? lightView : inputView;
+	}
 
 	private StepTimer timer = new StepTimer(50);
 	private StepTimer tempTimer = new StepTimer(20);
@@ -148,71 +179,14 @@ PipeConnector, TemperatureTE, ThermalMachine, Shockable {
 		return side.getStepY() != 0 ? Flow.OUTPUT : Flow.INPUT;
 	}
 
-	// --- NeoForge IFluidHandler (tank 0 = heavy out, 1 = light out, 2 = input) ---
-	@Override
-	public int getTanks() {
-		return 3;
-	}
 
-	@Override
-	public FluidStack getFluidInTank(int t) {
-		return t == 0 ? tankH.getFluid() : t == 1 ? tankL.getFluid() : input.getFluid();
-	}
 
-	@Override
-	public int getTankCapacity(int t) {
-		return t == 2 ? CAPACITY*2 : CAPACITY;
-	}
 
-	@Override
-	public boolean isFluidValid(int t, FluidStack stack) {
-		if (t != 2)
-			return false;
-		for (Electrolysis e : Electrolysis.recipes) {
-			if (e.uses(stack.getFluid()))
-				return true;
-		}
-		return false;
-	}
 
-	@Override
-	public int fill(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty() || !this.isFluidValid(2, resource))
-			return 0;
-		return input.fill(resource, action);
-	}
 
-	@Override
-	public FluidStack drain(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty())
-			return FluidStack.EMPTY;
-		if (resource.getFluid() == tankH.getActualFluid().getFluid())
-			return tankH.drain(resource.getAmount(), action);
-		if (resource.getFluid() == tankL.getActualFluid().getFluid())
-			return tankL.drain(resource.getAmount(), action);
-		return FluidStack.EMPTY;
-	}
 
-	@Override
-	public FluidStack drain(int maxDrain, FluidAction action) {
-		if (!tankH.isEmpty())
-			return tankH.drain(maxDrain, action);
-		return tankL.drain(maxDrain, action);
-	}
 
-	@Override
-	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
-		return from.getStepY() == 0 && !resource.isEmpty() && this.isFluidValid(2, resource) ? input.fill(resource, action) : 0;
-	}
 
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
-		if (from == Direction.DOWN)
-			return tankH.drain(maxDrain, doDrain);
-		if (from == Direction.UP)
-			return tankL.drain(maxDrain, doDrain);
-		return FluidStack.EMPTY;
-	}
 
 	@Override
 	public boolean canRemoveItem(int i, ItemStack itemstack) {

@@ -27,7 +27,15 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.ResourceHandlerUtil;
+import net.neoforged.neoforge.transfer.TransferPreconditions;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
+import reika.dragonapi.instantiable.storage.FilteredFluidResourceHandler;
+import reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler;
 
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
@@ -35,16 +43,83 @@ import reika.rotarycraft.auxiliary.interfaces.PumpablePipe;
 import reika.rotarycraft.auxiliary.interfaces.RenderableDuct;
 import reika.rotarycraft.base.blockentity.BlockEntityPiping;
 
-public abstract class TileEntityReactorPiping extends TileEntityReactorBase implements RenderableDuct, PumpablePipe {
+public abstract class TileEntityReactorPiping extends TileEntityReactorBase implements RenderableDuct, PumpablePipe, HasFluidResourceHandler {
 
 	protected Fluid fluid;
 	protected int fluidLevel;
+	private final ResourceHandler<FluidResource> fluidHandler = new ReactorPipeFluidHandler();
+	private final ResourceHandler<FluidResource> inputFluidView = new FilteredFluidResourceHandler(
+			fluidHandler, index -> true, (index, resource) -> true, (index, resource) -> false);
 
 	private boolean[] connections = new boolean[6];
 
 	public TileEntityReactorPiping(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
 	}
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null || side.getStepY() == 0 ? fluidHandler : inputFluidView;
+	}
+
+	private final class ReactorPipeFluidHandler extends SnapshotJournal<ReactorPipeState>
+			implements ResourceHandler<FluidResource> {
+		@Override public int size() { return 1; }
+		@Override public FluidResource getResource(int index) {
+			checkIndex(index);
+			return fluid == null || fluidLevel <= 0 ? FluidResource.EMPTY : FluidResource.of(fluid);
+		}
+		@Override public long getAmountAsLong(int index) {
+			checkIndex(index);
+			return fluidLevel;
+		}
+		@Override public long getCapacityAsLong(int index, FluidResource resource) {
+			checkIndex(index);
+			return resource.isEmpty() || isValid(index, resource) ? Integer.MAX_VALUE : 0;
+		}
+		@Override public boolean isValid(int index, FluidResource resource) {
+			checkIndex(index);
+			return !resource.isEmpty() && resource.equals(FluidResource.of(resource.getFluid()))
+					&& isValidFluid(resource.getFluid());
+		}
+		@Override public int insert(int index, FluidResource resource, int amount, TransactionContext transaction) {
+			checkIndex(index);
+			TransferPreconditions.checkNonEmptyNonNegative(resource, amount);
+			if (amount == 0 || !isValid(index, resource) || !canIntakeFluid(resource.getFluid())) return 0;
+			int inserted = Math.min(amount, Integer.MAX_VALUE - fluidLevel);
+			if (inserted <= 0) return 0;
+			updateSnapshots(transaction);
+			setFluid(resource.getFluid());
+			addFluid(inserted);
+			return inserted;
+		}
+		@Override public int extract(int index, FluidResource resource, int amount, TransactionContext transaction) {
+			checkIndex(index);
+			TransferPreconditions.checkNonEmptyNonNegative(resource, amount);
+			if (amount == 0 || !resource.equals(getResource(index))) return 0;
+			int extracted = Math.min(amount, fluidLevel);
+			if (extracted <= 0) return 0;
+			updateSnapshots(transaction);
+			removeLiquid(extracted);
+			if (fluidLevel == 0) setFluid(null);
+			return extracted;
+		}
+		@Override protected ReactorPipeState createSnapshot() {
+			return new ReactorPipeState(fluid, fluidLevel);
+		}
+		@Override protected void revertToSnapshot(ReactorPipeState snapshot) {
+			setFluid(snapshot.fluid());
+			setLevel(snapshot.amount());
+		}
+		@Override protected void onRootCommit(ReactorPipeState originalState) {
+			setChanged();
+		}
+		private void checkIndex(int index) {
+			java.util.Objects.checkIndex(index, 1);
+		}
+	}
+
+	private record ReactorPipeState(Fluid fluid, int amount) {}
 
 	public abstract boolean isValidFluid(Fluid f);
 
@@ -77,14 +152,13 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 
 	protected boolean isInteractableTile(BlockEntity te) {
 		if (te == null)
-			return false;
+			return true; // Capability-only blocks may not have a block entity.
 		if (te.getClass() == this.getClass())
 			return true;
-		if (te instanceof IFluidHandler) {
-			String name = te.getClass().getSimpleName().toLowerCase(Locale.ENGLISH);
-			return !name.contains("conduit") && !name.contains("pipe");
-		}
-		return false;
+		if (te instanceof PipeConnector)
+			return true;
+		String name = te.getClass().getSimpleName().toLowerCase(Locale.ENGLISH);
+		return !name.contains("conduit") && !name.contains("pipe");
 	}
 
 	protected final boolean canInteractWith(Level world, BlockPos pos, Direction side) {
@@ -98,7 +172,8 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 		if (m == this.getTile())
 			return true;
 		BlockEntity te = world.getBlockEntity(dpos);
-		return (te instanceof PipeConnector || te instanceof IFluidHandler) && this.isInteractableTile(te);
+		return this.isInteractableTile(te) && (te instanceof PipeConnector
+				|| world.getCapability(Capabilities.Fluid.BLOCK, dpos, side.getOpposite()) != null);
 	}
 
 	@Override
@@ -193,7 +268,8 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 			return true;
 		}
 		BlockEntity tile = level.getBlockEntity(dpos);
-		return tile instanceof IFluidHandler && this.isInteractableTile(tile);
+		return this.isInteractableTile(tile) && (tile instanceof PipeConnector
+				|| level.getCapability(Capabilities.Fluid.BLOCK, dpos, dir.getOpposite()) != null);
 	}
 
 	@Override
@@ -291,29 +367,37 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 				else if (te instanceof PipeConnector pc) {
 					BlockEntityPiping.Flow flow = pc.getFlowForSide(dir.getOpposite());
 					if (flow.canOutput) {
-						FluidStack fs = pc.drainPipe(dir.getOpposite(), Integer.MAX_VALUE, IFluidHandler.FluidAction.SIMULATE);
-						if (fs != null && !fs.isEmpty()) {
-							int level = this.getFluidLevel();
-							int todrain = this.getPipeIntake(fs.getAmount()-level);
-							if (todrain > 0 && this.canIntakeFluid(fs.getFluid())) {
-								this.addFluid(todrain);
-								this.setFluid(fs.getFluid());
-								pc.drainPipe(dir.getOpposite(), todrain, IFluidHandler.FluidAction.EXECUTE);
+						ResourceHandler<FluidResource> source = world.getCapability(Capabilities.Fluid.BLOCK,
+								pos.relative(dir), dir.getOpposite());
+						if (source == null) continue;
+						for (int slot = 0; slot < source.size(); slot++) {
+							FluidResource resource = source.getResource(slot);
+							if (resource.isEmpty() || !this.canIntakeFluid(resource.getFluid())) continue;
+							int todrain = this.getPipeIntake(source.getAmountAsInt(slot) - this.getFluidLevel());
+							if (todrain <= 0) continue;
+							int moved = ResourceHandlerUtil.move(source, fluidHandler,
+									candidate -> candidate.equals(resource), todrain, null);
+							if (moved > 0) {
 								this.onIntake(te);
+								break;
 							}
 						}
 					}
 				}
-				else if (te instanceof IFluidHandler fl) {
-					FluidStack fs = fl.drain(Integer.MAX_VALUE, IFluidHandler.FluidAction.SIMULATE);
-					if (fs != null && !fs.isEmpty()) {
-						int level = this.getFluidLevel();
-						int todrain = this.getPipeIntake(fs.getAmount()-level);
-						if (todrain > 0 && this.canIntakeFluid(fs.getFluid())) {
-							fl.drain(todrain, IFluidHandler.FluidAction.EXECUTE);
-							this.addFluid(todrain);
-							this.setFluid(fs.getFluid());
+				else {
+					ResourceHandler<FluidResource> source = world.getCapability(Capabilities.Fluid.BLOCK,
+							pos.relative(dir), dir.getOpposite());
+					if (source == null) continue;
+					for (int slot = 0; slot < source.size(); slot++) {
+						FluidResource resource = source.getResource(slot);
+						if (resource.isEmpty() || !this.canIntakeFluid(resource.getFluid())) continue;
+						int todrain = this.getPipeIntake(source.getAmountAsInt(slot) - this.getFluidLevel());
+						if (todrain <= 0) continue;
+						int moved = ResourceHandlerUtil.move(source, fluidHandler,
+								candidate -> candidate.equals(resource), todrain, null);
+						if (moved > 0) {
 							this.onIntake(te);
+							break;
 						}
 					}
 				}
@@ -354,21 +438,21 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 					if (flow.canIntake) {
 						int toadd = this.getPipeOutput(this.getFluidLevel());
 						if (toadd > 0) {
-							FluidStack fs = new FluidStack(f, toadd);
-							int added = pc.fillPipe(dir.getOpposite(), fs, IFluidHandler.FluidAction.EXECUTE);
-							if (added > 0) {
-								this.removeLiquid(added);
-							}
+							ResourceHandler<FluidResource> target = world.getCapability(Capabilities.Fluid.BLOCK,
+									pos.relative(dir), dir.getOpposite());
+							if (target != null) ResourceHandlerUtil.move(fluidHandler, target,
+									resource -> resource.getFluid() == f, toadd, null);
 						}
 					}
 				}
-				else if (te instanceof IFluidHandler fl && dir.getStepY() == 0) {
+				else if (dir.getStepY() == 0) {
+					ResourceHandler<FluidResource> target = world.getCapability(Capabilities.Fluid.BLOCK,
+							pos.relative(dir), dir.getOpposite());
+					if (target == null) continue;
 					int toadd = this.getPipeOutput(this.getFluidLevel());
 					if (toadd > 0) {
-						int added = fl.fill(new FluidStack(f, toadd), IFluidHandler.FluidAction.EXECUTE);
-						if (added > 0) {
-							this.removeLiquid(added);
-						}
+						ResourceHandlerUtil.move(fluidHandler, target,
+								resource -> resource.getFluid() == f, toadd, null);
 					}
 				}
 			}

@@ -19,10 +19,13 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.CombinedResourceHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.HybridTank;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.reactorcraft.auxiliary.TemperaturedReactorTyped;
 import reika.reactorcraft.registry.ReactorTiles;
@@ -34,6 +37,17 @@ public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoil
 	protected StepTimer timer = new StepTimer(20);
 
 	protected final HybridTank output = new HybridTank(this.getName().toLowerCase(Locale.ENGLISH)+"out", this.getCapacity());
+	private final ResourceHandler<FluidResource> outputHandler = new HybridTankResourceHandler(
+			new HybridTank[] {output}, (index, resource) -> false,
+			(index, resource) -> true, this::setChanged);
+	private final ResourceHandler<FluidResource> allFluids = new CombinedResourceHandler<>(
+			super.getFluidHandler(null), outputHandler);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null ? allFluids : side == Direction.UP ? outputHandler
+				: side == Direction.DOWN ? super.getFluidHandler(side) : null;
+	}
 
 	public TileEntityIntermediateBoiler(BlockEntityType<?> t, BlockPos pos, BlockState state) {
 		super(t, pos, state);
@@ -43,20 +57,8 @@ public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoil
 
 	public abstract int getMinimumTemperature();
 
-	@Override
-	public int getTanks() {
-		return 2;
-	}
 
-	@Override
-	public FluidStack getFluidInTank(int i) {
-		return i == 0 ? tank.getFluid() : output.getFluid();
-	}
 
-	@Override
-	public int getTankCapacity(int i) {
-		return i == 0 ? tank.getCapacity() : output.getCapacity();
-	}
 
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
@@ -131,20 +133,8 @@ public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoil
 		output.writeToNBT(NBT);
 	}
 
-	@Override
-	public FluidStack drain(FluidStack resource, FluidAction action) {
-		return output.drain(resource, action);
-	}
 
-	@Override
-	public FluidStack drain(int maxDrain, FluidAction action) {
-		return output.drain(maxDrain, action);
-	}
 
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
-		return from == Direction.UP ? output.drain(maxDrain, doDrain) : FluidStack.EMPTY;
-	}
 
 	@Override
 	public final BlockEntityPiping.Flow getFlowForSide(Direction side) {

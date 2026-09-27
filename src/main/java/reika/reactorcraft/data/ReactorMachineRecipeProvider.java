@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
  * {@code RecipeProvider} path because constructing a {@link net.neoforged.neoforge.fluids.FluidStack}
  * during datagen triggers "Components not bound yet" (the fluid-stack analogue of the item-stack
  * datagen restriction the plan warns about). The values are transcribed verbatim from the 1.7.10
- * {@code TileEntityUProcessor.Processes.UF6} and {@code TileEntityCentrifuge.Centrifuging.UF6}.
+ * both original {@code TileEntityUProcessor.Processes} entries and the UF6 centrifuge entry.
  */
 public final class ReactorMachineRecipeProvider implements DataProvider {
 
@@ -61,6 +61,23 @@ public final class ReactorMachineRecipeProvider implements DataProvider {
         return json;
     }
 
+    private JsonObject processorLiFBe() {
+        JsonObject json = new JsonObject();
+        json.addProperty("type", ReactorCraft.MODID + ":processor");
+        JsonArray catalyst = new JsonArray();
+        for (FluoriteTypes f : FluoriteTypes.colorList)
+            catalyst.add(ReactorCraft.MODID + ":" + f.getGemItemName());
+        json.add("catalyst", catalyst);
+        json.addProperty("input_item", ReactorCraft.MODID + ":emerald_dust");
+        json.add("input_fluid", fluid(ReactorCraft.MODID + ":lithium", 100));
+        json.add("intermediate_fluid", fluid(ReactorCraft.MODID + ":hydrofluoric_acid", 250));
+        json.addProperty("intermediate_consumed", 1500);
+        json.add("output_fluid", fluid(ReactorCraft.MODID + ":lifbe", 500));
+        json.addProperty("intermediate_time", 120);
+        json.addProperty("output_time", 600);
+        return json;
+    }
+
     private JsonObject centrifugeUF6() {
         JsonObject json = new JsonObject();
         json.addProperty("type", ReactorCraft.MODID + ":centrifuge");
@@ -77,6 +94,7 @@ public final class ReactorMachineRecipeProvider implements DataProvider {
     public CompletableFuture<?> run(CachedOutput cache) {
         ImmutableList.Builder<CompletableFuture<?>> futures = ImmutableList.builder();
         futures.add(save(cache, "processor/uf6", processorUF6()));
+        futures.add(save(cache, "processor/lifbe", processorLiFBe()));
         futures.add(save(cache, "centrifuge/uf6", centrifugeUF6()));
         return CompletableFuture.allOf(futures.build().toArray(CompletableFuture[]::new));
     }

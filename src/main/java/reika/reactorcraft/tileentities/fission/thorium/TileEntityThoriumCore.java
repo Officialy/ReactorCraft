@@ -21,10 +21,14 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.HybridTank;
+import reika.dragonapi.instantiable.storage.FilteredFluidResourceHandler;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
+import reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.interfaces.blockentity.InertIInv;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
@@ -52,7 +56,7 @@ import reika.rotarycraft.registry.MachineRegistry;
 //Cannot overheat (negative void coefficient)
 //If gets over some temp, dumps fuel on ground
 //Liquid waste
-public class TileEntityThoriumCore extends TileEntityNuclearCore implements InertIInv, IFluidHandler, PipeConnector {
+public class TileEntityThoriumCore extends TileEntityNuclearCore implements InertIInv, PipeConnector, HasFluidResourceHandler {
 
 	public TileEntityThoriumCore(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.THORIUM.get(), pos, state);
@@ -64,6 +68,25 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 	private final HybridTank fuelTank = new HybridTank("thoriumfuel", 4000);
 	private final HybridTank fuelTankOut = new HybridTank("thoriumfuelout", 4000);
 	private final HybridTank wasteTank = new HybridTank("thoriumwaste", 1000);
+	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(
+			new HybridTank[] {fuelTank, fuelTankOut, wasteTank},
+			(index, resource) -> index == 0 && this.isFuel(resource.getFluid()),
+			(index, resource) -> index > 0, this::setChanged);
+	private final ResourceHandler<FluidResource> inputView = new FilteredFluidResourceHandler(
+			fluidHandler, index -> index == 0, (index, resource) -> true,
+			(index, resource) -> false);
+	private final ResourceHandler<FluidResource> fuelOutputView = new FilteredFluidResourceHandler(
+			fluidHandler, index -> index == 1, (index, resource) -> false,
+			(index, resource) -> true);
+	private final ResourceHandler<FluidResource> wasteOutputView = new FilteredFluidResourceHandler(
+			fluidHandler, index -> index == 2, (index, resource) -> false,
+			(index, resource) -> true);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null ? fluidHandler : side == Direction.UP ? inputView
+				: this.isWastePipe(side) ? wasteOutputView : fuelOutputView;
+	}
 
 	private StepTimer timer2 = new StepTimer(5);
 
@@ -313,48 +336,12 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 
 	}
 
-	// --- NeoForge IFluidHandler (0=fuel in, 1=fuel out, 2=waste) ---
-	@Override
-	public int getTanks() {
-		return 3;
-	}
 
-	@Override
-	public FluidStack getFluidInTank(int t) {
-		return t == 0 ? fuelTank.getFluid() : t == 1 ? fuelTankOut.getFluid() : wasteTank.getFluid();
-	}
 
-	@Override
-	public int getTankCapacity(int t) {
-		return t == 2 ? 1000 : 4000;
-	}
 
-	@Override
-	public boolean isFluidValid(int t, FluidStack stack) {
-		return t == 0 && this.isFuel(stack.getFluid());
-	}
 
-	@Override
-	public int fill(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty() || !this.isFuel(resource.getFluid()))
-			return 0;
-		return fuelTank.fill(resource, action);
-	}
 
-	@Override
-	public FluidStack drain(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty())
-			return FluidStack.EMPTY;
-		FluidStack out = fuelTankOut.getFluid();
-		if (!out.isEmpty() && FluidStack.isSameFluidSameComponents(resource, out))
-			return fuelTankOut.drain(resource.getAmount(), action);
-		return FluidStack.EMPTY;
-	}
 
-	@Override
-	public FluidStack drain(int maxDrain, FluidAction action) {
-		return fuelTankOut.drain(maxDrain, action);
-	}
 
 	private boolean isWastePipe(Direction from) {
 		return this.getAdjacentBlockEntity(from) instanceof TileEntityWastePipe;
@@ -370,19 +357,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 		return side == Direction.UP ? m == MachineRegistry.FUELLINE : m.isStandardPipe();
 	}
 
-	@Override
-	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
-		return from == Direction.UP && !resource.isEmpty() && this.isFuel(resource.getFluid()) ? fuelTank.fill(resource, action) : 0;
-	}
 
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction action) {
-		if (from == Direction.UP)
-			return FluidStack.EMPTY;
-		if (this.isWastePipe(from))
-			return wasteTank.drain(maxDrain, action);
-		return fuelTankOut.drain(maxDrain, action);
-	}
 
 	@Override
 	public Flow getFlowForSide(Direction side) {

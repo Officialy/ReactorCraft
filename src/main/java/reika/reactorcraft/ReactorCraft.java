@@ -32,6 +32,7 @@ import reika.dragonapi.libraries.io.ReikaPacketHelper;
 import reika.reactorcraft.auxiliary.MobEffectRadiation;
 import reika.reactorcraft.command.SolenoidDebugCommand;
 import reika.reactorcraft.guis.*;
+import reika.reactorcraft.modinterface.jei.ReactorRecipeSync;
 import reika.reactorcraft.registry.*;
 import reika.rotarycraft.RotaryCraft;
 
@@ -69,7 +70,10 @@ public class ReactorCraft {
         ReactorFluids.FLUIDS.register(modEventBus);
 
         ReactorRecipeTypes.RECIPE_TYPES.register(modEventBus);
+        ReactorRecipeSync.register();
         ReactorRecipeSerializers.RECIPE_SERIALIZERS.register(modEventBus);
+        ReactorGameTests.TEST_INSTANCE_TYPES.register(modEventBus);
+        modEventBus.addListener(ReactorGameTests::onRegisterGameTests);
 
         ReactorFeatures.FEATURES.register(modEventBus);
         ReactorBlockEntities.BLOCK_ENTITIES.register(modEventBus);

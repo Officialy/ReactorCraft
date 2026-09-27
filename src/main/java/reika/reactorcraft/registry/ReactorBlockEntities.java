@@ -195,11 +195,10 @@ public final class ReactorBlockEntities {
 	private static <T extends BlockEntity> void registerItemCap(RegisterCapabilitiesEvent event, BlockEntityType<T> type) {
 		event.registerBlockEntity(Capabilities.Item.BLOCK, type,
 				(be, ctx) -> be instanceof HasItemHandler h ? h.getItemHandler() : null);
+		event.registerBlockEntity(Capabilities.Fluid.BLOCK, type,
+				(be, side) -> be instanceof reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler h
+						? h.getFluidHandler(side) : null);
 	}
-
-	// CAP-PORT: external Capabilities.Fluid.BLOCK exposure deferred (mirrors RotaryBlockEntities). The
-	// reactor tanks still implement the deprecated IFluidHandler and interoperate internally via
-	// PipeConnector; wiring them to the new ResourceHandler<FluidResource> capability is a follow-up.
 
 	private ReactorBlockEntities() {}
 }

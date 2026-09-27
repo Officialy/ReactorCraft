@@ -29,6 +29,7 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStackTemplate;
 
 import reika.reactorcraft.registry.ReactorRecipeSerializers;
 import reika.reactorcraft.registry.ReactorRecipeTypes;
@@ -40,18 +41,23 @@ import reika.reactorcraft.registry.ReactorRecipeTypes;
  * {@code outputB} (depleted dust). Requires the centrifuge to spin at {@code minSpeed}
  * ({@code MINSPEED}=262144 rad/s); {@code speedFactor} scales the per-tick progress.
  * <p>
- * Data-only: the consuming {@code TileEntityCentrifuge} (deferred) reads these by input fluid.
+ * The consuming {@code TileEntityCentrifuge} looks these up by input fluid at runtime.
  */
 public class CentrifugeRecipe implements Recipe<RecipeInput> {
 
-    private final FluidStack input;
+    public record FluidInput(FluidStack fluid) implements RecipeInput {
+        @Override public ItemStack getItem(int slot) { throw new IndexOutOfBoundsException(slot); }
+        @Override public int size() { return 0; }
+    }
+
+    private final FluidStackTemplate input;
     private final ItemStackTemplate outputA;
     private final Optional<ItemStackTemplate> outputB;
     private final float chanceOfAOverB;
     private final int minSpeed;
     private final int speedFactor;
 
-    public CentrifugeRecipe(FluidStack input, ItemStackTemplate outputA, Optional<ItemStackTemplate> outputB,
+    public CentrifugeRecipe(FluidStackTemplate input, ItemStackTemplate outputA, Optional<ItemStackTemplate> outputB,
                             float chanceOfAOverB, int minSpeed, int speedFactor) {
         this.input = input;
         this.outputA = outputA;
@@ -61,7 +67,7 @@ public class CentrifugeRecipe implements Recipe<RecipeInput> {
         this.speedFactor = speedFactor;
     }
 
-    public FluidStack getInput() { return input; }
+    public FluidStack getInput() { return input.create(); }
     public ItemStack getOutputA() { return outputA.create(); }
     public ItemStack getOutputB() { return outputB.map(ItemStackTemplate::create).orElse(ItemStack.EMPTY); }
     public float getChanceOfAOverB() { return chanceOfAOverB; }
@@ -70,7 +76,8 @@ public class CentrifugeRecipe implements Recipe<RecipeInput> {
 
     @Override
     public boolean matches(RecipeInput in, Level level) {
-        return false;
+        return in instanceof FluidInput fluidInput && !fluidInput.fluid().isEmpty()
+                && fluidInput.fluid().getFluid().isSame(input.create().getFluid());
     }
 
     @Override
@@ -110,7 +117,7 @@ public class CentrifugeRecipe implements Recipe<RecipeInput> {
     }
 
     public static final MapCodec<CentrifugeRecipe> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
-            FluidStack.CODEC.fieldOf("input").forGetter(r -> r.input),
+            FluidStackTemplate.CODEC.fieldOf("input").forGetter(r -> r.input),
             ItemStackTemplate.CODEC.fieldOf("output_a").forGetter(r -> r.outputA),
             ItemStackTemplate.CODEC.optionalFieldOf("output_b").forGetter(r -> r.outputB),
             Codec.FLOAT.fieldOf("chance_a_over_b").forGetter(r -> r.chanceOfAOverB),
@@ -120,7 +127,7 @@ public class CentrifugeRecipe implements Recipe<RecipeInput> {
 
     public static final StreamCodec<RegistryFriendlyByteBuf, CentrifugeRecipe> STREAM_CODEC = StreamCodec.of(
             (buf, r) -> {
-                FluidStack.STREAM_CODEC.encode(buf, r.input);
+                FluidStackTemplate.STREAM_CODEC.encode(buf, r.input);
                 ItemStackTemplate.STREAM_CODEC.encode(buf, r.outputA);
                 ByteBufCodecs.optional(ItemStackTemplate.STREAM_CODEC).encode(buf, r.outputB);
                 ByteBufCodecs.FLOAT.encode(buf, r.chanceOfAOverB);
@@ -128,7 +135,7 @@ public class CentrifugeRecipe implements Recipe<RecipeInput> {
                 ByteBufCodecs.VAR_INT.encode(buf, r.speedFactor);
             },
             buf -> new CentrifugeRecipe(
-                    FluidStack.STREAM_CODEC.decode(buf),
+                    FluidStackTemplate.STREAM_CODEC.decode(buf),
                     ItemStackTemplate.STREAM_CODEC.decode(buf),
                     ByteBufCodecs.optional(ItemStackTemplate.STREAM_CODEC).decode(buf),
                     ByteBufCodecs.FLOAT.decode(buf),

@@ -88,7 +88,7 @@ public final class ReactorItems {
     public static final DeferredItem<Item> DEPLETED_PELLET = reg("depleted_pellet", () -> new Item(itemProperties()));
 
     // --- Fluid canister (empty; fluid contents carried by CANISTER_FLUID data component) ---
-    public static final DeferredItem<ItemCanister> CANISTER = reg("canister", () -> new ItemCanister(toolProperties(), 16));
+    public static final DeferredItem<ItemCanister> CANISTER = reg("canister", () -> new ItemCanister(itemProperties().stacksTo(16), 16));
 
     // --- Heavy-water bucket (empties to a vanilla bucket) ---
     public static final DeferredItem<ItemHeavyBucket> HEAVY_BUCKET = reg("heavy_water_bucket", () -> new ItemHeavyBucket(toolProperties().craftRemainder(Items.BUCKET)));

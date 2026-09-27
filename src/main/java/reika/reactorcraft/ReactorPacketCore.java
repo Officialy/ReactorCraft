@@ -116,7 +116,8 @@ public class ReactorPacketCore implements PacketHandler {
                     y = inputStream.readInt();
                     z = inputStream.readInt();
                     int level = inputStream.readInt();
-                    ReikaPacketHelper.updateBlockEntityTankData(world, x, y, z, tank, level);
+                    String fluid = ReikaPacketHelper.readString(inputStream);
+                    ReikaPacketHelper.updateBlockEntityTankData(world, x, y, z, tank, level, fluid);
                     return;
                 case RAW:
                     control = inputStream.readInt();

@@ -17,9 +17,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.dragonapi.libraries.io.ReikaSoundHelper;
+import reika.dragonapi.instantiable.storage.FilteredFluidResourceHandler;
 import reika.reactorcraft.base.TileEntityTankedReactorMachine;
 import reika.reactorcraft.blocks.BlockThoriumFuel;
 import reika.reactorcraft.registry.ReactorBlockEntities;
@@ -30,6 +32,16 @@ import reika.rotarycraft.registry.MachineRegistry;
 
 
 public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		if (side == Direction.UP || !this.hasTile()) return null;
+		ResourceHandler<FluidResource> controller = this.getCore().getFluidHandler(null);
+		boolean waste = side != null && this.getAdjacentBlockEntity(side) instanceof
+				reika.reactorcraft.tileentities.waste.TileEntityWastePipe;
+		return new FilteredFluidResourceHandler(controller,
+				index -> side == null ? index == 1 || index == 2 : index == (waste ? 2 : 1),
+				(index, resource) -> false, (index, resource) -> true);
+	}
 
 	private int fullTicks = 0;
 
@@ -92,10 +104,6 @@ public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
 		world.setBlockAndUpdate(pos, ReactorBlocks.CORIUMFLOWING.get().defaultBlockState());
 	}
 
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction action) {
-		return this.hasTile() ? this.getCore().drainPipe(from, maxDrain, action) : FluidStack.EMPTY;
-	}
 
 	@Override
 	public boolean canConnectToPipe(MachineRegistry m) {

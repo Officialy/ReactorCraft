@@ -19,10 +19,14 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.HybridTank;
+import reika.dragonapi.instantiable.storage.FilteredFluidResourceHandler;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
+import reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.reactorcraft.auxiliary.ReactorCoreTE;
 import reika.reactorcraft.base.TileEntityReactorBase;
@@ -36,7 +40,7 @@ import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
 import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
-public class TileEntityTritizer extends TileEntityReactorBase implements ReactorCoreTE, PipeConnector, IFluidHandler {
+public class TileEntityTritizer extends TileEntityReactorBase implements ReactorCoreTE, PipeConnector, HasFluidResourceHandler {
 
 	public TileEntityTritizer(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.TRITIZER.get(), pos, state);
@@ -46,6 +50,22 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 
 	private final HybridTank input = new HybridTank("tritizerin", CAPACITY);
 	private final HybridTank output = new HybridTank("tritizerout", CAPACITY);
+	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(
+			new HybridTank[] {input, output},
+			(index, resource) -> index == 0 && Reactions.getReactionFrom(resource.getFluid()) != null,
+			(index, resource) -> index == 1, this::setChanged);
+	private final ResourceHandler<FluidResource> inputView = new FilteredFluidResourceHandler(
+			fluidHandler, index -> index == 0, (index, resource) -> true,
+			(index, resource) -> false);
+	private final ResourceHandler<FluidResource> outputView = new FilteredFluidResourceHandler(
+			fluidHandler, index -> index == 1, (index, resource) -> false,
+			(index, resource) -> true);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null ? fluidHandler : side == Direction.UP ? inputView
+				: side == Direction.DOWN ? outputView : null;
+	}
 
 	@Override
 	public ReactorTiles getTile() {
@@ -194,48 +214,12 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 		new Reactions(in, out, chance, amt);
 	}
 
-	// --- NeoForge IFluidHandler (tank 0 = input from top, tank 1 = output drained from bottom) ---
-	@Override
-	public int getTanks() {
-		return 2;
-	}
 
-	@Override
-	public FluidStack getFluidInTank(int t) {
-		return t == 0 ? input.getFluid() : output.getFluid();
-	}
 
-	@Override
-	public int getTankCapacity(int t) {
-		return CAPACITY;
-	}
 
-	@Override
-	public boolean isFluidValid(int t, FluidStack stack) {
-		return t == 0 && Reactions.getReactionFrom(stack.getFluid()) != null;
-	}
 
-	@Override
-	public int fill(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty() || Reactions.getReactionFrom(resource.getFluid()) == null)
-			return 0;
-		return input.fill(resource, action);
-	}
 
-	@Override
-	public FluidStack drain(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty())
-			return FluidStack.EMPTY;
-		FluidStack out = output.getFluid();
-		if (out.isEmpty() || !FluidStack.isSameFluidSameComponents(resource, out))
-			return FluidStack.EMPTY;
-		return output.drain(resource.getAmount(), action);
-	}
 
-	@Override
-	public FluidStack drain(int maxDrain, FluidAction action) {
-		return output.drain(maxDrain, action);
-	}
 
 	@Override
 	public boolean canConnectToPipe(MachineRegistry m) {
@@ -247,15 +231,7 @@ public class TileEntityTritizer extends TileEntityReactorBase implements Reactor
 		return this.canConnectToPipe(p) && side.getStepY() != 0;
 	}
 
-	@Override
-	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
-		return from == Direction.UP && !resource.isEmpty() && Reactions.getReactionFrom(resource.getFluid()) != null ? input.fill(resource, action) : 0;
-	}
 
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
-		return from == Direction.DOWN ? output.drain(maxDrain, doDrain) : FluidStack.EMPTY;
-	}
 
 	@Override
 	public Flow getFlowForSide(Direction side) {

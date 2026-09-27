@@ -50,7 +50,9 @@ public enum ReactorFuel {
 		if (input == null || input.isEmpty())
 			return null;
 		return switch (this) {
-			case PLUTONIUM -> ReactorItems.PLUTONIUM.getStackOfMetadata(input.getDamageValue() + 1);
+			case PLUTONIUM -> input.getDamageValue() >= ReactorItems.PLUTONIUM.getNumberMetadatas() - 1
+					? ItemStack.EMPTY
+					: ReactorItems.PLUTONIUM.getStackOfMetadata(input.getDamageValue() + 1);
 			case URANIUM -> input.getDamageValue() >= ReactorItems.FUEL.getNumberMetadatas() - 1
 					? ReactorItems.DEPLETED.getStackOf()
 					: ReactorItems.FUEL.getStackOfMetadata(input.getDamageValue() + 1);

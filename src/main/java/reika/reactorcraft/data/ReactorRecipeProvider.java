@@ -714,7 +714,7 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
             accept("alloy", new ShapelessBlastFurnaceRecipe(
                     alloyIns, List.of(),
                     new ItemStackTemplate(ReactorItems.crafting(CraftingItems.ALLOY), 3),
-                    1600F, 0F, 1.0F, 0, 0, 0));
+                    1600F, 0F, 1.0F, 0, 0, 0, 3, true, false));
 
             // Ferromagnetic ingot — steel + iron + lodestone alloyed in the blast furnace @ 1200°.
             // (ReactorRecipes.addCrafting: addAlloyingRecipe(FERROINGOT, 1200, steel+iron+lodestone).
@@ -729,7 +729,7 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
             accept("ferromagnetic_ingot", new ShapelessBlastFurnaceRecipe(
                     ferroIns, List.of(),
                     new ItemStackTemplate(ReactorItems.crafting(CraftingItems.FERROINGOT)),
-                    1200F, 0F, 1.0F, 0, 0, 0));
+                    1200F, 0F, 1.0F, 0, 0, 0, 3, true, false));
 
             // Lime from an egg in the blast furnace @ 850° (ReactorRecipes.addSmelting:
             // addRecipe(lime, 850, shapeless(lime, egg))). Smelting calcite→lime is the primary source;
@@ -737,7 +737,7 @@ public final class ReactorRecipeProvider extends RecipeProvider.Runner {
             accept("lime_from_egg", new ShapelessBlastFurnaceRecipe(
                     List.of(Ingredient.of(Items.EGG)), List.of(),
                     new ItemStackTemplate(ReactorItems.LIME.get()),
-                    850F, 0F, 1.0F, 0, 0, 0));
+                    850F, 0F, 1.0F, 0, 0, 0, 1, true, false));
 
             accept("graphite", new FrictionHeaterRecipe(
                     Ingredient.of(RotaryItems.COAL_DUST.get()),

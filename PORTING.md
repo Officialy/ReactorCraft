@@ -912,3 +912,359 @@ The 2026-09-13 ChromatiCraft Vibrant Pod follow-up fixes legacy 0..16 UVs being 
 26.2 normalized sprite API and restores the animated overlay's texture-derived transparency.
 ChromatiCraft and dependency compilation pass. See `ChromatiCraft/PORTING.md` for details;
 in-world visual verification remains after a client restart.
+
+## DragonAPI BugCatcher audit remediation (2026-09-20)
+
+The full `DragonAPI Port` Linear finding set (OFF-55 through OFF-202) was reconciled against the
+26.2 source. Confirmed defects were repaired across packet/tank synchronization, inventories,
+recipes, biome mutation and map output, file/network/XML/config resource handling, reflection,
+arrays and parsers, block flood-fill traversal, trackers, render helpers, and legacy registry-tag
+bridges. Tank packets now carry the fluid registry identifier so a positive sync can reconstruct an
+empty client tank; the DragonAPI, RotaryCraft, ReactorCraft, and ElectriCraft packet readers use the
+same wire format. Findings based on impossible states or intentional reversible behavior were left
+as no-code false positives. DragonAPI compilation and its Gradle test lifecycle pass (the module
+currently has no Java test sources); dependent-mod compilation is the integration check for the
+shared packet API.
+
+## GeoStrata survival pass (2026-09-24)
+
+The GeoStrata audit found that 1.7.10's ore renderer drew an underlying rock and a source ore
+icon in two passes. Its texture-clipping routine existed but was disabled. The 26.2 port now
+generates a layered model for every registered rock/ore pair and datagenerates transparent ore
+inclusion sprites from the patched local Minecraft texture artifact; mod ores use recoloured
+inclusion patterns until their source textures are available. The client creative gate is enabled.
+Icy ore veins, including those in Arctic Spires, yield the existing `lowtempdiamonds` item instead
+of vanilla diamonds. Jade now supplies rock, vein, vent and RF crystal information. The pass also
+ports the adjustable partial bounds block, RF crystal energy storage/transfer and growth, vent and
+arctic air effects, quartz bricks, common item tags and the original buying trade outputs via
+26.2 villager trade data. GeoStrata's `SURVIVAL_TODO.md` records remaining visual and parity work.
+GeoStrata compilation and both data generators pass. A development client reached the main menu
+with Jade loaded and the generated models baked. That smoke run found Jade's required plugin
+translation and the partial block's particle texture reference missing; both were corrected. A
+fresh-world visual and mechanics pass remains outstanding.
+The original `BOXRECIPES` setting now selects between two datagenerated deco-brick recipes through
+a NeoForge load-time condition; both client and server data generation pass after this change.
+
+GeoStrata follow-up: layered ore models now use an opaque host-rock base beneath the transparent
+ore and host masks; the complete ore matrix is grouped by rock in its own creative tab. Vents
+restore redstone-triggered activation and datagenerate dimension-specific host textures. Jade
+labels, lava rock names/tick timing, partial-block shared-face rendering and break particles, and
+manual RF crystal attachment were corrected. RotaryCraft's Rotational Dynamo now has shaft-power
+to RF conversion, its original default recipe, renderer, and creative access so the RF crystal
+can be tested. Client/server data generation and compilation passed; in-world behavior remains
+to be verified. All 15 RotaryCraft GameTests passed, including shaft-power-to-RF conversion
+through the new dynamo; GeoStrata crystal charging still needs an in-world transfer check.
+
+## RotaryCraft progression to ReactorCraft entry (2026-09-25)
+
+The playable route now includes the original blast-furnace alloy processing, high-temperature
+combustor, red-gold dust and ingot, tungsten and bedrock gear lines, ethanol crystals from clean
+sludge, and the grinder's coal-dust, netherrack-dust, and tar outputs needed for jet fuel. The
+fractionator was verified to produce jet fuel from ethanol and its six solids under shaft power;
+its ghast tear remains as the original solvent requirement. The rock melter turns ethanol crystals
+into liquid ethanol, with each loaded recipe's own temperature enforced. The ordered progression
+GameTest now checks the live recipe ingredients from early steel through the microturbine, jet
+engine, bedrock 16x gear and 4x gearbox, as well as the fractionator's runtime solid ingredients
+and ethanol output recipes. It also checks all four extractor stages for iron, gold, lapis and
+redstone, plus the tungsten-flake and aluminum-powder bonus sources. ReactorCraft's alloy,
+uranium processor, isotope centrifuge and UF6
+recipes load together; the blast furnace produces the original three cadmium-indium-silver alloy
+ingots at 1600 C. The jet engine's 65536 rad/s shaft speed reaches the ReactorCraft centrifuge's
+262144 rad/s requirement through a 4x acceleration gearbox. A combined-mod GameTest also confirms
+that the isotope centrifuge receives 262144 rad/s and nonzero power from a RotaryCraft shaft
+provider on its bottom face; the gearbox acceleration ratios have separate in-world tests.
+
+Worktable basic crafting and bucket-filler fluid transfer are restored and covered by in-world
+tests. The original red-gold and clean-sludge item artwork is unstiched from the 1.7.10 item sheet
+by datagen, with modern item models and language entries. The ReactorCraft fluid recipe codecs use
+fluid stack templates so the UF6 recipes load with the combined mods. Later ReactorCraft reactor
+operations and the remaining RotaryCraft recipes outside this entry path still require separate
+parity work.
+
+## RotaryCraft fractionator and utility-machine follow-up (2026-09-25)
+
+The fractionator's original six solids and consumption weights are now a loaded, generated recipe:
+blaze powder 1.5, coal dust 1, magma cream 0.75, pink dye 0.5, netherrack dust 2, and tar 1.5.
+The recipe also declares the ghast-tear solvent and ethanol-to-jet-fuel fluids. The machine and JEI
+read the recipe rather than a separate ingredient table. The in-world test fills the solids in
+reverse recipe order, verifies the original weights, and produces jet fuel without consuming the
+solvent. The 1.7.10 pressure calculation's 20-tick moving torque average is restored, including
+its save data; pressure again controls the redstone signal and no longer discards stored fuel at
+the original no-op overpressure threshold.
+
+The Boring Machine now holds its shaft position when a selected cell cannot be cut, applies its
+Fortune and Silk Touch enchants through block loot, saves those enchants, and routes broken
+container contents to an adjacent inventory or drops them. It checks placer break permissions,
+preserves the IgnoredByBorer hardness hook, and emits the original slice-dig API event. Its GameTest
+bores two slices, checks
+the 7x5 mask on the second slice, and verifies Silk Touch stone in an adjacent chest. The Sonic
+Borer now keeps pressure when its scan encounters an undroppable block and passes the checked
+range to the projectile so it cannot rescan a changed surface while firing. Its GameTest charges
+against bedrock, then clears the first solid surface when the shield is removed. The Woodcutter
+GameTest fells an oak tree and replants its sapling; its Efficiency-adjusted operation interval is
+clamped to one tick in instant-cut mode. The original non-instant setting again makes unsupported
+tree blocks fall and processes one block each tick. Machine enchantment levels are now restored by
+registry key on reload, fixing
+the shared persistence path used by the Woodcutter and other RotaryCraft machines. The GameTest
+arena is now 9x9x9 to hold the Sonic Borer's complete seven-block cross-section.
+
+The fuel line was an additional progression blocker: its fluid predicate compared each live
+fluid to a deferred registration holder, rejecting both RotaryCraft jet fuel and ethanol. It now
+accepts the registered fluids, preserves the original named fuel integrations (including the
+ReactorCraft LiFBe fuels), exposes its actual block identity, and reports non-self connections.
+The fractionator GameTest now carries its produced jet fuel through a fuel line into a jet engine,
+so the ethanol-to-ReactorCraft shaft-power path checks real fluid movement as well as crafting.
+DragonAPI's server-placer accessor also now returns null for unowned machine instances; the
+borer's permission check exposed a null dereference there in the GameTest arena.
+
+## ReactorCraft fuel chemistry and live shaft chain (2026-09-26)
+
+The combined-mod GameTest now drives the isotope centrifuge with a fueled RotaryCraft jet engine,
+a bedrock 4x acceleration gearbox, and a west-to-up bevel gear. It checks the engine's rated
+65536 rad/s, the gearbox's 262144 rad/s output, and nonzero power at the centrifuge's bottom face.
+The same test places a uranium processor, supplies water, fluorite, and a uranium ingot, transfers
+50 mB of its UF6 output into the centrifuge, and checks that the running machine consumes that
+fluid and produces enriched or depleted dust.
+
+The uranium processor and isotope centrifuge now use the loaded ReactorCraft machine recipes at
+runtime instead of parallel hardcoded process maps. The original second processor process,
+lithium plus emerald dust and hydrofluoric acid into LiFBe, is generated as
+`reactorcraft:processor/lifbe` with its original amounts and 120/600 tick stages. The fluid
+recipe types now match a fluid input rather than returning false. The processor still accepts
+the original external `gemFluorite` catalyst tag alongside the generated fluorite ingredient.
+The processor's LiFBe output has its own in-world GameTest. The fuel-rod and first reactor
+operation checks are recorded in the checkpoint below.
+The combined-mod `rotarycraft:*` run passed all 30 required GameTests after this change. The
+LiFBe check supplies enough lithium to keep the original input-fluid-selected process active
+through six intermediate batches and its 600-tick output stage.
+The processor also checks fluid identity as well as free capacity before spending reagents, so a
+leftover UF6 output cannot silently eat the next LiFBe batch. Its catalyst slot accepts the
+loaded recipe's declared ingredient in addition to the original fluorite compatibility path.
+
+## ReactorCraft fission and steam output checkpoint (2026-09-26)
+
+ReactorCraft now has its own headless in-world GameTest run (`:ReactorCraft:runGameTest`), using
+RotaryCraft's shared arena. Its first tests check the generated four-dust-to-two-rods recipe,
+uranium burnup through depleted fuel, the plutonium final-stage exhaustion, active fuel-rod
+fission under neutrons, fission heat boiling adjacent water, and boiler steam passing through a
+steam line and grate into a lubricated turbine. A RotaryCraft bedrock gearbox accepts the
+turbine's shaft output, and a Rotational Dynamo converts it into positive RF/t. The fully spent
+plutonium transition was corrected to produce an empty slot instead of repeatedly clamping past
+the final damage stage; the fuel rod now treats that result as empty when routing spent fuel.
+
+These checks prove the fission-to-RF route as connected stages. The turbine transport test
+preheats its boiler so it can isolate steam movement from the separate live-fission heat test.
+Later work should verify automated coolant replenishment, sustained fuel and steam operation,
+turbine multiblocks, and generator conversion under a complete reactor layout.
+
+## RotaryCraft production, farming and automation checkpoint (2026-09-26)
+
+The Composter now accumulates successive compost batches: DragonAPI's managed-inventory
+`addOrSetStack` helper previously grew a detached stack copy, so only the first batch persisted.
+The Composter also implements its container clearing and output-removal behavior, including
+permitting the output slot to be emptied. Its in-world test processes two wheat with yeast,
+checks two compost in the output, and clears the inventory.
+
+The Pump now processes only actual source fluid states, updates neighbors when removing a
+source, runs its world-changing work on the server, and stops at its original 400-damage
+failure threshold without repeating the break effect. Its in-world test checks source removal,
+water collection, and horizontal pipe output. It also retains the original five-source lava
+exception when 26.2 lava source conversion is enabled; a separate test confirms that an
+isolated lava source is drained and removed. The Auto Breeder has an in-world test that
+supplies shaft power from below, feeds a cow, and checks that exactly one wheat is consumed.
+
+The Refrigerator now sets its shaft input from its block facing, identifies its block and tank,
+and exposes liquid nitrogen through the fluid handler and pipe output. Its in-world test
+drives it from a creative coil, processes one ice block into the original torque-scaled
+1600 mB of liquid nitrogen, and checks pipe access. These five focused RotaryCraft GameTests
+pass on Minecraft 26.2. The next automation pass should restore the Item Cannon's inventory
+transfer, target persistence and player-facing target controls, then cover the remaining
+farming machines (fertilizer, sprinklers, harvester) and fluid-producing machines with
+in-world tests.
+
+### Combined-instance ChromatiCraft worldgen diagnostic (2026-09-26)
+
+A client run failed to generate overworld chunk `[-6, 13]` during the features step.
+`OverworldStructureFeature.tryGenerateInChunk` used `WorldGenRegion.getBiome`, whose fiddled
+sampling can request a chunk outside the feature step's available region. ChromatiCraft now
+uses the same biome manager with an uncached noise-biome source for its natural-structure
+biome checks. `:ChromatiCraft:compileJava --offline` passes; revisit the affected chunk in
+the original C2ME-enabled world to verify runtime behavior. The detailed change is recorded
+in `ChromatiCraft/PORTING.md`.
+
+## RotaryCraft Jade and JEI integration checkpoint (2026-09-27)
+
+Jade now has a server-backed provider for every RotaryCraft `BlockBasicMachine` that lacks a
+specialized pipe, engine, reservoir, or gearbox panel. It reports shutdown and operating status,
+missing shaft power, temperature, range, fluid tank contents, and comparator state where the
+machine exposes those values. The labels are generated through `RotaryLang`.
+
+JEI now registers categories and machine catalysts for all fourteen RotaryCraft datapack recipe
+types. It also presents the legacy Magnetizer table and the fixed Composter, Refrigerator, and
+Obsidian Maker processes; the Worktable is a catalyst for JEI's vanilla crafting category.
+NeoForge's `OnDatapackSyncEvent` sends the fourteen custom recipe types to clients, and the JEI
+plugin refreshes its entries from `RecipesReceivedEvent` when joining a dedicated server or
+after a datapack reload. The code compiles with `:RotaryCraft:compileJava --offline`, and
+`:RotaryCraft:runClientData --offline` generated the new English labels. A graphical Jade/JEI
+client check and multiplayer datapack-reload check remain to be run.
+The Big Furnace's current `BlockEntityLavaSmeltery` still uses placeholder stone output
+instead of the original furnace recipe lookup; its machine behavior must be ported before
+there is a real process to expose in JEI.
+
+## NeoForge 26.2 fluid capability migration checkpoint (2026-09-27)
+
+DragonAPI now has a transaction-aware `HybridTankResourceHandler` with complete `FluidStack`
+snapshots and a `FilteredFluidResourceHandler` for sided views. `HasFluidResourceHandler`
+lets the RotaryCraft, ReactorCraft, and ElectriCraft block entity registries expose
+`Capabilities.Fluid.BLOCK`. The legacy tank data remains authoritative, preserving named
+NBT and direct machine operations while external transfers use `FluidResource` and one
+transaction. The old `IFluidHandler` methods and `PipeConnector` protocol are still present
+in many machines and are **not** considered migrated.
+
+RotaryCraft has capability implementations in the reservoir, common powered-liquid bases,
+common pipe base, and `RCFluidReceiver` (including the Ground Hydrator). The pipe discovers
+capability-only neighbors and uses `ResourceHandlerUtil.move` for external transfers.
+ElectriCraft's Transformer exposes its liquid-nitrogen input through a fluid capability.
+ReactorCraft has capability implementations in its common tanked-machine and pipe bases,
+the Centrifuge, Electrolyzer, Synthesizer, Tritizer, U Processor, Fusion Heater and Injector,
+Thorium Core, Turbine Core, Steam Injector, Gas Collector, Heavy Pump, Reactor Pump, Heat
+Exchanger, Solar Exchanger, Condenser, and Steam Diffuser. Reactor Pump now pushes to
+external block capabilities with an atomic move. Both RotaryCraft and ReactorCraft Jade
+providers and DragonAPI's fluid-event query read capabilities; the three DragonAPI Lua
+tank methods read the new handler and validate their requested index.
+
+Verification on 26.2: `:DragonAPI:compileJava`, `:RotaryCraft:compileJava`,
+`:ReactorCraft:compileJava`, and `:ElectriCraft:compileJava` pass. Focused GameTests pass
+for reservoir transaction rollback and sided access, pipe-to-vanilla-cauldron conservation,
+Ground Hydrator water acceptance, and Electrolyzer transaction rollback and sided access.
+
+Remaining migration work: port the other RotaryCraft machine tanks and fluid interactions;
+replace legacy `PipeConnector`/`FluidAction` transfers with transactional capability paths;
+convert remaining ReactorCraft specialized pipe and item-container paths; migrate
+`HybridTank` off deprecated `FluidTank`; and port ChromatiCraft's deferred old-Forge fluid
+cluster fully before adding it to the build slice. Audit side restrictions and component
+identity during those changes. See `IFLUIDHANDLER-26.2-MIGRATION-REPORT.md` for the
+area-by-area inventory; its 2026-09-26 counts are the baseline before these edits.
+
+Further work in this checkpoint: RotaryCraft engine, Controller, Gearbox, Advanced Gear,
+Spillway, Obsidian Maker, Vacuum, Aerosolizer, Fluid Cannon, Bucket Filler and
+`EnergyToPowerBase` now expose transactional fluid views. Pulse Furnace exposes its water,
+jet fuel and oxygen inputs as three filtered tanks. Steam Turbine combines its liquid
+nitrogen tank with a rollback-safe steam energy input on the block-facing side. The Friction
+Boiler now pushes steam upward through an atomic capability move. Engine and
+Reservoir player buckets now require an exact 1000 mB transaction before replacing the held
+item; engine extraction also uses the unsided transactional view. Obsidian Maker,
+Fermenter, Pulse Furnace and Big Furnace player buckets use the same exact-fill rule.
+Bucket Filler transfers
+between its tank and item fluid capability in one transaction, with item replacement handled
+through `ItemAccess` and its managed inventory. ReactorCraft's Fuel Dump, Intermediate Boiler
+family and Water Cell intake also use modern capability paths. ReactorCraft's machine block
+now transfers Synthesizer, Electrolyzer, Heavy Pump, boiler, U Processor, Centrifuge and
+Turbine Core buckets/canisters transactionally; the U Processor's inventory container path
+uses an item capability and commits only a complete fluid move. The Centrifuge keeps its
+pipe-facing view input-only while allowing player canister withdrawal through the unsided
+view. The active ChromatiCraft `CrystalTank` API now extends `HasFluidResourceHandler`.
+
+Additional focused 26.2 GameTests pass for Gas Engine sides, Controller-to-Engine fuel,
+Aerosolizer rollback, Gearbox's material-specific lubricant limit, Water Cell intake from a
+RotaryCraft reservoir, Steam Turbine steam rollback and sidedness, and both Bucket Filler
+container modes. All five active module `compileJava` tasks have passed after their
+respective changes. This is still a partial migration: many machine implementations retain
+`IFluidHandler` and the old `PipeConnector` contract, `HybridTank` inherits deprecated
+`FluidTank`, and ChromatiCraft's old-Forge fluid classes remain outside its accepted build
+slice. Passing module compiles do not establish an all-modern fluid path.
+
+The subsequent pipe pass gave transactional capability views to the remaining active
+RotaryCraft `PipeConnector` classes: Spiller, Centrifuge, Grinder, Pump, Solar Tower, Gas Tank,
+Filling Station's shared `PoweredLiquidInOut` base, and both sprinklers' shared base. Gas Tank
+reports its torque- and fluid-dependent usable capacity through the shared tank handler.
+Sprinklers journal their integer water store and draw from pipe capabilities atomically.
+Spiller and Solar Tower gained working fluid intake where their old `fillPipe` methods
+returned zero. Both RotaryCraft and ReactorCraft pipe branches now transfer to and from
+`PipeConnector` machines through `Capabilities.Fluid.BLOCK` and `ResourceHandlerUtil.move`;
+their direct pipe-to-pipe balancing paths are still legacy internal paths. The Friction Boiler
+also pushes steam to the block above in one capability transaction. Focused tests pass for
+Pump-to-pipe water/lava output, pipe-to-Pulse-Furnace water conservation, and ReactorCraft
+Gas Duct-to-RotaryCraft Reservoir deuterium conservation. The reservoir is covered in that
+test because its normal gas evaporation consumes 100 mB per tick.
+
+### Legacy fluid API removed from all compiled code (2026-09-27)
+
+This completes the 26.2 fluid migration for everything in the build. It is a prerequisite for
+26.3, where NeoForge deletes `IFluidHandler`, `FluidTank`, `FluidAction` and the old `FluidUtil`
+outright (see `PORT-26.3-RESEARCH.md`).
+
+- `HybridTank` no longer extends the deprecated `FluidTank`. It owns its `fluid`, `capacity` and
+  `validator` fields, and its direct `fill`/`drain` take `doFill`/`doDrain` booleans, which is the
+  1.7.10 `HybridTank`'s own contract. Their bodies are NeoForge's former `FluidTank` logic, so
+  component matching and `onContentsChanged` timing are unchanged. Named NBT is unchanged.
+- `PipeConnector.fillPipe`/`drainPipe` are removed. Nothing called them any more: both pipe
+  families already moved fluid through `Capabilities.Fluid.BLOCK`. The interface now only
+  describes connection and flow direction.
+- 306 legacy members were removed across 63 RotaryCraft, 21 ReactorCraft and 1 ElectriCraft
+  classes: the `IFluidHandler` overrides and the `fillPipe`/`drainPipe` implementations.
+  Before deletion, each `fillPipe`/`drainPipe` side rule was checked against that machine's
+  `getFluidHandler(side)`; all match. Where they disagreed, 1.7.10 decided, and in every case the
+  capability view was the faithful one:
+  - Heat Exchanger drains only horizontally (`offsetY == 0`); the legacy override also allowed
+    the top.
+  - Grindstone and Big Furnace accept fluid through the inherited receiver (any side, and
+    horizontal sides, respectively); the legacy overrides returned 0.
+  - Magnet Engine inherits `EnergyToPowerBase`'s liquid nitrogen input; the legacy override
+    reported no tanks.
+  - Obsidian Maker accepts water and lava from horizontal sides (1.7.10 `canFill` requires
+    `offsetY == 0`); the legacy `fillPipe` returned 0.
+  - Friction Boiler accepts water through the inherited `PoweredLiquidIO` input on horizontal
+    sides; the legacy `fillPipe` returned 0.
+
+  The audit covered every compiled module's machines: those whose view is inherited from a base, and
+  those with their own view (Pump, Pulse Furnace, Solar Tower, both Centrifuges, Grinder, Fluid
+  Compressor, Bucket Filler, Spiller, Engine Controller, Vacuum, sprinklers, Gearbox, Advanced
+  Gear, Spillway and Aerosolizer). No deleted member belonged to an inner or anonymous
+  `HybridTank` subclass, so no tank-level override was lost.
+- Machine policy that the views call (`canFill`, `canDrain`, `isValidFluid`) is kept. The
+  Electrolyzer's recipe-input test became `isElectrolysisInput(Fluid)`. The Steam Turbine's
+  transactional steam handler now goes through the 1.7.10 `addEnergy(amount, doAdd)` helper
+  instead of duplicating its clamp.
+- The legacy `fluids.FluidUtil.getFluidContained` was replaced by
+  `transfer.fluid.FluidUtil.getFirstStackContained` in three places: `ReikaFluidHelper`,
+  ChromatiCraft `BlockParticleSpawner`, and RotaryCraft `BlockEntityBlockCannon`. This matches
+  1.7.10's `getFluidForFilledItem`. The Block Cannon previously called `.get()` on an empty
+  `Optional`, so any non-fluid item in its inventory threw.
+
+Verification: `compileJava` passes for all six modules. A bytecode scan of every module's
+`build/classes` finds no reference to `neoforge/fluids/capability/*`, the legacy
+`fluids/FluidUtil`, `FluidActionResult`, or `IFluidTank`. Full unselected GameTest suites:
+RotaryCraft 47/47, ReactorCraft 6/6, ElectriCraft 12/12.
+
+ChromatiCraft ran 168 tests and 160 passed. The 8 failures are unrelated to this change:
+`liquid_chroma_elemental_loop`, `pool_alloying_survival_loop`,
+`ball_lightning_entity_contract`, `geode_ore_survival_path`, `tiered_plant_survival_sources`,
+`proxima_tree_cluster`, `music_puzzle_layout` and `proxima_structure_placement`. Compiled
+ChromatiCraft references neither `HybridTank` nor `ReikaFluidHelper.getFluidForItem`, and the
+only ChromatiCraft file edited, `BlockParticleSpawner`'s fluid-item click, is not on any failing
+path. The failures are pre-existing and need their own investigation.
+
+Still outside this checkpoint:
+- ChromatiCraft's deferred 1.7.10 fluid cluster imports `net.minecraftforge` and is not in the
+  build slice. It adopts the capability pattern when each cluster is ported.
+- Direct pipe-to-pipe balancing still manipulates Reika's own tanks directly. It uses no
+  NeoForge API and is unaffected by 26.3.
+- The item and energy legacy APIs (`IItemHandler`, `SlotItemHandler`, `ItemStackHandler`,
+  `IEnergyStorage`) are also deleted in 26.3 and are a separate migration.
+
+## ReactorCraft Jade and JEI integration checkpoint (2026-09-27)
+
+ReactorCraft now registers a Jade provider on its machine blocks and formed multiblock blocks.
+It reads machine status, temperature, shaft power and requirements, occupied inventory slots,
+fluid tanks, and comparator output from the server where those interfaces are available. The
+plugin descriptor and all labels are present in generated client resources.
+
+JEI now covers the Processor and Isotope Centrifuge datapack recipe types and the active fixed
+process lists for the Electrolyzer, Synthesizer, and Tritizer. It displays fluid and item
+inputs, outputs, process times, temperature and speed requirements, and chance information
+provided by those definitions. NeoForge recipe sync sends the two custom types to multiplayer
+clients; JEI refreshes them after datapack reload. `:ReactorCraft:compileJava --offline` and
+`:ReactorCraft:runClientData --offline` pass. A graphical Jade/JEI check and multiplayer reload
+check remain. The three fixed process lists still live in legacy runtime code; migrating those
+definitions to datagen is separate porting work, after which JEI should read the new recipe types.

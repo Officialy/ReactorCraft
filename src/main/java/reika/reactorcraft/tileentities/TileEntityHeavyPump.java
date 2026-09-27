@@ -22,10 +22,13 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 import net.minecraft.world.level.block.state.BlockState;
 
 import reika.dragonapi.instantiable.HybridTank;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
+import reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
 import reika.dragonapi.libraries.level.ReikaBiomeHelper;
@@ -43,7 +46,7 @@ import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
 import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
-public class TileEntityHeavyPump extends TileEntityReactorBase implements ReactorPowerReceiver, IFluidHandler, PipeConnector {
+public class TileEntityHeavyPump extends TileEntityReactorBase implements ReactorPowerReceiver, PipeConnector, HasFluidResourceHandler {
 
 	public TileEntityHeavyPump(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.FLUIDEXTRACTOR.get(), pos, state);
@@ -66,6 +69,14 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	private StepTimer timer = new StepTimer(20);
 
 	private final HybridTank tank = new HybridTank("heavypump", 8000);
+	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(
+			new HybridTank[] {tank}, (index, resource) -> false,
+			(index, resource) -> true, this::setChanged);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null || side.getAxis().isHorizontal() ? fluidHandler : null;
+	}
 
 	// The legacy world-fluid logic and config key on the old integer dimension ids; map the vanilla
 	// dimensions back to those ids so ReactorConfig (still int-keyed) and the surface-Y logic stay faithful.
@@ -184,57 +195,23 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 	}
 
 	private void harvest(Extraction e, Level world, int x, int y, int z) {
-		tank.fill(new FluidStack(e.output, e.getExtractedAmount(world, x, y, z)), IFluidHandler.FluidAction.EXECUTE);
+		tank.fill(new FluidStack(e.output, e.getExtractedAmount(world, x, y, z)), true);
 		e.onHarvest(world, x, y, z, this.getPlacer());
 	}
 
-	// --- NeoForge IFluidHandler (output-only: filled by extraction, drained out the sides) ---
-	@Override
-	public int getTanks() {
-		return 1;
-	}
 
-	@Override
-	public FluidStack getFluidInTank(int t) {
-		return tank.getFluid();
-	}
 
-	@Override
-	public int getTankCapacity(int t) {
-		return tank.getCapacity();
-	}
 
-	@Override
-	public boolean isFluidValid(int t, FluidStack stack) {
-		return false;
-	}
 
-	@Override
-	public int fill(FluidStack resource, FluidAction action) {
-		return 0;
-	}
 
-	@Override
-	public FluidStack drain(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty())
-			return FluidStack.EMPTY;
-		FluidStack in = tank.getFluid();
-		if (in.isEmpty() || !FluidStack.isSameFluidSameComponents(resource, in))
-			return FluidStack.EMPTY;
-		return tank.drain(resource.getAmount(), action);
-	}
 
-	@Override
-	public FluidStack drain(int maxDrain, FluidAction action) {
-		return tank.drain(maxDrain, action);
-	}
 
 	public boolean hasABucket() {
 		return !tank.getFluid().isEmpty() && tank.getFluid().getAmount() >= FluidType.BUCKET_VOLUME;
 	}
 
 	public void subtractBucket() {
-		tank.drain(FluidType.BUCKET_VOLUME, IFluidHandler.FluidAction.EXECUTE);
+		tank.drain(FluidType.BUCKET_VOLUME, true);
 	}
 
 	public int getTankLevel() {
@@ -285,15 +262,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 		return this.canConnectToPipe(p) && side.getStepY() == 0;
 	}
 
-	@Override
-	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
-		return 0;
-	}
 
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
-		return from.getStepY() == 0 ? tank.drain(maxDrain, doDrain) : FluidStack.EMPTY;
-	}
 
 	@Override
 	public Flow getFlowForSide(Direction side) {

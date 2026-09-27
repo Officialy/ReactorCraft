@@ -18,17 +18,23 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.dragonapi.instantiable.HybridTank;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
+import reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler;
 import reika.dragonapi.libraries.java.ReikaStringParser;
 import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
 import reika.rotarycraft.base.blockentity.BlockEntityPiping;
 import reika.rotarycraft.registry.MachineRegistry;
 
-public abstract class TileEntityTankedReactorMachine extends TileEntityReactorBase implements IFluidHandler, PipeConnector {
+public abstract class TileEntityTankedReactorMachine extends TileEntityReactorBase implements PipeConnector, HasFluidResourceHandler {
 
 	protected final HybridTank tank = new HybridTank(ReikaStringParser.stripSpaces(this.getTEName().toLowerCase(Locale.ENGLISH)), this.getCapacity());
+	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(
+			new HybridTank[]{tank}, (index, resource) -> isValidFluid(resource.getFluid()),
+			(index, resource) -> false, this::setChanged);
 
 	public TileEntityTankedReactorMachine(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
@@ -60,44 +66,17 @@ public abstract class TileEntityTankedReactorMachine extends TileEntityReactorBa
 		return this.canReceiveFrom(from) && this.isValidFluid(f);
 	}
 
-	// --- NeoForge IFluidHandler (input-only tank; sided filtering is done by the block's
-	// capability wrapper / the RC PipeConnector protocol below) ---
 	@Override
-	public int getTanks() {
-		return 1;
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null || canReceiveFrom(side) ? fluidHandler : null;
 	}
 
-	@Override
-	public FluidStack getFluidInTank(int tank) {
-		return this.tank.getFluid();
-	}
 
-	@Override
-	public int getTankCapacity(int tank) {
-		return this.tank.getCapacity();
-	}
 
-	@Override
-	public boolean isFluidValid(int tank, FluidStack stack) {
-		return this.isValidFluid(stack.getFluid());
-	}
 
-	@Override
-	public int fill(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty() || !this.isValidFluid(resource.getFluid()))
-			return 0;
-		return tank.fill(resource, action);
-	}
 
-	@Override
-	public FluidStack drain(FluidStack resource, FluidAction action) {
-		return FluidStack.EMPTY;
-	}
 
-	@Override
-	public FluidStack drain(int maxDrain, FluidAction action) {
-		return FluidStack.EMPTY;
-	}
+
 
 	// --- RC pipe protocol ---
 	@Override
@@ -105,17 +84,7 @@ public abstract class TileEntityTankedReactorMachine extends TileEntityReactorBa
 		return this.canReceiveFrom(side) && this.canConnectToPipe(p);
 	}
 
-	@Override
-	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
-		if (resource.isEmpty() || !this.canFill(from, resource.getFluid()))
-			return 0;
-		return tank.fill(resource, action);
-	}
 
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
-		return FluidStack.EMPTY;
-	}
 
 	@Override
 	public BlockEntityPiping.Flow getFlowForSide(Direction side) {

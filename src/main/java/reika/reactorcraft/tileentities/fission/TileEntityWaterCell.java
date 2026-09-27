@@ -21,7 +21,10 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.transfer.ResourceHandlerUtil;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.auxiliary.ReactorCoreTE;
@@ -53,32 +56,23 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 				this.setLiquidState(LiquidStates.EMPTY);
 			}
 		}
-		if (MachineRegistry.getMachine(world, pos.above()) == MachineRegistry.RESERVOIR) {
-			BlockEntityReservoir te = (BlockEntityReservoir) this.getAdjacentBlockEntity(Direction.UP);
-			if (te.getFluidLevel() >= 1000) {
-				Fluid f = te.getFluid().getFluid();
-				if (this.canIntakeFluid(f)) {
-					te.removeLiquid(1000);
-					this.setLiquidState(LiquidStates.getState(f));
-				}
-			}
-		}
-
 		if (thermalTicker.checkCap() && !world.isClientSide()) {
 			this.updateTemperature(world, pos);
 		}
 
-		if (this.getLiquidState() == LiquidStates.EMPTY) {
-			BlockEntity te = world.getBlockEntity(pos.above());
-			if (te instanceof IFluidHandler ic) {
-				FluidStack liq = ic.drain(FluidType.BUCKET_VOLUME, IFluidHandler.FluidAction.SIMULATE);
-				if (!liq.isEmpty() && liq.getAmount() >= FluidType.BUCKET_VOLUME) {
-					ic.drain(FluidType.BUCKET_VOLUME, IFluidHandler.FluidAction.EXECUTE);
-					if (liq.getFluid().equals(Fluids.WATER)) {
-						this.setLiquidState(LiquidStates.WATER);
-					}
-					else if (liq.getFluid().equals(ReactorFluids.getLegacyFluid("rc heavy water"))) {
-						this.setLiquidState(LiquidStates.HEAVY);
+		if (!world.isClientSide() && internalLiquid == LiquidStates.EMPTY) {
+			var source = world.getCapability(Capabilities.Fluid.BLOCK, pos.above(), Direction.DOWN);
+			if (source != null) {
+				try (Transaction tx = Transaction.openRoot()) {
+					var extracted = ResourceHandlerUtil.extractFirst(source,
+							resource -> resource.equals(FluidResource.of(Fluids.WATER))
+									|| resource.equals(FluidResource.of(ReactorFluids.getLegacyFluid("rc heavy water"))),
+							FluidType.BUCKET_VOLUME, tx);
+					if (extracted != null && extracted.amount() == FluidType.BUCKET_VOLUME) {
+						Fluid fluid = extracted.resource().getFluid();
+						LiquidStates state = fluid == Fluids.WATER ? LiquidStates.WATER : LiquidStates.HEAVY;
+						tx.commit();
+						this.setLiquidState(state);
 					}
 				}
 			}

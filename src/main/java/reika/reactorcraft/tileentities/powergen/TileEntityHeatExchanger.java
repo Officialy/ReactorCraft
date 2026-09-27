@@ -18,9 +18,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.CombinedResourceHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.dragonapi.instantiable.HybridTank;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.libraries.mathsci.ReikaThermoHelper;
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
@@ -53,6 +56,17 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 	public static final int MINSPEED = 512;
 
 	private final HybridTank output = new HybridTank("exchangerout", this.getCapacity());
+	private final ResourceHandler<FluidResource> outputHandler = new HybridTankResourceHandler(
+			new HybridTank[] {output}, (index, resource) -> false,
+			(index, resource) -> true, this::setChanged);
+	private final ResourceHandler<FluidResource> allFluids = new CombinedResourceHandler<>(
+			super.getFluidHandler(null), outputHandler);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null ? allFluids : side == Direction.UP ? super.getFluidHandler(side)
+				: side == Direction.DOWN ? null : outputHandler;
+	}
 
 	private StepTimer temp = new StepTimer(20);
 
@@ -139,25 +153,8 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 		return temperature < currentRecipe.maxTemperature && tank.getFluidLevel() >= COOL_AMOUNT && output.getRemainingSpace() >= COOL_AMOUNT*currentRecipe.expansionRatio && this.canCoolFluid(tank.getActualFluid().getFluid());
 	}
 
-	@Override
-	public FluidStack drain(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty())
-			return FluidStack.EMPTY;
-		FluidStack out = output.getFluid();
-		if (out.isEmpty() || !FluidStack.isSameFluidSameComponents(resource, out))
-			return FluidStack.EMPTY;
-		return output.drain(resource.getAmount(), action);
-	}
 
-	@Override
-	public FluidStack drain(int maxDrain, FluidAction action) {
-		return output.drain(maxDrain, action);
-	}
 
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction action) {
-		return from != Direction.DOWN ? output.drain(maxDrain, action) : FluidStack.EMPTY;
-	}
 
 	@Override
 	public boolean canConnectToPipe(MachineRegistry m) {

@@ -18,9 +18,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.transfer.CombinedResourceHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.ResourceHandlerUtil;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.dragonapi.instantiable.HybridTank;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
 import reika.reactorcraft.base.TankedReactorPowerReceiver;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorFluids;
@@ -39,6 +44,17 @@ public class TileEntityReactorPump extends TankedReactorPowerReceiver {
 	public static final int MINTORQUE = 1024;
 
 	private final HybridTank output = new HybridTank("pumpout", this.getCapacity());
+	private final ResourceHandler<FluidResource> outputHandler = new HybridTankResourceHandler(
+			new HybridTank[] {output}, (index, resource) -> false,
+			(index, resource) -> true, this::setChanged);
+	private final ResourceHandler<FluidResource> allFluids = new CombinedResourceHandler<>(
+			super.getFluidHandler(null), outputHandler);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null ? allFluids : side == Direction.UP ? super.getFluidHandler(side)
+				: side.getAxis().isHorizontal() ? outputHandler : null;
+	}
 
 	@Override
 	public ReactorTiles getTile() {
@@ -74,16 +90,12 @@ public class TileEntityReactorPump extends TankedReactorPowerReceiver {
 	private void dumpFluids(Level world, BlockPos pos) {
 		for (int i = 2; i < 6; i++) {
 			Direction dir = dirs[i];
-			BlockEntity te = this.getAdjacentBlockEntity(dir);
-			if (te instanceof PipeConnector pc) {
-				int amt = pc.fillPipe(dir.getOpposite(), output.getFluid(), IFluidHandler.FluidAction.EXECUTE);
-				if (amt > 0)
-					output.removeLiquid(amt);
-			}
-			else if (te instanceof IFluidHandler fl) {
-				int amt = fl.fill(output.getFluid(), IFluidHandler.FluidAction.EXECUTE);
-				if (amt > 0)
-					output.removeLiquid(amt);
+			ResourceHandler<FluidResource> target = world.getCapability(Capabilities.Fluid.BLOCK,
+					pos.relative(dir), dir.getOpposite());
+			if (target != null) {
+				FluidResource resource = FluidResource.of(output.getFluid());
+				ResourceHandlerUtil.move(outputHandler, target, candidate -> candidate.equals(resource),
+						output.getFluidLevel(), null);
 			}
 		}
 	}
@@ -121,11 +133,6 @@ public class TileEntityReactorPump extends TankedReactorPowerReceiver {
 		output.writeToNBT(NBT);
 	}
 
-	// The pump's output tank is drained by adjacent pipes pulling on the horizontal sides.
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
-		return from.getAxis().isHorizontal() ? output.drain(maxDrain, doDrain) : FluidStack.EMPTY;
-	}
 
 	@Override
 	public BlockEntityPiping.Flow getFlowForSide(Direction side) {

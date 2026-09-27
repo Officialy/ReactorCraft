@@ -95,7 +95,7 @@ public class TileEntityFuelRod extends TileEntityNuclearCore {
 						if (ReikaRandomHelper.doWithChance(f.consumeChance)) {
 							ItemStack is = itemHandler.getStackInSlot(3);
 							itemHandler.setStackInSlot(3, f.getFissionProduct(is));
-							if (itemHandler.getStackInSlot(3) != null && itemHandler.getStackInSlot(3).getItem() != is.getItem())
+							if (!itemHandler.getStackInSlot(3).isEmpty() && itemHandler.getStackInSlot(3).getItem() != is.getItem())
 								this.tryPushSpentFuel(3);
 							if (ReikaRandomHelper.doWithChance(f.wasteChance))
 								this.addWaste();

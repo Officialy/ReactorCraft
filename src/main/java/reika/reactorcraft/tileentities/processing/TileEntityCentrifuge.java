@@ -17,28 +17,28 @@ import net.minecraft.world.level.block.state.BlockState;
 import reika.reactorcraft.container.MenuCentrifuge;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.dragonapi.instantiable.HybridTank;
+import reika.dragonapi.instantiable.storage.FilteredFluidResourceHandler;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
+import reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler;
 import reika.dragonapi.instantiable.StepTimer;
 import reika.dragonapi.libraries.ReikaInventoryHelper;
-import reika.dragonapi.libraries.java.ReikaJavaLibrary;
 import reika.dragonapi.libraries.java.ReikaRandomHelper;
 import reika.dragonapi.libraries.registry.ReikaItemHelper;
+import reika.reactorcraft.auxiliary.recipe.CentrifugeRecipe;
 import reika.reactorcraft.auxiliary.ReactorPowerReceiver;
-import reika.reactorcraft.auxiliary.ReactorStacks;
 import reika.reactorcraft.base.TileEntityInventoriedReactorBase;
 import reika.reactorcraft.registry.ReactorFluids;
+import reika.reactorcraft.registry.ReactorRecipeTypes;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.api.power.BasicPowerHandler;
 import reika.rotarycraft.api.power.PowerTransferHelper;
@@ -46,7 +46,7 @@ import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
 import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
-public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase implements IFluidHandler, ReactorPowerReceiver, PipeConnector {
+public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase implements ReactorPowerReceiver, PipeConnector, HasFluidResourceHandler {
 	public TileEntityCentrifuge(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.CENTRIFUGE.get(), pos, state);
 	}
@@ -61,19 +61,24 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 	public static final int UF6_PER_DUST = 50;
 	public static final int FUEL_CHANCE = 9;
 
-	private static final HashMap<Fluid, Centrifuging> recipes = new HashMap();
-
 	private final HybridTank tank = new HybridTank("centri", 12000);
+	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(
+			new HybridTank[] {tank},
+			(index, resource) -> this.getRecipe(resource.getFluid()) != null,
+			(index, resource) -> true, this::setChanged);
+	private final ResourceHandler<FluidResource> inputFluidView = new FilteredFluidResourceHandler(
+			fluidHandler, index -> true, (index, resource) -> true,
+			(index, resource) -> false);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null ? fluidHandler : side == Direction.UP ? inputFluidView : null;
+	}
 
 	private StepTimer timer = new StepTimer(900);
 
 	private final BasicPowerHandler powerHandler = new BasicPowerHandler();
 	public int split; //timer
-
-	@Override
-	protected void onFirstTick(Level world, BlockPos pos) {
-		ReikaJavaLibrary.initClass(Centrifuging.class);
-	}
 
 	@Override
 	public ReactorTiles getTile() {
@@ -115,10 +120,11 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 			this.noInputMachine();
 		}
 
-		if (powerHandler.getPower() > 0 && powerHandler.getOmega() >= MINSPEED && !tank.isEmpty()) {
-			Centrifuging recipe = recipes.get(tank.getActualFluid().getFluid());
-			if (recipe != null && tank.getFluidLevel() >= recipe.fluidAmount && this.hasInventorySpace(recipe)) {
-				timer.update(recipe.speedFactor);
+		if (powerHandler.getPower() > 0 && !tank.isEmpty()) {
+			CentrifugeRecipe recipe = this.getRecipe(tank.getActualFluid().getFluid());
+			if (recipe != null && powerHandler.getOmega() >= recipe.getMinSpeed()
+					&& tank.getFluidLevel() >= recipe.getInput().getAmount() && this.hasInventorySpace(recipe)) {
+				timer.update(recipe.getSpeedFactor());
 				if (timer.checkCap()) {
 					if (!world.isClientSide())
 						this.make(recipe);
@@ -166,20 +172,30 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 			return 900;
 	}
 
-	private void make(Centrifuging recipe) {
-		tank.removeLiquid(recipe.fluidAmount);
-		if (ReikaRandomHelper.doWithPercentChance(recipe.chanceOfAOverB)) {
+	private CentrifugeRecipe getRecipe(Fluid fluid) {
+		if (level == null || level.getServer() == null || fluid == null)
+			return null;
+		return level.getServer().getRecipeManager().recipeMap()
+				.byType(ReactorRecipeTypes.CENTRIFUGE.get()).stream()
+				.map(holder -> holder.value())
+				.filter(recipe -> recipe.matches(new CentrifugeRecipe.FluidInput(new FluidStack(fluid, 1)), level))
+				.findFirst().orElse(null);
+	}
+
+	private void make(CentrifugeRecipe recipe) {
+		tank.removeLiquid(recipe.getInput().getAmount());
+		if (ReikaRandomHelper.doWithPercentChance(recipe.getChanceOfAOverB())) {
 			ReikaInventoryHelper.addOrSetStack(recipe.getOutputA(), itemHandler, 0);
 		}
-		else if (recipe.outputB != null) {
+		else if (!recipe.getOutputB().isEmpty()) {
 			ReikaInventoryHelper.addOrSetStack(recipe.getOutputB(), itemHandler, 1);
 		}
 	}
 
-	private boolean hasInventorySpace(Centrifuging recipe) {
-		if (!itemHandler.getStackInSlot(0).isEmpty() && !ReikaItemHelper.matchStacks(itemHandler.getStackInSlot(0), recipe.outputA))
+	private boolean hasInventorySpace(CentrifugeRecipe recipe) {
+		if (!itemHandler.getStackInSlot(0).isEmpty() && !ReikaItemHelper.matchStacks(itemHandler.getStackInSlot(0), recipe.getOutputA()))
 			return false;
-		if (!itemHandler.getStackInSlot(1).isEmpty() && recipe.outputB != null && !ReikaItemHelper.matchStacks(itemHandler.getStackInSlot(1), recipe.outputB))
+		if (!itemHandler.getStackInSlot(1).isEmpty() && !recipe.getOutputB().isEmpty() && !ReikaItemHelper.matchStacks(itemHandler.getStackInSlot(1), recipe.getOutputB()))
 			return false;
 		if (!itemHandler.getStackInSlot(0).isEmpty() && itemHandler.getStackInSlot(0).getCount() >= itemHandler.getStackInSlot(0).getMaxStackSize())
 			return false;
@@ -276,43 +292,12 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 		powerHandler.noInputMachine();
 	}
 
-	// --- NeoForge IFluidHandler (input-only: accepts UF6 from the top) ---
-	@Override
-	public int getTanks() {
-		return 1;
-	}
 
-	@Override
-	public FluidStack getFluidInTank(int t) {
-		return tank.getFluid();
-	}
 
-	@Override
-	public int getTankCapacity(int t) {
-		return tank.getCapacity();
-	}
 
-	@Override
-	public boolean isFluidValid(int t, FluidStack stack) {
-		return recipes.containsKey(stack.getFluid());
-	}
 
-	@Override
-	public int fill(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty() || !recipes.containsKey(resource.getFluid()))
-			return 0;
-		return tank.fill(resource, action);
-	}
 
-	@Override
-	public FluidStack drain(FluidStack resource, FluidAction action) {
-		return FluidStack.EMPTY;
-	}
 
-	@Override
-	public FluidStack drain(int maxDrain, FluidAction action) {
-		return FluidStack.EMPTY;
-	}
 
 	@Override
 	protected void readSyncTag(CompoundTag NBT) {
@@ -370,15 +355,7 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 		return this.canConnectToPipe(p) && side == Direction.UP;
 	}
 
-	@Override
-	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
-		return from == Direction.UP && !resource.isEmpty() && recipes.containsKey(resource.getFluid()) ? tank.fill(resource, action) : 0;
-	}
 
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
-		return FluidStack.EMPTY;
-	}
 
 	@Override
 	public Flow getFlowForSide(Direction side) {
@@ -413,59 +390,4 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 		return tank.getActualFluid().getFluid();
 	}
 
-	public static Collection<Centrifuging> getRecipes() {
-		ReikaJavaLibrary.initClass(Centrifuging.class);
-		return Collections.unmodifiableCollection(recipes.values());
-	}
-
-	public static Centrifuging getRecipe(Fluid f) {
-		ReikaJavaLibrary.initClass(Centrifuging.class);
-		return recipes.get(f);
-	}
-
-	public static enum Centrifuging {
-
-		UF6(ReactorFluids.UF6.get(), UF6_PER_DUST, ReactorStacks.fueldust, ReactorStacks.depdust, FUEL_CHANCE);
-
-		public final Fluid input;
-		public final int fluidAmount;
-		private final ItemStack outputA;
-		private final ItemStack outputB;
-		public final float chanceOfAOverB; //percentage
-
-		public final int minSpeed;
-		public final int speedFactor;
-
-		private Centrifuging(Fluid f, int amt, ItemStack a, ItemStack b, float c) {
-			this(f, amt, a, b, c, MINSPEED, 1);
-		}
-
-		private Centrifuging(Fluid f, int amt, ItemStack a, ItemStack b, float c, int ms, int sf) {
-			input = f;
-			fluidAmount = amt;
-			outputA = a;
-			outputB = b;
-			chanceOfAOverB = c;
-
-			minSpeed = ms;
-			speedFactor = sf;
-
-			if (recipes.containsKey(f))
-				throw new IllegalArgumentException("Fluid "+f+" already registered to a recipe!");
-			recipes.put(f, this);
-		}
-
-		public ItemStack getOutputA() {
-			return outputA.copy();
-		}
-
-		public ItemStack getOutputB() {
-			return outputB != null ? outputB.copy() : null;
-		}
-
-		public boolean produces(ItemStack result) {
-			return ReikaItemHelper.matchStacks(outputA, result) || (outputB != null && ReikaItemHelper.matchStacks(outputB, result));
-		}
-
-	}
 }

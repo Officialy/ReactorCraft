@@ -1,4 +1,4 @@
-// 26.2	2026-07-18T17:13:21.4360579	ReactorCraft Recipes
+// 26.2	2026-09-25T14:42:25.1327261	ReactorCraft Recipes
 90e69a31dda37bc7bbc6b112ee919778ecce46dc data/reactorcraft/advancement/recipes/combat/hazmat_boots.json
 10e0429a7ab57f4d5ba158badf2772c15b8f122a data/reactorcraft/advancement/recipes/combat/hazmat_chestplate.json
 7a6994c950bd535010bd91062cbb0fa13ea58011 data/reactorcraft/advancement/recipes/combat/hazmat_helmet.json
@@ -124,7 +124,7 @@ fb5a4f892c1d2653ffa619af9d691c4c037195ed data/reactorcraft/advancement/recipes/m
 99375c7d486b99d1148f54ffd8b170f51a6ea3a6 data/reactorcraft/advancement/recipes/tools/geiger_counter.json
 2345421c712128446bc154f2e5ba92e723b1cbe5 data/reactorcraft/advancement/recipes/tools/iron_finder.json
 c76d938994aea9b9a35baee6b88f74fe90ee1054 data/reactorcraft/advancement/recipes/tools/radiation_cleaner.json
-e3c3a71afd331bb2d0bf14e5dba2bb7f37d9c803 data/reactorcraft/recipe/alloy.json
+3a2b317dea7067e9c47308dd4a592258d72b80e9 data/reactorcraft/recipe/alloy.json
 b9f054f7a32f9a945d19c6f171300b84eda02a6c data/reactorcraft/recipe/auxiliary_permanent_magnet.json
 01dd358af08d99dbe68b05a6c5717b43f64fd86a data/reactorcraft/recipe/blue_tritium_lamp.json
 013e7b2cd5552823e61d5374e0d0cbf6aa37b01d data/reactorcraft/recipe/breeder_core.json
@@ -160,7 +160,7 @@ c59c51a8c4355d8b747323cee527e485bb8b970d data/reactorcraft/recipe/control_rod_bl
 b04d500bca542ef4382e491903ec254ef548c571 data/reactorcraft/recipe/depleted_fuel.json
 cd3ba689f9d53da5ace4c616f49c4e4b8ae56cf0 data/reactorcraft/recipe/electrolyzer.json
 81bf612600c213cbd45d420952521d207c06323a data/reactorcraft/recipe/ferromagnetic_base.json
-748e05a92c26e9e3fa21a9ef60a9a93defd9fd10 data/reactorcraft/recipe/ferromagnetic_ingot.json
+6495a722b815141a1cc7e3e8589da16986dced4f data/reactorcraft/recipe/ferromagnetic_ingot.json
 d1db75ab3bcec31eeacd487b8afdc9992989d210 data/reactorcraft/recipe/fuel.json
 cc581d6ab0d8b34cec9ea7b5dbd337191dd70c02 data/reactorcraft/recipe/fuel_dump.json
 19c8f01cc71f5a6e5ab6934301d479b56e77d3ae data/reactorcraft/recipe/fuel_rod.json
@@ -191,7 +191,7 @@ a85571eef0fdec51777a6a9ba8f83dc7e05ff931 data/reactorcraft/recipe/hysteresis_uni
 7ba6c8166215388f1fe7280620e06e99dbcf2f37 data/reactorcraft/recipe/isotope_centrifuge.json
 8e1034525c76b5e3fc86281f5391dc5607099341 data/reactorcraft/recipe/laser_concentration_lens.json
 cd968a8f27081dc2be83fe140d14b28eb373c4dc data/reactorcraft/recipe/leather_from_lime.json
-b9320341ebf614e22f89632ebd2f1124c2c84f74 data/reactorcraft/recipe/lime_from_egg.json
+ee7d1868b970726027efdea83bad46a08a296b50 data/reactorcraft/recipe/lime_from_egg.json
 c6e11dc38b006f5f7bc0e25b2c94abafd1ea32e3 data/reactorcraft/recipe/lodestone_block.json
 2b41d2e374b314117c0cc4a2aeba0f19ea963d67 data/reactorcraft/recipe/lodestone_block_uncraft.json
 bed1a28958ee66fa4439a240522705d418c59528 data/reactorcraft/recipe/magenta_tritium_lamp.json

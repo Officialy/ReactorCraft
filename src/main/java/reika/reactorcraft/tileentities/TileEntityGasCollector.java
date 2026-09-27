@@ -22,11 +22,14 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.dragonapi.auxiliary.trackers.ItemMaterialController;
 import reika.dragonapi.instantiable.HybridTank;
 import reika.dragonapi.instantiable.ItemMaterial;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
+import reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler;
 import reika.reactorcraft.base.TileEntityReactorBase;
 import reika.reactorcraft.blocks.BlockReactorMachine;
 import reika.reactorcraft.registry.ReactorBlockEntities;
@@ -38,13 +41,21 @@ import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.blockentities.production.BlockEntityRefrigerator;
 import reika.rotarycraft.registry.MachineRegistry;
 
-public class TileEntityGasCollector extends TileEntityReactorBase implements IFluidHandler, PipeConnector, RefrigeratorAttachment {
+public class TileEntityGasCollector extends TileEntityReactorBase implements PipeConnector, RefrigeratorAttachment, HasFluidResourceHandler {
 
 	public TileEntityGasCollector(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.COLLECTOR.get(), pos, state);
 	}
 
 	private final HybridTank tank = new HybridTank("co2collector", 1000);
+	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(
+			new HybridTank[] {tank}, (index, resource) -> false,
+			(index, resource) -> true, this::setChanged);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null || side == readDir.getOpposite() ? fluidHandler : null;
+	}
 
 	private Direction readDir = Direction.DOWN;
 
@@ -86,46 +97,12 @@ public class TileEntityGasCollector extends TileEntityReactorBase implements IFl
 		return bs.is(Blocks.FURNACE) || MachineRegistry.getMachine(level, tgt) == MachineRegistry.REFRIGERATOR;
 	}
 
-	// --- NeoForge IFluidHandler (output-only: filled internally via addLiquid, drained out via pipe) ---
-	@Override
-	public int getTanks() {
-		return 1;
-	}
 
-	@Override
-	public FluidStack getFluidInTank(int tank) {
-		return this.tank.getFluid();
-	}
 
-	@Override
-	public int getTankCapacity(int tank) {
-		return this.tank.getCapacity();
-	}
 
-	@Override
-	public boolean isFluidValid(int tank, FluidStack stack) {
-		return false;
-	}
 
-	@Override
-	public int fill(FluidStack resource, FluidAction action) {
-		return 0;
-	}
 
-	@Override
-	public FluidStack drain(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty())
-			return FluidStack.EMPTY;
-		FluidStack in = tank.getFluid();
-		if (in.isEmpty() || !FluidStack.isSameFluidSameComponents(resource, in))
-			return FluidStack.EMPTY;
-		return tank.drain(resource.getAmount(), action);
-	}
 
-	@Override
-	public FluidStack drain(int maxDrain, FluidAction action) {
-		return tank.drain(maxDrain, action);
-	}
 
 	@Override
 	public ReactorTiles getTile() {
@@ -172,15 +149,7 @@ public class TileEntityGasCollector extends TileEntityReactorBase implements IFl
 		return this.canConnectToPipe(m) && this.getFlowForSide(side) != Flow.NONE;
 	}
 
-	@Override
-	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
-		return 0;
-	}
 
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
-		return from == readDir.getOpposite() ? tank.drain(maxDrain, doDrain) : FluidStack.EMPTY;
-	}
 
 	@Override
 	public Flow getFlowForSide(Direction side) {

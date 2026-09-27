@@ -17,10 +17,14 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.dragonapi.DragonAPI;
 import reika.dragonapi.instantiable.HybridTank;
+import reika.dragonapi.instantiable.storage.FilteredFluidResourceHandler;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
+import reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler;
 import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
 import reika.dragonapi.libraries.level.ReikaWorldHelper;
 import reika.reactorcraft.auxiliary.MultiBlockTile;
@@ -37,7 +41,7 @@ import reika.rotarycraft.auxiliary.interfaces.TemperatureTE;
 import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
 
-public class TileEntityFusionHeater extends TileEntityReactorBase implements TemperatureTE, Laserable, IFluidHandler, PipeConnector, MultiBlockTile {
+public class TileEntityFusionHeater extends TileEntityReactorBase implements TemperatureTE, Laserable, PipeConnector, MultiBlockTile, HasFluidResourceHandler {
 
 	public TileEntityFusionHeater(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.HEATER.get(), pos, state);
@@ -52,6 +56,25 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 	private final HybridTank tank = new HybridTank("fusionheater", 8000);
 	private final HybridTank h2 = new HybridTank("fusionheaterh2", 4000);
 	private final HybridTank h3 = new HybridTank("fusionheaterh3", 4000);
+	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(
+			new HybridTank[] {h2, h3, tank},
+			(index, resource) -> index == 0
+					? resource.getFluid() == ReactorFluids.getLegacyFluid("rc deuterium")
+					: index == 1 && resource.getFluid() == ReactorFluids.getLegacyFluid("rc tritium"),
+			(index, resource) -> index == 2, this::setChanged);
+	private final ResourceHandler<FluidResource> inputView = new FilteredFluidResourceHandler(
+			fluidHandler, index -> index < 2, (index, resource) -> true,
+			(index, resource) -> false);
+	private final ResourceHandler<FluidResource> outputView = new FilteredFluidResourceHandler(
+			fluidHandler, index -> index == 2, (index, resource) -> false,
+			(index, resource) -> true);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null ? fluidHandler : side == Direction.UP
+				? this.getAdjacentBlockEntity(side) instanceof TileEntityMagneticPipe ? outputView : null
+				: inputView;
+	}
 
 	private boolean exposedToAir() {
 		BlockPos p = this.getBlockPos();
@@ -178,53 +201,12 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 		hasMultiBlock = NBT.getBooleanOr("multi", false);
 	}
 
-	// --- NeoForge IFluidHandler (0=deuterium in, 1=tritium in, 2=plasma out) ---
-	@Override
-	public int getTanks() {
-		return 3;
-	}
 
-	@Override
-	public FluidStack getFluidInTank(int t) {
-		return t == 0 ? h2.getFluid() : t == 1 ? h3.getFluid() : tank.getFluid();
-	}
 
-	@Override
-	public int getTankCapacity(int t) {
-		return t == 2 ? 8000 : 4000;
-	}
 
-	@Override
-	public boolean isFluidValid(int t, FluidStack stack) {
-		return (t == 0 || t == 1) && this.isHydrogen(stack.getFluid());
-	}
 
-	@Override
-	public int fill(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty())
-			return 0;
-		Fluid f = resource.getFluid();
-		if (f.equals(ReactorFluids.getLegacyFluid("rc deuterium")))
-			return h2.fill(resource, action);
-		if (f.equals(ReactorFluids.getLegacyFluid("rc tritium")))
-			return h3.fill(resource, action);
-		return 0;
-	}
 
-	@Override
-	public FluidStack drain(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty())
-			return FluidStack.EMPTY;
-		FluidStack out = tank.getFluid();
-		if (out.isEmpty() || !FluidStack.isSameFluidSameComponents(resource, out))
-			return FluidStack.EMPTY;
-		return tank.drain(resource.getAmount(), action);
-	}
 
-	@Override
-	public FluidStack drain(int maxDrain, FluidAction action) {
-		return tank.drain(maxDrain, action);
-	}
 
 	@Override
 	public boolean canConnectToPipe(MachineRegistry m) {
@@ -236,15 +218,7 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 		return p.isStandardPipe() && side != Direction.UP;
 	}
 
-	@Override
-	public int fillPipe(Direction from, FluidStack resource, IFluidHandler.FluidAction action) {
-		return from != Direction.UP ? this.fill(resource, action) : 0;
-	}
 
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction action) {
-		return from == Direction.UP && this.getAdjacentBlockEntity(from) instanceof TileEntityMagneticPipe ? tank.drain(maxDrain, action) : FluidStack.EMPTY;
-	}
 
 	@Override
 	public Flow getFlowForSide(Direction side) {

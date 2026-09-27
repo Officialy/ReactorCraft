@@ -163,6 +163,25 @@ public class ReactorLang extends LanguageProvider {
     protected void addTranslations() {
         add("tab.reactorcraft", "ReactorCraft");
         add("item.reactorcraft.canister.filled", "%s Canister");
+        add("config.jade.plugin_reactorcraft", "ReactorCraft");
+        add("config.jade.plugin_reactorcraft.machine_state", "Machine State");
+        add("jade.reactorcraft.status", "Status: %s");
+        add("jade.reactorcraft.temperature", "Temperature: %s / %s °C");
+        add("jade.reactorcraft.power", "Power: %s / %s W");
+        add("jade.reactorcraft.shaft", "Torque: %s / %s Nm; speed: %s / %s rad/s");
+        add("jade.reactorcraft.inventory", "Inventory: %s / %s slots occupied");
+        add("jade.reactorcraft.fluid", "%s: %s / %s mB");
+        add("jade.reactorcraft.comparator", "Comparator: %s / 15");
+        add("jei.reactorcraft.item_consumed", "Item consumed");
+        add("jei.reactorcraft.item_catalyst", "Catalyst; item retained");
+        add("jei.reactorcraft.min_temperature", "Minimum temperature: %s °C");
+        add("jei.reactorcraft.base_duration", "Base duration: %s ticks");
+        add("jei.reactorcraft.neutron_chance", "%s%% chance per neutron interaction");
+        add("jei.reactorcraft.intermediate_consumed", "Intermediate fluid; %s mB consumed per output step");
+        add("jei.reactorcraft.output_chance", "%s%% chance");
+        add("jei.reactorcraft.intermediate_time", "Intermediate stage: %s ticks");
+        add("jei.reactorcraft.output_time", "Output stage: %s ticks");
+        add("jei.reactorcraft.centrifuge_speed", "Minimum speed: %s rad/s");
         for (var e : FLUIDS.entrySet())
             add("fluid_type.reactorcraft." + e.getKey(), e.getValue());
 

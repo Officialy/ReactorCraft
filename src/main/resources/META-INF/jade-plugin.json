@@ -1,0 +1,5 @@
+{
+  "plugins": [
+    "reika.reactorcraft.modinterface.jade.ReactorJadePlugin"
+  ]
+}

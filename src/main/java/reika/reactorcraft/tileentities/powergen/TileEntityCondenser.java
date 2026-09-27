@@ -16,9 +16,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.reactorcraft.base.TileEntityTankedReactorMachine;
+import reika.dragonapi.instantiable.HybridTank;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
 import reika.reactorcraft.blocks.BlockSteam;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorBlocks;
@@ -29,6 +32,14 @@ import reika.rotarycraft.base.blockentity.BlockEntityPiping;
 import reika.rotarycraft.registry.MachineRegistry;
 
 public class TileEntityCondenser extends TileEntityTankedReactorMachine {
+	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(
+			new HybridTank[] {tank}, (index, resource) -> false,
+			(index, resource) -> true, this::setChanged);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null || side == Direction.UP ? fluidHandler : null;
+	}
 
 	public TileEntityCondenser(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.CONDENSER.get(), pos, state);
@@ -81,11 +92,6 @@ public class TileEntityCondenser extends TileEntityTankedReactorMachine {
 
 	}
 
-	// The condensed water is pulled out of the top by an adjacent pipe.
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
-		return from == Direction.UP ? tank.drain(maxDrain, doDrain) : FluidStack.EMPTY;
-	}
 
 	@Override
 	public BlockEntityPiping.Flow getFlowForSide(Direction side) {

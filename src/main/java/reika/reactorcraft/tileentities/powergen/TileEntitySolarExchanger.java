@@ -15,9 +15,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 import reika.reactorcraft.base.TankedReactorPowerReceiver;
+import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorTiles;
 import reika.rotarycraft.base.blockentity.BlockEntityPiping;
@@ -26,6 +28,14 @@ import reika.rotarycraft.registry.MachineRegistry;
 // MOD-PORT: implements RotaryCraft's SodiumSolarOutput once that sodium-solar-upgrade interface is
 // ported; until then the receiveSodium() input path (from a solar tower) is gated out.
 public class TileEntitySolarExchanger extends TankedReactorPowerReceiver {
+	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(
+			new reika.dragonapi.instantiable.HybridTank[] {tank},
+			(index, resource) -> false, (index, resource) -> true, this::setChanged);
+
+	@Override
+	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
+		return side == null || side.getAxis().isHorizontal() ? fluidHandler : null;
+	}
 
 	public TileEntitySolarExchanger(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.SOLAR.get(), pos, state);
@@ -34,11 +44,6 @@ public class TileEntitySolarExchanger extends TankedReactorPowerReceiver {
 	public static final int MINPOWER = 65536;
 	public static final int MINSPEED = 2048;
 
-	// The exchanger pushes its hot sodium out through the horizontal sides.
-	@Override
-	public FluidStack drainPipe(Direction from, int maxDrain, IFluidHandler.FluidAction doDrain) {
-		return from.getStepY() == 0 ? tank.drain(maxDrain, doDrain) : FluidStack.EMPTY;
-	}
 
 	@Override
 	public BlockEntityPiping.Flow getFlowForSide(Direction side) {
