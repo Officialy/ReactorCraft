@@ -65,6 +65,8 @@ public final class ReactorGameTests {
         Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(
                 Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "default"),
                 new TestEnvironmentDefinition.AllOf(List.of()));
+        register(event, environment, "steam_line_holds_back_water", 40,
+                ReactorGameTests::steamLineHoldsBackWater);
         register(event, environment, "uranium_fuel_crafting_and_burnup", 80,
                 ReactorGameTests::uraniumFuelCraftingAndBurnup);
         register(event, environment, "fuel_rod_fissions_and_boils_water", 220,
@@ -77,6 +79,27 @@ public final class ReactorGameTests {
                 ReactorGameTests::waterCellDrawsReservoirCapability);
         register(event, environment, "gas_duct_fills_rotary_reservoir", 80,
                 ReactorGameTests::gasDuctFillsRotaryReservoir);
+    }
+
+    /**
+     * 1.7.10 made every ReactorCraft line and machine block {@code Material.iron}, which blocks movement, so flowing water never
+     * replaced it. 26.3 decides that from block tags (see {@code LegacyMotionTags}); this pins the tags
+     * and the behaviour they produce.
+     */
+    private static void steamLineHoldsBackWater(GameTestHelper helper) {
+        BlockPos target = new BlockPos(3, 1, 3);
+        helper.setBlock(target, ReactorBlocks.STEAMLINE.get());
+        var state = helper.getLevel().getBlockState(helper.absolutePos(target));
+        helper.assertTrue(state.is(net.minecraft.tags.BlockTags.BLOCKS_MOTION)
+                        && !state.is(net.minecraft.tags.BlockTags.WASHED_AWAY_BY_FLUIDS),
+                "steam line must block motion and not be washed away by fluids");
+        helper.setBlock(target.west(), net.minecraft.world.level.block.Blocks.WATER);
+        helper.runAfterDelay(30, () -> {
+            helper.assertTrue(helper.getLevel().getBlockState(helper.absolutePos(target)).is(ReactorBlocks.STEAMLINE.get()),
+                    "flowing water must not wash away a steam line, found "
+                            + helper.getLevel().getBlockState(helper.absolutePos(target)));
+            helper.succeed();
+        });
     }
 
     private static void gasDuctFillsRotaryReservoir(GameTestHelper helper) {

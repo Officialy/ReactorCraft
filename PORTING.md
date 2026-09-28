@@ -1381,9 +1381,7 @@ Runtime findings (compile does not catch these):
   current DataVersion, so no datafixer upgraded it. All four are fixed. RotaryCraft and ElectriCraft
   arenas are regenerated; ChromatiCraft's templates regenerate with its datagen.
 - **Motion blocking is tag-driven** (`blocks_motion*`, including heightmaps). NeoForge does not
-  populate it for modded blocks. Each mod's block tag provider must add the blocks whose 26.2
-  `blocksMotion()` was true (`isSolid()` minus cobweb and bamboo sapling), or heightmaps and
-  worldgen treat them as passable. This has not been done yet.
+  populate it for modded blocks. Done; see the next entry.
 - **TerraBlender 26.3.0.0.7 does not load on NeoForge 26.3.0.20 or later** (NeoForge #3527 removed
   `DataPackRegistryEvent$NewRegistry`; upstream TerraBlender issue #239). GeoStrata and
   ChromatiCraft cannot launch, so their datagen, and with it ChromatiCraft's stale
@@ -1391,4 +1389,45 @@ Runtime findings (compile does not catch these):
   NeoForge pin at 26.3.0.19.
 
 GameTests on 26.3: RotaryCraft 48/48, ReactorCraft 6/6, ElectriCraft 12/12. Client launch is untested.
-Shaders still need the 26.3 GLSL changes (`#include`, `layout(location)`).
+
+### 26.3 motion and fluid tags, and shaders (2026-09-28)
+
+**Block tags.** In 26.3, `#minecraft:blocks_motion_no_leaves` (through `blocks_motion`) drives the
+motion heightmaps, `causes_suffocation` (which still also requires a full collision shape) and
+`blocks_fluid_flow`. Flowing fluid replaces only `#minecraft:washed_away_by_fluids`. In 26.2 all of
+this came from `isSolid()`, and fluid washed away anything that did not block motion.
+`DragonAPI LegacyMotionTags` classifies each mod's registry.
+- **The rule.** A block blocks motion if it is solid (26.2's rule; `calculateSolid` is unchanged in
+  26.3), **or** if the mod says its 1.7.10 material blocked movement. Leaves go into
+  `#minecraft:leaves`. Otherwise the block is washable, except doors and signs.
+- **Why the material rule.** 1.7.10 judged fluids, precipitation height and teleport landing by
+  `Material.blocksMovement()`, and ReactorCraft and ElectriCraft made every non-fluid block
+  `Material.iron` or `rock`. The 26.2 shape rule therefore let water destroy steam lines, heat pipes,
+  the scrubber, steam and every ElectriCraft wire, which was a port regression. Those two providers
+  pass `block -> !(block instanceof LiquidBlock)`.
+- **Results.**
+  - RotaryCraft: new `RoCBlockTagsProvider`; 178 motion-blocking, and 2 washable (canola and HSLA
+    fluid, correct under either rule). The mining pipe is solid in only some states and is tagged
+    by its default state.
+  - ReactorCraft: 102 motion-blocking, none washable.
+  - ElectriCraft: 47 motion-blocking, none washable.
+  - GeoStrata and ChromatiCraft providers are wired but still use the shape rule. Their 1.7.10
+    materials need an audit when TerraBlender lets their datagen run.
+- **Tests.** `steam_line_holds_back_water` and `wire_holds_back_water` pin the tags and the
+  behaviour.
+
+**Shaders.** All 11 of our GLSL files are in the 26.3 dialect:
+- `#extension GL_ARB_separate_shader_objects : require`
+- `#moj_import` becomes `#include`
+- every stage `in`/`out` has an explicit `layout(location)`, numbered to match the vanilla vertex
+  shader each one pairs with (`screenquad`, `position_tex_color` or `particle`, read from the 26.3
+  jar)
+- `reika_color.glsl` drops `#version` and gains an include guard, like vanilla 26.3 includes
+
+Each file compiles with the Vulkan SDK's `glslc` using the game's `GlslCompiler` settings (Vulkan
+1.2 target, auto-bound uniforms, no automatic location mapping, `RENDERPEARL_*` macros, and
+`<namespace:path>` includes resolved from our assets and the 26.3 jar). An unconverted shader fails
+the same check. What still needs a client launch is uniform and sampler binding against each
+pipeline's bind group layouts.
+
+GameTests after these changes: RotaryCraft 48/48, ReactorCraft 7/7, ElectriCraft 13/13.
