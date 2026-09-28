@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:pebble_bed"
+        "recipes": "reactorcraft:pebble_bed"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

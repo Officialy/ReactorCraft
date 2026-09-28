@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:depleted_fuel"
+        "recipes": "reactorcraft:depleted_fuel"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

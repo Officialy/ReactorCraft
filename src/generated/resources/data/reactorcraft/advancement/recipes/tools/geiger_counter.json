@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:geiger_counter"
+        "recipes": "reactorcraft:geiger_counter"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

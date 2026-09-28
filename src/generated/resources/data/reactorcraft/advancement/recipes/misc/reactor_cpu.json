@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:reactor_cpu"
+        "recipes": "reactorcraft:reactor_cpu"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

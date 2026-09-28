@@ -52,7 +52,7 @@ public class RenderPlasma extends EntityRenderer<EntityPlasma, RenderPlasma.Plas
 		if (size <= 0)
 			return;
 		poseStack.pushPose();
-		poseStack.mulPose(camera.orientation);
+		poseStack.rotate(camera.orientation);
 		float h = size / 2F;
 		collector.submitCustomGeometry(poseStack, RenderTypes.entityTranslucentEmissive(texture), (pose, buf) -> emitQuad(pose, buf, h));
 		poseStack.popPose();

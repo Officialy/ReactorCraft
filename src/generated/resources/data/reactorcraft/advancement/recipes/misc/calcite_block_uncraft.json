@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:calcite_block_uncraft"
+        "recipes": "reactorcraft:calcite_block_uncraft"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

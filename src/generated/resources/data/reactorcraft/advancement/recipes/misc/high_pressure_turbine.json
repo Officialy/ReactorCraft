@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:high_pressure_turbine"
+        "recipes": "reactorcraft:high_pressure_turbine"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

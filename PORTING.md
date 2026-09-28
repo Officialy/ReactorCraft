@@ -1327,3 +1327,68 @@ clients; JEI refreshes them after datapack reload. `:ReactorCraft:compileJava --
 `:ReactorCraft:runClientData --offline` pass. A graphical Jade/JEI check and multiplayer reload
 check remain. The three fixed process lists still live in legacy runtime code; migrating those
 definitions to datagen is separate porting work, after which JEI should read the new recipe types.
+
+## 26.3 compilation and datagen checkpoint (2026-09-28)
+
+The repository now targets Minecraft 26.3 and NeoForge `26.3.0.26-beta`. ReactorCraft's ore
+feature uses the 26.3 `Feature` interface and `MapCodec`; its world registry bootstraps
+`worldgen/feature` entries and matching placed features. The recipe and loot providers use the
+reloadable registry layer. `:ReactorCraft:compileJava` and `:ReactorCraft:runServerData` pass.
+RotaryCraft and ElectriCraft also pass compile and server datagen; GeoStrata passes compile.
+The complete build remains red in ChromatiCraft's 26.3 migration. See the implementation-status
+section of the root `PORT-26.3-RESEARCH.md` for the current cross-module status and TerraBlender
+runtime incompatibility.
+
+ChromatiCraft's 26.3 feature, placement, Proxima noise/material, recipe, and loot registry
+clusters have since been migrated in the active source slice. Its focused compile now reports
+250 errors, down from 1,202; ReactorCraft and the other previously compiling modules still
+complete their compile tasks. ChromatiCraft datagen and GameTests remain pending a compilable
+slice.
+
+### 26.3: full compile and first runtime pass (2026-09-28)
+
+All six modules now compile on 26.3, and DragonAPI's tests compile. The last ChromatiCraft errors:
+- `setShade(boolean)` on NeoForge's quad builders became `setShadeOverride(@Nullable Direction)`.
+  26.2 lit a `shade=false` quad with `cardinalLighting.up()`, so `false` maps exactly to
+  `Direction.UP` and `true` to `null`.
+- `GlowCavePiece`'s `PerlinSimplexNoise(random, [-2, -1, 0])` uses vanilla's own migration of
+  that same octave set (`Biome#FROZEN_TEMPERATURE_NOISE`): three offset-free `SimplexNoise` layers
+  in a `NoiseStack`.
+- The custom sky hook now receives the fog buffer; `RenderSystem.setShaderFog(skyFog)` is what
+  26.2's `setupFog` runnable did.
+- `ItemAbilities.HOE_TILL` is gone because tilling moved to data-driven `BlockTransformer`s, and
+  NeoForge data-map entries are appended *after* vanilla's, so they cannot override grass to
+  farmland. DragonAPI now posts `BlockTransformResultEvent` from `MixinBlockTransformer` (wrapping
+  the transformer's `getOptionalState`), and Luminous Cliffs' `createCliffFarmland` listens to it.
+
+Runtime findings (compile does not catch these):
+- **Mixin targets.** Verify them against the real jar
+  (`DragonAPI/build/moddev/artifacts/minecraft-patched-26.3.0.26-beta.jar`), not
+  `Sources/minecraft`. That checkout's unpatched text differs where NeoForge patches, for example
+  the first-person renderer's map check, which NeoForge keeps as `instanceof MapItem`.
+  - `MixinEnvironmentAttributeSystem` moved to `addDynamicLayers`.
+  - `MixinGameTestRunner` now shadows `server` rather than `level`.
+  - The held-map mixin keeps its `MapItem` constant wrap.
+
+  A bytecode audit (target class, injector method, `@At` descriptor, accessor and shadow) now
+  reports 0 problems for every mixin.
+- **Block-state serialisation changed twice.** In JSON, `BlockState.CODEC` takes a block id string
+  or an object keyed `id`, and `{"Name": ...}` fails; ElectriCraft's hand-written ore features were
+  flattened (no `config` wrapper), moved to `worldgen/feature`, and given string states. In NBT, the
+  keys are now `id`/`properties`, and `NbtUtils.readBlockState` silently returns **air** without
+  `id`. Every provider that hand-built palette NBT (the RotaryCraft, ElectriCraft and ChromatiCraft
+  test arenas, and **all of `ChromaStructureTemplateProvider`**) wrote `Name` while stamping the
+  current DataVersion, so no datafixer upgraded it. All four are fixed. RotaryCraft and ElectriCraft
+  arenas are regenerated; ChromatiCraft's templates regenerate with its datagen.
+- **Motion blocking is tag-driven** (`blocks_motion*`, including heightmaps). NeoForge does not
+  populate it for modded blocks. Each mod's block tag provider must add the blocks whose 26.2
+  `blocksMotion()` was true (`isSolid()` minus cobweb and bamboo sapling), or heightmaps and
+  worldgen treat them as passable. This has not been done yet.
+- **TerraBlender 26.3.0.0.7 does not load on NeoForge 26.3.0.20 or later** (NeoForge #3527 removed
+  `DataPackRegistryEvent$NewRegistry`; upstream TerraBlender issue #239). GeoStrata and
+  ChromatiCraft cannot launch, so their datagen, and with it ChromatiCraft's stale
+  `worldgen/configured_feature` output, and their GameTests wait on a TerraBlender fix or a
+  NeoForge pin at 26.3.0.19.
+
+GameTests on 26.3: RotaryCraft 48/48, ReactorCraft 6/6, ElectriCraft 12/12. Client launch is untested.
+Shaders still need the 26.3 GLSL changes (`#include`, `layout(location)`).

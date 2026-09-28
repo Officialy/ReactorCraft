@@ -57,7 +57,7 @@ public class RenderSteamDiffuser extends ReactorTERenderer<TileEntitySteamDiffus
         stack.scale(1.0F, -1.0F, -1.0F);
         stack.translate(0.5, 0.5, 0.5);
         TileEntitySteamDiffuser diffuser = (TileEntitySteamDiffuser) be;
-        stack.mulPose(Axis.YP.rotationDegrees(facingAngle(diffuser.getFacing())));
+        stack.rotate(Axis.YP.rotationDegrees(facingAngle(diffuser.getFacing())));
         model.renderAll(stack, vc, light);
         stack.popPose();
     }

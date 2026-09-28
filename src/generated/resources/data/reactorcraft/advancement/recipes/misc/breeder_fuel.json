@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:breeder_fuel"
+        "recipes": "reactorcraft:breeder_fuel"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

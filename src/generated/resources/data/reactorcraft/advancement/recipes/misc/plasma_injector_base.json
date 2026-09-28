@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:plasma_injector_base"
+        "recipes": "reactorcraft:plasma_injector_base"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

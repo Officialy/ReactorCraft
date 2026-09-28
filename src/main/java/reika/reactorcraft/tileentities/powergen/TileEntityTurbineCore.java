@@ -482,7 +482,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker, HasFluidResourceHan
 							0.4 * (e.getY() - y - 0.5 + 0.1),
 							0.4 * (e.getZ() - z - 0.5 + 0.1) + rand.nextDouble() * 0.1);
 					e.setDeltaMovement(v);
-					e.hurtMarked = true;
+					e.syncVelocity = true;
 					if (inter == null || inter.maxSpeed > Interference.MOB.maxSpeed)
 						inter = Interference.MOB;
 				}

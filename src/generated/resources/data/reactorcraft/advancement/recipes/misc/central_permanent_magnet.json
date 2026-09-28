@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:central_permanent_magnet"
+        "recipes": "reactorcraft:central_permanent_magnet"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

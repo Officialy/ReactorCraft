@@ -4,13 +4,13 @@ import net.minecraft.core.RegistrySetBuilder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.registry.ReactorOreType;
 import reika.reactorcraft.world.ReactorOreConfig;
+import reika.reactorcraft.world.ReactorOreFeature;
 
 import java.util.List;
 
@@ -54,27 +54,21 @@ public final class ReactorWorldGenProvider {
     public static RegistrySetBuilder buildRegistrySet() {
         RegistrySetBuilder builder = new RegistrySetBuilder();
 
-        builder.add(Registries.CONFIGURED_FEATURE, bootstrap -> {
-            var features = bootstrap.lookup(Registries.FEATURE);
-            ResourceKey<Feature<?>> featureKey =
-                    ResourceKey.create(Registries.FEATURE, Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "ore"));
+        builder.add(Registries.FEATURE, bootstrap -> {
             for (ReactorOreType ore : ReactorOreType.list) {
                 Identifier id = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, ore.featureName());
-                ResourceKey<ConfiguredFeature<?, ?>> key = ResourceKey.create(Registries.CONFIGURED_FEATURE, id);
-                @SuppressWarnings({"unchecked", "rawtypes"})
-                ConfiguredFeature configured = new ConfiguredFeature(
-                        (Feature) features.getOrThrow(featureKey).value(), config(ore));
-                bootstrap.register(key, configured);
+                ResourceKey<Feature> key = ResourceKey.create(Registries.FEATURE, id);
+                bootstrap.register(key, new ReactorOreFeature(config(ore)));
             }
         });
 
         builder.add(Registries.PLACED_FEATURE, bootstrap -> {
-            var configuredFeatures = bootstrap.lookup(Registries.CONFIGURED_FEATURE);
+            var features = bootstrap.lookup(Registries.FEATURE);
             for (ReactorOreType ore : ReactorOreType.list) {
                 Identifier id = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, ore.featureName());
                 ResourceKey<PlacedFeature> key = ResourceKey.create(Registries.PLACED_FEATURE, id);
-                ResourceKey<ConfiguredFeature<?, ?>> cfKey = ResourceKey.create(Registries.CONFIGURED_FEATURE, id);
-                PlacedFeature placed = new PlacedFeature(configuredFeatures.getOrThrow(cfKey), List.of());
+                ResourceKey<Feature> featureKey = ResourceKey.create(Registries.FEATURE, id);
+                PlacedFeature placed = new PlacedFeature(features.getOrThrow(featureKey), List.of());
                 bootstrap.register(key, placed);
             }
         });

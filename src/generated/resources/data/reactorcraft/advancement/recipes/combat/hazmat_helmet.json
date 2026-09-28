@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:hazmat_helmet"
+        "recipes": "reactorcraft:hazmat_helmet"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

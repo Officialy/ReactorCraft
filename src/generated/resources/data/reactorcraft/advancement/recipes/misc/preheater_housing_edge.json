@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:preheater_housing_edge"
+        "recipes": "reactorcraft:preheater_housing_edge"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

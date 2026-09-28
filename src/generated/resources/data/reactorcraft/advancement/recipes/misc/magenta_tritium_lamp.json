@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:magenta_tritium_lamp"
+        "recipes": "reactorcraft:magenta_tritium_lamp"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

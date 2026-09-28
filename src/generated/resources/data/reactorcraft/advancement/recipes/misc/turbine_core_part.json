@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:turbine_core_part"
+        "recipes": "reactorcraft:turbine_core_part"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

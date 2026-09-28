@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:reactor_boiler"
+        "recipes": "reactorcraft:reactor_boiler"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

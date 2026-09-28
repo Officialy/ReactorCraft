@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:smelt_magnetite_ore"
+        "recipes": "reactorcraft:smelt_magnetite_ore"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

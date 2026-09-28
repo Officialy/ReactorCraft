@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:fusion_marker"
+        "recipes": "reactorcraft:fusion_marker"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:reactor_pump"
+        "recipes": "reactorcraft:reactor_pump"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

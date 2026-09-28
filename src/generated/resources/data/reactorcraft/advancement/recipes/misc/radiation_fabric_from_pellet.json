@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:radiation_fabric_from_pellet"
+        "recipes": "reactorcraft:radiation_fabric_from_pellet"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

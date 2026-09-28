@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:gas_collector"
+        "recipes": "reactorcraft:gas_collector"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

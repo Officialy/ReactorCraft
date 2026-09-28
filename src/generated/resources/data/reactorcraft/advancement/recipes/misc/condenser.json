@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:condenser"
+        "recipes": "reactorcraft:condenser"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

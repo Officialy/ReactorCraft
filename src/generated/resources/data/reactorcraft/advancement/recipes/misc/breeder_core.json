@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:breeder_core"
+        "recipes": "reactorcraft:breeder_core"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

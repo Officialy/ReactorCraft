@@ -97,9 +97,9 @@ public class ModelTurbine {
         for (int i = 0; i < 360; i += da) {
             stack.pushPose();
             stack.translate(0, VO, 0);
-            stack.mulPose(Axis.ZP.rotationDegrees(i + phi));
+            stack.rotate(Axis.ZP.rotationDegrees(i + phi));
             stack.translate(0, -VO, 0);
-            stack.mulPose(Axis.YP.rotationDegrees(-bladeTwist(stage)));
+            stack.rotate(Axis.YP.rotationDegrees(-bladeTwist(stage)));
             blade.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
             stack.popPose();
         }

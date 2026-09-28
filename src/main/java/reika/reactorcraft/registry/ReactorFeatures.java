@@ -1,5 +1,6 @@
 package reika.reactorcraft.registry;
 
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -16,11 +17,11 @@ import reika.reactorcraft.world.ReactorOreFeature;
  */
 public final class ReactorFeatures {
 
-    public static final DeferredRegister<Feature<?>> FEATURES =
-            DeferredRegister.create(Registries.FEATURE, ReactorCraft.MODID);
+    public static final DeferredRegister<MapCodec<? extends Feature>> FEATURES =
+            DeferredRegister.create(Registries.FEATURE_TYPE, ReactorCraft.MODID);
 
-    public static final DeferredHolder<Feature<?>, Feature<ReactorOreConfig>> ORE =
-            FEATURES.register("ore", ReactorOreFeature::new);
+    public static final DeferredHolder<MapCodec<? extends Feature>, MapCodec<ReactorOreFeature>> ORE =
+            FEATURES.register("ore", () -> ReactorOreFeature.CODEC);
 
     private ReactorFeatures() {}
 }

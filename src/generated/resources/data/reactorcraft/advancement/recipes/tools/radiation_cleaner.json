@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:radiation_cleaner"
+        "recipes": "reactorcraft:radiation_cleaner"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

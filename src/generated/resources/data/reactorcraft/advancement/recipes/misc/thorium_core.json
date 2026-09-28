@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:thorium_core"
+        "recipes": "reactorcraft:thorium_core"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

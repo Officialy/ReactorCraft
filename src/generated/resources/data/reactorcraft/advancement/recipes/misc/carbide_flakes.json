@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:carbide_flakes"
+        "recipes": "reactorcraft:carbide_flakes"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

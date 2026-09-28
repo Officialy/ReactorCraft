@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:neutron_absorber_from_pellet"
+        "recipes": "reactorcraft:neutron_absorber_from_pellet"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

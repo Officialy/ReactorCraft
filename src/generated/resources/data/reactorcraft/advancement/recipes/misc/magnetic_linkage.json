@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:magnetic_linkage"
+        "recipes": "reactorcraft:magnetic_linkage"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

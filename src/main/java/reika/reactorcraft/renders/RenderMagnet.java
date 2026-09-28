@@ -57,7 +57,7 @@ public class RenderMagnet extends ReactorTERenderer<TileEntityToroidMagnet> {
         stack.scale(1.0F, -1.0F, -1.0F);
         stack.translate(0.5, 0.5, 0.5);
         float ang = 90.0F - ((TileEntityToroidMagnet) be).getAngle();
-        stack.mulPose(Axis.YP.rotationDegrees(ang));
+        stack.rotate(Axis.YP.rotationDegrees(ang));
         model.renderAll(stack, vc, light);
         stack.popPose();
     }
@@ -82,7 +82,7 @@ public class RenderMagnet extends ReactorTERenderer<TileEntityToroidMagnet> {
         PoseStack ps = new PoseStack();
         ps.last().set(poseStack.last());
         ps.translate(0.5, 0.5, 0.5);
-        ps.mulPose(Axis.YP.rotationDegrees(tile.getAngle() + 90.0F));
+        ps.rotate(Axis.YP.rotationDegrees(tile.getAngle() + 90.0F));
 
         int[] arrow = {100, 192, 255, a};
         ReikaRenderHelper.renderLine(collector, ps, 0, 0.1, 0, 4, 0.1, 0, arrow);

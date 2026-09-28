@@ -67,7 +67,7 @@ public class RenderTurbineWheel extends ReactorTERenderer<TileEntityReactorFlywh
         stack.translate(0.0, 2.0, 1.0);
         stack.scale(1.0F, -1.0F, -1.0F);
         stack.translate(0.5, 0.5, 0.5);
-        stack.mulPose(Axis.YP.rotationDegrees(facingAngle(tile.getFacing())));
+        stack.rotate(Axis.YP.rotationDegrees(facingAngle(tile.getFacing())));
         model.renderAll(stack, vc, light, spinAngle(tile));
         stack.popPose();
     }

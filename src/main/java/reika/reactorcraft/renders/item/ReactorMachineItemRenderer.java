@@ -93,8 +93,8 @@ public class ReactorMachineItemRenderer implements NoDataSpecialModelRenderer {
         // the block centre.
         poseStack.translate(0.5F, 0.5F, 0.5F);
         poseStack.scale(scale, scale, scale);
-        poseStack.mulPose(Axis.XP.rotationDegrees(30F));
-        poseStack.mulPose(Axis.YP.rotationDegrees(225F + extraYawDeg));
+        poseStack.rotate(Axis.XP.rotationDegrees(30F));
+        poseStack.rotate(Axis.YP.rotationDegrees(225F + extraYawDeg));
         poseStack.translate(-0.5F, -0.5F, -0.5F);
 
         RenderType rt = RenderTypes.entitySolid(texture);

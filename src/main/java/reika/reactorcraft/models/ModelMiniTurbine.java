@@ -66,13 +66,13 @@ public class ModelMiniTurbine {
     public void renderAll(PoseStack stack, VertexConsumer vc, int light) {
         for (float a : FRONT_ANGLES) {
             stack.pushPose();
-            stack.mulPose(Axis.ZP.rotationDegrees(a));
+            stack.rotate(Axis.ZP.rotationDegrees(a));
             frontStrut.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
             stack.popPose();
         }
         for (float a : REAR_ANGLES) {
             stack.pushPose();
-            stack.mulPose(Axis.ZP.rotationDegrees(a));
+            stack.rotate(Axis.ZP.rotationDegrees(a));
             rearStrut.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
             stack.popPose();
         }

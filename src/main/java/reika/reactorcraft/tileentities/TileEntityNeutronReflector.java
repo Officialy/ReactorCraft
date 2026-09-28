@@ -33,7 +33,7 @@ public class TileEntityNeutronReflector extends TileEntityReactorBase implements
 		if (rand.nextInt(4) == 0) {
 			Vec3 mot = e.getDeltaMovement();
 			e.setDeltaMovement(-mot.x, mot.y, -mot.z);
-			e.hurtMarked = true;
+			e.syncVelocity = true;
 			return false;
 		}
 		else

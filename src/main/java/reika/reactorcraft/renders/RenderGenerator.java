@@ -66,7 +66,7 @@ public class RenderGenerator extends ReactorTERenderer<TileEntityReactorGenerato
         stack.translate(0.0, 2.0, 1.0);
         stack.scale(1.0F, -1.0F, -1.0F);
         stack.translate(0.5, 0.5, 0.5);
-        stack.mulPose(Axis.YP.rotationDegrees(facingAngle(gen.getFacing())));
+        stack.rotate(Axis.YP.rotationDegrees(facingAngle(gen.getFacing())));
         model.renderAll(stack, vc, light, spinAngle(gen));
         stack.popPose();
     }

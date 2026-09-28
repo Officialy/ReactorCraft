@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:isotope_centrifuge"
+        "recipes": "reactorcraft:isotope_centrifuge"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

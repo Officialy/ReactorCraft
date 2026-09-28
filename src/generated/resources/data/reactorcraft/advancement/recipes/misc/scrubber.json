@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:scrubber"
+        "recipes": "reactorcraft:scrubber"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

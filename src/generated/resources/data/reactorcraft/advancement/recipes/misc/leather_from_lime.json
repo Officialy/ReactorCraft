@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:leather_from_lime"
+        "recipes": "reactorcraft:leather_from_lime"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

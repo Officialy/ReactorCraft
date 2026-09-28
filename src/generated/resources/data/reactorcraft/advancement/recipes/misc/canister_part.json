@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:canister_part"
+        "recipes": "reactorcraft:canister_part"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

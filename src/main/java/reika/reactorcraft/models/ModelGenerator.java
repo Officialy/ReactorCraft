@@ -146,7 +146,7 @@ public class ModelGenerator {
     public void renderAll(PoseStack stack, VertexConsumer vc, int light, float phi) {
         stack.pushPose();
         stack.translate(0, 1, -7.5);
-        stack.mulPose(Axis.ZP.rotationDegrees(phi));
+        stack.rotate(Axis.ZP.rotationDegrees(phi));
         shape1.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape1b.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape1c.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
@@ -155,7 +155,7 @@ public class ModelGenerator {
         shape3a.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape3b.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape3c.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
-        stack.mulPose(Axis.ZP.rotationDegrees(-phi));
+        stack.rotate(Axis.ZP.rotationDegrees(-phi));
 
         shape2.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape2a.render(stack, vc, light, OverlayTexture.NO_OVERLAY);

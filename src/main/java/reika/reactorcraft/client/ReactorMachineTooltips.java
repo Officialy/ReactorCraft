@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import org.lwjgl.glfw.GLFW;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -66,7 +65,7 @@ public final class ReactorMachineTooltips {
 			return;
 
 		List<Component> li = event.getToolTip();
-		if (InputConstants.isKeyDown(Minecraft.getInstance().getWindow(), GLFW.GLFW_KEY_LEFT_SHIFT)) {
+		if (InputConstants.isKeyDown(InputConstants.KEY_LSHIFT)) {
 			if (minp)
 				li.add(Component.literal(String.format("Minimum Power: %.3f %sW",
 						ReikaMathLibrary.getThousandBase(pow), ReikaEngLibrary.getSIPrefix(pow))));

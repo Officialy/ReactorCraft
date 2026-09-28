@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:smelt_pink_fluorite_ore"
+        "recipes": "reactorcraft:smelt_pink_fluorite_ore"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

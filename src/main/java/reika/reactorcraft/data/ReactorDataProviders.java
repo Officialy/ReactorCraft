@@ -1,9 +1,7 @@
 package reika.reactorcraft.data;
 
-import java.util.concurrent.CompletableFuture;
-
-import net.minecraft.core.HolderLookup;
-import net.minecraft.data.PackOutput;
+import net.minecraft.core.RegistrySetBuilder;
+import net.minecraft.core.registries.Registries;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
@@ -31,10 +29,11 @@ public final class ReactorDataProviders {
     public static void onGatherServer(GatherDataEvent.Server event) {
         event.createProvider(ReactorBlockTagsProvider::new);
         event.createProvider(ReactorItemTagsProvider::new);
-        event.createProvider(ReactorLootProvider::new);
-        event.createDatapackRegistryObjects(ReactorWorldGenProvider.buildRegistrySet());
+        event.createReloadableRegistryObjects(new RegistrySetBuilder()
+                .add(ReactorRecipeProvider.bootstrap())
+                .add(Registries.LOOT_TABLE, new ReactorLootProvider()));
+        event.createWorldRegistryObjects(ReactorWorldGenProvider.buildRegistrySet());
         event.createProvider(ReactorBiomeModifierProvider::new);
-        event.createProvider(ReactorRecipeProvider::new);
         event.createProvider(ReactorMachineRecipeProvider::new);
     }
 }

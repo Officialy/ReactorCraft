@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:iron_finder"
+        "recipes": "reactorcraft:iron_finder"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

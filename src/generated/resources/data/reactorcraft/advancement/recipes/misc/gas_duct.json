@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:gas_duct"
+        "recipes": "reactorcraft:gas_duct"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

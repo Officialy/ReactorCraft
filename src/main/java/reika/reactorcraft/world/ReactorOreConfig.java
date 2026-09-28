@@ -6,7 +6,6 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 
 /**
  * Configuration for {@link ReactorOreFeature}, one instance per ore type. Transcribes the gameplay
@@ -17,7 +16,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfigur
  * {@code needsLava} reproduces the ammonium lava-adjacency requirement.
  */
 public record ReactorOreConfig(Block ore, int count, int size, int minY, int maxY, int dimType,
-                               boolean randomFluorite, boolean needsLava) implements FeatureConfiguration {
+                               boolean randomFluorite, boolean needsLava) {
 
     public static final MapCodec<ReactorOreConfig> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
             BuiltInRegistries.BLOCK.byNameCodec().fieldOf("ore").forGetter(ReactorOreConfig::ore),

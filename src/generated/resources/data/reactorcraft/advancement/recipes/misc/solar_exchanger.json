@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:solar_exchanger"
+        "recipes": "reactorcraft:solar_exchanger"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

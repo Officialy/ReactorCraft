@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:plasma_injector_hysteresis_core"
+        "recipes": "reactorcraft:plasma_injector_hysteresis_core"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

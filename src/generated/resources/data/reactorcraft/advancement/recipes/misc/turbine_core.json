@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:turbine_core"
+        "recipes": "reactorcraft:turbine_core"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:fuel_dump"
+        "recipes": "reactorcraft:fuel_dump"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

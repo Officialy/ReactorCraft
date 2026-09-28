@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:graphite_block"
+        "recipes": "reactorcraft:graphite_block"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

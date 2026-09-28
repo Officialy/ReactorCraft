@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:solenoid_magnet"
+        "recipes": "reactorcraft:solenoid_magnet"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

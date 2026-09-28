@@ -59,8 +59,8 @@ public class RenderSolarTop extends ReactorTERenderer<TileEntitySolarTop> {
         stack.scale(1.0F, -1.0F, -1.0F);
         stack.translate(0.5, 0.5, 0.5);
         if (flip) {
-            stack.mulPose(Axis.XP.rotationDegrees(180.0F));
-            stack.mulPose(Axis.YP.rotationDegrees(90.0F));
+            stack.rotate(Axis.XP.rotationDegrees(180.0F));
+            stack.rotate(Axis.YP.rotationDegrees(90.0F));
         }
 
         int c = ReikaPhysicsHelper.getColorForTemperature(200 + tile.getTemperature() * 2);

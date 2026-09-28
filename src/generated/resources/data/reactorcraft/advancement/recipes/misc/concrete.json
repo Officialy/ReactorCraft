@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:concrete"
+        "recipes": "reactorcraft:concrete"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

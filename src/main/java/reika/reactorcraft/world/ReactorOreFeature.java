@@ -1,5 +1,6 @@
 package reika.reactorcraft.world;
 
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.BlockTags;
@@ -9,7 +10,7 @@ import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 
 import reika.reactorcraft.registry.FluoriteTypes;
 import reika.reactorcraft.registry.ReactorBlocks;
@@ -22,18 +23,29 @@ import reika.reactorcraft.registry.ReactorBlocks;
  * ammonium nether, endblende end) is applied by the biome modifiers that reference the placed
  * feature, so it is intentionally absent here.
  */
-public class ReactorOreFeature extends Feature<ReactorOreConfig> {
+public final class ReactorOreFeature implements Feature {
 
-    public ReactorOreFeature() {
-        super(ReactorOreConfig.CODEC.codec());
+    public static final MapCodec<ReactorOreFeature> CODEC =
+            ReactorOreConfig.CODEC.xmap(ReactorOreFeature::new, ReactorOreFeature::config);
+
+    private final ReactorOreConfig config;
+
+    public ReactorOreFeature(ReactorOreConfig config) {
+        this.config = config;
+    }
+
+    public ReactorOreConfig config() {
+        return config;
     }
 
     @Override
-    public boolean place(FeaturePlaceContext<ReactorOreConfig> context) {
-        WorldGenLevel world = context.level();
-        RandomSource rand = context.random();
-        BlockPos origin = context.origin();
-        ReactorOreConfig cfg = context.config();
+    public MapCodec<ReactorOreFeature> codec() {
+        return CODEC;
+    }
+
+    @Override
+    public boolean place(WorldGenLevel world, ChunkGenerator chunkGenerator, RandomSource rand, BlockPos origin) {
+        ReactorOreConfig cfg = config;
         int baseX = origin.getX();
         int baseZ = origin.getZ();
         int span = cfg.maxY() - cfg.minY() + 1;

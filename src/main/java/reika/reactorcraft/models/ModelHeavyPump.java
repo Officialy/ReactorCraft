@@ -137,7 +137,7 @@ public class ModelHeavyPump {
         shape1a.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
 
         stack.pushPose();
-        stack.mulPose(Axis.YP.rotationDegrees(phi));
+        stack.rotate(Axis.YP.rotationDegrees(phi));
         shape3.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape3a.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape3b.render(stack, vc, light, OverlayTexture.NO_OVERLAY);

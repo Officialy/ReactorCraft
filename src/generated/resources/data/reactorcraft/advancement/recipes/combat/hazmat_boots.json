@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:hazmat_boots"
+        "recipes": "reactorcraft:hazmat_boots"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:heavy_pump"
+        "recipes": "reactorcraft:heavy_pump"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

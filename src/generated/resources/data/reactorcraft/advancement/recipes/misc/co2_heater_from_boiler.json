@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:co2_heater_from_boiler"
+        "recipes": "reactorcraft:co2_heater_from_boiler"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

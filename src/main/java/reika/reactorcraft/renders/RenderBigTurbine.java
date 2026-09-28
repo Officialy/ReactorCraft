@@ -62,7 +62,7 @@ public class RenderBigTurbine extends ReactorTERenderer<TileEntityTurbineCore> {
         stack.scale(1.0F, -1.0F, -1.0F);
         stack.translate(0.5, 0.5, 0.5);
         TileEntityTurbineCore turb = (TileEntityTurbineCore) be;
-        stack.mulPose(Axis.YP.rotationDegrees(facingAngle(turb.getFacing())));
+        stack.rotate(Axis.YP.rotationDegrees(facingAngle(turb.getFacing())));
         int stage = Mth.clamp(turb.getStage(), 0, models.length - 1);
         models[stage].renderAll(stack, vc, light, spinAngle(turb));
         stack.popPose();

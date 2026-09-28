@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:neutron_reflector"
+        "recipes": "reactorcraft:neutron_reflector"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

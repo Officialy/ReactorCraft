@@ -1,0 +1,11 @@
+{
+  "type": "reactorcraft:ore",
+  "count": 6,
+  "dim_type": 1,
+  "max_y": 32,
+  "min_y": 32,
+  "needs_lava": true,
+  "ore": "reactorcraft:ammonium_ore",
+  "random_fluorite": false,
+  "size": 8
+}

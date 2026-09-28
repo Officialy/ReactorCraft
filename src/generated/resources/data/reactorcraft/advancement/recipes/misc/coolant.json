@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:coolant"
+        "recipes": "reactorcraft:coolant"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

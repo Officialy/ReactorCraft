@@ -114,7 +114,7 @@ public class ModelCentrifuge {
         shape1.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
 
         stack.pushPose();
-        stack.mulPose(Axis.YP.rotationDegrees(phi));
+        stack.rotate(Axis.YP.rotationDegrees(phi));
         shape2.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape2a.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shape2b.render(stack, vc, light, OverlayTexture.NO_OVERLAY);

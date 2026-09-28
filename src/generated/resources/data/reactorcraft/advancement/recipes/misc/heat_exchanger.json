@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:heat_exchanger"
+        "recipes": "reactorcraft:heat_exchanger"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:sodium_boiler"
+        "recipes": "reactorcraft:sodium_boiler"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

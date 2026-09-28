@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:plasma_injector_induction_coil"
+        "recipes": "reactorcraft:plasma_injector_induction_coil"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:uranium_processor"
+        "recipes": "reactorcraft:uranium_processor"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

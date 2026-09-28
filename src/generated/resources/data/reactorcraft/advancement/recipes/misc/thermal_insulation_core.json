@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:thermal_insulation_core"
+        "recipes": "reactorcraft:thermal_insulation_core"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:steam_diffuser"
+        "recipes": "reactorcraft:steam_diffuser"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

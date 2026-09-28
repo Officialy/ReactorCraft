@@ -63,13 +63,13 @@ public class RenderGasCollector extends ReactorTERenderer<TileEntityGasCollector
         Direction facing = be.getBlockState().getValue(BlockReactorMachine.FACING);
         float angle = facingAngle(facing);
         if (facing.getAxis() == Direction.Axis.Y) {
-            stack.mulPose(Axis.ZP.rotationDegrees(angle));
+            stack.rotate(Axis.ZP.rotationDegrees(angle));
             if (facing == Direction.DOWN)
                 stack.translate(0.0, -2.0, 0.0);
         }
         else {
-            stack.mulPose(Axis.XP.rotationDegrees(90F));
-            stack.mulPose(Axis.ZP.rotationDegrees(angle));
+            stack.rotate(Axis.XP.rotationDegrees(90F));
+            stack.rotate(Axis.ZP.rotationDegrees(angle));
             stack.translate(0.0, -1.0, -1.0);
         }
 

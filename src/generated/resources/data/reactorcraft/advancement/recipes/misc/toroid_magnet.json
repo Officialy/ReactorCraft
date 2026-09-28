@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:toroid_magnet"
+        "recipes": "reactorcraft:toroid_magnet"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

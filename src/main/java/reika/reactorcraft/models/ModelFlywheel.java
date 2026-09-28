@@ -137,7 +137,7 @@ public class ModelFlywheel {
         stack.pushPose();
         double vo = 0.9375;
         stack.translate(0, vo, 0);
-        stack.mulPose(Axis.ZP.rotationDegrees(phi));
+        stack.rotate(Axis.ZP.rotationDegrees(phi));
         stack.translate(0, -vo, 0);
         stack.translate(0, 0, -0.0625);
         stack.scale(1F, 1F, 1.25F);

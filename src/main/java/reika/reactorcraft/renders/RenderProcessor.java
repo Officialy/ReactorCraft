@@ -62,7 +62,7 @@ public class RenderProcessor extends ReactorTERenderer<TileEntityUProcessor> {
         Level level = be.getLevel();
         if (level != null) {
             Direction facing = be.getBlockState().getValue(BlockReactorMachine.FACING);
-            stack.mulPose(Axis.YP.rotationDegrees(facingAngle(facing)));
+            stack.rotate(Axis.YP.rotationDegrees(facingAngle(facing)));
         }
         model.renderAll(stack, vc, light);
         stack.popPose();

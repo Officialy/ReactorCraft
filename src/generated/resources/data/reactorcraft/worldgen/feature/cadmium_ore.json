@@ -1,0 +1,11 @@
+{
+  "type": "reactorcraft:ore",
+  "count": 3,
+  "dim_type": 0,
+  "max_y": 32,
+  "min_y": 12,
+  "needs_lava": false,
+  "ore": "reactorcraft:cadmium_ore",
+  "random_fluorite": false,
+  "size": 9
+}

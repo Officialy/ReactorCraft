@@ -57,7 +57,7 @@ public class RenderSolenoid extends ReactorTERenderer<TileEntitySolenoidMagnet> 
         stack.translate(0.0, 2.0, 1.0);
         stack.scale(1.0F, -1.0F, -1.0F);
         stack.translate(0.5, 0.5, 0.5);
-        stack.mulPose(Axis.YP.rotationDegrees(spinAngle(te)));
+        stack.rotate(Axis.YP.rotationDegrees(spinAngle(te)));
         model.renderAll(stack, vc, light);
         stack.popPose();
     }

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:waste_storage"
+        "recipes": "reactorcraft:waste_storage"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

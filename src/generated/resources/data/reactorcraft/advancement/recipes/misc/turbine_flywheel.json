@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:turbine_flywheel"
+        "recipes": "reactorcraft:turbine_flywheel"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

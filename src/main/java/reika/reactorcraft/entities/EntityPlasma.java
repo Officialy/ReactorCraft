@@ -75,7 +75,7 @@ public class EntityPlasma extends ParticleEntity implements CustomFanEntity {
 		double dd = ReikaMathLibrary.py3d(dx, 0, dz);
 		double v = this.getSpeed();
 		this.setDeltaMovement(dx*v/dd, this.getDeltaMovement().y, dz*v/dd);
-		this.hurtMarked = true;
+		this.syncVelocity = true;
 	}
 
 	private void checkFusion() {

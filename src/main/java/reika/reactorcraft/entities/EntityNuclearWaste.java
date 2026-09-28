@@ -53,7 +53,7 @@ public final class EntityNuclearWaste extends ItemEntity {
 		if (this.getY() < 0) {
 			Vec3 mot = this.getDeltaMovement();
 			if (!this.level().isClientSide())
-				this.hurtMarked = true;
+				this.syncVelocity = true;
 			this.setDeltaMovement(mot.x, Math.abs(mot.y), mot.z);
 			this.setPos(this.getX(), Math.max(this.getY(), 0), this.getZ());
 

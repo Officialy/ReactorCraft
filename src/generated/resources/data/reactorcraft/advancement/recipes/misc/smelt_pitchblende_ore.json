@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:smelt_pitchblende_ore"
+        "recipes": "reactorcraft:smelt_pitchblende_ore"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

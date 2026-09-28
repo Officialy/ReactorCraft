@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "reactorcraft:coolant_cell"
+        "recipes": "reactorcraft:coolant_cell"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

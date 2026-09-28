@@ -59,7 +59,7 @@ public class RenderMiniTurbine extends ReactorTERenderer<TileEntityTurbineCore> 
         stack.scale(1.0F, -1.0F, -1.0F);
         stack.translate(0.5, 0.5, 0.5);
         TileEntityTurbineCore turb = (TileEntityTurbineCore) be;
-        stack.mulPose(Axis.YP.rotationDegrees(facingAngle(turb.getFacing())));
+        stack.rotate(Axis.YP.rotationDegrees(facingAngle(turb.getFacing())));
         model.renderAll(stack, vc, light);
         stack.popPose();
     }
