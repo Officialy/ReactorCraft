@@ -26,6 +26,10 @@ public class ReactorItemTagsProvider extends ItemTagsProvider {
 
     public static final TagKey<Item> DEPLETED_URANIUM = TagKey.create(Registries.ITEM,
             Identifier.fromNamespaceAndPath("c", "ingots/depleted_uranium"));
+    public static final TagKey<Item> QUICKLIME_DUST = TagKey.create(Registries.ITEM,
+            Identifier.fromNamespaceAndPath("c", "dusts/quicklime"));
+    public static final TagKey<Item> AMMONIUM_DUST = TagKey.create(Registries.ITEM,
+            Identifier.fromNamespaceAndPath("c", "dusts/ammonium"));
 
     public ReactorItemTagsProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookup) {
         super(output, lookup, ReactorCraft.MODID);
@@ -36,5 +40,7 @@ public class ReactorItemTagsProvider extends ItemTagsProvider {
         tag(DEPLETED_URANIUM)
                 .add(ReactorItems.DEPLETED_FUEL.getKey())
                 .add(ReactorItems.DEPLETED_PELLET.getKey());
+        tag(QUICKLIME_DUST).add(ReactorItems.LIME.getKey());
+        tag(AMMONIUM_DUST).add(ReactorItems.AMMONIUM_DUST.getKey());
     }
 }

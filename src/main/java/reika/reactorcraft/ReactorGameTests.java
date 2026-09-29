@@ -34,6 +34,8 @@ import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorFuel;
 import reika.reactorcraft.registry.ReactorItems;
 import reika.reactorcraft.registry.ReactorFluids;
+import reika.reactorcraft.data.ReactorItemTagsProvider;
+import reika.reactorcraft.tileentities.processing.TileEntitySynthesizer.FluidSynthesis;
 import reika.reactorcraft.registry.WorkingFluid;
 import reika.reactorcraft.tileentities.fission.TileEntityFuelRod;
 import reika.reactorcraft.tileentities.fission.TileEntityWaterCell;
@@ -79,6 +81,25 @@ public final class ReactorGameTests {
                 ReactorGameTests::waterCellDrawsReservoirCapability);
         register(event, environment, "gas_duct_fills_rotary_reservoir", 80,
                 ReactorGameTests::gasDuctFillsRotaryReservoir);
+        register(event, environment, "ammonia_synthesis_ingredients", 40,
+                ReactorGameTests::ammoniaSynthesisIngredients);
+    }
+
+    private static void ammoniaSynthesisIngredients(GameTestHelper helper) {
+        var ammonia = FluidSynthesis.AMMONIA;
+        helper.assertTrue(FluidSynthesis.list.contains(ammonia)
+                        && ammonia.input == Fluids.WATER
+                        && ammonia.output == ReactorFluids.AMMONIA.get(),
+                "the ammonia fluid synthesis recipe must initialize and remain registered");
+        helper.assertTrue(ReactorItems.LIME.toStack().is(ReactorItemTagsProvider.QUICKLIME_DUST)
+                        && ReactorItems.AMMONIUM_DUST.toStack().is(ReactorItemTagsProvider.AMMONIUM_DUST),
+                "ReactorCraft dusts must publish the common tags used by ammonia synthesis");
+        helper.assertTrue(ammonia.usesItem(ReactorItems.LIME.toStack())
+                        && ammonia.usesItem(ReactorItems.AMMONIUM_DUST.toStack())
+                        && !ammonia.getAForDisplay().isEmpty()
+                        && !ammonia.getBForDisplay().isEmpty(),
+                "both legacy ore alternatives and their fallback items must be usable and displayable");
+        helper.succeed();
     }
 
     /**

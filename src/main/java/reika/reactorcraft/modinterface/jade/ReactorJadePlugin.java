@@ -31,23 +31,23 @@ import snownee.jade.api.config.IPluginConfig;
 /** Server-backed diagnostics for every registered ReactorCraft machine block. */
 @WailaPlugin
 public final class ReactorJadePlugin implements IWailaPlugin {
+    private static final Identifier UID = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "machine_state");
+    private static final String PREFIX = "reactorcraft_jade_";
+
     @Override
     public void register(IWailaCommonRegistration registration) {
-        registration.registerBlockDataProvider(MachineData.INSTANCE, BlockReactorMachine.class);
-        registration.registerBlockDataProvider(MachineData.INSTANCE, BlockReCMultiBlock.class);
+        registration.registerBlockDataProvider(ServerData.INSTANCE, BlockReactorMachine.class);
+        registration.registerBlockDataProvider(ServerData.INSTANCE, BlockReCMultiBlock.class);
     }
 
     @Override
     public void registerClient(IWailaClientRegistration registration) {
-        registration.registerBlockComponent(MachineData.INSTANCE, BlockReactorMachine.class);
-        registration.registerBlockComponent(MachineData.INSTANCE, BlockReCMultiBlock.class);
+        registration.registerBlockComponent(Tooltip.INSTANCE, BlockReactorMachine.class);
+        registration.registerBlockComponent(Tooltip.INSTANCE, BlockReCMultiBlock.class);
     }
 
-    private enum MachineData implements IServerDataProvider<BlockAccessor>, IBlockComponentProvider {
+    private enum ServerData implements IServerDataProvider<BlockAccessor> {
         INSTANCE;
-
-        private static final Identifier UID = Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "machine_state");
-        private static final String PREFIX = "reactorcraft_jade_";
 
         @Override public Identifier getUid() { return UID; }
 
@@ -109,6 +109,12 @@ public final class ReactorJadePlugin implements IWailaPlugin {
             if (comparator > 0 || data.size() == 1)
                 data.putInt(key("comparator"), comparator);
         }
+    }
+
+    private enum Tooltip implements IBlockComponentProvider {
+        INSTANCE;
+
+        @Override public Identifier getUid() { return UID; }
 
         @Override
         public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
@@ -148,8 +154,9 @@ public final class ReactorJadePlugin implements IWailaPlugin {
                         data.getIntOr(key("comparator"), 0)).withStyle(ChatFormatting.GRAY));
         }
 
-        private static String key(String suffix) {
-            return PREFIX + suffix;
-        }
+    }
+
+    private static String key(String suffix) {
+        return PREFIX + suffix;
     }
 }

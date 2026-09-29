@@ -1431,3 +1431,46 @@ the same check. What still needs a client launch is uniform and sampler binding 
 pipeline's bind group layouts.
 
 GameTests after these changes: RotaryCraft 48/48, ReactorCraft 7/7, ElectriCraft 13/13.
+
+## 26.3 cross-stack integration follow-up (2026-09-28)
+
+GeoStrata and ChromatiCraft now depend on the locally patched TerraBlender NeoForge
+artifact `26.3-26.3.0.0.7-local.1`. Its removed datapack registry event was migrated
+to `NewDatapackRegistryEvent.worldRegistry`. The six-mod offline compile passes;
+GeoStrata and ChromatiCraft server datagen pass; ChromatiCraft client datagen passes.
+GeoStrata registers the previously missing `geo_rock` feature-type codec. ChromatiCraft
+uses one registry entry per shared feature codec and supplies empty common item tags
+for the optional Burrow loot materials. The generated 26.3 data was refreshed.
+GeoStrata client datagen passes, and the full ChromatiCraft 26.3 GameTest suite passes
+168/168 required tests.
+
+## Jade 26.3 client startup repair (2026-09-28)
+
+Jade `26.3.1+neoforge` rejects a block data provider that also implements
+`IComponentProvider`. RotaryCraft's `RotaryMachineJadeProvider` and ReactorCraft's
+`ReactorJadePlugin.MachineData` still combined the server data and client tooltip
+interfaces, causing a client loading failure when Jade discovered the RotaryCraft
+plugin. Both integrations now register distinct providers with the same UID and NBT
+keys, preserving the server-backed tooltip content. The RotaryCraft and ReactorCraft
+compile and jar tasks pass. A ReactorCraft development client with Jade loaded both
+plugins successfully and continued through client resource loading.
+
+ChromatiCraft's Fluid Radiator GameTest exposed two DragonAPI open-path helpers that are shared
+with this module. `CoordHelper.getAdjacentCoordinates` now returns neighbors of the supplied
+position, and `ReikaBlockHelper.getBlockVolume` returns zero for an empty voxel shape. The
+ChromatiCraft focused transfer GameTest covers both fixes.
+
+## 26.3 ammonia synthesis and JEI recipe startup (2026-09-28)
+
+JEI first loaded `FluidSynthesis.AMMONIA` during recipe registration and exposed a
+DragonAPI port gap: the legacy ore-name `FlexibleIngredient` constructor built an empty
+`ItemMatch`, which immediately threw a registration exception. DragonAPI now retains
+the corresponding `c:` item tag and a mutable set of explicit alternatives. Matching,
+display stacks, and ingredient IDs include both sources. ReactorCraft publishes its
+lime and ammonium dust under `c:dusts/quicklime` and `c:dusts/ammonium`; the original
+fallback stacks remain accepted even when another mod supplies those tags.
+
+`ammonia_synthesis_ingredients` checks that the fluid recipe initializes, both dust
+tags load, and the item alternatives remain usable and displayable. ReactorCraft server
+datagen and the focused GameTest passed. The full development client JEI startup has
+not been rerun for this change.
