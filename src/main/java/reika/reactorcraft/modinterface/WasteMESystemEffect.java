@@ -32,7 +32,7 @@ public class WasteMESystemEffect extends MESystemReader.ItemInSystemEffect {
 	}
 
 	public WasteMESystemEffect() {
-		super(ReactorItems.WASTE_ITEM.get().getDefaultInstance(), true); //1.7.10 WILDCARD_VALUE: waste of any isotope
+		super(() -> ReactorItems.WASTE_ITEM.get().getDefaultInstance(), true); //1.7.10 WILDCARD_VALUE: waste of any isotope
 	}
 
 	@Override
