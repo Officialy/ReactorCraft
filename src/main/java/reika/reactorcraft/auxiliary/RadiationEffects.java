@@ -245,7 +245,7 @@ public class RadiationEffects {
 		}
 	}
 
-	// DRAGONAPI-PORT: createMESystemEffect (Applied Energistics ME-system waste leak) gated out —
-	// AE2 (appeng.api.*) + DragonAPI's MESystemEffect are not in this build.
+	// V33a createMESystemEffect (nuclear waste in an ME network leaks neutrons) lives in the AE-only
+	// reika.reactorcraft.modinterface.WasteMESystemEffect, registered from ReactorCraft's constructor when AE2 is loaded.
 
 }

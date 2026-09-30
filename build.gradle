@@ -51,6 +51,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/api/NeutronShield.java'
     include 'reika/reactorcraft/api/RadiationHandler.java'
     include 'reika/reactorcraft/auxiliary/ReactorBlock.java'
+    include 'reika/reactorcraft/modinterface/WasteMESystemEffect.java'
     include 'reika/reactorcraft/auxiliary/SteamTile.java'
     include 'reika/reactorcraft/auxiliary/MultiBlockTile.java'
     include 'reika/reactorcraft/auxiliary/PebbleBedArrangement.java'

@@ -97,6 +97,10 @@ public class ReactorCraft {
         modEventBus.addListener((FMLCommonSetupEvent e) ->
                 e.enqueueWork(ReactorTiles::loadMappings));
 
+        // V33a ReactorCraft.load: stored nuclear waste leaks radiation out of ME networks.
+        if (reika.dragonapi.ModList.APPENG.isLoaded())
+            modEventBus.addListener((FMLCommonSetupEvent e) -> e.enqueueWork(ReactorCraft::registerMESystemEffects));
+
         // RegisterCommandsEvent fires on the game bus, not the mod bus -- see DragonAPI.onRegisterCommandEvent
         // for the same pattern.
         NeoForge.EVENT_BUS.addListener(ReactorCraft::registerCommands);
@@ -106,6 +110,11 @@ public class ReactorCraft {
             modEventBus.addListener(ReactorCraft::registerScreens);
             modEventBus.addListener(this::clientSetup);
         }
+    }
+
+    // A bare invokestatic: ReactorCraft's own verification never has to load the AE-typed effect class.
+    private static void registerMESystemEffects() {
+        reika.reactorcraft.modinterface.WasteMESystemEffect.register();
     }
 
     private static void registerCommands(final RegisterCommandsEvent event) {
