@@ -1611,3 +1611,26 @@ Final release validation: ReactorCraft and RotaryCraft release jars build succes
 GameTest-only fluid substitutions. The attempted six-mod build currently stops in the independent
 ChromatiCraft work at ChromaBlocks: PushReaction.BLOCK is absent in the 26.3 API; that work is
 left to its owning agent. ReactorCraft alone was rerun after the last edits: all 49 tests pass.
+
+
+## RotaryCraft Terraformer continuation (2026-09-30)
+
+The Terraformer is fully registered and ported against the 26.3 source APIs, including its original
+36 directed biome steps, 54-slot menu, water tank, six-sided summative power, redstone activation,
+Tile Selector, persisted work queue and diamond/config-controlled terrain editing. Datagen provides
+the original crafting recipe, conversion recipes, biome-family tags, models, loot and translations;
+loaded recipes are synchronized for the menu and JEI. Modern 4x4 biome cells charge sixteen original
+column costs as one atomic operation and update the complete vertical column through FillBiomeCommand.
+
+Terrain uses real registered target-biome features with FeaturePlacer.placeWithBiomeCheck, limited
+to selected loaded cells and permitted non-block-entity positions. Soil starts at original Y=30;
+climate freezing/melting also applies without the diamond. Area-provider import has an API bridge
+and retains a BUILDCRAFT-PORT integration marker for the absent 26.3 BuildCraft API. Fifty-one new
+functional tests use real creative coils and cover each conversion plus gates, inventory/fluid
+transactions, save/load, selector/menu validation, area import, climate, soil, trees, boundaries,
+survival drops and recipe codecs. Real-client menu/JEI visuals and real biome packet delivery remain
+unverified for this new machine. Concurrent AE2/Item Filter port files remain with their owning agent.
+
+Terraformer validation: 51/51 new tests and 284/284 full RotaryCraft GameTests pass on the shared
+tree; RotaryCraft release build and all 11 JUnit checks pass with fresh isolated compiler outputs.
+The temporary validation configuration and worlds stay under ignored build directories.
