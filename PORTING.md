@@ -1474,3 +1474,53 @@ fallback stacks remain accepted even when another mod supplies those tags.
 tags load, and the item alternatives remain usable and displayable. ReactorCraft server
 datagen and the focused GameTest passed. The full development client JEI startup has
 not been rerun for this change.
+
+## RotaryCraft survival beta follow-up (2026-09-29)
+
+All six mod repositories and the parent stack were committed and pushed before starting this
+work. ChromatiCraft implementation was left for the later agent. RotaryCraft now restores the
+Steel Purifier with original V33a conversion/crafting/thermal behavior, a reloadable datapack
+recipe and synchronized JEI/menu support. PURIFIER is appended to retain existing enum indices.
+
+The expanded machine sweep owns one arena per active registry entry (134), removing the old
+50-position cap. It exposed Winder's wrong block entity and missing lifecycle calls in Sprinkler,
+ECU, Power Bus, Drying Bed and Ground Hydrator. Powered processing tests exposed Compactor's
+missing power direction and lost output-stack writeback. Its V33a environmental and thermal
+behavior was restored. Beam Mirror beam cleanup and Music Box dedicated-server score-file
+handling were repaired with functional regressions. See RotaryCraft/SURVIVAL-BETA.md for the
+coverage boundary, remaining machines and beta acceptance work. The iron-as-steel fixture is
+a separate GameTest resource source set and must never appear in release data.
+
+## NeoForge update deferred (2026-09-30)
+
+The `26.3.0.37-beta` upgrade was reverted at the owner's request; the family remains
+on `26.3.0.26-beta` with its existing `COMMON` config registrations. All six mods
+compiled and packaged on `.37`, and ReactorCraft's five registry tests plus the
+focused ammonia synthesis GameTest passed in the existing headless mode. The
+normal runtime failed to load JEI `31.7.0.45` because it references the removed
+`ModConfig.Type.SERVER` field. The latest published JEI `31.8.0.48` sources also
+still reference that field. Revisit the upgrade when a compatible JEI is available;
+migrate `COMMON` to `LOCAL` and preserve `reactorcraft-common.toml` explicitly to
+retain existing settings.
+
+
+## RotaryCraft survival follow-up and production login (2026-09-30)
+
+Rechecked the intervening DragonAPI/RotaryCraft/ElectriCraft World Rift work and retained the
+NeoForge 26.3.0.26-beta pin. RotaryCraft's baseline passed 201/201. The survival follow-up now
+passes 215/215 required GameTests and all 11 JUnit checks; all six release builds pass.
+
+Original four-disc/four-pattern yields are datagen-backed bulk shaped recipes. The targeted
+vanilla crafting-table transfer repair preserves max-stack-one storage, whole-batch backpressure,
+craft awards/remainders and ordinary vanilla crafting. Drying Bed tests exposed lost output
+writeback, missing inventory persistence/survival drops and wrong fluid sides; these were restored,
+including registry-aware detached entity loading and persistent progress. Ground Hydrator tests
+now check actual farmland irrigation and its 25 mB threshold. Handbook MODINTERFACE formatting
+now receives the original RF/Extractor values.
+
+The six release jars plus local TerraBlender boot, save and stop in an installed production
+NeoForge server outside Gradle. A real six-mod development client logged in over the network,
+loaded the world and completed JEI startup after fixing only the isolated offline test whitelist.
+The client reconnected after a production-server restart with saved Purifier/Drying Bed entities.
+An external release-client installation, authenticated two-player play and end-to-end survival
+remain acceptance work. See RotaryCraft/SURVIVAL-BETA.md for the exact coverage boundary.
