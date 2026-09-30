@@ -1634,3 +1634,39 @@ unverified for this new machine. Concurrent AE2/Item Filter port files remain wi
 Terraformer validation: 51/51 new tests and 284/284 full RotaryCraft GameTests pass on the shared
 tree; RotaryCraft release build and all 11 JUnit checks pass with fresh isolated compiler outputs.
 The temporary validation configuration and worlds stay under ignored build directories.
+
+
+## Applied Energistics 2 integration (2026-09-30)
+
+AE2 is the 26.3 port fork (`Other/Applied-Energistics-2`, published to mavenLocal as
+`org.appliedenergistics:appliedenergistics2:${ae2_version}`, needs GuideME `26.3.0-port`). It is
+`compileOnly` in the root build; the AE2 + GuideME jars live in `ChromatiCraft/run/mods` (and in
+`ChromatiCraft/run-data/mods` + `run-client-data/mods`, so ChromatiCraft datagen sees the AE items).
+Modern AE2's mod id is `ae2` (`ModList.APPENG` was still `appliedenergistics2` - every AE check was dead).
+
+**DragonAPI layer** (`instantiable.modinteract` / `modinteract.deepinteract` / `modinteract.itemhandlers`):
+`BasicAEInterface`/`DirectionalAEInterface` (managed grid node + in-world node host + action host),
+`MESystemReader` (storage/crafting/watchers/`MESystemEffect`s on every grid), `MEWorkTracker`,
+`MENetwork`, `AEPatternHandling` (pattern decode/encode, pattern-provider insertion), `AppEngHandler`
+(AE items by registry id - no AE classes). **Rule for AE-typed code:** machines implement only the
+AE-free `MEGridHost`, register their BE type with `AEHooks.registerGridHost`, keep AE objects in
+`Object` fields and call AE helpers only behind `ModList.APPENG.isLoaded()`. Never pass an AE-typed
+value where a *different* declared type is expected in a class that loads without AE (the verifier loads
+both to prove assignability) - that is why `BasicAEInterface.updateReader` exists.
+
+**Ported:** RotaryCraft AutoCrafting Unit (+ Crafting Pattern GUI, whose decode was stubbed) and Item
+Filter (both whole machines), Item Pump pattern loading into pattern providers, certus/fluix grinding;
+ReactorCraft waste-in-ME neutron leak; ChromatiCraft ME Inventory Link ability, Tool Storage crate as
+a grid node, Void/Crystal/Corrosion Resistant Cells, the Unknown Artefact ME drain, the Tool Storage
+AE recipe. Found on the way: `KeyedItemStack` equality never matched (METADATA fell through to false).
+
+**Not portable / deferred:** RotaryCraft `OreForcer` certus (AE2 has no certus ore) and
+`fixAEPowerRatio` (AE2 has no RotaryCraft power unit); Bundled Bus (needs ProjectRed); ChromatiCraft
+Pattern Cache + Pattern Crystal (V33a WIP: no recipe/research, the crystal's pattern was `null`) and
+Remote Terminal (commented out in V33a). ChromatiCraft files whose AE hooks arrive with the file
+itself (not yet accepted): CastingAutomationSystem, Casting Auto/Injector, Router Hub, Item Inserter,
+Bulk Mover, ChromaticEventManager, Crystal Furnace/Ore Creator (charged certus ore - AE2 has none).
+
+**Tests:** `RotaryAETests` / `ChromaAETests` build real ME networks and only register with AE2 loaded;
+drop the AE2 + GuideME jars into `<mod>/run-gametest/mods` to run them (`-PgameTestSelector=<mod>:ae2_*`),
+then remove them so the normal suite stays lean.
