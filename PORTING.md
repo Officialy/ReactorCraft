@@ -1524,3 +1524,50 @@ loaded the world and completed JEI startup after fixing only the isolated offlin
 The client reconnected after a production-server restart with saved Purifier/Drying Bed entities.
 An external release-client installation, authenticated two-player play and end-to-end survival
 remain acceptance work. See RotaryCraft/SURVIVAL-BETA.md for the exact coverage boundary.
+
+
+## Reactor-type GameTests and sodium solar integration (2026-09-30)
+
+Added 26 required GameTests in `ReactorTypeGameTests`, expanding ReactorCraft from 8 to 34.
+All six generating `ReactorType` values now have functional coverage:
+
+| Type | Verified behavior |
+| --- | --- |
+| FISSION | Existing uranium crafting, neutron heat and water boiling; added plutonium feeding and final-stage consumption. |
+| BREEDER | Fuel-slot validation, neutron heat, sodium heating, temperature gate, whole-batch backpressure and hot-sodium exchange. |
+| HTGR | A real 25-core pebble arrangement feeds and retains its 24 pellets while generating heat; CO2 heating, temperature gate, backpressure and hot-CO2 exchange. |
+| THORIUM | Breeder-neutron rejection, thorium-neutron fuel-to-hot-LiFBe conversion, source heat, exchanger and emergency fuel dump. |
+| FUSION | Actual preheater casing, isotope consumption and plasma conservation in charged magnetic outlets; casing, temperature and isotope-dose gates; a real fusion event emits three neutrons into absorbers; sustained absorbed neutron heat reaches water through a heat pipe. |
+| SOLAR | A contiguous 35-mirror field discovers and aims at its tower, invalidates on removal, and generates ordinary water-mode power; a real two-block ReactorCraft receiver enables sodium power and warm-sodium return with inventory conservation; powered warm-sodium cooling, output capacity, sided extraction and transaction rollback. |
+
+Auxiliary exchangers receive actual shaft power from redstone-enabled creative coils. The solar
+tower must generate its own power from its mirrors and receiver. Starting coolant/preheater/
+receiver temperatures isolate thermal operating stages, as the existing steam tests do. These
+checks do not claim a cold-start survival build or a continuously operating full fusion toroid.
+`NONE` is a non-generating type, not an additional reactor.
+
+The tests and source audit exposed and repaired:
+
+- Breeder automation rejecting all empty modern `ItemStack` slots.
+- Intermediate heaters comparing a `FluidStack` with a `Fluid`; both sodium and CO2 heating
+  now work, and a batch waits for its full output capacity instead of losing overflow.
+- The obsolete sodium-solar output integration gate. The exchanger now implements the existing
+  RotaryCraft interface and reports the exact warm-sodium amount accepted.
+- RotaryCraft solar-field discovery left commented out, distance calculations ignoring the
+  candidate tower, and a primary-tower comparison that restricted generation to Y=0. Restored
+  the original contiguous plant discovery, height/falloff rules, aiming and light weighting;
+  safe invalidation handles removed blocks. Vertical tank pooling respects capacity.
+- Independent RotaryCraft/ReactorCraft sodium registry identities. A receiver exposes its cold
+  sodium through the shared interface without introducing a reverse module dependency.
+- DragonAPI using solid-render status for air exposure, causing modelled iron piping to unseal
+  reactors. Modern motion tags and collision shapes preserve legacy material behavior.
+- Heat pipes replacing a donor's whole stored heat with the transfer delta and recording incoming
+  source heat with a negative weight. Transfers now retain the donor's residual heat and positive
+  provenance; a steam boiler keeps accepting heat after becoming fusion/HTGR-typed while the
+  generating cores retain their external-heating protection.
+
+Validation on Minecraft 26.3 / NeoForge 26.3.0.26-beta / Java 25:
+34/34 ReactorCraft GameTests, 215/215 RotaryCraft GameTests, 5 ReactorCraft and 11 RotaryCraft
+JUnit checks; all six release builds pass offline. Logs are in the workspace's ignored `build/`
+directory: `reactor-types-regression.log` and `reactor-types-final-validation.log`.
+ChromatiCraft implementation and its pending files remain with the other session.

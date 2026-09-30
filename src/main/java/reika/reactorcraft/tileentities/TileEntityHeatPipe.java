@@ -126,8 +126,7 @@ public class TileEntityHeatPipe extends TileEntityLine {
 				if (valid) {
 					double diff = ourheat - theirheat; // >0 if applying heat
 					diff /= 4;
-					int put = getTemperatureForHeat(diff, hc);
-					hc.setTemperature(put + hc.getAmbientTemperature());
+					hc.setTemperature(getTemperatureForHeat(theirheat + diff, hc) + hc.getAmbientTemperature());
 					heatEnergy -= diff;
 					if (diff < 0) {
 						ReactorType type = null;
@@ -135,7 +134,7 @@ public class TileEntityHeatPipe extends TileEntityLine {
 							type = tb.getReactorType();
 						}
 						if (type != null)
-							reactorTypes.addValue(type, diff);
+							reactorTypes.addValue(type, -diff);
 					}
 					else if (diff > 0) {
 						if (te instanceof TileEntityNuclearBoiler tb) {

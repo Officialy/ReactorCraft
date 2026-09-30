@@ -22,12 +22,12 @@ import reika.reactorcraft.base.TankedReactorPowerReceiver;
 import reika.dragonapi.instantiable.storage.HybridTankResourceHandler;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorTiles;
+import reika.reactorcraft.registry.ReactorFluids;
+import reika.rotarycraft.auxiliary.interfaces.SodiumSolarUpgrades.SodiumSolarOutput;
 import reika.rotarycraft.base.blockentity.BlockEntityPiping;
 import reika.rotarycraft.registry.MachineRegistry;
 
-// MOD-PORT: implements RotaryCraft's SodiumSolarOutput once that sodium-solar-upgrade interface is
-// ported; until then the receiveSodium() input path (from a solar tower) is gated out.
-public class TileEntitySolarExchanger extends TankedReactorPowerReceiver {
+public class TileEntitySolarExchanger extends TankedReactorPowerReceiver implements SodiumSolarOutput {
 	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(
 			new reika.dragonapi.instantiable.HybridTank[] {tank},
 			(index, resource) -> false, (index, resource) -> true, this::setChanged);
@@ -87,6 +87,14 @@ public class TileEntitySolarExchanger extends TankedReactorPowerReceiver {
 
 	public boolean isActive() {
 		return this.sufficientPower();
+	}
+
+	@Override
+	public int receiveSodium(int amt) {
+		int accepted = Math.max(0, Math.min(amt, tank.getRemainingSpace()));
+		tank.addLiquid(accepted, ReactorFluids.WARM_SODIUM.get());
+		if (accepted > 0) this.setChanged();
+		return accepted;
 	}
 
 	@Override

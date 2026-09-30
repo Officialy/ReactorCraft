@@ -319,7 +319,9 @@ public abstract class TileEntityReactorBase extends BlockEntityBase implements T
 	}
 
 	public boolean allowExternalHeating() {
-		if (this instanceof ReactorTyped) {
+		// A steam boiler must keep accepting heat after its source provenance becomes HTGR/fusion.
+		// Those restrictions protect the generating cores, not their heat-driven secondary loops.
+		if (this instanceof ReactorTyped && !(this instanceof TileEntityNuclearBoiler)) {
 			ReactorType r = ((ReactorTyped)this).getReactorType();
 			return r != ReactorType.HTGR && r != ReactorType.FUSION;
 		}

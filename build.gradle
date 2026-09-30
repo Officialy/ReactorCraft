@@ -46,6 +46,7 @@ dependencies {
 // whole block once the entire mod is ported.
 sourceSets.main.java {
     include 'reika/reactorcraft/ReactorGameTests.java'
+    include 'reika/reactorcraft/ReactorTypeGameTests.java'
     include 'reika/reactorcraft/api/NeutronShield.java'
     include 'reika/reactorcraft/api/RadiationHandler.java'
     include 'reika/reactorcraft/auxiliary/ReactorBlock.java'

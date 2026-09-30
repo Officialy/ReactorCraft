@@ -86,7 +86,7 @@ public class TileEntityBreederCore extends TileEntityNuclearCore {
 
 	@Override
 	public boolean isItemValidForSlot(int i, ItemStack itemstack) {
-		if (itemHandler.getStackInSlot(i) != null)
+		if (!itemHandler.getStackInSlot(i).isEmpty())
 			return false;
 		if (itemstack.getItem() == ReactorItems.BREEDERFUEL.getItemInstance())
 			return i < 4;

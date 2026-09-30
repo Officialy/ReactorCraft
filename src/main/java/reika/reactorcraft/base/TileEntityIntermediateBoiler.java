@@ -108,7 +108,10 @@ public abstract class TileEntityIntermediateBoiler extends TileEntityNuclearBoil
 	protected abstract double getFluidHeatCapacity();
 
 	public boolean canHeat() {
-		return temperature >= this.getMinimumTemperature() && tank.getFluidLevel() >= this.getLiquidUsage() && output.getFluidLevel() < output.getCapacity() && tank.getActualFluid().equals(this.getInputFluid());
+		return temperature >= this.getMinimumTemperature()
+				&& tank.getFluidLevel() >= this.getLiquidUsage()
+				&& output.getRemainingSpace() >= this.getLiquidUsage()
+				&& tank.getActualFluid().getFluid() == this.getInputFluid();
 	}
 
 	@Override

@@ -37,6 +37,11 @@ public class TileEntitySolarTop extends TileEntityReactorBase implements Tempera
 
 	public static final int MAXTEMP = 1800;
 
+	@Override
+	public net.minecraft.world.level.material.Fluid getSodiumFluid() {
+		return reika.reactorcraft.registry.ReactorFluids.SODIUM.get();
+	}
+
 	private final StepTimer tempTimer = new StepTimer(5);
 
 	@Override

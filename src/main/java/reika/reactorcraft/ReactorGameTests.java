@@ -51,7 +51,7 @@ import reika.rotarycraft.modinterface.conversion.TileEntityDynamo;
 import reika.rotarycraft.registry.RotaryBlocks;
 import reika.rotarycraft.blockentities.storage.BlockEntityReservoir;
 
-/** In-world checks for the first working fission route after uranium enrichment. */
+/** In-world processing, steam and reactor checks; all generating types are covered by ReactorTypeGameTests. */
 public final class ReactorGameTests {
 
     private ReactorGameTests() {}
@@ -83,6 +83,7 @@ public final class ReactorGameTests {
                 ReactorGameTests::gasDuctFillsRotaryReservoir);
         register(event, environment, "ammonia_synthesis_ingredients", 40,
                 ReactorGameTests::ammoniaSynthesisIngredients);
+        ReactorTypeGameTests.register(event, environment);
     }
 
     private static void ammoniaSynthesisIngredients(GameTestHelper helper) {
@@ -309,7 +310,7 @@ public final class ReactorGameTests {
         }).thenSucceed();
     }
 
-    private static void register(RegisterGameTestsEvent event, Holder<TestEnvironmentDefinition<?>> environment,
+    static void register(RegisterGameTestsEvent event, Holder<TestEnvironmentDefinition<?>> environment,
                                  String name, int maxTicks, Consumer<GameTestHelper> body) {
         TestData<Holder<TestEnvironmentDefinition<?>>> data =
                 new TestData<>(environment, RoCTestStructureProvider.ARENA, maxTicks, 0, true, Rotation.NONE);
