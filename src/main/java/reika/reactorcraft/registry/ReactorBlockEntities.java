@@ -194,7 +194,7 @@ public final class ReactorBlockEntities {
 
 	private static <T extends BlockEntity> void registerItemCap(RegisterCapabilitiesEvent event, BlockEntityType<T> type) {
 		event.registerBlockEntity(Capabilities.Item.BLOCK, type,
-				(be, ctx) -> be instanceof HasItemHandler h ? h.getItemHandler() : null);
+				(be, ctx) -> be instanceof HasItemHandler h ? h.getAutomationItemHandler() : null);
 		event.registerBlockEntity(Capabilities.Fluid.BLOCK, type,
 				(be, side) -> be instanceof reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler h
 						? h.getFluidHandler(side) : null);
