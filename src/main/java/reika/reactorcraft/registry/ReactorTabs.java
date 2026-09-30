@@ -43,6 +43,9 @@ public final class ReactorTabs {
             if (asItem != Items.AIR && seen.add(asItem))
                 event.accept(asItem);
         }
+        ItemStack chargedRemote = new ItemStack(ReactorItems.REMOTE_CONTROL.get());
+        chargedRemote.setDamageValue(32000);
+        event.accept(chargedRemote);
         for (var holder : ReactorItems.ITEMS.getEntries()) {
             Item item = holder.get();
             if (seen.add(item))

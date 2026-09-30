@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "B": "minecraft:stone_button",
+    "C": "rotarycraft:circuit_board",
+    "E": "minecraft:ender_pearl",
+    "P": "rotarycraft:hsla_steel_plate",
+    "S": "rotarycraft:hsla_steel_ingot"
+  },
+  "pattern": [
+    "SES",
+    "BCB",
+    "BPB"
+  ],
+  "result": {
+    "id": "reactorcraft:remote_control"
+  }
+}

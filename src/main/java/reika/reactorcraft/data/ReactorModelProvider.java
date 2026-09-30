@@ -102,6 +102,17 @@ public class ReactorModelProvider extends ModelProvider {
         for (var holder : ReactorBlocks.BLOCKS.getEntries()) {
             Block block = holder.get();
 
+            if (block instanceof reika.reactorcraft.blocks.BlockFluorite fluorite) {
+                Identifier id = ModelLocationUtils.getModelLocation(block);
+                modelOut.accept(id, () -> cubeAllModel("reactorcraft:block/mat/floblock_" + fluorite.getColor().getColorName()));
+                MultiVariant variant = new MultiVariant(WeightedList.of(new Variant(id)));
+                blockStateOut.accept(MultiVariantGenerator.dispatch(block)
+                        .with(PropertyDispatch.initial(reika.reactorcraft.blocks.BlockFluorite.ACTIVATED).generate(active -> variant)));
+                itemModelOut.accept(block.asItem(), ItemModelUtils.plainModel(id));
+                blockItemsHandled.add(block.asItem());
+                continue;
+            }
+
             if (block instanceof reika.reactorcraft.blocks.BlockSteam) {
                 // Steam renders as a translucent cube (legacy render pass 1). A plain cube_all would land
                 // on the solid/cutout layer and read as an opaque block; emit a cube model with

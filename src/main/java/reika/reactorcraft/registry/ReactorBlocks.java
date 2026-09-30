@@ -93,6 +93,17 @@ public final class ReactorBlocks {
         return FLUORITE_ORE.get(f).get();
     }
 
+    public static final EnumMap<FluoriteTypes, DeferredBlock<Block>> FLUORITE_BLOCKS = new EnumMap<>(FluoriteTypes.class);
+    static {
+        for (FluoriteTypes f : FluoriteTypes.colorList)
+            FLUORITE_BLOCKS.put(f, register(f.getColorName() + "_fluorite_block", () ->
+                    new reika.reactorcraft.blocks.BlockFluorite(blockProperties().strength(1.2F, 4)
+                            .sound(SoundType.STONE).requiresCorrectToolForDrops().randomTicks()
+                            .lightLevel(s -> s.getValue(reika.reactorcraft.blocks.BlockFluorite.ACTIVATED) ? 15 : 0), f)));
+    }
+
+    public static Block fluoriteBlock(FluoriteTypes f) { return FLUORITE_BLOCKS.get(f).get(); }
+
     private static BlockBehaviour.Properties machineProperties() {
         return blockProperties().strength(2.0F, 10.0F).requiresCorrectToolForDrops().sound(SoundType.METAL);
     }

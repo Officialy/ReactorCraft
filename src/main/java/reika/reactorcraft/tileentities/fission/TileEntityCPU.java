@@ -295,7 +295,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 		temperatureChecks.clear();
 		ListTag li = NBT.getListOrEmpty("checks");
 		for (int j = 0; j < li.size(); j++) {
-			temperatureChecks.add(TemperatureMonitor.readTag(li.getCompoundOrEmpty(j)));
+			temperatureChecks.add(TemperatureMonitor.readTag(li.getCompoundOrEmpty(j), this.level));
 		}
 	}
 
@@ -314,7 +314,7 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 
 		ListTag li = new ListTag();
 		for (TemperatureMonitor m : temperatureChecks) {
-			li.add(m.writeTag());
+			li.add(m.writeTag(this.level));
 		}
 		NBT.put("checks", li);
 	}
@@ -325,12 +325,16 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	}
 
 	public void addTemperatureCheck(LinkableReactorCore te) {
-		temperatureChecks.add(new TemperatureMonitor(te));
+		TemperatureMonitor monitor = new TemperatureMonitor(te);
+		if (temperatureChecks.stream().noneMatch(existing -> existing.matches(te, this.level)))
+			temperatureChecks.add(monitor);
 		te.link(this);
+		this.setChanged();
 	}
 
 	public void removeTemperatureCheck(LinkableReactorCore te) {
-		temperatureChecks.remove(new TemperatureMonitor(te));
+		temperatureChecks.removeIf(monitor -> monitor.matches(te, this.level));
+		this.setChanged();
 	}
 
 	@Override
@@ -339,41 +343,54 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 	}
 
 	private static class TemperatureMonitor {
-
 		private final BlockPos location;
+		private final net.minecraft.resources.ResourceKey<Level> dimension;
 
-		private TemperatureMonitor(LinkableReactorCore te) {
-			location = ((BlockEntity)te).getBlockPos();
+		private TemperatureMonitor(LinkableReactorCore core) {
+			BlockEntity block = (BlockEntity)core;
+			location = block.getBlockPos();
+			dimension = block.getLevel().dimension();
 		}
 
-		private TemperatureMonitor(BlockPos c) {
-			location = c;
+		private TemperatureMonitor(BlockPos pos, net.minecraft.resources.ResourceKey<Level> dimension) {
+			location = pos;
+			this.dimension = dimension;
 		}
 
-		public CompoundTag writeTag() {
-			CompoundTag t = new CompoundTag();
-			t.putLong("pos", location.asLong());
-			return t;
+		public CompoundTag writeTag(Level ownerLevel) {
+			CompoundTag tag = new CompoundTag();
+			tag.putLong("pos", location.asLong());
+			var world = dimension != null ? dimension : ownerLevel != null ? ownerLevel.dimension() : null;
+			if (world != null)
+				tag.putString("dimension", world.identifier().toString());
+			return tag;
 		}
 
-		public static TemperatureMonitor readTag(CompoundTag tag) {
-			return new TemperatureMonitor(BlockPos.of(tag.getLongOr("pos", 0)));
+		public static TemperatureMonitor readTag(CompoundTag tag, Level ownerLevel) {
+			// Chunk deserialization happens before setLevel. Old coordinate-only saves resolve to
+			// the CPU's own dimension when first used, rather than assuming the Overworld here.
+			var dimension = tag.contains("dimension") ? net.minecraft.resources.ResourceKey.create(
+					net.minecraft.core.registries.Registries.DIMENSION, net.minecraft.resources.Identifier.parse(tag.getStringOr("dimension", "minecraft:overworld")))
+					: ownerLevel != null ? ownerLevel.dimension() : null;
+			return new TemperatureMonitor(BlockPos.of(tag.getLongOr("pos", 0)), dimension);
 		}
 
-		public int getTemperature(TileEntityCPU te) {
-			return ((LinkableReactorCore)te.level.getBlockEntity(location)).getTemperature();
+		public int getTemperature(TileEntityCPU cpu) {
+			var key = dimension != null ? dimension : cpu.level.dimension();
+			Level world = key.equals(cpu.level.dimension()) ? cpu.level
+					: cpu.level.getServer() != null ? cpu.level.getServer().getLevel(key) : null;
+			return world != null && world.hasChunkAt(location) && world.getBlockEntity(location) instanceof LinkableReactorCore core ? core.getTemperature() : 0;
 		}
 
-		@Override
-		public int hashCode() {
-			return location.hashCode();
+		public boolean matches(LinkableReactorCore core, Level ownerLevel) {
+			BlockEntity block = (BlockEntity)core;
+			var key = dimension != null ? dimension : ownerLevel.dimension();
+			return location.equals(block.getBlockPos()) && key.equals(block.getLevel().dimension());
 		}
 
-		@Override
-		public boolean equals(Object o) {
-			return o instanceof TemperatureMonitor && ((TemperatureMonitor)o).location.equals(location);
+		@Override public int hashCode() { return java.util.Objects.hash(location, dimension); }
+		@Override public boolean equals(Object other) {
+			return other instanceof TemperatureMonitor monitor && location.equals(monitor.location) && java.util.Objects.equals(dimension, monitor.dimension);
 		}
-
 	}
-
 }

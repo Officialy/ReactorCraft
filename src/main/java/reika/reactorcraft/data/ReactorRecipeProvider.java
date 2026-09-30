@@ -497,6 +497,13 @@ public final class ReactorRecipeProvider {
                     .unlockedBy("has_fabric", has(fabric)).save(out);
 
             // Coil-charged radiation tools (legacy: " r ","sSs","sgs" and " sp","sbs","ss ").
+            shaped(RecipeCategory.TOOLS, ReactorItems.REMOTE_CONTROL.get())
+                    .define('S', RotaryItems.HSLA_STEEL_INGOT.get()).define('E', Items.ENDER_PEARL)
+                    .define('B', Items.STONE_BUTTON).define('C', RotaryItems.CIRCUIT_BOARD.get())
+                    .define('P', RotaryItems.HSLA_PLATE.get())
+                    .pattern("SES").pattern("BCB").pattern("BPB")
+                    .unlockedBy("has_circuit", has(RotaryItems.CIRCUIT_BOARD.get())).save(out);
+
             shaped(RecipeCategory.TOOLS, ReactorItems.GEIGER_COUNTER.get())
                     .define('r', RotaryItems.RADAR_UNIT.get()).define('s', RotaryItems.HSLA_STEEL_INGOT.get())
                     .define('S', RotaryItems.SCREEN.get()).define('g', RotaryItems.HSLA_STEEL_GEAR.get())
@@ -666,6 +673,7 @@ public final class ReactorRecipeProvider {
                     .save(out);
 
             for (FluoriteTypes f : FluoriteTypes.colorList) {
+                blockCompaction(f.getColorName() + "_fluorite_block", ReactorBlocks.fluoriteBlock(f), ReactorItems.fluorite(f));
                 shaped(RecipeCategory.MISC, ReactorBlocks.tritiumLamp(f))
                         .define('C', ReactorItems.fluorite(f))
                         .define('S', RotaryItems.HSLA_STEEL_INGOT.get())

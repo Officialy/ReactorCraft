@@ -14,29 +14,17 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.level.Level;
 
-import net.minecraft.world.level.block.entity.BlockEntity;
 import reika.dragonapi.instantiable.gui.ImagedGuiButton;
 import reika.dragonapi.instantiable.io.PacketTarget;
 import reika.dragonapi.libraries.io.ReikaPacketHelper;
 import reika.reactorcraft.ReactorCraft;
-import reika.reactorcraft.auxiliary.ReactorControlLayout;
 import reika.reactorcraft.base.ReactorGuiBase;
 import reika.reactorcraft.container.MenuCPU;
 import reika.reactorcraft.registry.ReactorPackets;
 import reika.reactorcraft.tileentities.fission.TileEntityCPU;
-import reika.reactorcraft.tileentities.fission.TileEntityControlRod;
 
-/**
- * 26.2 port of GuiCPU — the reactor control-rod management panel. Shows a top-down colour grid of the
- * control rods on the current Y layer (via {@link ReactorControlLayout#getDisplayColorAtRelativePosition});
- * click a cell to toggle that rod ({@code CPUTOGGLE} packet), the Retract/Insert All buttons send
- * {@code CPURAISE}/{@code CPULOWER}, and the side buttons scroll the displayed Y layer.
- *
- * The layout is synced to the client via TileEntityCPU.writeSyncTag (the tile inits its layout in the
- * constructor so the client has it to populate). Packets are handled by ReactorPacketCore.
- */
+/** Live server-supplied control-rod grid; works for local, distant and cross-dimension CPUs. */
 public class ScreenCPU extends ReactorGuiBase<TileEntityCPU, MenuCPU> {
 
     private static final int BUTTON_SIZE = 3;
@@ -60,43 +48,41 @@ public class ScreenCPU extends ReactorGuiBase<TileEntityCPU, MenuCPU> {
         int j = leftPos;
         int k = topPos;
         addRenderableWidget(Button.builder(Component.literal("Retract All"),
-                b -> sendCPU(ReactorPackets.CPURAISE.ordinal(), tile)).bounds(j + 8, k + 18, 72, 20).build());
+                b -> sendCPU(ReactorPackets.CPURAISE.ordinal(), menu.getController().pos())).bounds(j + 8, k + 18, 72, 20).build());
         addRenderableWidget(Button.builder(Component.literal("Insert All"),
-                b -> sendCPU(ReactorPackets.CPULOWER.ordinal(), tile)).bounds(j + 96, k + 18, 72, 20).build());
+                b -> sendCPU(ReactorPackets.CPULOWER.ordinal(), menu.getController().pos())).bounds(j + 96, k + 18, 72, 20).build());
         addRenderableWidget(new ImagedGuiButton(2, j + 7, k + 84, 12, 48, 90, 60, BUTTONS, b -> {
-            ReactorControlLayout l = tile.getLayout();
-            if (l != null && l.getMinY() < offsetY)
+            if (menu.minY() < offsetY)
                 offsetY--;
         }));
         addRenderableWidget(new ImagedGuiButton(3, j + 157, k + 84, 12, 48, 90, 108, BUTTONS, b -> {
-            ReactorControlLayout l = tile.getLayout();
-            if (l != null && l.getMaxY() > offsetY)
+            if (menu.maxY() > offsetY)
                 offsetY++;
         }));
     }
 
-    private void sendCPU(int ordinal, BlockEntity target) {
-        ReikaPacketHelper.sendUpdatePacket(ReactorCraft.packetChannel, ordinal, target, PacketTarget.server);
+    private void sendCPU(int ordinal, net.minecraft.core.BlockPos target) {
+        ReikaPacketHelper.sendUpdatePacket(ReactorCraft.packetChannel, ordinal, target.getX(), target.getY(), target.getZ(), PacketTarget.server);
     }
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         super.extractLabels(graphics, mouseX, mouseY);
-        ReactorControlLayout layout = tile.getLayout();
-        Level world = tile.getLevel();
-        if (layout == null || world == null)
-            return;
-        int r = BUTTON_SIZE;
-        int s = BUTTON_SPACE;
-        int ox = 1 + imageWidth / 2 - s / 2 - 1;
-        int oy = imageHeight / 2 - s / 2 + 5;
-        for (int a = layout.getMinX(); a <= layout.getMaxX(); a++) {
-            for (int b = layout.getMinZ(); b <= layout.getMaxZ(); b++) {
-                if (a != 0 || b != 0) {
-                    int c = layout.getDisplayColorAtRelativePosition(world, a, offsetY, b);
-                    int x = ox + a * s;
-                    int y = oy + b * s;
-                    graphics.fill(x, y, x + r, y + r, 0xff000000 | c);
+        offsetY = Mth.clamp(offsetY, menu.minY(), menu.maxY());
+        int ox = 1 + imageWidth / 2 - BUTTON_SPACE / 2 - 1;
+        int oy = imageHeight / 2 - BUTTON_SPACE / 2 + 5;
+        var cpu = menu.getController().pos();
+        int minX = menu.getRods().keySet().stream().mapToInt(p -> p.getX() - cpu.getX()).min().orElse(0);
+        int maxX = menu.getRods().keySet().stream().mapToInt(p -> p.getX() - cpu.getX()).max().orElse(0);
+        int minZ = menu.getRods().keySet().stream().mapToInt(p -> p.getZ() - cpu.getZ()).min().orElse(0);
+        int maxZ = menu.getRods().keySet().stream().mapToInt(p -> p.getZ() - cpu.getZ()).max().orElse(0);
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                if (x != 0 || z != 0) {
+                    int color = menu.getRods().getOrDefault(cpu.offset(x, offsetY, z), 0x6a6a6a);
+                    int px = ox + x * BUTTON_SPACE;
+                    int py = oy + z * BUTTON_SPACE;
+                    graphics.fill(px, py, px + BUTTON_SIZE, py + BUTTON_SIZE, 0xff000000 | color);
                 }
             }
         }
@@ -104,19 +90,14 @@ public class ScreenCPU extends ReactorGuiBase<TileEntityCPU, MenuCPU> {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        ReactorControlLayout layout = tile.getLayout();
-        Level world = tile.getLevel();
-        if (layout != null && world != null) {
-            int s = BUTTON_SPACE;
-            int ox = leftPos + 1 + imageWidth / 2 - s / 2 - 1;
-            int oy = topPos + imageHeight / 2 - s / 2 + 5;
-            int a = Mth.floor((event.x() - ox) / (double) s);
-            int b = Mth.floor((event.y() - oy) / (double) s);
-            TileEntityControlRod rod = layout.getControlRodAtRelativePosition(world, a, offsetY, b);
-            if (rod != null) {
-                sendCPU(ReactorPackets.CPUTOGGLE.ordinal(), rod);
-                return true;
-            }
+        int ox = leftPos + 1 + imageWidth / 2 - BUTTON_SPACE / 2 - 1;
+        int oy = topPos + imageHeight / 2 - BUTTON_SPACE / 2 + 5;
+        int x = Mth.floor((event.x() - ox) / BUTTON_SPACE);
+        int z = Mth.floor((event.y() - oy) / BUTTON_SPACE);
+        var rod = menu.getController().pos().offset(x, offsetY, z);
+        if (menu.getRods().containsKey(rod)) {
+            sendCPU(ReactorPackets.CPUTOGGLE.ordinal(), rod);
+            return true;
         }
         return super.mouseClicked(event, doubleClick);
     }

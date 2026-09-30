@@ -49,8 +49,10 @@ public class ReactorBlockTagsProvider extends BlockTagsProvider {
                 continue;
             tier.put(ore.getBlock(), oreTier(ore));
         }
-        for (FluoriteTypes f : FluoriteTypes.colorList)
+        for (FluoriteTypes f : FluoriteTypes.colorList) {
             tier.put(ReactorBlocks.fluoriteOre(f), 0);
+            tier.put(ReactorBlocks.fluoriteBlock(f), 0);
+        }
         for (MatBlocks m : MatBlocks.matList)
             tier.put(ReactorBlocks.matBlock(m), 1);
 

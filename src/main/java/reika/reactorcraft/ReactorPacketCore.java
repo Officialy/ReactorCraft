@@ -167,17 +167,13 @@ public class ReactorPacketCore implements PacketHandler {
             e.printStackTrace();
             return;
         }
-        BlockEntity te = world.getBlockEntity(new BlockPos(x, y, z));
         try {
             switch (pack) {
                 case CPUTOGGLE:
-                    ((TileEntityControlRod) te).toggle(true, true);
-                    break;
                 case CPURAISE:
-                    ((TileEntityCPU) te).raiseAllRods();
-                    break;
                 case CPULOWER:
-                    ((TileEntityCPU) te).lowerAllRods();
+                    if (ep.containerMenu instanceof reika.reactorcraft.container.MenuCPU menu)
+                        menu.handleControl(ep, pack, new BlockPos(x, y, z));
                     break;
                 case ORERADIATION:
                     RadiationEffects.instance.doOreIrradiation(world, x, y, z, ep);

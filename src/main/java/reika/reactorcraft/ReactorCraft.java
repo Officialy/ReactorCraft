@@ -74,6 +74,7 @@ public class ReactorCraft {
         ReactorRecipeSerializers.RECIPE_SERIALIZERS.register(modEventBus);
         ReactorGameTests.TEST_INSTANCE_TYPES.register(modEventBus);
         modEventBus.addListener(ReactorGameTests::onRegisterGameTests);
+        modEventBus.addListener(reika.reactorcraft.container.CPUViewPayload::register);
 
         ReactorFeatures.FEATURES.register(modEventBus);
         ReactorBlockEntities.BLOCK_ENTITIES.register(modEventBus);

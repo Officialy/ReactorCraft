@@ -74,7 +74,10 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	}
 
 	public void link(TileEntityCPU te) {
+		if (CPU != null && CPU.getBlockEntity() instanceof TileEntityCPU previous && previous != te)
+			previous.removeTemperatureCheck(this);
 		CPU = new WorldLocation(te);
+		this.setChanged();
 	}
 
 	@Override

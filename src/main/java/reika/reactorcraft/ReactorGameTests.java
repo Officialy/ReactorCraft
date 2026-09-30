@@ -84,6 +84,7 @@ public final class ReactorGameTests {
         register(event, environment, "ammonia_synthesis_ingredients", 40,
                 ReactorGameTests::ammoniaSynthesisIngredients);
         ReactorTypeGameTests.register(event, environment);
+        ReactorContentGameTests.register(event, environment);
     }
 
     private static void ammoniaSynthesisIngredients(GameTestHelper helper) {

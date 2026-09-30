@@ -1571,3 +1571,43 @@ Validation on Minecraft 26.3 / NeoForge 26.3.0.26-beta / Java 25:
 JUnit checks; all six release builds pass offline. Logs are in the workspace's ignored `build/`
 directory: `reactor-types-regression.log` and `reactor-types-final-validation.log`.
 ChromatiCraft implementation and its pending files remain with the other session.
+
+
+## Decorative fluorite and CPU remote (2026-09-30)
+
+- Decorative fluorite is registered as eight colour-specific blocks. The original floblock textures,
+  1.2 hardness/4 resistance, wooden-pickaxe tier, nine gems -> one block and reverse recipes,
+  colour-preserving loot and creative entries are generated/registered. A neutron sets ACTIVATED,
+  giving light 15 and coloured particles; the original random tick deactivates it. Optional coloured
+  lighting remains marked for integration. Fluorite ore excitation still awaits BlockFluoriteOre.
+- ItemRemoteControl is fully ported and registered as remote_control. Original recipe:
+  SES/BCB/BPB (steel, ender pearl, stone buttons, circuit board, base panel). Charge remains damage
+  0..32000 kJ for RotaryCraft's charging station. Binding is free; successful menu opening consumes
+  one kJ. Range is 4*floor(log2(charge)) with the original 0.5m allowance; cross-dimension control
+  requires charge >8192. Normal and charged creative stacks and charge/range/link tooltips are present.
+- REMOTE_CPU is a persistent and synchronized GlobalPos component. Missing worlds/deleted CPUs
+  fail without spending charge. The CPU menu creates a detached client display and receives
+  menu-owned rod snapshots, so remote views do not query another dimension's client blocks.
+  Control packets resolve through the player's current CPU menu, verifying target CPU/rod membership;
+  stale, closed and invalid menus are rejected. Local CPU opening uses the same protocol.
+- Reactor temperature monitoring links use dimension-aware saved positions, deduplicate repeated
+  links, unlink from a previous CPU when relinked, and mark both core and controller dirty. Missing
+  monitored blocks are handled safely. Older coordinate-only links resolve to the CPU's dimension
+  even when the chunk loads before setLevel, and can still be removed correctly.
+- Fifteen new content/remote tests bring ReactorCraft to 49/49: eight colour-specific crafting,
+  irradiation, light, wooden-pickaxe loot and decay tests; charge/range/dimension boundaries; binding,
+  original remote recipe and disk/network stack round trips; removed CPU/missing dimension failures;
+  actual server menu opening with one-kJ debit using a negotiated mock connection; rod membership
+  validation; detached remote display snapshots; monitor linking/deduplication/chunk-save migration.
+  The existing 34 reactor tests remain passing, including breeder sodium and the solar tower.
+- Continued RotaryCraft by fully porting the Distiller and adding twelve functional GameTests.
+  Its three original fluid conversions are data-driven, synchronized and exposed in JEI/handbook;
+  the current shared tree passes 228 RotaryCraft GameTests. Foreign-fluid fixtures are test-only.
+- Limit: new fluorite particles, Distiller basins and remote CPU display have not been visually
+  inspected in a real client in this slice; mock menu tests do not prove a real network session.
+
+Final release validation: ReactorCraft and RotaryCraft release jars build successfully; their 5 and
+11 JUnit checks pass (DragonAPI: 3). Jar inspection confirms all new content/resources and excludes
+GameTest-only fluid substitutions. The attempted six-mod build currently stops in the independent
+ChromatiCraft work at ChromaBlocks: PushReaction.BLOCK is absent in the 26.3 API; that work is
+left to its owning agent. ReactorCraft alone was rerun after the last edits: all 49 tests pass.

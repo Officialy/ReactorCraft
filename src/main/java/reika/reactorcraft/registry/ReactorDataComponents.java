@@ -9,8 +9,8 @@ import reika.reactorcraft.ReactorCraft;
 
 /**
  * ReactorCraft item data components. Fuel-rod burnup and waste isotope still ride
- * {@code ItemStack.getDamageValue()} (see the fuel/waste TEs); only the fluid canister needs a
- * component, since it carries a full {@link SimpleFluidContent} rather than an int.
+ * {@code ItemStack.getDamageValue()} (see the fuel/waste TEs); the fluid canister carries a full
+ * {@link SimpleFluidContent}, and the CPU remote stores a dimension-aware location.
  */
 public final class ReactorDataComponents {
 
@@ -22,6 +22,11 @@ public final class ReactorDataComponents {
             COMPONENTS.registerComponentType("canister_fluid", b -> b
                     .persistent(SimpleFluidContent.CODEC)
                     .networkSynchronized(SimpleFluidContent.STREAM_CODEC));
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<net.minecraft.core.GlobalPos>> REMOTE_CPU =
+            COMPONENTS.registerComponentType("remote_cpu", b -> b
+                    .persistent(net.minecraft.core.GlobalPos.CODEC)
+                    .networkSynchronized(net.minecraft.core.GlobalPos.STREAM_CODEC));
 
     private ReactorDataComponents() {}
 }

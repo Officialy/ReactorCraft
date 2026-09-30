@@ -104,7 +104,10 @@ public class BlockReactorMachine extends BlockTEBase implements MachineRegistryB
         BlockEntity te = level.getBlockEntity(pos);
         if (te instanceof TileEntityReactorBase rc && rc.hasGui()) {
             if (!level.isClientSide() && player instanceof ServerPlayer sp) {
-                sp.openMenu(rc, pos);
+                if (rc instanceof reika.reactorcraft.tileentities.fission.TileEntityCPU cpu)
+                    sp.openMenu(cpu, data -> reika.reactorcraft.container.MenuCPU.writeOpeningData(data, cpu));
+                else
+                    sp.openMenu(rc, pos);
             }
             return InteractionResult.SUCCESS;
         }

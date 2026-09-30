@@ -100,8 +100,9 @@ public class EntityNeutron extends ParticleEntity {
 				}
 			}
 
-			// BLOCK-PORT: fluorite irradiation (legacy meta+8 glow on FLUORITE/FLUORITEORE) — wire to
-			// the fluorite blockstate when ReactorBlocks/FluoriteTypes is ported.
+			if (id instanceof reika.reactorcraft.blocks.BlockFluorite fluorite && world instanceof net.minecraft.server.level.ServerLevel server)
+				fluorite.activate(server, pos);
+			// BLOCK-PORT: ore excitation still requires the legacy BlockFluoriteOre port.
 
 			RadiationShield rs = RadiationShield.getFrom(new BlockKey(bs));
 			if (rs != null && ReikaRandomHelper.doWithChance(rs.neutronAbsorbChance))

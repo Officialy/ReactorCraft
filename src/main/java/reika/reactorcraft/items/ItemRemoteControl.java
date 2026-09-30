@@ -9,150 +9,122 @@
  ******************************************************************************/
 package reika.reactorcraft.items;
 
-import java.util.List;
-
-import net.minecraft.block.Block;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.World;
-import net.minecraftforge.common.DimensionManager;
-
-import reika.dragonapi.instantiable.data.immutable.Coordinate;
-import reika.dragonapi.libraries.io.ReikaChatHelper;
-import reika.dragonapi.libraries.mathsci.ReikaMathLibrary;
-import reika.reactorcraft.ReactorCraft;
+import java.util.function.Consumer;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
 import reika.reactorcraft.auxiliary.LinkableReactorCore;
-import reika.reactorcraft.base.ReactorItemBase;
-import reika.reactorcraft.registry.ReactorItems;
-import reika.reactorcraft.registry.ReactorTiles;
+import reika.reactorcraft.base.ItemReactorTool;
+import reika.reactorcraft.container.MenuCPU;
+import reika.reactorcraft.registry.ReactorDataComponents;
 import reika.reactorcraft.tileentities.fission.TileEntityCPU;
 import reika.rotarycraft.api.interfaces.ChargeableTool;
 
-public class ItemRemoteControl extends ReactorItemBase implements ChargeableTool {
+/** Coil-powered CPU remote: linking is free, opening costs one kJ, range is 4 floor(log2(charge)). */
+public class ItemRemoteControl extends ItemReactorTool implements ChargeableTool {
+    public static final int MAX_CHARGE = 32000;
 
-	public ItemRemoteControl(int tex) {
-		super(tex);
-		maxStackSize = 1;
-		canRepair = false;
-		hasSubtypes = false;
-	}
+    public ItemRemoteControl(Properties properties) { super(properties); }
 
-	@Override
-	public ItemStack onItemRightClick(ItemStack is, World world, EntityPlayer ep) {
-		if (this.canUse(is, world, ep)) {
-			TileEntity te = this.getLinkedCPU(is);
-			if (te instanceof TileEntityCPU) {
-				int x = is.stackTagCompound.getInteger("cx");
-				int y = is.stackTagCompound.getInteger("cy");
-				int z = is.stackTagCompound.getInteger("cz");
-				int dim = is.stackTagCompound.getInteger("id");
-				World w = DimensionManager.getWorld(dim);
-				Block id = w.getBlock(x, y, z);
-				int meta = w.getBlockMetadata(x, y, z);
-				if (id == ReactorTiles.CPU.getBlock() && meta == ReactorTiles.CPU.getBlockMetadata()) {
-					is.setItemDamage(is.getItemDamage()-1);
-					ep.openGui(ReactorCraft.instance, 0, w, x, y, z);
-				}
-			}
-		}
-		return is;
-	}
+    public void setLinkedCPU(ItemStack stack, TileEntityCPU cpu) {
+        stack.set(ReactorDataComponents.REMOTE_CPU.get(), GlobalPos.of(cpu.getLevel().dimension(), cpu.getBlockPos()));
+    }
 
-	@Override
-	public boolean onItemUse(ItemStack is, EntityPlayer ep, World world, int x, int y, int z, int s, float a, float b, float c) {
-		ReactorTiles r = ReactorTiles.getTE(world, x, y, z);
-		TileEntity te = world.getTileEntity(x, y, z);
-		if (r == ReactorTiles.CPU) {
-			if (te != null) {
-				this.setLinkedCPU(is, te);
-				ReikaChatHelper.sendChatToPlayer(ep, "Linking to "+ReactorTiles.CPU.getName()+" at "+new Coordinate(te));
-				return true;
-			}
-		}
-		else if (r != null && r.isLinkableReactorCore() && this.getLinkedCPU(is) != null) {
-			((TileEntityCPU)this.getLinkedCPU(is)).addTemperatureCheck((LinkableReactorCore)te);
-			ReikaChatHelper.sendChatToPlayer(ep, "Linking "+r.getName()+" to "+ReactorTiles.CPU.getName()+" at "+new Coordinate(this.getLinkedCPU(is)));
-		}
-		return false;
-	}
+    public TileEntityCPU getLinkedCPU(ItemStack stack, MinecraftServer server) {
+        GlobalPos target = stack.get(ReactorDataComponents.REMOTE_CPU.get());
+        if (!stack.is(this) || target == null || server == null)
+            return null;
+        ServerLevel level = server.getLevel(target.dimension());
+        return level != null && level.getBlockEntity(target.pos()) instanceof TileEntityCPU cpu ? cpu : null;
+    }
 
-	public TileEntity getLinkedCPU(ItemStack is) {
-		if (is.getItem() == this) {
-			if (is.stackTagCompound != null) {
-				int x = is.stackTagCompound.getInteger("cx");
-				int y = is.stackTagCompound.getInteger("cy");
-				int z = is.stackTagCompound.getInteger("cz");
-				int dim = is.stackTagCompound.getInteger("id");
-				TileEntity te = DimensionManager.getWorld(dim).getTileEntity(x, y, z);
-				return te;
-			}
-		}
-		return null;
-	}
+    public boolean canWorkInterdimensionally(ItemStack stack) { return stack.getDamageValue() > 8192; }
 
-	public boolean canUse(ItemStack is, World world, EntityPlayer ep) {
-		if (is.getItemDamage() > 0 && is.stackTagCompound != null) {
-			int x = is.stackTagCompound.getInteger("cx");
-			int y = is.stackTagCompound.getInteger("cy");
-			int z = is.stackTagCompound.getInteger("cz");
-			int dim = is.stackTagCompound.getInteger("id");
-			if (dim == world.provider.dimensionId || this.canWorkInterdimensionally(is)) {
-				int ex = MathHelper.floor_double(ep.posX);
-				int ey = MathHelper.floor_double(ep.posY);
-				int ez = MathHelper.floor_double(ep.posZ);
-				double dd = ReikaMathLibrary.py3d(ex-x, ey-y, ez-z);
-				return DimensionManager.getWorld(dim) != null && this.getRange(is)+0.5 >= dd;
-			}
-		}
-		return false;
-	}
+    public int getRange(ItemStack stack) {
+        int charge = stack.getDamageValue();
+        return charge > 0 ? 4 * (31 - Integer.numberOfLeadingZeros(charge)) : 0;
+    }
 
-	private void setLinkedCPU(ItemStack is, TileEntity te) {
-		is.stackTagCompound = new NBTTagCompound();
-		is.stackTagCompound.setInteger("cx", te.xCoord);
-		is.stackTagCompound.setInteger("cy", te.yCoord);
-		is.stackTagCompound.setInteger("cz", te.zCoord);
-		is.stackTagCompound.setInteger("id", te.worldObj.provider.dimensionId);
-	}
+    public boolean canUse(ItemStack stack, Level level, Player player) {
+        GlobalPos target = stack.get(ReactorDataComponents.REMOTE_CPU.get());
+        return stack.is(this) && stack.getDamageValue() > 0 && target != null
+                && (target.dimension().equals(level.dimension()) || canWorkInterdimensionally(stack))
+                && player.blockPosition().distSqr(target.pos()) <= Math.pow(getRange(stack) + 0.5, 2)
+                && (level.isClientSide() || level.getServer().getLevel(target.dimension()) != null);
+    }
 
-	public boolean canWorkInterdimensionally(ItemStack is) {
-		return is.getItemDamage() > 8192;
-	}
+    @Override
+    public InteractionResult use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (!canUse(stack, level, player))
+            return InteractionResult.PASS;
+        if (player instanceof ServerPlayer serverPlayer) {
+            TileEntityCPU cpu = getLinkedCPU(stack, level.getServer());
+            if (cpu == null)
+                return InteractionResult.PASS;
+            if (serverPlayer.openMenu(cpu, data -> MenuCPU.writeOpeningData(data, cpu)).isPresent())
+                stack.setDamageValue(stack.getDamageValue() - 1);
+        }
+        return InteractionResult.SUCCESS;
+    }
 
-	public int getRange(ItemStack is) {
-		return 4*(int)ReikaMathLibrary.logbase(is.getItemDamage(), 2);
-	}
+    @Override
+    public InteractionResult useOn(UseOnContext context) {
+        if (context.getPlayer() == null) return InteractionResult.PASS;
+        Level level = context.getLevel();
+        var target = level.getBlockEntity(context.getClickedPos());
+        if (target instanceof TileEntityCPU cpu) {
+            if (!level.isClientSide()) {
+                setLinkedCPU(context.getItemInHand(), cpu);
+                context.getPlayer().sendSystemMessage(Component.literal("Linked to reactor CPU at " + cpu.getBlockPos().toShortString()));
+            }
+            return InteractionResult.SUCCESS;
+        }
+        if (target instanceof LinkableReactorCore core) {
+            if (!level.isClientSide()) {
+                TileEntityCPU cpu = getLinkedCPU(context.getItemInHand(), level.getServer());
+                if (cpu == null)
+                    return InteractionResult.PASS;
+                cpu.addTemperatureCheck(core);
+                context.getPlayer().sendSystemMessage(Component.literal("Linked reactor temperature monitor to CPU at " + cpu.getBlockPos().toShortString()));
+            }
+            return context.getItemInHand().has(ReactorDataComponents.REMOTE_CPU.get()) ? InteractionResult.SUCCESS : InteractionResult.PASS;
+        }
+        return InteractionResult.PASS;
+    }
 
-	@Override
-	public void getSubItems(Item id, CreativeTabs tab, List li) {
-		li.add(ReactorItems.REMOTE.getStackOfMetadata(0));
-		li.add(ReactorItems.REMOTE.getStackOfMetadata(32000));
-	}
+    @Override
+    public int setCharged(ItemStack stack, int charge, boolean strongcoil) {
+        int previous = stack.getDamageValue();
+        stack.setDamageValue(Math.clamp(charge, 0, MAX_CHARGE));
+        return previous;
+    }
 
-	@Override
-	public void addInformation(ItemStack is, EntityPlayer ep, List li, boolean par4) {
-		if (is.stackTagCompound != null) {
-			int x = is.stackTagCompound.getInteger("cx");
-			int y = is.stackTagCompound.getInteger("cy");
-			int z = is.stackTagCompound.getInteger("cz");
-			int dim = is.stackTagCompound.getInteger("id");
-			li.add(String.format("Linked to CPU in world %d at %d, %d, %d", dim, x, y, z));
-		}
-		else {
-			li.add("No linked CPU");
-		}
-		li.add("Charge: "+is.getItemDamage()+" kJ");
-	}
+    @Override
+    public boolean isBarVisible(ItemStack stack) { return stack.getDamageValue() > 0; }
+    @Override
+    public int getBarWidth(ItemStack stack) { return Math.round(13F * stack.getDamageValue() / MAX_CHARGE); }
+    @Override
+    public int getBarColor(ItemStack stack) { return 0x00ff00; }
 
-	@Override
-	public int setCharged(ItemStack is, int charge, boolean strongcoil) {
-		int ret = is.getItemDamage();
-		is.setItemDamage(charge);
-		return ret;
-	}
+    @Override
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> lines, TooltipFlag flag) {
+        GlobalPos target = stack.get(ReactorDataComponents.REMOTE_CPU.get());
+        lines.accept(Component.literal(target == null ? "No linked CPU" : "Linked to CPU in " + target.dimension().identifier() + " at " + target.pos().toShortString()));
+        lines.accept(Component.literal("Charge: " + stack.getDamageValue() + " kJ"));
+        lines.accept(Component.literal("Range: " + getRange(stack) + " m"));
+        if (canWorkInterdimensionally(stack))
+            lines.accept(Component.literal("Cross-dimension control enabled"));
+    }
 }
