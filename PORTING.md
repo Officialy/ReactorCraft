@@ -1695,3 +1695,26 @@ Ten new Chunk Loader functional tests plus five live-tag tests pass, along with 
 placement test: 301/301 RotaryCraft GameTests and 11/11 JUnit checks; release build passes.
 Nineteen machines remain from the owner's original missing-machine list. The client visuals,
 real network joining and release-jar server/client play remain outside this headless validation.
+
+## RotaryCraft Fuel Enhancer (2026-10-01)
+
+The Fuel Enhancer is now fully ported against V33a's actual source. Both petroleum fuel and
+kerosene convert to jet fuel at 4:1, once per tick, with logarithmic shaft-speed scaling and
+the original five catalysts (including pink dye). Recipes are supplied by datagen and synced
+to clients; common fuel/kerosene tags replace global legacy fluid names. No foreign fuel is
+invented by RotaryCraft: an integration or datapack must populate these tags with registered
+fluids. Optional recipe usability callbacks remain available. Difficulty-dependent catalyst
+consumption retains the original division by 100 and petroleum's additional 1.5 multiplier.
+
+Ported the inventoried two-tank base, stable transactional capability views, top intake,
+horizontal output, fuel-line routes, nine-slot menu with complete power values, crafting,
+generated loot/models/tags, handbook, comparator and animated model/fluid basins. The vanilla
+Container bridge uses live stacks for hopper merges, preventing loss that snapshot-only reads
+caused during validation. Detached inventory loads preserve their supplied registry context.
+Any-removal inventory drops and manual versus automated retrieval are independently tested.
+
+Thirty-three new functional tests plus the new registry placement test bring RotaryCraft to
+335/335 passing GameTests. All 11 JUnit checks and the release build pass. Release jar inspection
+confirms generated resources and excludes foreign-fluid and deterministic-consumption fixtures.
+Eighteen machines remain from the owner's original missing list. New Fuel Enhancer visuals,
+real multiplayer interaction and third-party fuel integrations still need live-game validation.
