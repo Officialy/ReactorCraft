@@ -1718,3 +1718,29 @@ Thirty-three new functional tests plus the new registry placement test bring Rot
 confirms generated resources and excludes foreign-fluid and deterministic-consumption fixtures.
 Eighteen machines remain from the owner's original missing list. New Fuel Enhancer visuals,
 real multiplayer interaction and third-party fuel integrations still need live-game validation.
+
+
+## RotaryCraft Fuel Engine (2026-10-01)
+
+Ported V33a's Fuel Engine: 524288 W at 256 rad/s / 2048 Nm, separate 24000 mB fuel/water/
+lubricant tanks, original startup, firing and lubricant costs, inertial coast-down, all ECU
+settings and normal/flipped ECU fuel transfer. Preserve the integer turbofuel efficiency
+expression and original thermal cooling, throttling and double-explosion failure. Added
+the original survival recipe, generated models/loot/mining and motion tags, menu, handbook,
+item power tooltip, original texture, crank/piston animation, smoke and diesel sound.
+
+Fuel lines now accept the same explicit common fuel tags as the engine. Fluid transactions,
+ECU partial-capacity backpressure and manual buckets conserve fluids. Save/load retains tank
+contents, flipping, power and timer phase; reload does not reset an ongoing fuel interval.
+DragonAPI's atmosphere query events preserve the combustion gate and density/damage extension
+points. Absent Advanced Rocketry/Galacticraft/Satisforestry modern adapters are marked;
+external fuel comes from populated `c:fuel`/`c:turbofuel` tags, never an invented RotaryCraft fuel.
+
+43 new functional tests plus the registry placement test: 379/379 full RotaryCraft GameTests,
+11/11 JUnit checks and successful release build. Tests include actual shafts in four directions,
+real fluid pipes, all ECU settings, redstone hysteresis, cooling, vacuum, survival interactions,
+and resumed fuel cadence after reload. Overheat dispatches the actual strength-4/8 explosion
+events; the test cancels their execution to isolate neighboring structures, so blast damage
+and fire spread remain unmeasured. Release fixtures are excluded from the built jar.
+Seventeen machines remain from the owner's original missing list. This validation does not
+include client visuals/audio, real multiplayer joining or release-jar play outside development.
