@@ -1762,3 +1762,26 @@ Headless tests cover actual mouse/shift transfers, worn equipment, creative-coil
 all pack variants, both gearbox fluids, hoppers, transactions, persistence, comparators and
 exactly-once survival/command-removal drops. Client visuals and network joining remain outside
 this validation. No ReactorCraft implementation changes were needed for this fix.
+
+## RotaryCraft Mob Radar and ElectriCraft RF sprites (2026-10-01)
+
+Ported the V33a Mob Radar with bottom shaft input, original power/range formula and cap,
+modern full-height square scans, independent player/animal/hostile categories, RadarJammer
+API and static reset, immutable server-synced contacts, saved filters/ownership, original
+survival recipe, loot/mining/motion tags, handbook, menu, model, antenna and GUI icons.
+Restore its three-quarter collision height and owner-only through-wall HUD rendering.
+The Motion Tracker remains an absent tool dependency, preserved through MOTION-PORT and
+an optional item tag; the compass substitute exists only in GameTest resources.
+DragonAPI restores original mob colors/subclass shading and corrects the modern hostile
+classification from all Mob subclasses to Monster plus the existing exceptional categories.
+
+ElectriCraft now generates a minecraft block-atlas directory source for textures/blocks.
+This resolves its RF core/end sprite IDs and other original legacy wire/battery sprites
+while retaining the valid 20-frame RF animation metadata.
+
+Validation: 446/446 RotaryCraft GameTests (30 new functional radar checks and placement),
+11/11 JUnit checks, 13/13 ElectriCraft GameTests, successful datagen and both release builds.
+Jar checks verify radar data/assets/tags, exclusion of the tracker fixture and the RF atlas
+source/animations. Sixteen machines remain from the original missing list. Client visuals,
+real networking and release-jar play remain outside these headless checks. No ReactorCraft
+implementation changes were needed for this slice.
