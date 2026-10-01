@@ -33,6 +33,17 @@ public class ReactorBlockTagsProvider extends BlockTagsProvider {
 
     @Override
     protected void addTags(HolderLookup.Provider provider) {
+        for (var ore : ReactorOreType.list) {
+            String material = ore == ReactorOreType.ENDBLENDE ? "pitchblende" : ore.name().toLowerCase(java.util.Locale.ROOT);
+            var key = net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.BLOCK,
+                    net.minecraft.resources.Identifier.fromNamespaceAndPath("c", "ores/" + material));
+            if (ore == ReactorOreType.FLUORITE) {
+                for (var color : FluoriteTypes.colorList)
+                    tag(key).add(net.minecraft.core.registries.BuiltInRegistries.BLOCK.getResourceKey(ReactorBlocks.fluoriteOre(color)).orElseThrow());
+            } else tag(key).add(net.minecraft.core.registries.BuiltInRegistries.BLOCK.getResourceKey(ore.getBlock()).orElseThrow());
+            tag(net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.BLOCK,
+                    net.minecraft.resources.Identifier.fromNamespaceAndPath("c", "ores"))).addTag(key);
+        }
         // 26.3 made movement blocking, suffocation, fluid blocking and fluid washing tag-driven and
         // NeoForge tags no modded blocks; give every block its 26.2 behaviour (see LegacyMotionTags).
         var motionTag = tag(BlockTags.BLOCKS_MOTION_NO_LEAVES);

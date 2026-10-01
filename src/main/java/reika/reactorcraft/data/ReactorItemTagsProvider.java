@@ -37,10 +37,37 @@ public class ReactorItemTagsProvider extends ItemTagsProvider {
 
     @Override
     protected void addTags(HolderLookup.Provider provider) {
+        for (var ore : reika.reactorcraft.registry.ReactorOreType.list) {
+            String material = ore == reika.reactorcraft.registry.ReactorOreType.ENDBLENDE ? "pitchblende" : ore.name().toLowerCase(java.util.Locale.ROOT);
+            var key = common("ores/" + material);
+            if (ore == reika.reactorcraft.registry.ReactorOreType.FLUORITE) {
+                for (var color : reika.reactorcraft.registry.FluoriteTypes.colorList) {
+                    tag(key).add(net.minecraft.core.registries.BuiltInRegistries.ITEM.getResourceKey(reika.reactorcraft.registry.ReactorBlocks.fluoriteOre(color).asItem()).orElseThrow());
+                    tag(common("gems/fluorite")).add(net.minecraft.core.registries.BuiltInRegistries.ITEM.getResourceKey(ReactorItems.fluorite(color)).orElseThrow());
+                }
+                tag(common("gems")).addTag(common("gems/fluorite"));
+            } else {
+                tag(key).add(net.minecraft.core.registries.BuiltInRegistries.ITEM.getResourceKey(ore.getBlock().asItem()).orElseThrow());
+                String product = switch (ore) {
+                    case PITCHBLENDE, ENDBLENDE -> "ingots/uranium";
+                    case CADMIUM, INDIUM, SILVER -> "ingots/" + material;
+                    case CALCITE, MAGNETITE -> "gems/" + material;
+                    case THORIUM, AMMONIUM -> "dusts/" + material;
+                    default -> throw new IllegalStateException("Unhandled ore " + ore);
+                };
+                tag(common(product)).add(net.minecraft.core.registries.BuiltInRegistries.ITEM.getResourceKey(ore.getProduct()).orElseThrow());
+                tag(common(product.split("/")[0])).addTag(common(product));
+            }
+            tag(common("ores")).addTag(key);
+        }
         tag(DEPLETED_URANIUM)
                 .add(ReactorItems.DEPLETED_FUEL.getKey())
                 .add(ReactorItems.DEPLETED_PELLET.getKey());
         tag(QUICKLIME_DUST).add(ReactorItems.LIME.getKey());
         tag(AMMONIUM_DUST).add(ReactorItems.AMMONIUM_DUST.getKey());
+    }
+
+    private static TagKey<Item> common(String path) {
+        return TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", path));
     }
 }

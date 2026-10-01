@@ -1812,3 +1812,31 @@ No ReactorCraft implementation changes were required.
 Validation: RotaryCraft passes 466/466 required GameTests and 11/11 JUnit tests, server/client
 datagen and the release build. Release-jar inspection confirms the 40 extractor recipes,
 four raw rates, three existing-iron texture mappings and both counted smelts/advancements.
+
+## Tagged RotaryCraft modded/custom extractor integration (2026-10-01)
+
+Restore all 90 original modded ore families through common item tags: copper shares its
+modern vanilla chain; 89 other families gain complete four-stage chains, original sprites,
+counts/rarity XP and tagged furnace products with original RotaryCraft fallbacks. Three
+extra stage-zero recipes preserve Nether Force/Mimichite/Essence metadata variants.
+Final-stage bonus recipes restore the original secondary table with ore-tag availability
+gates in place of mod-ID gates, including coal's pitchblende alternative. The original
+integer-reciprocal bonus roll is preserved. The raw-iron 23% balance remains unchanged.
+
+ReactorCraft now publishes pitchblende/end pitchblende, cadmium, indium, silver, calcite,
+magnetite, thorium, ammonium and every colored fluorite ore in common item and block tags.
+Products publish corresponding common ingot/dust/gem tags. ElectriCraft publishes its six
+ore/material families too. Tagged smelts prefer an installed external product, using a
+deterministic registry-ID ordering and the original RotaryCraft output as fallback.
+
+Datapack custom extraction uses component-bearing generic intermediates, tagged inputs,
+configurable counts/rates/bonuses, name/tint and component-sensitive smelting. GUI and
+automation validate the synchronized recipe set. Fix component-blind merging, counted
+primary/secondary output backpressure and partial-water processing. The full tag catalog
+and five complete custom recipe examples are in RotaryCraft/EXTRACTOR-TAGS.md.
+
+Validation: 104 new RotaryCraft tests; full suites pass 570/570 RotaryCraft, 13/13 ElectriCraft
+and 49/49 ReactorCraft GameTests, plus 11/11 RotaryCraft JUnit. Datagen and all three builds
+succeed. Release-jar verification confirms the 399 extraction recipes, 89 counted tagged
+smelts, all original sprites/models, unchanged raw rates, cross-mod packaged tags and
+exclusion of test-only custom/fake-ore fixtures. Log: build/mod-ore-final-validation.log.

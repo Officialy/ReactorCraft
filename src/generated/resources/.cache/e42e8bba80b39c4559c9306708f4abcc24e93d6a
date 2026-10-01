@@ -1,4 +1,25 @@
-// 26.3	2026-09-28T20:09:53.1670714	Tags for minecraft:item mod id reactorcraft
-f6483cf25e0c013df46283729f56678842123619 data/c/tags/item/dusts/ammonium.json
+// 26.3	2026-10-01T22:33:32.0507185	Tags for minecraft:item mod id reactorcraft
+98073ef2fba371477ab969117c5c8d8fe34fb318 data/c/tags/item/dusts.json
+ce4d94faca470532aee5449054a254aa7a60a073 data/c/tags/item/dusts/ammonium.json
 3bdebdf97ccb640232bded2d0dc136a908fa63d4 data/c/tags/item/dusts/quicklime.json
+50b2aa0482b695ca85f7d15bbc3d280c64e8e20e data/c/tags/item/dusts/thorium.json
+44067d90d25b2ce2fd8facaae4794fd3ac07acbb data/c/tags/item/gems.json
+dde00136669e7c796b8769393edafa546cb725a1 data/c/tags/item/gems/calcite.json
+d0e2c00d3cdbaa78f1c808fc463ac9b5541a693d data/c/tags/item/gems/fluorite.json
+eed14f555288cc39d90551a117427401edd555ff data/c/tags/item/gems/magnetite.json
+d897c22f3c16aa2b4ef6242a0594e5d84ad5e933 data/c/tags/item/ingots.json
+c86bccaf2b51a7f5c62426695d27e2446daaa013 data/c/tags/item/ingots/cadmium.json
 4b140acde154422b1f2f03ba059f18ec8477c236 data/c/tags/item/ingots/depleted_uranium.json
+9695cdbe6cf0bc470e88a597961fff73668c15c8 data/c/tags/item/ingots/indium.json
+3622defa7fa73719004881086f24e93376858286 data/c/tags/item/ingots/silver.json
+aa0a359ed0166e9f763e2d2489103bfe40ebed6b data/c/tags/item/ingots/uranium.json
+7bc392f6af7a081917775d5db091eeb8a1f1b6cd data/c/tags/item/ores.json
+595e7d60989c8f344c0dcc622e687de511211544 data/c/tags/item/ores/ammonium.json
+80de6ee4333c87b092ae189e95034b00d88bf488 data/c/tags/item/ores/cadmium.json
+0949b8435f4dcc4efb7cfa7e7e508995ca342a48 data/c/tags/item/ores/calcite.json
+7c48fc18f01dda6c77419ec94ca502f45d0028fd data/c/tags/item/ores/fluorite.json
+1ce98b84d77b85c186da27d5d80199c8c70c972b data/c/tags/item/ores/indium.json
+e359994307c5eb80be452be3a1cb4b3731a08df3 data/c/tags/item/ores/magnetite.json
+3644f2e1517bf76d3c27037de301beb9265301fb data/c/tags/item/ores/pitchblende.json
+00a516f6c3177f0ebc8951fca8560578d0e3c8e8 data/c/tags/item/ores/silver.json
+cae469c001f3ea11b10fdbb0f86fe6e9f5d83797 data/c/tags/item/ores/thorium.json

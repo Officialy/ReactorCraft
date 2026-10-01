@@ -1,4 +1,14 @@
-// 26.3	2026-09-30T17:47:30.7439833	Tags for minecraft:block mod id reactorcraft
+// 26.3	2026-10-01T22:33:32.0487188	Tags for minecraft:block mod id reactorcraft
+7bc392f6af7a081917775d5db091eeb8a1f1b6cd data/c/tags/block/ores.json
+595e7d60989c8f344c0dcc622e687de511211544 data/c/tags/block/ores/ammonium.json
+80de6ee4333c87b092ae189e95034b00d88bf488 data/c/tags/block/ores/cadmium.json
+0949b8435f4dcc4efb7cfa7e7e508995ca342a48 data/c/tags/block/ores/calcite.json
+7c48fc18f01dda6c77419ec94ca502f45d0028fd data/c/tags/block/ores/fluorite.json
+1ce98b84d77b85c186da27d5d80199c8c70c972b data/c/tags/block/ores/indium.json
+e359994307c5eb80be452be3a1cb4b3731a08df3 data/c/tags/block/ores/magnetite.json
+3644f2e1517bf76d3c27037de301beb9265301fb data/c/tags/block/ores/pitchblende.json
+00a516f6c3177f0ebc8951fca8560578d0e3c8e8 data/c/tags/block/ores/silver.json
+cae469c001f3ea11b10fdbb0f86fe6e9f5d83797 data/c/tags/block/ores/thorium.json
 a36ec3c758d352a6c44576ff102ac7cb796efaad data/minecraft/tags/block/blocks_motion_no_leaves.json
 35133e95f1c8fdd7a1c21afcc231fc0bffefb9a8 data/minecraft/tags/block/leaves.json
 f5e354f810b48aaf63df5f4553c5214daa21bb22 data/minecraft/tags/block/mineable/pickaxe.json
