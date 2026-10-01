@@ -1785,3 +1785,30 @@ Jar checks verify radar data/assets/tags, exclusion of the tracker fixture and t
 source/animations. Sixteen machines remain from the original missing list. Client visuals,
 real networking and release-jar play remain outside these headless checks. No ReactorCraft
 implementation changes were needed for this slice.
+
+## RotaryCraft raw iron balance and lapis/redstone conversion (2026-10-01)
+
+Add the owner's requested raw-iron extractor route. Minecraft 26.3's Fortune III ore_drops
+formula averages 2.2 raw iron per mined ore. Original iron ore extraction yields 1.5^4 =
+5.0625 ingots on average. Equalizing raw extraction requires a per-stage duplication chance
+of (5.0625/2.2)^(1/4)-1 = 23.16451155%; use 23%, giving 2.28886641 per raw iron and
+5.035506102 per Fortune III mined ore. The reference is vanilla Fortune III; higher modded
+Fortune levels are outside this calculation. Ore remains better through vanilla Fortune 0-III.
+
+Three separate raw intermediates, with generated models reusing existing iron sprites,
+preserve this provenance through all four recipes and saves. Explicit duplication_chance
+is optional in recipe JSON, carried over network sync and displayed by JEI. It takes
+precedence over bedrock guaranteed crushing for raw iron; original ore/rarity/Nether
+behavior remains intact. Raw solutions retain the original tungsten bonus.
+
+Restore exact V33a furnace output counts and XP: lapis flakes -> six lapis lazuli (0.6 XP),
+redstone flakes -> four redstone dust (0.5 XP), each 200 ticks. Generated advancements
+unlock the recipes. Tests uncovered copy-only extractor inventory mutations; consumption,
+interstage merging, stacked output and bonus counts now explicitly write back to the
+ManagedItemHandler. Twenty new tests cover the balance, actual raw/ore processing,
+inventory conservation, persistence, codecs and real multi-output furnace behavior.
+No ReactorCraft implementation changes were required.
+
+Validation: RotaryCraft passes 466/466 required GameTests and 11/11 JUnit tests, server/client
+datagen and the release build. Release-jar inspection confirms the 40 extractor recipes,
+four raw rates, three existing-iron texture mappings and both counted smelts/advancements.
