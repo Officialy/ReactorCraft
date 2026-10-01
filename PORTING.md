@@ -1658,7 +1658,8 @@ both to prove assignability) - that is why `BasicAEInterface.updateReader` exist
 Filter (both whole machines), Item Pump pattern loading into pattern providers, certus/fluix grinding;
 ReactorCraft waste-in-ME neutron leak; ChromatiCraft ME Inventory Link ability, Tool Storage crate as
 a grid node, Void/Crystal/Corrosion Resistant Cells, the Unknown Artefact ME drain, the Tool Storage
-AE recipe. Found on the way: `KeyedItemStack` equality never matched (METADATA fell through to false).
+AE recipe, the ME Item Distributor (whole tile + GUI + TESR + ae2-conditional casting recipe; 2026-10-01).
+ElectriCraft and GeoStrata had no AE integration in 1.7.10 (checked upstream/master). Found on the way: `KeyedItemStack` equality never matched (METADATA fell through to false).
 
 **Not portable / deferred:** RotaryCraft `OreForcer` certus (AE2 has no certus ore) and
 `fixAEPowerRatio` (AE2 has no RotaryCraft power unit); Bundled Bus (needs ProjectRed); ChromatiCraft
