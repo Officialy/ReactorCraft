@@ -1744,3 +1744,21 @@ events; the test cancels their execution to isolate neighboring structures, so b
 and fire spread remain unmeasured. Release fixtures are excluded from the built jar.
 Seventeen machines remain from the owner's original missing list. This validation does not
 include client visuals/audio, real multiplayer joining or release-jar play outside development.
+
+## RotaryCraft Filling Station survival fix (2026-10-01)
+
+Fixed the missing HasItemHandler binding that omitted all four station slots, completing the
+single-tank inventory base's Container/WorldlyContainer and transactional capability behavior.
+DragonAPI ArmorSlot now permits valid nonempty equipment. Restore real horizontal shaft input,
+1024 W gating, V33a's speed-based filling rate, ethanol crystals and general filled-container
+draining with safe empty-container remainders. Fillable carries explicit fluid and amount;
+jetpacks and integrated gears persist fluid identity, reject mixing and conserve transferred
+quantity. Preserve legacy station ItemsRaw inventories and amount-only jetpack fuel saves.
+
+Thirty-six new functional station tests bring RotaryCraft to 415/415 GameTests. All 11 JUnit
+checks, datagen and the release build pass. Release-jar inspection verifies station data,
+mining/motion and jetpack armor tags, plus exclusion of the test-only rocket-fuel substitution.
+Headless tests cover actual mouse/shift transfers, worn equipment, creative-coil power,
+all pack variants, both gearbox fluids, hoppers, transactions, persistence, comparators and
+exactly-once survival/command-removal drops. Client visuals and network joining remain outside
+this validation. No ReactorCraft implementation changes were needed for this fix.
