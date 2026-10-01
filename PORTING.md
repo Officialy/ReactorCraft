@@ -1670,3 +1670,27 @@ Bulk Mover, ChromaticEventManager, Crystal Furnace/Ore Creator (charged certus o
 **Tests:** `RotaryAETests` / `ChromaAETests` build real ME networks and only register with AE2 loaded;
 drop the AE2 + GuideME jars into `<mod>/run-gametest/mods` to run them (`-PgameTestSelector=<mod>:ae2_*`),
 then remove them so the normal suite stays lean.
+
+
+## RotaryCraft Chunk Loader and tag audit (2026-10-01)
+
+The Chunk Loader is now fully ported on 26.3: original bottom power and speed/radius rules,
+configuration gate, original crafting ingredients, model, particles, handbook, loot and item
+rendering. Ticket sets expand/contract with power and release on power loss or any block
+removal. DragonAPI's restored-ticket validation rebuilds the live ownership cache, preventing
+saved outer chunks from remaining forced after first-tick power loss. Runtime caches clear
+at server shutdown to avoid ownership collisions when another integrated world opens in the
+same JVM. The restore regression
+uses the real NeoForge validation callback with saved owner sets; it is not a cold server restart.
+
+RotaryCraft's generated block/item tags now cover machine/pipe pickaxe speed, tool and armor
+categories (including special wearable equipment), shears enchantments, source-backed material
+compatibility and hardened-glass block/item parity. HSLA is kept out of ordinary steel by
+default, preserving the purifier's foreign-steel boundary; alloy tungsten is not pure tungsten.
+The original published aluminum-alloy compact/aluminum powder entries are retained under
+common aluminum tags, matching V33a RotaryRegistration rather than deriving tags from names.
+
+Ten new Chunk Loader functional tests plus five live-tag tests pass, along with the new
+placement test: 301/301 RotaryCraft GameTests and 11/11 JUnit checks; release build passes.
+Nineteen machines remain from the owner's original missing-machine list. The client visuals,
+real network joining and release-jar server/client play remain outside this headless validation.
