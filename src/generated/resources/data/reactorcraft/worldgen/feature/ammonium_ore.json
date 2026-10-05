@@ -7,5 +7,6 @@
   "needs_lava": true,
   "ore": "reactorcraft:ammonium_ore",
   "random_fluorite": false,
+  "settings_key": "AMMONIUM",
   "size": 8
 }

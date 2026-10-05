@@ -11,7 +11,7 @@ package reika.reactorcraft.items;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.fluids.SimpleFluidContent;
+import reika.reactorcraft.auxiliary.CanisterContents;
 
 import reika.reactorcraft.base.ItemReactorTool;
 import reika.reactorcraft.registry.ReactorDataComponents;
@@ -35,7 +35,7 @@ public class ItemCanister extends ItemReactorTool {
 
 	@Override
 	public Component getName(ItemStack is) {
-		SimpleFluidContent c = is.get(ReactorDataComponents.CANISTER_FLUID.get());
+		CanisterContents c = is.get(ReactorDataComponents.CANISTER_FLUID.get());
 		if (c != null && !c.isEmpty())
 			return Component.translatable("item.reactorcraft.canister.filled", c.getFluid().getFluidType().getDescription());
 		return super.getName(is);

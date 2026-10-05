@@ -51,7 +51,7 @@ public class PebbleBedArrangement {
 
 	@Override
 	public String toString() {
-		return "#"+this.hashCode()+" > "+this.getSize()+": "+positions.keySet().toString();
+		return "#"+this.hashCode()+" > "+this.getSize()+": "+ positions.keySet();
 	}
 
 }

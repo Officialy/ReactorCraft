@@ -1,0 +1,25 @@
+{
+  "parent": "reactorcraft:plasma",
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.meltpipe.description"
+    },
+    "icon": {
+      "id": "reactorcraft:magnetic_pipe"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.meltpipe.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

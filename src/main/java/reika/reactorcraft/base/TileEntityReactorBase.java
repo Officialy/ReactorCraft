@@ -166,11 +166,10 @@ public abstract class TileEntityReactorBase extends BlockEntityBase implements T
 			ReactorTiles r = ReactorTiles.getTE(world, dpos);
 			if (r != null) {
 				TileEntityReactorBase te = (TileEntityReactorBase)world.getBlockEntity(dpos);
-				if (te instanceof Temperatured) {
+				if (te instanceof Temperatured tr) {
 					int Tamb_loc = ReikaWorldHelper.getAmbientTemperatureAt(world, dpos);
 
-					Temperatured tr = (Temperatured)te;
-					boolean flag = true;
+                    boolean flag = true;
 					if (tr instanceof TileEntityNuclearCore)
 						flag = true;
 					if (flag) {
@@ -262,9 +261,8 @@ public abstract class TileEntityReactorBase extends BlockEntityBase implements T
 			String s = String.format("%s %s: %dC", this.getTEName(), Variables.TEMPERATURE, ((TemperatureTE)this).getTemperature());
 			li.add(s);
 		}
-		if (this instanceof TileEntityReactorPiping) {
-			TileEntityReactorPiping rp = (TileEntityReactorPiping)this;
-			if (rp.getFluidLevel() <= 0) {
+		if (this instanceof TileEntityReactorPiping rp) {
+            if (rp.getFluidLevel() <= 0) {
 				String s = String.format("%s is empty.", this.getTEName());
 				li.add(s);
 			}
@@ -273,27 +271,23 @@ public abstract class TileEntityReactorBase extends BlockEntityBase implements T
 				li.add(s);
 			}
 		}
-		if (this instanceof TileEntitySolenoidMagnet) {
-			ShaftPowerReceiver sp = (ShaftPowerReceiver)this;
-			String pre = ReikaEngLibrary.getSIPrefix(sp.getPower());
+		if (this instanceof TileEntitySolenoidMagnet sp) {
+            String pre = ReikaEngLibrary.getSIPrefix(sp.getPower());
 			double base = ReikaMathLibrary.getThousandBase(sp.getPower());
 			li.add(String.format("%s receiving %.3f %sW @ %d rad/s.", sp.getName(), base, pre, sp.getOmega()));
 		}
-		if (this instanceof TileEntityReactorGenerator) {
-			TileEntityReactorGenerator sp = (TileEntityReactorGenerator)this;
-			li.add(sp.getGeneratedOutputForDisplay());
+		if (this instanceof TileEntityReactorGenerator sp) {
+            li.add(sp.getGeneratedOutputForDisplay());
 		}
-		if (this instanceof TileEntityTurbineCore) {
-			TileEntityTurbineCore sp = (TileEntityTurbineCore)this;
-			long power = sp.getPower();
+		if (this instanceof TileEntityTurbineCore sp) {
+            long power = sp.getPower();
 			String pre = ReikaEngLibrary.getSIPrefix(power);
 			double base = ReikaMathLibrary.getThousandBase(power);
 			li.add(String.format("%s producing %.3f %sW @ %d rad/s.", sp.getName(), base, pre, sp.getOmega()));
 			li.add(String.format("Lubricant level %d mB per block.", sp.getLubricant()));
 		}
-		if (this instanceof TileEntitySteamLine) {
-			TileEntitySteamLine sl = (TileEntitySteamLine)this;
-			String s = String.format("%s contains %d m^3 of steam.", this.getTEName(), sl.getSteam());
+		if (this instanceof TileEntitySteamLine sl) {
+            String s = String.format("%s contains %d m^3 of steam.", this.getTEName(), sl.getSteam());
 			li.add(s);
 			Proportionality<ReactorType> types = sl.getSourceReactorType();
 			if (!types.isEmpty()) {
@@ -304,9 +298,8 @@ public abstract class TileEntityReactorBase extends BlockEntityBase implements T
 				}
 			}
 		}
-		if (this instanceof TileEntityHeatPipe) {
-			TileEntityHeatPipe hp = (TileEntityHeatPipe)this;
-			double e = hp.getNetHeatEnergy();
+		if (this instanceof TileEntityHeatPipe hp) {
+            double e = hp.getNetHeatEnergy();
 			String s = String.format("%s contains %.3f%sJ of heat energy.", this.getTEName(), ReikaMathLibrary.getThousandBase(e), ReikaEngLibrary.getSIPrefix(e));
 			li.add(s);
 		}

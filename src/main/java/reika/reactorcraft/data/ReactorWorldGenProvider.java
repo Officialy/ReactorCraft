@@ -31,7 +31,6 @@ public final class ReactorWorldGenProvider {
     static int[] yBand(ReactorOreType ore) {
         return switch (ore) {
             case INDIUM -> new int[]{-32, 16};
-            case THORIUM -> new int[]{-48, 32};
             case MAGNETITE -> new int[]{60, 292};
             default -> new int[]{ore.minY, ore.maxY};
         };
@@ -48,7 +47,7 @@ public final class ReactorWorldGenProvider {
     static ReactorOreConfig config(ReactorOreType ore) {
         int[] y = yBand(ore);
         return new ReactorOreConfig(ore.getBlock(), ore.perChunk, ore.veinSize, y[0], y[1],
-                dimType(ore), ore == ReactorOreType.FLUORITE, ore == ReactorOreType.AMMONIUM);
+                dimType(ore), ore == ReactorOreType.FLUORITE, ore == ReactorOreType.AMMONIUM, ore.name());
     }
 
     public static RegistrySetBuilder buildRegistrySet() {

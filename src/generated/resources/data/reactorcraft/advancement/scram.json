@@ -1,0 +1,25 @@
+{
+  "parent": "reactorcraft:hotcore",
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.scram.description"
+    },
+    "icon": {
+      "id": "reactorcraft:reactor_cpu"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.scram.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

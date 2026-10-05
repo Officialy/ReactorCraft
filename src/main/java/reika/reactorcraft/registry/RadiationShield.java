@@ -1,6 +1,7 @@
 package reika.reactorcraft.registry;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -40,8 +41,7 @@ public enum RadiationShield {
 		displayName = s;
 		neutronAbsorbChance = n;
 		radiationDeflectChance = r;
-		for (BlockKey bk : bks)
-			blocks.add(bk);
+        Collections.addAll(blocks, bks);
 	}
 
 	public static RadiationShield getFrom(Block b, int meta) {

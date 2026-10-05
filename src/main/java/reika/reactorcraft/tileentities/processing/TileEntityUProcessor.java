@@ -81,7 +81,7 @@ public class TileEntityUProcessor extends TileEntityInventoriedReactorBase imple
 
 	private Direction facing = Direction.WEST;
 
-	private ParallelTicker timer = new ParallelTicker().addTicker("intermediate", 0).addTicker("output", 0);
+	private final ParallelTicker timer = new ParallelTicker().addTicker("intermediate", 0).addTicker("output", 0);
 
 	private java.util.List<ProcessorRecipe> getRecipes() {
 		if (level == null || level.getServer() == null)

@@ -27,7 +27,7 @@ import reika.rotarycraft.auxiliary.interfaces.PipeRenderConnector;
 
 public abstract class TileEntityLine extends TileEntityReactorBase {
 
-	private boolean[] connections = new boolean[6];
+	private final boolean[] connections = new boolean[6];
 
 	public TileEntityLine(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);

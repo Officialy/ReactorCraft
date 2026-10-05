@@ -81,7 +81,7 @@ public final class ReactorItems {
     public static final DeferredItem<Item> WASTE_DUST = reg("waste_dust", () -> new Item(itemProperties()));
 
     public static final DeferredItem<ItemReactorFuel> FUEL_ROD = reg("fuel", () -> new ItemReactorFuel(itemProperties(), 100));
-    public static final DeferredItem<ItemReactorFuel> PLUTONIUM_ROD = reg("plutonium", () -> new ItemReactorFuel(itemProperties(), 100));
+    public static final DeferredItem<ItemReactorFuel> PLUTONIUM_ROD = reg("plutonium", () -> new reika.reactorcraft.items.ItemPlutonium(itemProperties(), 100));
     public static final DeferredItem<ItemReactorFuel> FUEL_PELLET = reg("fuel_pellet", () -> new ItemReactorFuel(itemProperties(), 25));
     public static final DeferredItem<ItemReactorFuel> BREEDER_FUEL = reg("breeder_fuel", () -> new ItemReactorFuel(itemProperties(), 20));
     public static final DeferredItem<Item> DEPLETED_FUEL = reg("depleted_fuel", () -> new Item(itemProperties()));

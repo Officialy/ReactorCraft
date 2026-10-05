@@ -1,0 +1,25 @@
+{
+  "parent": "reactorcraft:mineuranium",
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.recusebook.description"
+    },
+    "icon": {
+      "id": "reactorcraft:reactor_book"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.recusebook.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

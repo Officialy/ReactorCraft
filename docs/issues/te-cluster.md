@@ -221,12 +221,12 @@ Diffed against `origin/master:Base/<Name>.java` (confirmed this submodule's `ori
   `src/main/java/reika/reactorcraft/base/TileEntityReactorPiping.java:124-127`.
 - **Problem:** the original method in both classes was:
   ```java
-  public final boolean isConnectionValidForSide(ForgeDirection dir) {
-      if (dir.offsetX == 0 && MinecraftForgeClient.getRenderPass() != 1)
-          dir = dir.getOpposite();
-      return connections[dir.ordinal()];
-  }
-  ```
+public boolean isConnectionValidForSide(ForgeDirection dir) {
+    if (dir.offsetX == 0 && MinecraftForgeClient.getRenderPass() != 1)
+        dir = dir.getOpposite();
+    return connections[dir.ordinal()];
+}
+```
   (`origin/master:Base/TileEntityLine.java:81-85`, `origin/master:Base/TileEntityReactorPiping.java:130-134`).
   The port collapsed this to `return connections[dir.ordinal()];` with **no flip at all** for any
   axis. The doc comment directly above it (kept verbatim in the port) still says: *"Direction is

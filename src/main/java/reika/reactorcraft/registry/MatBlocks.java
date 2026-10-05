@@ -32,7 +32,7 @@ public enum MatBlocks implements StringRepresentable {
 
 	public static final MatBlocks[] matList = values();
 
-	private MatBlocks(String n, String reg) {
+	MatBlocks(String n, String reg) {
 		translationKey = n;
 		registryName = reg;
 	}

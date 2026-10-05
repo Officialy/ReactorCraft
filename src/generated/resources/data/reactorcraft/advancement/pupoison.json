@@ -1,0 +1,25 @@
+{
+  "parent": "reactorcraft:plutonium",
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.pupoison.description"
+    },
+    "icon": {
+      "id": "minecraft:spider_eye"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.pupoison.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

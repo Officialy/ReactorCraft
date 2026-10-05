@@ -11,6 +11,6 @@ package reika.reactorcraft.auxiliary;
 
 public interface SteamTile {
 
-	public int getSteam();
+	int getSteam();
 
 }

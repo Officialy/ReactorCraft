@@ -1,0 +1,25 @@
+{
+  "parent": "reactorcraft:uf6",
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.fission.description"
+    },
+    "icon": {
+      "id": "reactorcraft:fuel"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.fission.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -63,19 +63,15 @@ public class TileEntityFuelRod extends TileEntityNuclearCore {
 			return true;
 		//if (is.getItem() == ReactorItems.THORIUM.getItemInstance())
 		//	return true;
-		if (is.getItem() == ReactorItems.PLUTONIUM.getItemInstance())
-			return true;
-		return false;
-	}
+        return is.getItem() == ReactorItems.PLUTONIUM.getItemInstance();
+    }
 
 	@Override
 	public boolean canRemoveItem(int i, ItemStack is) {
 		if (is.getItem() == ReactorItems.WASTE.getItemInstance())
 			return true;
-		if (is.getItem() == ReactorItems.DEPLETED.getItemInstance())
-			return true;
-		return false;
-	}
+        return is.getItem() == ReactorItems.DEPLETED.getItemInstance();
+    }
 
 	private ReactorFuel getFuel() {
 		return ReactorFuel.getFrom(itemHandler.getStackInSlot(3));

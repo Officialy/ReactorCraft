@@ -1,0 +1,25 @@
+{
+  "parent": "reactorcraft:mineuranium",
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.minecadmium.description"
+    },
+    "icon": {
+      "id": "reactorcraft:cadmium_ingot"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.minecadmium.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

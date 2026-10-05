@@ -81,16 +81,16 @@ public class RadiationHandler {
 		return entityClass;
 	}
 
-	public static interface RadiationLevel {
+	public interface RadiationLevel {
 
-		public String name();
-		public int ordinal();
+		String name();
+		int ordinal();
 
 		/** Whether this radiation level is even harmful */
-		public boolean causesHarm();
+        boolean causesHarm();
 
 		/** Whether an entity is sufficiently armored to be immune to this radiation level */
-		public boolean hasSufficientShielding(LivingEntity e);
+        boolean hasSufficientShielding(LivingEntity e);
 
 	}
 

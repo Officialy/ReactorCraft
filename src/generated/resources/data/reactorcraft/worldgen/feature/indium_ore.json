@@ -7,5 +7,6 @@
   "needs_lava": false,
   "ore": "reactorcraft:indium_ore",
   "random_fluorite": false,
+  "settings_key": "INDIUM",
   "size": 7
 }

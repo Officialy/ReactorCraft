@@ -1,0 +1,31 @@
+{
+  "parent": "reactorcraft:fission",
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.ammonia.description"
+    },
+    "icon": {
+      "components": {
+        "reactorcraft:canister_fluid": {
+          "amount": 1000,
+          "id": "reactorcraft:ammonia"
+        }
+      },
+      "id": "reactorcraft:canister"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.ammonia.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

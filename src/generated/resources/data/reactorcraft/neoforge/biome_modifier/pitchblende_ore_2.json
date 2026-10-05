@@ -1,0 +1,6 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "#reactorcraft:extra_pitchblende_biomes",
+  "features": "reactorcraft:pitchblende_ore",
+  "step": "underground_ores"
+}

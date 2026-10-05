@@ -93,9 +93,8 @@ public class TileEntityReactorFlywheel extends TileEntityReactorBase implements 
 		}
 		power = (long)omega*(long)torque;
 		BlockEntity tg = this.getAdjacentBlockEntity(this.getFacing().getOpposite());
-		if (tg instanceof ShaftPowerReceiver) {
-			ShaftPowerReceiver rec = (ShaftPowerReceiver)tg;
-			rec.setOmega(this.getOmega());
+		if (tg instanceof ShaftPowerReceiver rec) {
+            rec.setOmega(this.getOmega());
 			rec.setTorque(this.getTorque());
 			rec.setPower(this.getPower());
 		}

@@ -1,4 +1,16 @@
-# ReactorCraft → NeoForge 26.2 port
+# ReactorCraft → Minecraft 26.3 / NeoForge port
+
+## VoidMonster sibling port — 2026-10-04
+
+VoidMonster is now included in the **Minecraft 26.3 / NeoForge 26.3.0.26-beta** build and
+TestInstance launcher. Its complete active source set lives under `VoidMonster/src/main/java`;
+root-level 1.7.10 source remains pristine for parity/reference. Entity/world/client behavior,
+registered loot/damage data, native component custom drops, and optional Rotary radar/turret
+integration are implemented. Builds/datagen pass, the world-policy checks pass 22/22, and
+nine server contracts pass both with and without RotaryCraft. Legacy external mod integrations
+remain explicit gates; in-world visual comparison remains outstanding. See
+[VoidMonster/PORTING.md](../VoidMonster/PORTING.md) for the accepted boundary, migration
+decisions, source-parity notes, resource provenance and exact validation commands.
 
 > **STATUS UPDATE (supersedes the "In progress — TE cluster batch" / "~2527 errors" notes below):**
 > the TE cluster is **done** — all 46 concrete TEs + the 10 `base/` classes are on the allowlist and
@@ -1840,3 +1852,305 @@ and 49/49 ReactorCraft GameTests, plus 11/11 RotaryCraft JUnit. Datagen and all 
 succeed. Release-jar verification confirms the 399 extraction recipes, 89 counted tagged
 smelts, all original sprites/models, unchanged raw rates, cross-mod packaged tags and
 exclusion of test-only custom/fake-ore fixtures. Log: build/mod-ore-final-validation.log.
+
+## 2026-10-02 — ChromatiCraft overworld generation parity
+
+ChromatiCraft now owns a saved, bounded post-population queue for full V33a dungeon retry squares
+(48/64/96 blocks) and floating-island air checks after vegetation. Luminous Cliffs terrain shaping
+runs before the 26.3 vanilla carver pass, with a persisted stage attachment preventing later refill.
+The Ocean Temple water-surface anchoring defect is corrected to seabed anchoring. Full detail and
+focused test evidence are in `ChromatiCraft/PORTING.md`; no ReactorCraft runtime behavior changes.
+ChromatiCraft compilation passes, with 5/5 focused worldgen parity GameTests and 8/8 existing
+structure regression GameTests passing; fresh-world visual/density acceptance remains outstanding.
+
+## 2026-10-03 — ChromatiCraft overworld survival audit
+
+Completed the source-inventory audit and closed Ocean Temple entrance/shaft, dungeon biome-boundary,
+natural finishing, Warp Nexus seed, missing Cliffs flower, GeoStrata natural-rock support and lore-tower
+island/headroom/loot gaps. Natural lore towers join the saved post-population queue. Fixed Lock Key
+chunk-unload notification that reloaded delegates and caused an infinite server save/unload cycle.
+Final all-Reika survival generation contracts pass 8/8 and existing biome-fragment puzzles 3/3; both
+servers save and exit cleanly. Details and logs are in ChromatiCraft/PORTING.md. No ReactorCraft runtime
+behavior changes. The early external test mistakenly loaded a stale FTB Library 26.2.0.8 snapshot
+from TestInstance/mods. Both real client folders already contain FTB Library 26.3.0.1. The launcher
+now sources headless external dependencies from TestInstance/run/mods and lets clients discover
+that folder normally, instead of adding legacy snapshots to their runtime. No jars or saves changed.
+Pylon worldgen tests pass 3/3 and Data Node tests 2/2. A fresh normal-noise/TerraBlender probe passes
+across 54 FULL chunks in six biome regions, retaining progression ores, shaped Cliffs ground,
+ChromatiCraft trees and glowing plants after all-Reika decoration; explored queues drain and the
+server saves/exits successfully. Tower/artefact caches now distinguish actual worlds with equal
+seeds. GameTest disables structure sets, so natural density/client visual acceptance is not claimed;
+island candidates and placement remain covered by their focused parity tests.
+The corrected current-external-mod runs also pass: 8/8 survival contracts plus the 54-chunk
+normal-world population probe with FTB Library 26.3.0.1, FTB Ultimine 26.3.0.6, AE2 and GuideME.
+The previously reported FTB incompatibility applies only to the stale launcher snapshots.
+
+## 2026-10-03 — First-login items, original chest loot and all-mod advancements
+
+DragonAPI's original PlayerFirstTimeTracker now subscribes to the server login event. Restore
+ReactorCraft, ElectriCraft and ChromatiCraft book-tracker registration alongside RotaryCraft's
+existing registration. Each original tracker ID completes only after delivery; the existing
+death-persistent player tag survives reconnects and NeoForge death cloning. Existing carried
+books avoid duplicates. Delivery fills available slots and drops the exact remainder, including
+full creative inventories, rather than using Inventory.add's creative discard behavior. Fake
+players do not receive starter items. Existing players whose trackers never ran receive their
+missing books on their next login, subject to the original handbook configuration options.
+
+Restore all 28 live RotaryChests V33a entries across seven vanilla chest tables through generated
+injection subtables and NeoForge global loot modifiers. The bonus chest adds HSLA steel, 1–5
+ingots, weight 6, tier 1. Original counts, weights and tier gates remain data-driven, and changing
+CHESTGEN takes effect at loot generation. Like the existing ChromatiCraft implementation, the
+modern additive pool includes weight 100 for no extra item: relative original weights survive,
+but absolute probabilities differ from 1.7.10's shared vanilla weight denominator. Existing
+ChromatiCraft chest injection remains active.
+
+Generate 213 gameplay advancements (recipe-unlock advancements are additional): RotaryCraft
+46, ReactorCraft 28, ElectriCraft 22, GeoStrata 42, ChromatiCraft 75. Restore both original
+achievement catalogs, authored English descriptions, dependencies and challenge flags. Only
+actual item milestones use inventory criteria; book reading, mining, machine operation and
+combat keep action callbacks. The shared RotaryCraft achievements option also gates automatic
+RotaryCraft/ReactorCraft inventory criteria. Restore missing machine/output/tool hooks, the
+real registered plutonium hazard, and the fully functioning Gravel Gun with its original recipe,
+charge/ammunition/damage/PvP rules and three combat milestones. Modern Gravel Gun recipe gating
+resolves common item tags without constructing stacks during registry bootstrap; fix the old
+runtime gate resolver that discarded valid selected materials.
+
+ReactorCraft canister contents now use immutable FluidStackTemplate-backed CanisterContents.
+This is required for 26.3 advancement/recipe reload, which precedes fluid component binding.
+Preserve the previous SimpleFluidContent saved JSON shape, including explicit empty contents;
+the UF6/ammonia display icons retain their actual fluids and amounts.
+
+ElectriCraft and GeoStrata had no upstream achievement page; their new generated tabs cover
+electrical machines/wires/storage and rock exploration/masonry/resources. DragonAPI is the
+shared library/award bridge and has no standalone gameplay tab. ChromatiCraft projects its
+74 authored progression stages plus a root, retaining original research text, hidden-stage
+presentation and progression notifications. Its original research DAG remains authoritative;
+advancements synchronize on stage changes, reset and login, including existing-save backfill.
+Inactive optional integrations remain hidden and ungranted. The vanilla display has one parent;
+actual research still requires every original prerequisite.
+
+Close two authored upstream entries that had no live award sites. LIGHTFALL now tracks actual
+supporting light-block removal through a fatal fall, clearing the marker after real safe landing,
+flight, water, teleport, dimension change or reconnect. Supporting collision rather than a
+fixed tick timeout handles delayed client onGround reports. Restore the original public
+LightBridgePowerLossEvent on NeoForge as well. FIFTYGW measures simultaneous outlet power in
+one connected reactor steam circuit (steam lines, high-pressure turbine chains, grates and
+powered matching-fluid steam clouds feeding normal turbines). One high-pressure turbine cannot
+reach 50 GW: count each producing chain outlet once, aggregate connected outlets, and exclude
+separate plants. The measurement uses loaded chunks only and caches each circuit for the current
+tick; turbine updates check once per second. This gives "single reactor" a concrete connected
+steam-plant meaning, rather than summing a player's unrelated reactors. These callbacks implement
+the original authored milestone descriptions; they are additions to the upstream award sites.
+
+The full ChromatiCraft port boundary still applies to research for subsystems outside its
+accepted source slice. No dependency behavior was removed to make compilation pass.
+
+Validation: all server/client data providers pass. Generated-data and release-jar audits validate
+all 213 displays, translations, parents, icons and criteria, the seven loot modifiers, and the
+Gravel Gun recipe/models. Full server suites pass RotaryCraft **583/583** (13 new regressions),
+ReactorCraft **60/60** (11 new regressions), and ElectriCraft **13/13**. ChromatiCraft passes its
+seven new advancement/integration regressions and six existing progression regressions. All
+six module builds pass. Logs: `build/login-advancements-data-complete.log`,
+`build/login-advancements-final-all.log`, `build/login-advancements-reactor-regression-complete.log`,
+`build/login-advancements-chroma-complete.log`, and `build/login-advancements-package-validation.log`.
+The final collision-based delayed-ground check passes **13/13** focused RotaryCraft advancement
+tests, followed by all six module builds (`build/login-advancements-delayed-ground-final.log`).
+RotaryCraft's 11 and ReactorCraft's five JUnit tests pass. Final jars include the original public
+light-bridge event, the causal fall tracker and the connected-plant power measurement.
+
+## 2026-10-03 — All-mod overworld generation inventory audit
+
+Source/data inspection for the owner's question about missing overworld generation; no generation
+implementation or new runtime validation is claimed by this audit. Compared active providers,
+generated biome modifiers and current feature bodies with retained original source and the
+ChromatiCraft survival-generation ledger.
+
+Owner's scope correction: Skypeaters were unfinished upstream and are deliberately disabled;
+they are not missing port work. Retrogeneration is out of scope. Forestry, Thaumcraft and
+Mystcraft integrations are deferred until viable targets exist and are not current generation
+tasks. Historical observations about those systems are retained elsewhere in the ledger.
+
+- ElectriCraft has no active worldgen/placed-feature/biome-modifier datagen path. The legacy
+  BasicElectriOreGenerator's actual placement is commented out. Tin, silver, nickel, aluminum
+  and platinum therefore lack ElectriCraft natural generation. Copper uses vanilla's ore and
+  still generates through vanilla, but the original ElectriCraft copper scatter is absent too.
+  ReactorCraft supplies its own silver generation, not the original ElectriCraft distribution.
+  The original equivalent-ore/config/discretization behavior also needs a complete modern path.
+- RotaryCraft's original optional ExtraIronGenerator is absent. ConfigRegistry.EXTRAIRON remains,
+  but has no active generation consumer or feature data. Original source (659e4e688) registered it
+  only above factor 1, with floor(10*(factor-1)) veins of size 10 at inclusive y=4..67. At the
+  default factor 1 the original generator would do nothing.
+- GeoStrata's primary natural feature families are registered: rocks, glow crystals/vines, lava
+  rock, ocean spikes, flux crystals, vents, ore veins, Arctic Spires and creepvines (Void Opals
+  belong to the End). Missing behavior includes the rock-hosted ore conversion branches and
+  Ore Mode consumers; original biome painting around successful creepvines/spires (TerraBlender
+  does provide both named biomes, but independently of those placement footprints); the Arctic
+  Spire generation event; and the ChromatiCraft-specific Glowing Cliffs vine eligibility.
+  Arctic cluster placement is reduced to an 8x8 candidate square rather than original +/-64:
+  its retained 24-block spacing rejects every second candidate after a successful first spire.
+  Glow-crystal tree-density admission is an approximation, and vine admission omits the original
+  adjacent-solid check. These are incomplete source behavior, not absent feature registration.
+- ReactorCraft has an active path for every modern ore type. Pitchblende modifiers cover only
+  ocean/river tags, omitting original Mushroom Island/shore and Rainbow Forest admission.
+  Active ore config uses literal counts and does not consume original ore-density,
+  discretization, optional-ore/equivalent-ore or rainbow-fluorite generation settings. Current
+  thorium is additionally assigned to the Overworld, whereas retained original ReactorOres
+  assigns it to the Nether; this is a dimension-parity difference rather than a missing
+  overworld ore type. Existing intentional height remaps are not classified as missing content.
+- ChromatiCraft's ordinary overworld inventory has active generation paths, as recorded by the
+  recent survival audit. The ledger records Ender Forest lightning without rain and Rainbow Forest
+  height cooling as outstanding biome behavior. Broad natural-density/client
+  visual acceptance remains separate from the passing focused and 54-chunk population contracts.
+- DragonAPI has no independent natural overworld content family to restore within this scope.
+
+## 2026-10-04 — GeoStrata vent selection during parallel world generation
+
+Investigated the Distant Horizons feature-placement NPE at `VentGenerator.getVentTypeFor`.
+The shared feature held mutable dynamic weights and an RNG shared between placements. A
+concurrent worker could replace them between WeightedRandom's total-weight calculation and
+its cumulative selection, allowing a nonempty vent distribution to return null.
+
+Vent selection now builds a local snapshot of positive weights and uses only that placement's
+RandomSource. Preserve the original spawn curves, terrain-height normalization, dimension
+admission, Ender vent selection, cold-biome restriction and density/placement rules. When no
+type has positive weight (including y=0 and normalized heights past the curve endpoint), skip
+that individual attempt instead of inventing an arbitrary zero-weight vent. DragonAPI's shared
+WeightedRandom API is unchanged.
+
+Added GeoStrata's NeoForge JUnit harness and five regressions covering empty distributions,
+height/dimension/biome eligibility, an exact zero RNG roll, another placement interleaved during
+the RNG roll, and eight concurrent seeded selections compared with serial results.
+Validation: all five regressions pass under the NeoForge JUnit harness; `:GeoStrata:jar`
+also succeeds on 26.3. Log: `build/vent-generator-regression.log`. The live Distant Horizons
+world-generation workload has not been rerun in this session.
+
+
+## 2026-10-04 — ChromatiCraft item slice and Iris compatibility
+
+ChromatiCraft now accepts the original Anti-Attenuation Gem, Recall Tablet, Capture Star and Recipe
+Tablet, their datagen recipes/models/lang and original sprites. All ten dimensional resource identities
+and all 28 tiered identities are registered, with original discovery stages and corrected dimensional
+deco resource loot. Acquisition paths still depend on their respective ported structures; the wider
+item backlog remains pending. Inventory/serialization regressions pass 4/4 and the module builds.
+
+Address the reported camera-following/black-square pylon and Cliffs mist shader issues using 26.3
+world submit geometry, explicitly assigned public Iris emissive/particle programs, and alpha-backed
+atlas sprite aliases generated by a custom SpriteSource. Cliffs clouds now render before shader
+composition from extracted world-space snapshots. Preserve vanilla effects and source animations;
+Iris remains optional. Current 26.3 Minecraft/NeoForge sources and installed Iris 1.11.7 API/bytecode
+were the references. Compile and both datagens pass. In-game shader-pack visual verification remains
+pending; passing server tests do not certify the rendered result. Details and logs are in
+ChromatiCraft/PORTING.md's 2026-10-04 entry.
+
+## 2026-10-04 — ChromatiCraft progression text concealment
+
+Restore the original progression-driven glyph text in ChromatiCraft's active 26.3 item, ability
+and Lexicon slice. Use styled Components, the exact V33a glyph texture and a client datagen font
+provider. Live research gates cover tiered/dimensional resources, discovered colors, boosted
+shards/stones and original GROUPS/CORES/ALLOYS names. Unknown ores retain their localized host
+name. Client-only name hooks keep server data untouched; fragment tooltips and progression/
+casting titles now conceal and reveal according to original eligibility. Preserve the original
+Teleportation Pump's [Unknown]/random amount behavior and avoid invented relay/potion gates.
+
+The changed source classes compile independently against 26.3; glyph/component/resource smoke
+checks pass. Six real GameTests pass using an isolated last-built module with these classes and
+resources overlaid (build/chroma-text-snapshot-gametest.log). The whole current ChromatiCraft
+build remains red in concurrent VoidMonster port work, which is retained on the allowlist. Full
+client datagen, a rebuilt release jar and live visual acceptance remain unvalidated. See
+ChromatiCraft/PORTING.md's progression text entry for source-parity boundaries and full details.
+
+Coverage includes the Unknown Artefact's original scrolling glyph font and fragment-readability/
+read-only eligibility checks.
+
+## 2026-10-04 — VoidMonster Nether cap and ChromatiCraft compatibility
+
+Fix natural Nether duplicates by querying the server's actual loaded entities before spawning;
+above-ceiling monsters do not necessarily tick into the old cache. The four-retry singleton
+regression and both complete VoidMonster server suites pass 9/9, with and without RotaryCraft.
+Existing monsters are preserved. Correct the generated legacy Lua custom-drop example's root
+handling and use 26.3 LivingEntity.damageCooldownTime for the lethal health-drain repeat window.
+
+Accept the complete authored ChromatiCraft compatibility cluster: corruption essence/progression,
+MOBBAIT, death fog/emitter, sixteen colored altars, Nether/Overworld trap layouts, cross-dimension
+four-TNT transfer and destruction ritual, native renderers/shaders/networking, Lexicon previews and
+original casting recipes/data. Preserve pylon-attributed fragment and two additional loot/XP
+roll bonuses and add the native arrival chunk ticket. VoidMonster remains optional. Compatibility tests pass 10/10 with
+VoidMonster and 4/4 without; existing structure regressions pass 17/17 and text regressions 6/6.
+DragonAPI structure arrays now record declared states during worldless datagen while retaining
+actual live state capture for scans. Full compile/build and both datagens pass; the earlier text
+entry's concurrent red-build limitation is resolved. Live visual acceptance remains separate.
+
+See [VoidMonster/PORTING.md](../VoidMonster/PORTING.md) and
+[ChromatiCraft/PORTING.md](../ChromatiCraft/PORTING.md) for scope, provenance and validation logs.
+
+
+### ChromatiCraft item continuation / shared DragonAPI corrections — 2026-10-04
+
+Write the Excavation, Construction and Hover Stars in the active 26.3 slice, with source recipes,
+mode networking/UI, selection rendering, original sprites and six runtime regression tests. Native
+casting data now expresses the six Excavation Star Enchanting upgrades and Growth Power I while
+preserving the central item's components and source fragment requirements. Both casting codecs
+carry the new fields; ChromatiCraft network protocol is 2.
+
+Correct ProgressiveRecursiveBreaker's default private-drop inventory, state/blacklist matching,
+native tool loot, client/server world cleanup, duplicate completion, queued-state revalidation and
+legacy setBlock update arguments. DecimalLineSegment uses a valid compact canonical record
+constructor and retains endpoint copying. These shared changes affect consumers in the other ports;
+run their relevant recursive-mining regressions when Gradle validation becomes available.
+
+Validation is pending: the Gradle attempt did not execute because automatic approval review returned
+an account usage-limit error. New enum references and original asset provenance were checked
+statically. Do not reuse older successful build/test logs as evidence for this later slice. See
+ChromatiCraft/PORTING.md for exact source contracts, tests, remaining backlog and validation commands.
+
+### RotaryCraft priority continuation — 2026-10-05
+
+Continue the owner's non-ChromatiCraft scope by restoring the full V33a Sonic Weapon and
+Motion Tracker on Minecraft26.3, including native registrations/rendering/menus/packets,
+original effects, scanning rules, source recipes/artwork and actual Mob Radar owner HUD access.
+Repair the required spring -> Winder -> Worktable -> charged-tool chain with per-stack charge,
+source material values, real inventory write-backs, transactional sided ports and guarded
+controls. Correct both shared RotaryCraft inventory bases' registry-aware detached loading
+while retaining fixed handler identity, and restore real spring-powered discharge plus Smoke
+Detector charge/range/battery state. No ChromatiCraft source, data or tasks are part of this slice.
+
+Validation: 658/658 required RotaryCraft GameTests and 11/11 JUnit checks pass, including74
+new Sonic/Motion/charging checks. Server/client datagen and the release build succeed. The
+shared one-slot GUI now references its actual original screen/power-tab assets. See
+RotaryCraft/SURVIVAL-BETA.md for provenance, source rounding, corrected chunk-loading test
+fixtures, artifact verification and the fifteen remaining machines from the original list.
+Logs: build/sonic-motion-final.log and build/sonic-motion-release.log. Live client visual
+acceptance and real multiplayer joins remain unverified by these headless checks.
+
+
+### RotaryCraft Defoliator continuation - 2026-10-05
+
+Continue the non-ChromatiCraft scope with the full V33a Defoliator on Minecraft26.3:
+original mechanical probing/range, poison/chlorine intake and potion conversion, vegetation
+loot, permissions/owner identity, poison exposure, native item/fluid transactions and real
+hopper/pipe automation. Restore the original recipe, GUI, renderer, model, handbook and
+survival access. Preserve source slot/potion metadata semantics and prevent chemical or
+bottle loss under backpressure. Target-centered client particles now use a complete packet
+and require no surviving target block entity. No ChromatiCraft source, data or tasks changed.
+
+The final version passes 719/719 required RotaryCraft GameTests and 11/11 JUnit checks;
+server/client datagen and the release build succeed. Jar inspection verifies the native
+classes/data/models, original recipe and byte-identical V33a artwork, with no fixture-resource
+leaks. See RotaryCraft/SURVIVAL-BETA.md for source parity, the 60 Defoliator checks, fixture
+corrections and fourteen remaining machines. Logs: build/defoliator-final.log and
+build/defoliator-artifact-verification.json. Live client visuals/multiplayer joins remain
+unverified.
+
+
+### ChromatiCraft item-first continuation — 2026-10-05
+
+Continue full ChromatiCraft ports while other agents own the other mods. Compile the three previous
+wand ports and Star Enchanting; restore Creature Sounding Star, Multitool, Ore Harvester, Aura
+Visualization Crystals, Spawner Interference Crystal and all six animated Magic Branch materials
+with original behavior, recipes, sprites and native 26.3 hooks. Fix literal structure datagen's bare
+zero-offset coordinates without relaxing strict authored geometry counts. Native compile and both
+asset/data generators pass through the Spawner slice; all ten preceding wand/tool regressions pass.
+The three new network/spawner checks exposed mock-player/connection fixture assumptions, now fixed;
+corrected runtime suite and Magic Branch checks remain in progress. No other mod source is edited.
+See ChromatiCraft/PORTING.md for contracts, exact validation logs, optional integration and live shader
+visual gaps. The earlier approval quota limitation no longer applies; Gradle executes successfully.

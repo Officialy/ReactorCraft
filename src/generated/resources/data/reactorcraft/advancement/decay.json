@@ -1,0 +1,26 @@
+{
+  "parent": "reactorcraft:fission",
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.decay.description"
+    },
+    "frame": "challenge",
+    "icon": {
+      "id": "reactorcraft:waste_storage"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.decay.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

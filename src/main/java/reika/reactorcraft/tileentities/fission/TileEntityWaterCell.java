@@ -167,7 +167,7 @@ public class TileEntityWaterCell extends TileEntityReactorBase implements Reacto
 
 		private final Fluid fluid;
 
-		private LiquidStates(Fluid f) {
+		LiquidStates(Fluid f) {
 			fluid = f;
 		}
 

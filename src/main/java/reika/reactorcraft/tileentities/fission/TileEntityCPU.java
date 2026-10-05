@@ -11,8 +11,11 @@ package reika.reactorcraft.tileentities.fission;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -35,6 +38,7 @@ import reika.rotarycraft.api.power.PowerTransferHelper;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 public class TileEntityCPU extends TileEntityReactorBase implements ReactorPowerReceiver, TemperaturedReactorTyped, ReactorBlock, NeutronTile {
 
@@ -342,55 +346,46 @@ public class TileEntityCPU extends TileEntityReactorBase implements ReactorPower
 		return ReactorType.FISSION;
 	}
 
-	private static class TemperatureMonitor {
-		private final BlockPos location;
-		private final net.minecraft.resources.ResourceKey<Level> dimension;
+    private record TemperatureMonitor(BlockPos location, ResourceKey<Level> dimension) {
+        private TemperatureMonitor(LinkableReactorCore core) {
+            BlockEntity block = (BlockEntity) core;
+            this(block.getBlockPos(), block.getLevel().dimension());
+        }
 
-		private TemperatureMonitor(LinkableReactorCore core) {
-			BlockEntity block = (BlockEntity)core;
-			location = block.getBlockPos();
-			dimension = block.getLevel().dimension();
-		}
+        public CompoundTag writeTag(Level ownerLevel) {
+            CompoundTag tag = new CompoundTag();
+            tag.putLong("pos", location.asLong());
+            var world = dimension != null ? dimension : ownerLevel != null ? ownerLevel.dimension() : null;
+            if (world != null)
+                tag.putString("dimension", world.identifier().toString());
+            return tag;
+        }
 
-		private TemperatureMonitor(BlockPos pos, net.minecraft.resources.ResourceKey<Level> dimension) {
-			location = pos;
-			this.dimension = dimension;
-		}
+        public static TemperatureMonitor readTag(CompoundTag tag, Level ownerLevel) {
+            // Chunk deserialization happens before setLevel. Old coordinate-only saves resolve to
+            // the CPU's own dimension when first used, rather than assuming the Overworld here.
+            var dimension = tag.contains("dimension") ? ResourceKey.create(
+                    Registries.DIMENSION, Identifier.parse(tag.getStringOr("dimension", "minecraft:overworld")))
+                    : ownerLevel != null ? ownerLevel.dimension() : null;
+            return new TemperatureMonitor(BlockPos.of(tag.getLongOr("pos", 0)), dimension);
+        }
 
-		public CompoundTag writeTag(Level ownerLevel) {
-			CompoundTag tag = new CompoundTag();
-			tag.putLong("pos", location.asLong());
-			var world = dimension != null ? dimension : ownerLevel != null ? ownerLevel.dimension() : null;
-			if (world != null)
-				tag.putString("dimension", world.identifier().toString());
-			return tag;
-		}
+        public int getTemperature(TileEntityCPU cpu) {
+            var key = dimension != null ? dimension : cpu.level.dimension();
+            Level world = key.equals(cpu.level.dimension()) ? cpu.level
+                    : cpu.level.getServer() != null ? cpu.level.getServer().getLevel(key) : null;
+            return world != null && world.hasChunkAt(location) && world.getBlockEntity(location) instanceof LinkableReactorCore core ? core.getTemperature() : 0;
+        }
 
-		public static TemperatureMonitor readTag(CompoundTag tag, Level ownerLevel) {
-			// Chunk deserialization happens before setLevel. Old coordinate-only saves resolve to
-			// the CPU's own dimension when first used, rather than assuming the Overworld here.
-			var dimension = tag.contains("dimension") ? net.minecraft.resources.ResourceKey.create(
-					net.minecraft.core.registries.Registries.DIMENSION, net.minecraft.resources.Identifier.parse(tag.getStringOr("dimension", "minecraft:overworld")))
-					: ownerLevel != null ? ownerLevel.dimension() : null;
-			return new TemperatureMonitor(BlockPos.of(tag.getLongOr("pos", 0)), dimension);
-		}
+        public boolean matches(LinkableReactorCore core, Level ownerLevel) {
+            BlockEntity block = (BlockEntity) core;
+            var key = dimension != null ? dimension : ownerLevel.dimension();
+            return location.equals(block.getBlockPos()) && key.equals(block.getLevel().dimension());
+        }
 
-		public int getTemperature(TileEntityCPU cpu) {
-			var key = dimension != null ? dimension : cpu.level.dimension();
-			Level world = key.equals(cpu.level.dimension()) ? cpu.level
-					: cpu.level.getServer() != null ? cpu.level.getServer().getLevel(key) : null;
-			return world != null && world.hasChunkAt(location) && world.getBlockEntity(location) instanceof LinkableReactorCore core ? core.getTemperature() : 0;
-		}
-
-		public boolean matches(LinkableReactorCore core, Level ownerLevel) {
-			BlockEntity block = (BlockEntity)core;
-			var key = dimension != null ? dimension : ownerLevel.dimension();
-			return location.equals(block.getBlockPos()) && key.equals(block.getLevel().dimension());
-		}
-
-		@Override public int hashCode() { return java.util.Objects.hash(location, dimension); }
-		@Override public boolean equals(Object other) {
-			return other instanceof TemperatureMonitor monitor && location.equals(monitor.location) && java.util.Objects.equals(dimension, monitor.dimension);
-		}
-	}
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof TemperatureMonitor monitor && location.equals(monitor.location) && Objects.equals(dimension, monitor.dimension);
+        }
+    }
 }

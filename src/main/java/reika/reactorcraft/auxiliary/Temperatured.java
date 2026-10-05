@@ -16,12 +16,12 @@ import reika.rotarycraft.auxiliary.interfaces.HeatConduction;
 /** Reactor core blocks only. */
 public interface Temperatured extends ThermalTile, HeatConduction {
 
-	public abstract int getTemperature();
+	int getTemperature();
 
-	public void setTemperature(int T);
+	void setTemperature(int T);
 
-	public int getMaxTemperature();
+	int getMaxTemperature();
 
-	public boolean canDumpHeatInto(LiquidStates liq);
+	boolean canDumpHeatInto(LiquidStates liq);
 
 }

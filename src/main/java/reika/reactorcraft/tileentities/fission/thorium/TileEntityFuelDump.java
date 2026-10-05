@@ -107,7 +107,7 @@ public class TileEntityFuelDump extends TileEntityTankedReactorMachine {
 
 	@Override
 	public boolean canConnectToPipe(MachineRegistry m) {
-		return this.hasTile() ? this.getCore().canConnectToPipe(m) : false;
+		return this.hasTile() && this.getCore().canConnectToPipe(m);
 	}
 
 	private boolean hasTile() {

@@ -27,7 +27,7 @@ public enum WorkingFluid {
 
 	public static final WorkingFluid[] list = values();
 
-	private WorkingFluid(float e, int boil, String f) {
+	WorkingFluid(float e, int boil, String f) {
 		efficiency = e;
 		boilingTemp = boil;
 		fluidName = f;

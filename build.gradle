@@ -45,12 +45,17 @@ dependencies {
 // done-tracker: add a file here the moment it is ported, and the build verifies it. Remove this
 // whole block once the entire mod is ported.
 sourceSets.main.java {
+    include 'reika/reactorcraft/auxiliary/ReactorPowerMilestones.java'
+    include 'reika/reactorcraft/auxiliary/CanisterContents.java'
     include 'reika/reactorcraft/ReactorGameTests.java'
     include 'reika/reactorcraft/ReactorTypeGameTests.java'
     include 'reika/reactorcraft/ReactorContentGameTests.java'
+    include 'reika/reactorcraft/ReactorAdvancementTests.java'
     include 'reika/reactorcraft/api/NeutronShield.java'
     include 'reika/reactorcraft/api/RadiationHandler.java'
     include 'reika/reactorcraft/auxiliary/ReactorBlock.java'
+    include 'reika/reactorcraft/auxiliary/ReactorBookTracker.java'
+    include 'reika/reactorcraft/auxiliary/ReactorAdvancementEvents.java'
     include 'reika/reactorcraft/modinterface/WasteMESystemEffect.java'
     include 'reika/reactorcraft/auxiliary/SteamTile.java'
     include 'reika/reactorcraft/auxiliary/MultiBlockTile.java'
@@ -64,6 +69,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/items/ItemReactorBasic.java'
     include 'reika/reactorcraft/base/ItemReactorTool.java'
     include 'reika/reactorcraft/items/ItemReactorFuel.java'
+    include 'reika/reactorcraft/items/ItemPlutonium.java'
     include 'reika/reactorcraft/items/ItemNuclearWaste.java'
     include 'reika/reactorcraft/items/ItemHeavyBucket.java'
     include 'reika/reactorcraft/items/ItemRadiationGoggles.java'
@@ -98,9 +104,11 @@ sourceSets.main.java {
     include 'reika/reactorcraft/registry/ReactorFeatures.java'
     include 'reika/reactorcraft/world/ReactorOreConfig.java'
     include 'reika/reactorcraft/world/ReactorOreFeature.java'
+    include 'reika/reactorcraft/world/ReactorOreSettings.java'
 
     // Datagen (client: lang + models; server: loot, worldgen registry set, biome modifiers, recipes)
     include 'reika/reactorcraft/data/ReactorDataProviders.java'
+    include 'reika/reactorcraft/data/ReactorAdvancementProvider.java'
     include 'reika/reactorcraft/data/ReactorLang.java'
     include 'reika/reactorcraft/data/ReactorModelProvider.java'
     include 'reika/reactorcraft/data/ReactorLootProvider.java'
@@ -108,6 +116,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/data/ReactorItemTagsProvider.java'
     include 'reika/reactorcraft/data/ReactorWorldGenProvider.java'
     include 'reika/reactorcraft/data/ReactorBiomeModifierProvider.java'
+    include 'reika/reactorcraft/data/ReactorBiomeTagsProvider.java'
     include 'reika/reactorcraft/data/ReactorRecipeProvider.java'
     include 'reika/reactorcraft/data/ReactorMachineRecipeProvider.java'
 

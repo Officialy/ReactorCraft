@@ -132,7 +132,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 			}
 			if (rs != null && this.getTicksExisted() % len == 0) {
 				rs.playSoundAtBlock(this, 2, 1);
-				int l = this.getGeneratorLength();
+				int l = getGeneratorLength();
 				rs.playSoundAtBlock(world, this.getX() + this.getFacing().getStepX() * l, this.getY(), this.getZ() + this.getFacing().getStepZ() * l, 2, 1);
 				rs.playSoundAtBlock(world, this.getX() + this.getFacing().getStepX() * l / 2, this.getY(), this.getZ() + this.getFacing().getStepZ() * l / 2, 2, 1);
 			}
@@ -140,7 +140,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	private void fail(Level world, BlockPos pos) {
-		int l = this.getGeneratorLength() / 2;
+		int l = getGeneratorLength() / 2;
 		world.removeBlock(pos, false);
 		double dx = pos.getX() + 0.5 + this.getFacing().getStepX() * l;
 		double dz = pos.getZ() + 0.5 + this.getFacing().getStepZ() * l;
@@ -165,7 +165,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 	}
 
 	private TileEntityTurbineCore getTurbine(Level world, BlockPos pos) {
-		int len = this.getGeneratorLength();
+		int len = getGeneratorLength();
 		BlockPos tpos = pos.relative(this.getFacing(), len);
 		ReactorTiles r = ReactorTiles.getTE(world, tpos);
 		return r != null && r.isTurbine() ? (TileEntityTurbineCore) world.getBlockEntity(tpos) : null;
@@ -228,7 +228,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 
 	// 1.21.5: BlockEntity.getRenderBoundingBox was removed; kept as a helper for the renderer's bounds.
 	public AABB getRenderBoundingBox() {
-		int l = this.getGeneratorLength();
+		int l = getGeneratorLength();
 		int x1 = this.getX() + 1 + this.getFacing().getStepX() * l;
 		int z1 = this.getZ() + 1 + this.getFacing().getStepZ() * l;
 		int mx = Math.min(x1, this.getX());
@@ -238,7 +238,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 		return new AABB(mx, this.getY() - 2, mz, mx2, this.getY() + 3, mz2).inflate(6, 6, 6);
 	}
 
-	public static enum Modes {
+	public enum Modes {
 		RF("Redstone Flux", 1D / ReikaRFHelper.getWattsPerRF(), PowerTypes.RF),
 		// IndustrialCraft EU output removed (IC2 not in the 26.2 build; PowerTypes.EU no longer exists).
 		ELC("ElectriCraft", 1, PowerTypes.ELECTRICRAFT);
@@ -249,7 +249,7 @@ WrappableWireSource, PowerSourceTracker, EMPControl {
 
 		private static final Modes[] list = values();
 
-		private Modes(String s, double r, PowerTypes p) {
+		Modes(String s, double r, PowerTypes p) {
 			name = s;
 			ratio = r;
 			type = p;

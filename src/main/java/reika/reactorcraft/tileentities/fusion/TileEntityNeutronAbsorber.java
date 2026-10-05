@@ -34,7 +34,7 @@ public class TileEntityNeutronAbsorber extends TileEntityReactorBase implements 
 	}
 
 
-	private StepTimer tempTimer = new StepTimer(20);
+	private final StepTimer tempTimer = new StepTimer(20);
 
 	@Override
 	public ReactorTiles getTile() {

@@ -45,7 +45,7 @@ public class TileEntityMagneticPipe extends TileEntityReactorPiping implements S
 
 	private int charge;
 
-	private StepTimer chargeTimer = new StepTimer(20);
+	private final StepTimer chargeTimer = new StepTimer(20);
 
 	@Override
 	public ReactorTiles getTile() {

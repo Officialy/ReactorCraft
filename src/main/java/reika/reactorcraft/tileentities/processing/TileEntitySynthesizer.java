@@ -84,8 +84,8 @@ public class TileEntitySynthesizer extends TileEntityInventoriedReactorBase impl
 		return side == null ? fluidHandler : side.getAxis().isHorizontal() ? inputView : outputView;
 	}
 
-	private StepTimer steptimer = new StepTimer(1800);
-	private StepTimer tempTimer = new StepTimer(20);
+	private final StepTimer steptimer = new StepTimer(1800);
+	private final StepTimer tempTimer = new StepTimer(20);
 
 	public static final class FluidSynthesis {
 

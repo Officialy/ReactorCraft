@@ -30,6 +30,12 @@ import org.joml.Vector3fc;
 
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.models.ModelCentrifuge;
+import reika.reactorcraft.models.ModelBigTurbine;
+import reika.reactorcraft.models.ModelDiffuser;
+import reika.reactorcraft.models.ModelFlywheel;
+import reika.reactorcraft.models.ModelGenerator;
+import reika.reactorcraft.models.ModelMiniTurbine;
+import reika.reactorcraft.models.ModelSolarTop;
 import reika.reactorcraft.models.ModelControl;
 import reika.reactorcraft.models.ModelCondenser;
 import reika.reactorcraft.models.ModelElectrolyzer;
@@ -47,7 +53,7 @@ import reika.reactorcraft.models.ModelWasteStorage;
 import reika.reactorcraft.registry.ReactorModelLayers;
 
 /**
- * 26.2 special-model renderer for the BER-rendered machine ITEMS (control rod, toroid/solenoid magnet,
+ * 26.3 special-model renderer for the BER-rendered machine ITEMS (control rod, toroid/solenoid magnet,
  * steam grate, condenser, turbine). The block-in-world is drawn by the {@code ReactorTERenderer}; the
  * inventory/hand icon previously fell back to a flat steel cube because the block has an empty baked
  * model. This routes those items through {@code minecraft:special} (the modern replacement for the
@@ -97,7 +103,7 @@ public class ReactorMachineItemRenderer implements NoDataSpecialModelRenderer {
         poseStack.rotate(Axis.YP.rotationDegrees(225F + extraYawDeg));
         poseStack.translate(-0.5F, -0.5F, -0.5F);
 
-        RenderType rt = RenderTypes.entitySolid(texture);
+        RenderType rt = RenderTypes.entityCutout(texture);
         PoseStack snap = new PoseStack();
         snap.last().set(poseStack.last());
         collector.submitCustomGeometry(poseStack, rt, (p, vc) -> draw.render(snap, vc, lightCoords));
@@ -120,6 +126,25 @@ public class ReactorMachineItemRenderer implements NoDataSpecialModelRenderer {
 
     private static Identifier tex(String name) {
         return Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "textures/tileentity/" + name + ".png");
+    }
+
+    /** Original fusion marker: blue-tinted redstone-torch texture on two crossed, double-sided quads. */
+    private static void renderMarker(PoseStack pose, VertexConsumer vertices, int light) {
+        for (int axis = 0; axis < 2; axis++) {
+            pose.pushPose();
+            pose.rotate(Axis.YP.rotationDegrees(axis * 90F));
+            markerVertex(pose, vertices, -.5F, 1.5F, 0F, 0F, light);
+            markerVertex(pose, vertices, .5F, 1.5F, 1F, 0F, light);
+            markerVertex(pose, vertices, .5F, 2.5F, 1F, 1F, light);
+            markerVertex(pose, vertices, -.5F, 2.5F, 0F, 1F, light);
+            pose.popPose();
+        }
+    }
+
+    private static void markerVertex(PoseStack pose, VertexConsumer vertices, float x, float y,
+                                     float u, float v, int light) {
+        vertices.addVertex(pose.last(), x, y, 0F).setColor(0xFF0033FF).setUv(u, v)
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose.last(), 0F, 0F, -1F);
     }
 
     /** Codec-backed unbaked form. Resolved at bake() against the live model layers. */
@@ -164,6 +189,36 @@ public class ReactorMachineItemRenderer implements NoDataSpecialModelRenderer {
                 case "waste_storage" -> {
                     ModelWasteStorage m = new ModelWasteStorage(set.bakeLayer(ReactorModelLayers.WASTE_STORAGE));
                     return make((p, vc, l) -> m.renderAll(p, vc, l), tex("storage"));
+                }
+                case "turbine_flywheel" -> {
+                    ModelFlywheel m = new ModelFlywheel(set.bakeLayer(ReactorModelLayers.FLYWHEEL));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l, 0F), tex("flywheel"));
+                }
+                case "reactor_generator" -> {
+                    ModelGenerator m = new ModelGenerator(set.bakeLayer(ReactorModelLayers.GENERATOR));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l, 0F), tex("generator0"));
+                }
+                case "high_pressure_turbine" -> {
+                    ModelBigTurbine m = new ModelBigTurbine(set.bakeLayer(ReactorModelLayers.BIG_TURBINE_STAGES[0]), 0);
+                    return make((p, vc, l) -> m.renderAll(p, vc, l, 0F), tex("bigturbine"));
+                }
+                case "mini_turbine" -> {
+                    ModelMiniTurbine m = new ModelMiniTurbine(set.bakeLayer(ReactorModelLayers.MINI_TURBINE));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l), tex("miniturbine3"));
+                }
+                case "steam_diffuser" -> {
+                    ModelDiffuser m = new ModelDiffuser(set.bakeLayer(ReactorModelLayers.STEAM_DIFFUSER));
+                    return make((p, vc, l) -> m.renderAll(p, vc, l), tex("diffuser"));
+                }
+                case "solar_top" -> {
+                    ModelSolarTop m = new ModelSolarTop(set.bakeLayer(ReactorModelLayers.SOLAR_TOP));
+                    int tint = 0xFF000000 | (reika.dragonapi.libraries.mathsci.ReikaPhysicsHelper
+                            .getColorForTemperature(200) & 0xFFFFFF);
+                    return make((p, vc, l) -> m.renderAll(p, vc, l, tint), tex("solartop"));
+                }
+                case "fusion_marker" -> {
+                    return make(ReactorMachineItemRenderer::renderMarker,
+                            Identifier.withDefaultNamespace("textures/block/redstone_torch.png"));
                 }
                 case "electrolyzer" -> {
                     ModelElectrolyzer m = new ModelElectrolyzer(set.bakeLayer(ReactorModelLayers.ELECTROLYZER));

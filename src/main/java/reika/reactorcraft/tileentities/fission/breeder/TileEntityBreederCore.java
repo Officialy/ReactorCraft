@@ -35,7 +35,7 @@ public class TileEntityBreederCore extends TileEntityNuclearCore {
 	}
 
 
-	private StepTimer timer2 = new StepTimer(10);
+	private final StepTimer timer2 = new StepTimer(10);
 
 	@Override
 	public void updateEntity(Level world, BlockPos pos) {
@@ -141,10 +141,8 @@ public class TileEntityBreederCore extends TileEntityNuclearCore {
 	public boolean canRemoveItem(int slot, ItemStack is) {
 		if (is.getItem() == ReactorItems.PLUTONIUM.getItemInstance())
 			return true;
-		if (is.getItem() == ReactorItems.WASTE.getItemInstance())
-			return true;
-		return false;
-	}
+        return is.getItem() == ReactorItems.WASTE.getItemInstance();
+    }
 
 	@Override
 	public ReactorTiles getTile() {

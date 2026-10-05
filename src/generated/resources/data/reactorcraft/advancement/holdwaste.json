@@ -1,0 +1,25 @@
+{
+  "parent": "reactorcraft:fission",
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.holdwaste.description"
+    },
+    "icon": {
+      "id": "reactorcraft:waste"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.holdwaste.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

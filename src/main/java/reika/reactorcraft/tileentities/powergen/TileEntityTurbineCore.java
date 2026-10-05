@@ -110,7 +110,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker, HasFluidResourceHan
 
 	private Interference inter = null;
 
-	private BlockArray contact = new BlockArray();
+	private final BlockArray contact = new BlockArray();
 
 	private int damage;
 
@@ -136,7 +136,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker, HasFluidResourceHan
 		return hasMultiBlock;
 	}
 
-	private StepTimer soundTimer = new StepTimer(41);
+	private final StepTimer soundTimer = new StepTimer(41);
 
 	private int stage;
 
@@ -157,6 +157,11 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker, HasFluidResourceHan
 
 	public Direction getFacing() {
 		return this.getBlockState().getValue(BlockReactorMachine.FACING);
+	}
+
+	/** Loaded turbines establish these endpoints on their first update before power can be traced. */
+	public final boolean isPowerTopologyReady() {
+		return readPos != null && writePos != null;
 	}
 
 	private void updateIO() {
@@ -216,11 +221,12 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker, HasFluidResourceHan
 		if (this.getGenPower() >= 1000000000L) {
 			ReactorAchievements.GIGATURBINE.triggerAchievement(this.getPlacer());
 		}
+		if (!world.isClientSide() && world.getGameTime() % 20 == 0)
+			reika.reactorcraft.auxiliary.ReactorPowerMilestones.check(this);
 
 		BlockEntity tg = world.getBlockEntity(writePos);
-		if (tg instanceof ShaftPowerReceiver) {
-			ShaftPowerReceiver rec = (ShaftPowerReceiver) tg;
-			rec.setOmega(this.getOmega());
+		if (tg instanceof ShaftPowerReceiver rec) {
+            rec.setOmega(this.getOmega());
 			rec.setTorque(this.getTorque());
 			rec.setPower(this.getPower());
 		}
@@ -300,9 +306,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker, HasFluidResourceHan
 	public final boolean isAtEndOFLine() {
 		if (ReactorTiles.getTE(level, readPos) == this.getTile()) {
 			TileEntityTurbineCore tile = (TileEntityTurbineCore) level.getBlockEntity(readPos);
-			if (this.getBlockPos().equals(tile.writePos)) {
-				return false;
-			}
+            return !this.getBlockPos().equals(tile.writePos);
 		}
 		return true;
 	}
@@ -471,7 +475,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker, HasFluidResourceHan
 		List<LivingEntity> li = world.getEntitiesOfClass(LivingEntity.class, box);
 		for (LivingEntity e : li) {
 			if (this.getOmega() > 0 && ReikaMathLibrary.py3d(e.getX() - x - 0.5, e.getY() - y - 0.5, e.getZ() - z - 0.5) < r) {
-				if (this.canDamageTurbine(e)) {
+				if (canDamageTurbine(e)) {
 					if (world instanceof ServerLevel sl) {
 						sl.explode(null, e.getX(), e.getY() + e.getEyeHeight(), e.getZ(), 2, Level.ExplosionInteraction.BLOCK);
 						e.hurtServer(sl, sl.damageSources().generic(), 2);
@@ -648,7 +652,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker, HasFluidResourceHan
 		return new AABB(this.getBlockPos()).inflate(6, 6, 6);
 	}
 
-	private static enum Interference {
+	private enum Interference {
 		JAM(0),
 		FLUID(512),
 		MOB(4096);
@@ -657,7 +661,7 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker, HasFluidResourceHan
 
 		public static final Interference[] list = values();
 
-		private Interference(int max) {
+		Interference(int max) {
 			maxSpeed = max;
 		}
 

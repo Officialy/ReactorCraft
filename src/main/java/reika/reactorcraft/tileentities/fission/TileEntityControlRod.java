@@ -100,15 +100,13 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 
 		if (spread) {
 			BlockEntity te = this.getAdjacentBlockEntity(Direction.UP);
-			while (te instanceof TileEntityControlRod) {
-				TileEntityControlRod tc = (TileEntityControlRod)te;
-				tc.toggle(false, false);
+			while (te instanceof TileEntityControlRod tc) {
+                tc.toggle(false, false);
 				te = tc.getAdjacentBlockEntity(Direction.UP);
 			}
 			te = this.getAdjacentBlockEntity(Direction.DOWN);
-			while (te instanceof TileEntityControlRod) {
-				TileEntityControlRod tc = (TileEntityControlRod)te;
-				tc.toggle(false, false);
+			while (te instanceof TileEntityControlRod tc) {
+                tc.toggle(false, false);
 				te = tc.getAdjacentBlockEntity(Direction.DOWN);
 			}
 		}
@@ -139,7 +137,7 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 
 	@Override
 	public boolean onNeutron(EntityNeutron e, Level world, BlockPos pos) {
-		return this.isActive() ? ReikaRandomHelper.doWithChance(60) : false;
+		return this.isActive() && ReikaRandomHelper.doWithChance(60);
 	}
 
 	@Override
@@ -227,14 +225,14 @@ public class TileEntityControlRod extends TileEntityReactorBase implements Linka
 		return new AABB(this.getBlockPos()).expandTowards(0, 2, 0);
 	}
 
-	private static enum Motions {
+	private enum Motions {
 		RAISING(1),
 		LOWERING(-1),
 		SCRAM(-7);
 
 		public final int stepHeight;
 
-		private Motions(int dh) {
+		Motions(int dh) {
 			stepHeight = dh;
 		}
 	}

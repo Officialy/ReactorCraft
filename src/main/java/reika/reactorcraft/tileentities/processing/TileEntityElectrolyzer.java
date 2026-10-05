@@ -97,8 +97,8 @@ public class TileEntityElectrolyzer extends TileEntityInventoriedReactorBase imp
 				: side == Direction.UP ? lightView : inputView;
 	}
 
-	private StepTimer timer = new StepTimer(50);
-	private StepTimer tempTimer = new StepTimer(20);
+	private final StepTimer timer = new StepTimer(50);
+	private final StepTimer tempTimer = new StepTimer(20);
 
 	public int time;
 

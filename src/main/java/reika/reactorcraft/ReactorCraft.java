@@ -95,7 +95,12 @@ public class ReactorCraft {
 
         modEventBus.addListener(ReactorBlockEntities::registerCapabilities);
         modEventBus.addListener((FMLCommonSetupEvent e) ->
-                e.enqueueWork(ReactorTiles::loadMappings));
+                e.enqueueWork(() -> {
+                    ReactorTiles.loadMappings();
+                    if (reika.rotarycraft.registry.ConfigRegistry.HANDBOOK.getState())
+                        reika.dragonapi.auxiliary.trackers.PlayerFirstTimeTracker.addTracker(
+                                new reika.reactorcraft.auxiliary.ReactorBookTracker());
+                }));
 
         // V33a ReactorCraft.load: stored nuclear waste leaks radiation out of ME networks.
         if (reika.dragonapi.ModList.APPENG.isLoaded())

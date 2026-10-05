@@ -13,10 +13,10 @@ import reika.rotarycraft.api.power.ShaftPowerReceiver;
 
 public interface ReactorPowerReceiver extends ShaftPowerReceiver {
 
-	public int getMinTorque();
+	int getMinTorque();
 
-	public int getMinSpeed();
+	int getMinSpeed();
 
-	public long getMinPower();
+	long getMinPower();
 
 }

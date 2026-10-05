@@ -23,11 +23,11 @@ public enum ReactorPackets {
 
 	private static final ReactorPackets[] list = values();
 
-	private ReactorPackets() {
+	ReactorPackets() {
 		this(0);
 	}
 
-	private ReactorPackets(int ints) {
+	ReactorPackets(int ints) {
 		numInts = ints;
 	}
 

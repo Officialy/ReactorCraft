@@ -29,7 +29,7 @@ public enum ReactorFuel {
 	private static final HashMap<Item, ReactorFuel> itemMap = new HashMap<>();
 	public static final ReactorFuel[] fuelList = values();
 
-	private ReactorFuel(Item item, int fiss, int con, int waste, int temp, float v) {
+	ReactorFuel(Item item, int fiss, int con, int waste, int temp, float v) {
 		fuel = item;
 		fissionChance = fiss;
 		consumeChance = con;

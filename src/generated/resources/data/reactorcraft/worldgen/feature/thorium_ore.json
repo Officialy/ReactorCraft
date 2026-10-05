@@ -1,11 +1,12 @@
 {
   "type": "reactorcraft:ore",
   "count": 1,
-  "dim_type": 0,
+  "dim_type": 1,
   "max_y": 32,
-  "min_y": -48,
+  "min_y": 0,
   "needs_lava": false,
   "ore": "reactorcraft:thorium_ore",
   "random_fluorite": false,
+  "settings_key": "THORIUM",
   "size": 24
 }

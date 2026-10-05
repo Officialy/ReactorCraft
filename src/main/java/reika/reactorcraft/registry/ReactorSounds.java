@@ -69,7 +69,7 @@ public enum ReactorSounds implements CustomDistanceSound {
 
 	private boolean isVolumed = false;
 
-	private ReactorSounds(String n) {
+	ReactorSounds(String n) {
 		if (n.startsWith("#")) {
 			isVolumed = true;
 			n = n.substring(1);

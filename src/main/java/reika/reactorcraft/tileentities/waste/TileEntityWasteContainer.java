@@ -121,7 +121,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 
 	@Override
 	public boolean canRemoveItem(int i, ItemStack itemstack) {
-		return this.isLongLivedWaste(itemstack);
+		return isLongLivedWaste(itemstack);
 	}
 
 	@Override
@@ -182,7 +182,7 @@ public class TileEntityWasteContainer extends TileEntityWasteUnit implements Tem
 
 	@Override
 	public boolean isValidIsotope(Isotopes i) {
-		return !this.isLongLivedWaste(i);
+		return !isLongLivedWaste(i);
 	}
 
 	public boolean feed() {

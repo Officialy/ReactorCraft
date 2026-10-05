@@ -68,7 +68,7 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 				: side == Direction.DOWN ? null : outputHandler;
 	}
 
-	private StepTimer temp = new StepTimer(20);
+	private final StepTimer temp = new StepTimer(20);
 
 	private Exchange currentRecipe;
 
@@ -192,7 +192,7 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 	}
 
 	//Add API to allow others to add fluids
-	public static enum Exchange {
+	public enum Exchange {
 		SODIUM(ReactorFluids.HOT_SODIUM.get(), ReactorFluids.SODIUM.get(), ReikaThermoHelper.SODIUM_HEAT, 600, ReactorType.BREEDER),
 		CO2("rc hot co2", "rc co2", ReikaThermoHelper.CO2_HEAT, TileEntityPebbleBed.MINTEMP, ReactorType.HTGR),
 		LIFBE("rc hot lifbe", "rc lifbe", ReikaThermoHelper.LIFBE_HEAT, 1000, ReactorType.THORIUM),
@@ -209,19 +209,19 @@ public class TileEntityHeatExchanger extends TankedReactorPowerReceiver implemen
 
 		public static final Exchange[] list = values();
 
-		private Exchange(String from, String to, double c, int max, ReactorType t) {
+		Exchange(String from, String to, double c, int max, ReactorType t) {
 			this(from, to, 1, c, max, t);
 		}
 
-		private Exchange(Fluid from, Fluid to, double c, int max, ReactorType t) {
+		Exchange(Fluid from, Fluid to, double c, int max, ReactorType t) {
 			this(from, to, 1, c, max, t);
 		}
 
-		private Exchange(String from, String to, int r, double c, int max, ReactorType t) {
+		Exchange(String from, String to, int r, double c, int max, ReactorType t) {
 			this(ReactorFluids.getLegacyFluid(from), ReactorFluids.getLegacyFluid(to), r, c, max, t);
 		}
 
-		private Exchange(Fluid from, Fluid to, int r, double c, int max, ReactorType t) {
+		Exchange(Fluid from, Fluid to, int r, double c, int max, ReactorType t) {
 			coldFluid = to;
 			hotFluid = from;
 			heatCapacity = c;

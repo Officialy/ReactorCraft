@@ -51,7 +51,7 @@ public abstract class TileEntityReactorPiping extends TileEntityReactorBase impl
 	private final ResourceHandler<FluidResource> inputFluidView = new FilteredFluidResourceHandler(
 			fluidHandler, index -> true, (index, resource) -> true, (index, resource) -> false);
 
-	private boolean[] connections = new boolean[6];
+	private final boolean[] connections = new boolean[6];
 
 	public TileEntityReactorPiping(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);

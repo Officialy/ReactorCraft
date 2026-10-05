@@ -87,9 +87,8 @@ public class EntityNeutron extends ParticleEntity {
 				if (((NeutronBlock)id).onNeutron(this, world, pos))
 					return true;
 			}
-			else if (id instanceof NeutronShield) {
-				NeutronShield ns = (NeutronShield)id;
-				String type = this.getNeutronType().name();
+			else if (id instanceof NeutronShield ns) {
+                String type = this.getNeutronType().name();
 				double c = Math.min(ns.getAbsorptionChance(type), RadiationShield.BEDINGOT.neutronAbsorbChance);
 				if (ReikaRandomHelper.doWithChance(c)) {
 					double c2 = Mth.clamp(ns.getRadiationSpawnMultiplier(world, pos, type), 0, 1);
@@ -183,7 +182,7 @@ public class EntityNeutron extends ParticleEntity {
 		return speed;
 	}
 
-	public static enum NeutronType {
+	public enum NeutronType {
 		NULL(),
 		DECAY(),
 		FISSION(),
@@ -240,7 +239,7 @@ public class EntityNeutron extends ParticleEntity {
 		}
 	}
 
-	public static enum NeutronSpeed {
+	public enum NeutronSpeed {
 		THERMAL(),
 		FAST();
 

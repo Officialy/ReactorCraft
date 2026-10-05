@@ -12,7 +12,7 @@ import reika.reactorcraft.ReactorCraft;
  * 26.2 datagen entry point for ReactorCraft. Client handler emits language + models; server handler
  * emits loot, the ore worldgen {@link net.minecraft.core.RegistrySetBuilder} (configured + placed
  * features), biome modifiers, and recipes (smelting/crafting + processor/centrifuge JSON + the
- * cross-mod RotaryCraft recipes). Tag and advancement providers are tracked as follow-ups.
+ * cross-mod RotaryCraft recipes), tags and the original achievement catalog as advancements.
  */
 @EventBusSubscriber(modid = ReactorCraft.MODID)
 public final class ReactorDataProviders {
@@ -27,11 +27,13 @@ public final class ReactorDataProviders {
 
     @SubscribeEvent
     public static void onGatherServer(GatherDataEvent.Server event) {
+        event.createProvider(ReactorBiomeTagsProvider::new);
         event.createProvider(ReactorBlockTagsProvider::new);
         event.createProvider(ReactorItemTagsProvider::new);
         event.createReloadableRegistryObjects(new RegistrySetBuilder()
                 .add(ReactorRecipeProvider.bootstrap())
-                .add(Registries.LOOT_TABLE, new ReactorLootProvider()));
+                .add(Registries.LOOT_TABLE, new ReactorLootProvider())
+                .add(Registries.ADVANCEMENT, new ReactorAdvancementProvider()));
         event.createWorldRegistryObjects(ReactorWorldGenProvider.buildRegistrySet());
         event.createProvider(ReactorBiomeModifierProvider::new);
         event.createProvider(ReactorMachineRecipeProvider::new);

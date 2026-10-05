@@ -151,7 +151,7 @@ public class TileEntityWasteStorage extends TileEntityWasteUnit implements Range
 
 	@Override
 	public boolean isValidIsotope(Isotopes i) {
-		return this.isLongLivedWaste(i);
+		return isLongLivedWaste(i);
 	}
 
 	@Override

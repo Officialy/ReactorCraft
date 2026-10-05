@@ -197,10 +197,8 @@ public class BlockTurbineMulti extends BlockReCMultiBlock implements EntityBlock
 		int n = this.checkForTurbines(world, dir, blocks); //only accept steam emitter at last turb stage
 		if (n <= 0 || n > 7)
 			return false;
-		if (!this.checkForShape(world, dir, blocks, n, call))
-			return false;
-		return true;
-	}
+        return this.checkForShape(world, dir, blocks, n, call);
+    }
 
 	private int checkForTurbines(Level world, Direction dir, StructuredBlockArray blocks) {
 		int mx = blocks.getMinX()+blocks.getSizeX()/2;

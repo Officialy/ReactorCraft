@@ -13,8 +13,8 @@ import reika.dragonapi.interfaces.blockentity.BreakAction;
 
 public interface MultiBlockTile extends BreakAction {
 
-	public boolean hasMultiBlock();
+	boolean hasMultiBlock();
 
-	public void setHasMultiBlock(boolean has);
+	void setHasMultiBlock(boolean has);
 
 }

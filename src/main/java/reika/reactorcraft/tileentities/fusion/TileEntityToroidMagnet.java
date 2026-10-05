@@ -64,8 +64,8 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 
 	private int charge = 0;
 
-	private StepTimer chargeTimer = new StepTimer(20);
-	private StepTimer reCheckTimer = new StepTimer(20);
+	private final StepTimer chargeTimer = new StepTimer(20);
+	private final StepTimer reCheckTimer = new StepTimer(20);
 
 	private static final int RATE = ReactorOptions.getToroidChargeRate();
 
@@ -452,7 +452,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 		return ReikaAABBHelper.getBlockAABB(this.getBlockPos()).inflate(3, 3, 3);
 	}
 
-	public static enum Aim {
+	public enum Aim {
 		N(0,			2, 0),
 		NNW1(11.3F,		2, -1),
 		NNW2(24,		2, -1),
@@ -492,7 +492,7 @@ ChunkLoadingTile, NeutronTile, NonIFluidTank {
 
 		public static final Aim[] list = values();
 
-		private Aim(float a, int x, int z) {
+		Aim(float a, int x, int z) {
 			angle = a;
 			xOffset = x;
 			zOffset = z;

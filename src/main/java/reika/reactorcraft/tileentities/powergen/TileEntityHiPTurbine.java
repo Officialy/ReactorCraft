@@ -245,9 +245,8 @@ public class TileEntityHiPTurbine extends TileEntityTurbineCore implements Multi
 			for (int i = 0; i < arr.getSize(); i++) {
 				BlockPos c = arr.getNthBlock(i);
 				BlockEntity tile = world.getBlockEntity(c);
-				if (tile instanceof TileEntitySteamInjector) {
-					TileEntitySteamInjector te = (TileEntitySteamInjector) tile;
-					int lube = te.getLubricant();
+				if (tile instanceof TileEntitySteamInjector te) {
+                    int lube = te.getLubricant();
 					int rem = Math.min(lube, tank.getRemainingSpace());
 					if (rem > 0) {
 						te.remove(rem);

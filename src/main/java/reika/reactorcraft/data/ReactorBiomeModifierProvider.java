@@ -38,8 +38,9 @@ public final class ReactorBiomeModifierProvider implements DataProvider {
     private static String[] biomeTags(ReactorOreType ore) {
         switch (ore) {
             case PITCHBLENDE:
-                return new String[]{"#minecraft:is_ocean", "#minecraft:is_river"};
+                return new String[]{"#minecraft:is_ocean", "#minecraft:is_river", "#reactorcraft:extra_pitchblende_biomes"};
             case AMMONIUM:
+            case THORIUM:
                 return new String[]{"#minecraft:is_nether"};
             case ENDBLENDE:
                 return new String[]{"#minecraft:is_end"};

@@ -177,10 +177,8 @@ public class TileEntityReactorPump extends TankedReactorPowerReceiver {
 	public boolean isValidFluid(Fluid f) {
 		if (f.equals(ReactorFluids.getLegacyFluid("rc lowpwater")))
 			return true;
-		if (f.equals(ReactorFluids.getLegacyFluid("rc lowpammonia")))
-			return true;
-		return false;
-	}
+        return f.equals(ReactorFluids.getLegacyFluid("rc lowpammonia"));
+    }
 
 	@Override
 	public int getMinTorque(int available) {

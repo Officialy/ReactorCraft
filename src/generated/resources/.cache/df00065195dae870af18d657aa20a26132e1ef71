@@ -1,4 +1,4 @@
-// 26.3	2026-09-28T00:47:04.8413894	ReactorCraft Biome Modifiers
+// 26.3	2026-10-03T20:05:00.4082664	ReactorCraft Biome Modifiers
 f80f78b4c8bad5fe0ae51f8f3b2b9375ecd968ed data/reactorcraft/neoforge/biome_modifier/ammonium_ore.json
 f925c25469a79229bd3ff07ba1f8b3890a9166f2 data/reactorcraft/neoforge/biome_modifier/cadmium_ore.json
 4fa35c824c4d73d3bacc92543b83450a36c0b623 data/reactorcraft/neoforge/biome_modifier/calcite_ore.json
@@ -8,5 +8,6 @@ f31480545a81486ba968cb13ab50d50a3f50050e data/reactorcraft/neoforge/biome_modifi
 c9cc308bd644a8e21e486880ebc106814fbca244 data/reactorcraft/neoforge/biome_modifier/magnetite_ore.json
 400692a1dcda410ad878a4fe0b5bb85959e7c880 data/reactorcraft/neoforge/biome_modifier/pitchblende_ore_0.json
 b6771e9e20d8588419633526c8fc57207e009ad3 data/reactorcraft/neoforge/biome_modifier/pitchblende_ore_1.json
+f19071714d08e2cef947e1059b6492ce67281f33 data/reactorcraft/neoforge/biome_modifier/pitchblende_ore_2.json
 b0204613dbbea98e8eb3c5113a63d91ac91c7063 data/reactorcraft/neoforge/biome_modifier/silver_ore.json
-c16bc3d4cf3d6e2e7e354bca4733683ea54210df data/reactorcraft/neoforge/biome_modifier/thorium_ore.json
+07fa519b1d3ebef4112db8b6831316646549da3b data/reactorcraft/neoforge/biome_modifier/thorium_ore.json

@@ -1,0 +1,25 @@
+{
+  "parent": "reactorcraft:mineuranium",
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.heavywater.description"
+    },
+    "icon": {
+      "id": "reactorcraft:heavy_water_bucket"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.heavywater.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

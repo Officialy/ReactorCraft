@@ -13,10 +13,10 @@ import net.minecraft.world.item.ItemStack;
 
 public interface Feedable {
 
-	public boolean feed();
+	boolean feed();
 
-	public boolean feedIn(ItemStack is);
+	boolean feedIn(ItemStack is);
 
-	public ItemStack feedOut();
+	ItemStack feedOut();
 
 }

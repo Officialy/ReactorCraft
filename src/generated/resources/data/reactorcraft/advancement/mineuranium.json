@@ -1,0 +1,25 @@
+{
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "background": "minecraft:textures/block/iron_block.png",
+    "description": {
+      "translate": "advancements.reactorcraft.mineuranium.description"
+    },
+    "icon": {
+      "id": "reactorcraft:uranium_ingot"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.mineuranium.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

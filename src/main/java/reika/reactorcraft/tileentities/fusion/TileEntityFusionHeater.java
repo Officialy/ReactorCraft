@@ -150,10 +150,8 @@ public class TileEntityFusionHeater extends TileEntityReactorBase implements Tem
 	private boolean isHydrogen(Fluid f) {
 		if (f.equals(ReactorFluids.getLegacyFluid("rc deuterium")))
 			return true;
-		if (f.equals(ReactorFluids.getLegacyFluid("rc tritium")))
-			return true;
-		return false;
-	}
+        return f.equals(ReactorFluids.getLegacyFluid("rc tritium"));
+    }
 
 	@Override
 	public void addTemperature(int temp) {

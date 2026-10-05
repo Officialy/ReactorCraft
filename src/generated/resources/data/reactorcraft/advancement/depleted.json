@@ -1,0 +1,35 @@
+{
+  "parent": "reactorcraft:uf6",
+  "criteria": {
+    "trigger": {
+      "conditions": {
+        "items": [
+          {
+            "items": "reactorcraft:depleted_fuel"
+          }
+        ],
+        "player": {
+          "type": "rotarycraft:advancements_enabled"
+        }
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.depleted.description"
+    },
+    "icon": {
+      "id": "reactorcraft:depleted_fuel"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.depleted.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

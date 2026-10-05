@@ -70,7 +70,7 @@ public class RadiationEffects {
 			// DRAGONAPI-PORT: powered-armor decharge (ReikaEntityHelper.isEntityWearingPoweredArmor +
 			// ReikaItemHelper.dechargeItem) not ported — radiation no longer drains powered armor yet.
 			if (e instanceof Creeper) {
-				((Creeper)e).getPersistentData().putBoolean("radioactive", true);
+				e.getPersistentData().putBoolean("radioactive", true);
 			}
 		}
 		return false;
@@ -199,7 +199,7 @@ public class RadiationEffects {
 		}
 	}
 
-	public static enum RadiationIntensity implements RadiationLevel {
+	public enum RadiationIntensity implements RadiationLevel {
 		BACKGROUND(0), //always
 		LOWLEVEL(100), //neutrons
 		MODERATE(1200), //plutonium, creepers, waste containers
@@ -210,7 +210,7 @@ public class RadiationEffects {
 
 		private final int potionDuration;
 
-		private RadiationIntensity(int t) {
+		RadiationIntensity(int t) {
 			potionDuration = t;
 		}
 

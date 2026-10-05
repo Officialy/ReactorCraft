@@ -24,6 +24,8 @@ public class ItemReactorBook extends ReactorItemBase {
 
 	@Override
 	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+		if (!level.isClientSide())
+			reika.reactorcraft.registry.ReactorAchievements.RECUSEBOOK.triggerAchievement(player);
 		if (level.isClientSide() && hand.equals(InteractionHand.MAIN_HAND)) {
 			reika.reactorcraft.client.ClientScreens.openReactorBook(player, level);
 		}

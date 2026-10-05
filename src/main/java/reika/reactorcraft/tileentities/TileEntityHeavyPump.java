@@ -66,7 +66,7 @@ public class TileEntityHeavyPump extends TileEntityReactorBase implements Reacto
 		extractions.put(Fluids.LAVA, new MoltenLithiumExtraction());
 	}
 
-	private StepTimer timer = new StepTimer(20);
+	private final StepTimer timer = new StepTimer(20);
 
 	private final HybridTank tank = new HybridTank("heavypump", 8000);
 	private final ResourceHandler<FluidResource> fluidHandler = new HybridTankResourceHandler(

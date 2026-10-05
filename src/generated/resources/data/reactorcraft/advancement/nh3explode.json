@@ -1,0 +1,25 @@
+{
+  "parent": "reactorcraft:ammonia",
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.nh3explode.description"
+    },
+    "icon": {
+      "id": "reactorcraft:steam_line"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.nh3explode.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

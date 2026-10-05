@@ -102,10 +102,8 @@ ToggleTile, NeutronTile, HasFluidResourceHandler {
 			return false;
 		if (!enabled)
 			return false;
-		if (this.hasRedstoneSignal())
-			return false;
-		return true;
-	}
+        return !this.hasRedstoneSignal();
+    }
 
 	private void make(Level world, BlockPos pos) {
 		this.createPlasma(world, pos);

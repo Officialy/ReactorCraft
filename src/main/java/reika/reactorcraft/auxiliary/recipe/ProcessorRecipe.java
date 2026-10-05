@@ -81,8 +81,8 @@ public class ProcessorRecipe implements Recipe<RecipeInput> {
 
     @Override
     public boolean matches(RecipeInput in, Level level) {
-        return in instanceof FluidInput fluidInput && !fluidInput.fluid().isEmpty()
-                && fluidInput.fluid().getFluid().isSame(inputFluid.create().getFluid());
+        return in instanceof FluidInput(FluidStack fluid) && !fluid.isEmpty()
+                && fluid.getFluid().isSame(inputFluid.create().getFluid());
     }
 
     @Override

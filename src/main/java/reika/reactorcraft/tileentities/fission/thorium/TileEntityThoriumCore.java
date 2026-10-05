@@ -88,7 +88,7 @@ public class TileEntityThoriumCore extends TileEntityNuclearCore implements Iner
 				: this.isWastePipe(side) ? wasteOutputView : fuelOutputView;
 	}
 
-	private StepTimer timer2 = new StepTimer(5);
+	private final StepTimer timer2 = new StepTimer(5);
 
 	private boolean isFuel(Fluid f) {
 		return f == ReactorFluids.LIFBE_FUEL.get() || f == ReactorFluids.LIFBE_FUEL_PREHEAT.get();

@@ -16,7 +16,12 @@ import net.minecraft.world.level.block.Block;
  * {@code needsLava} reproduces the ammonium lava-adjacency requirement.
  */
 public record ReactorOreConfig(Block ore, int count, int size, int minY, int maxY, int dimType,
-                               boolean randomFluorite, boolean needsLava) {
+                               boolean randomFluorite, boolean needsLava, String settingsKey) {
+
+    public ReactorOreConfig(Block ore, int count, int size, int minY, int maxY, int dimType,
+                            boolean randomFluorite, boolean needsLava) {
+        this(ore,count,size,minY,maxY,dimType,randomFluorite,needsLava,"");
+    }
 
     public static final MapCodec<ReactorOreConfig> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
             BuiltInRegistries.BLOCK.byNameCodec().fieldOf("ore").forGetter(ReactorOreConfig::ore),
@@ -26,6 +31,7 @@ public record ReactorOreConfig(Block ore, int count, int size, int minY, int max
             Codec.INT.fieldOf("max_y").forGetter(ReactorOreConfig::maxY),
             Codec.INT.fieldOf("dim_type").forGetter(ReactorOreConfig::dimType),
             Codec.BOOL.fieldOf("random_fluorite").forGetter(ReactorOreConfig::randomFluorite),
-            Codec.BOOL.fieldOf("needs_lava").forGetter(ReactorOreConfig::needsLava)
+            Codec.BOOL.fieldOf("needs_lava").forGetter(ReactorOreConfig::needsLava),
+            Codec.STRING.optionalFieldOf("settings_key", "").forGetter(ReactorOreConfig::settingsKey)
     ).apply(inst, ReactorOreConfig::new));
 }

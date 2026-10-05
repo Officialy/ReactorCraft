@@ -1,0 +1,25 @@
+{
+  "parent": "reactorcraft:holdwaste",
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.wasteleak.description"
+    },
+    "icon": {
+      "id": "reactorcraft:radiation_goggles"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.wasteleak.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

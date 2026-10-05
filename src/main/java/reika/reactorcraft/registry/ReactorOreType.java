@@ -32,7 +32,7 @@ public enum ReactorOreType {
     SILVER(ReactorBlocks.SILVER_ORE, ReactorItems.SILVER_INGOT, 16, 40, 9, 2, Dimension.OVERWORLD, 0.5F, false),
     CALCITE(ReactorBlocks.CALCITE_ORE, ReactorItems.CALCITE, 32, 60, 4, 12, Dimension.OVERWORLD, 0.4F, true),
     MAGNETITE(ReactorBlocks.MAGNETITE_ORE, ReactorItems.LODESTONE, 60, 128, 16, 7, Dimension.OVERWORLD, 0.8F, true),
-    THORIUM(ReactorBlocks.THORIUM_ORE, ReactorItems.THORIUM_DUST, 0, 32, 24, 1, Dimension.OVERWORLD, 0.8F, false),
+    THORIUM(ReactorBlocks.THORIUM_ORE, ReactorItems.THORIUM_DUST, 0, 32, 24, 1, Dimension.NETHER, 0.8F, false),
     FLUORITE(null, null, 32, 60, 8, 12, Dimension.OVERWORLD, 0.4F, true),
     AMMONIUM(ReactorBlocks.AMMONIUM_ORE, ReactorItems.AMMONIUM_DUST, 32, 32, 8, 6, Dimension.NETHER, 0.8F, true),
     ENDBLENDE(ReactorBlocks.END_PITCHBLENDE_ORE, ReactorItems.URANIUM_INGOT, 0, 64, 16, 6, Dimension.END, 1.0F, false);

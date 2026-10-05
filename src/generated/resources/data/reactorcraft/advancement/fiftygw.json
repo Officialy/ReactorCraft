@@ -1,0 +1,26 @@
+{
+  "parent": "reactorcraft:fusion",
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.fiftygw.description"
+    },
+    "frame": "challenge",
+    "icon": {
+      "id": "rotarycraft:dynamometer"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.fiftygw.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

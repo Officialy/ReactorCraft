@@ -76,8 +76,8 @@ public class CentrifugeRecipe implements Recipe<RecipeInput> {
 
     @Override
     public boolean matches(RecipeInput in, Level level) {
-        return in instanceof FluidInput fluidInput && !fluidInput.fluid().isEmpty()
-                && fluidInput.fluid().getFluid().isSame(input.create().getFluid());
+        return in instanceof FluidInput(FluidStack fluid) && !fluid.isEmpty()
+                && fluid.getFluid().isSame(input.create().getFluid());
     }
 
     @Override

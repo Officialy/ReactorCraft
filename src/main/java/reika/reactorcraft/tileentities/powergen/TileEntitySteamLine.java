@@ -44,7 +44,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 
 	private WorkingFluid fluid = WorkingFluid.EMPTY;
 	// Per-reactor-type contribution breakdown (display only; rebuilds from boiler draws, not persisted).
-	private Proportionality<ReactorType> source = new Proportionality<>();
+	private final Proportionality<ReactorType> source = new Proportionality<>();
 
 	@Override
 	public ReactorTiles getTile() {
@@ -178,7 +178,7 @@ public class TileEntitySteamLine extends TileEntityLine implements PumpablePipe,
 	public boolean canTransferTo(PumpablePipe p, Direction dir) {
 		if (p instanceof TileEntitySteamLine) {
 			WorkingFluid f = ((TileEntitySteamLine) p).fluid;
-			return f != WorkingFluid.EMPTY ? f == fluid : true;
+			return f == WorkingFluid.EMPTY || f == fluid;
 		}
 		return false;
 	}

@@ -15,6 +15,6 @@ import reika.reactorcraft.tileentities.fission.TileEntityCPU;
 
 public interface LinkableReactorCore extends TypedReactorCoreTE, BreakAction {
 
-	public void link(TileEntityCPU te);
+	void link(TileEntityCPU te);
 
 }

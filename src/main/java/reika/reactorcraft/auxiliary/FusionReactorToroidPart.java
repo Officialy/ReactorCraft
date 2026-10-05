@@ -13,6 +13,6 @@ import net.minecraft.world.level.Level;
 
 public interface FusionReactorToroidPart {
 
-	public FusionReactorToroidPart getNextPart(Level world, int x, int y, int z);
+	FusionReactorToroidPart getNextPart(Level world, int x, int y, int z);
 
 }

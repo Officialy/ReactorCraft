@@ -49,6 +49,7 @@ public final class ReactorContentGameTests {
     private ReactorContentGameTests() {}
 
     static void register(RegisterGameTestsEvent event, Holder<TestEnvironmentDefinition<?>> environment) {
+        ReactorAdvancementTests.register(event, environment);
         for (var color : FluoriteTypes.colorList)
             ReactorGameTests.register(event, environment, "decorative_fluorite_" + color.getColorName(), 40, h -> fluorite(h, color));
         ReactorGameTests.register(event, environment, "remote_charge_and_range_boundaries", 40, ReactorContentGameTests::charge);

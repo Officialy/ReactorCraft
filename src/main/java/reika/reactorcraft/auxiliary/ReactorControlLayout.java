@@ -150,11 +150,10 @@ public class ReactorControlLayout {
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(controller.toString());
-		sb.append(" ");
-		sb.append(controls);
-		return sb.toString();
+        String sb = controller.toString() +
+                " " +
+                controls;
+		return sb;
 	}
 
 	public void SCRAM() {

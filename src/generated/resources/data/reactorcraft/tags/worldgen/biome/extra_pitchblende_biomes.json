@@ -1,0 +1,9 @@
+{
+  "values": [
+    "minecraft:mushroom_fields",
+    {
+      "id": "chromaticraft:rainbow_forest",
+      "required": false
+    }
+  ]
+}

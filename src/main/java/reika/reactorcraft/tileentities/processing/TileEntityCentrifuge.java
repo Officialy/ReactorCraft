@@ -75,7 +75,7 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 		return side == null ? fluidHandler : side == Direction.UP ? inputFluidView : null;
 	}
 
-	private StepTimer timer = new StepTimer(900);
+	private final StepTimer timer = new StepTimer(900);
 
 	private final BasicPowerHandler powerHandler = new BasicPowerHandler();
 	public int split; //timer
@@ -199,10 +199,8 @@ public class TileEntityCentrifuge extends TileEntityInventoriedReactorBase imple
 			return false;
 		if (!itemHandler.getStackInSlot(0).isEmpty() && itemHandler.getStackInSlot(0).getCount() >= itemHandler.getStackInSlot(0).getMaxStackSize())
 			return false;
-		if (!itemHandler.getStackInSlot(1).isEmpty() && itemHandler.getStackInSlot(1).getCount() >= itemHandler.getStackInSlot(1).getMaxStackSize())
-			return false;
-		return true;
-	}
+        return itemHandler.getStackInSlot(1).isEmpty() || itemHandler.getStackInSlot(1).getCount() < itemHandler.getStackInSlot(1).getMaxStackSize();
+    }
 
 	public int getProcessingScaled(int p) {
 		return (int)(p*split/(float)timer.getCap());

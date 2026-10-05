@@ -186,10 +186,9 @@ public class TileEntityHeatPipe extends TileEntityLine {
 
 	@Override
 	protected boolean canConnectToMachine(Block id, Direction dir, BlockEntity te) {
-		if (!(te instanceof HeatConduction))
+		if (!(te instanceof HeatConduction h))
 			return false;
-		HeatConduction h = (HeatConduction) te;
-		return h.allowExternalHeating() || h.allowHeatExtraction();
+        return h.allowExternalHeating() || h.allowHeatExtraction();
 	}
 
 	@Override

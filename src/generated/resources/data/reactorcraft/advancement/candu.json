@@ -1,0 +1,25 @@
+{
+  "parent": "reactorcraft:heavywater",
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.reactorcraft.candu.description"
+    },
+    "icon": {
+      "id": "reactorcraft:coolant_cell"
+    },
+    "title": {
+      "translate": "advancements.reactorcraft.candu.title"
+    }
+  },
+  "requirements": [
+    [
+      "trigger"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

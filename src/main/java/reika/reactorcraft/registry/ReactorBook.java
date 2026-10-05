@@ -140,26 +140,26 @@ public enum ReactorBook implements HandbookEntry {
 
 	public static final ReactorBook[] tabList = values();
 
-	private ReactorBook(String name, boolean parent) {
+	ReactorBook(String name, boolean parent) {
 		this(name, (java.util.function.Supplier<ItemStack>) null);
 		isParent = parent;
 	}
 
-	private ReactorBook(ReactorTiles r) {
-		this((String) null, () -> new ItemStack(r.getBlock()));
+	ReactorBook(ReactorTiles r) {
+		this(null, () -> new ItemStack(r.getBlock()));
 		machine = r;
 	}
 
-	private ReactorBook(String name, ReactorTiles r) {
+	ReactorBook(String name, ReactorTiles r) {
 		this(name, () -> new ItemStack(r.getBlock()));
 	}
 
-	private ReactorBook(ReactorItems.ItemRef i, String name) {
+	ReactorBook(ReactorItems.ItemRef i, String name) {
 		this(name, i::getStackOf);
 		item = i;
 	}
 
-	private ReactorBook(String name, java.util.function.Supplier<ItemStack> icon) {
+	ReactorBook(String name, java.util.function.Supplier<ItemStack> icon) {
 		iconItem = icon;
 		pageTitle = name;
 	}
