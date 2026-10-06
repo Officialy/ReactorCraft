@@ -1,5 +1,12 @@
 # ReactorCraft → Minecraft 26.3 / NeoForge port
 
+## NeoForge 26.3.0.45 bump — 2026-10-06
+
+FML 12 removed `ModConfig.Type.COMMON` (now `LOCAL`) and does not migrate the file name, so
+`ReactorCraft` registers `LOCAL` under the existing `reactorcraft-common.toml`. JEI is now
+31.9.0.58; the ReactorCraft unit tests load it cleanly. Full breaking-change audit:
+`../PORT-26.3-RESEARCH.md`, section "NeoForge 26.3.0.26 → 26.3.0.45 bump".
+
 ## VoidMonster sibling port — 2026-10-04
 
 VoidMonster is now included in the **Minecraft 26.3 / NeoForge 26.3.0.26-beta** build and
