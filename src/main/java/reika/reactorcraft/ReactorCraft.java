@@ -59,7 +59,7 @@ public class ReactorCraft {
         instance = this;
 
         // FML 12 renamed COMMON to LOCAL, whose default file is reactorcraft-local.toml; keep the existing file name.
-        modContainer.registerConfig(ModConfig.Type.LOCAL, ReactorOptions.SPEC, "reactorcraft-common.toml");
+        modContainer.registerConfig(ModConfig.Type.SYNCED, ReactorOptions.SPEC, "reactorcraft-common.toml");
 
         ReactorDataComponents.COMPONENTS.register(modEventBus);
 

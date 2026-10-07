@@ -269,5 +269,15 @@
   "jei.reactorcraft.neutron_chance": "%s%% chance per neutron interaction",
   "jei.reactorcraft.output_chance": "%s%% chance",
   "jei.reactorcraft.output_time": "Output stage: %s ticks",
-  "tab.reactorcraft": "ReactorCraft"
+  "message.reactorcraft.linked_cpu": "Linked to reactor CPU at %s",
+  "message.reactorcraft.linked_monitor": "Linked reactor temperature monitor to CPU at %s",
+  "tab.reactorcraft": "ReactorCraft",
+  "tooltip.reactorcraft.charge": "Charge: %s kJ",
+  "tooltip.reactorcraft.cpu_location": "Linked to CPU in %s at %s",
+  "tooltip.reactorcraft.cross_dimension": "Cross-dimension control enabled",
+  "tooltip.reactorcraft.half_life": "Half Life: %s",
+  "tooltip.reactorcraft.mixed_waste": "Mixed Waste: %s",
+  "tooltip.reactorcraft.no_cpu": "No linked CPU",
+  "tooltip.reactorcraft.range": "Range: %s m",
+  "tooltip.reactorcraft.water": "Water: %s/%s mB"
 }

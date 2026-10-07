@@ -3,7 +3,7 @@
   "input": {
     "neoforge:ingredient_type": "neoforge:components",
     "components": {
-      "minecraft:damage": 1000
+      "reactorcraft:waste_identity": "group:alkali"
     },
     "items": "reactorcraft:waste"
   },
@@ -11,7 +11,7 @@
     {
       "item": {
         "components": {
-          "minecraft:damage": 14
+          "reactorcraft:waste_identity": "isotope:cs137"
         },
         "id": "reactorcraft:waste"
       }

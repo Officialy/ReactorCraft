@@ -41,8 +41,8 @@ dependencies {
 }
 
 // PORT-IN-PROGRESS allowlist (see PORTING.md). The sources are still mostly original 1.7.10 and
-// will not compile, so we compile ONLY files that have been fully ported to 26.2. This list IS the
-// done-tracker: add a file here the moment it is ported, and the build verifies it. Remove this
+// are intentionally excluded. The allowlist selects the active Minecraft 26.3 porting cluster,
+// including work in progress; red builds are expected while its dependencies land. Remove this
 // whole block once the entire mod is ported.
 sourceSets.main.java {
     include 'reika/reactorcraft/auxiliary/ReactorPowerMilestones.java'

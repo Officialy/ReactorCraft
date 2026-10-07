@@ -67,6 +67,8 @@ public final class ReactorGameTests {
         Holder<TestEnvironmentDefinition<?>> environment = event.registerEnvironment(
                 Identifier.fromNamespaceAndPath(ReactorCraft.MODID, "default"),
                 new TestEnvironmentDefinition.AllOf(List.of()));
+        register(event, environment, "audit_inventory_sides_and_reload", 40, ReactorGameTests::auditInventorySidesAndReload);
+        register(event, environment, "audit_legacy_item_components", 40, ReactorGameTests::auditLegacyItemComponents);
         register(event, environment, "steam_line_holds_back_water", 40,
                 ReactorGameTests::steamLineHoldsBackWater);
         register(event, environment, "uranium_fuel_crafting_and_burnup", 80,
@@ -85,6 +87,74 @@ public final class ReactorGameTests {
                 ReactorGameTests::ammoniaSynthesisIngredients);
         ReactorTypeGameTests.register(event, environment);
         ReactorContentGameTests.register(event, environment);
+    }
+
+    private static void auditInventorySidesAndReload(GameTestHelper helper) {
+        BlockPos pos = new BlockPos(3, 1, 3);
+        helper.setBlock(pos, ReactorBlocks.FUEL.get());
+        TileEntityFuelRod rod = helper.getBlockEntity(pos, TileEntityFuelRod.class);
+        var level = helper.getLevel();
+        var above = level.getCapability(Capabilities.Item.BLOCK, helper.absolutePos(pos), Direction.UP);
+        var below = level.getCapability(Capabilities.Item.BLOCK, helper.absolutePos(pos), Direction.DOWN);
+        var side = level.getCapability(Capabilities.Item.BLOCK, helper.absolutePos(pos), Direction.EAST);
+        var fuel = net.neoforged.neoforge.transfer.item.ItemResource.of(ReactorItems.FUEL_ROD.toStack());
+        try (var transaction = Transaction.openRoot()) {
+            helper.assertTrue(above.insert(net.neoforged.neoforge.transfer.item.ItemResource.of(net.minecraft.world.item.Items.COAL), 1, transaction) == 0, "invalid items cannot enter a fuel core");
+            helper.assertTrue(side.insert(fuel, 1, transaction) == 0, "fuel cannot enter the side of a fuel core");
+            helper.assertTrue(above.insert(fuel, 1, transaction) == 1, "valid fuel must enter from above");
+            transaction.commit();
+        }
+        try (var transaction = Transaction.openRoot()) {
+            helper.assertTrue(below.extract(fuel, 1, transaction) == 0, "unspent fuel must not be extracted");
+        }
+        rod.setItem(0, ReactorItems.DEPLETED_FUEL.toStack());
+        var depleted = net.neoforged.neoforge.transfer.item.ItemResource.of(ReactorItems.DEPLETED_FUEL.toStack());
+        try (var transaction = Transaction.openRoot()) {
+            helper.assertTrue(above.extract(depleted, 1, transaction) == 0, "depleted fuel cannot leave through the input face");
+            helper.assertTrue(below.extract(depleted, 1, transaction) == 1, "depleted fuel must leave through the output face");
+        }
+        helper.assertTrue(!rod.getItem(0).isEmpty(), "aborted extraction must restore inventory");
+        var handler = rod.getItemHandler();
+        var tag = rod.saveWithoutMetadata(level.registryAccess());
+        rod.clearContent();
+        rod.loadWithComponents(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, level.registryAccess(), tag));
+        helper.assertTrue(handler == rod.getItemHandler() && rod.getItem(0).is(ReactorItems.DEPLETED_FUEL.get()), "load must restore contents without replacing cached handlers");
+        try (var transaction = Transaction.openRoot()) {
+            helper.assertTrue(below.extract(depleted, 1, transaction) == 1, "previously bound capability must still see restored contents");
+            transaction.commit();
+        }
+        helper.assertTrue(rod.getItem(0).isEmpty(), "committed extraction must remove the item");
+        helper.succeed();
+    }
+
+    private static void auditLegacyItemComponents(GameTestHelper helper) {
+        ItemStack fuel = ReactorItems.FUEL_ROD.toStack();
+        fuel.set(net.minecraft.core.component.DataComponents.DAMAGE, 17);
+        reika.dragonapi.interfaces.LegacyItemData.migrate(fuel);
+        helper.assertTrue(fuel.getDamageValue() == 17 && !fuel.has(net.minecraft.core.component.DataComponents.DAMAGE)
+                && fuel.getOrDefault(reika.reactorcraft.registry.ReactorDataComponents.FUEL_BURNUP.get(), -1) == 17, "legacy burnup must migrate without losing its value");
+        ItemStack magnet = ReactorItems.MAGNET_ITEM.toStack();
+        magnet.set(net.minecraft.core.component.DataComponents.DAMAGE, 5);
+        reika.dragonapi.interfaces.LegacyItemData.migrate(magnet);
+        helper.assertTrue(magnet.getDamageValue() == 5 && !magnet.has(net.minecraft.core.component.DataComponents.DAMAGE), "legacy magnet charge must migrate");
+        ItemStack waste = ReactorItems.WASTE_ITEM.toStack();
+        waste.set(net.minecraft.core.component.DataComponents.DAMAGE, 1000);
+        reika.dragonapi.interfaces.LegacyItemData.migrate(waste);
+        helper.assertTrue(waste.getDamageValue() == 1000 && reika.reactorcraft.items.ItemNuclearWaste.identity(1000).equals(waste.get(reika.reactorcraft.registry.ReactorDataComponents.WASTE_IDENTITY.get())), "legacy waste must gain a stable named identity");
+        BlockPos pos = new BlockPos(3, 1, 3);
+        helper.setBlock(pos, RotaryBlocks.VACUUM.get());
+        var vacuum = helper.getBlockEntity(pos, reika.rotarycraft.blockentities.BlockEntityVacuum.class);
+        var inventory = vacuum.getItemHandler();
+        ItemStack oldFuel = ReactorItems.FUEL_ROD.toStack();
+        oldFuel.set(net.minecraft.core.component.DataComponents.DAMAGE, 23);
+        inventory.setStackInSlot(0, oldFuel);
+        var saved = vacuum.saveWithoutMetadata(helper.getLevel().registryAccess());
+        inventory.setStackInSlot(0, ItemStack.EMPTY);
+        vacuum.loadWithComponents(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), saved));
+        helper.assertTrue(inventory == vacuum.getItemHandler()
+                && inventory.getStackInSlot(0).getOrDefault(reika.reactorcraft.registry.ReactorDataComponents.FUEL_BURNUP.get(), -1) == 23
+                && !inventory.getStackInSlot(0).has(net.minecraft.core.component.DataComponents.DAMAGE), "Rotary inventory loads must also migrate Reactor items");
+        helper.succeed();
     }
 
     private static void ammoniaSynthesisIngredients(GameTestHelper helper) {

@@ -3,7 +3,7 @@
   "input": {
     "neoforge:ingredient_type": "neoforge:components",
     "components": {
-      "minecraft:damage": 1003
+      "reactorcraft:waste_identity": "group:nonmetal"
     },
     "items": "reactorcraft:waste"
   },
@@ -12,7 +12,7 @@
       "chance": 0.510142,
       "item": {
         "components": {
-          "minecraft:damage": 28
+          "reactorcraft:waste_identity": "isotope:i135"
         },
         "id": "reactorcraft:waste"
       }
@@ -21,7 +21,7 @@
       "chance": 0.3651116,
       "item": {
         "components": {
-          "minecraft:damage": 29
+          "reactorcraft:waste_identity": "isotope:xe131"
         },
         "id": "reactorcraft:waste"
       }
@@ -30,7 +30,7 @@
       "chance": 0.12474646,
       "item": {
         "components": {
-          "minecraft:damage": 11
+          "reactorcraft:waste_identity": "isotope:xe135"
         },
         "id": "reactorcraft:waste"
       }

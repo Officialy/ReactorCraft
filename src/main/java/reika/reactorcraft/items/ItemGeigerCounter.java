@@ -70,7 +70,7 @@ public class ItemGeigerCounter extends ItemReactorTool implements ChargeableTool
 
 	@Override
 	public void appendHoverText(ItemStack is, Item.TooltipContext ctx, TooltipDisplay display, Consumer<Component> li, TooltipFlag flag) {
-		li.accept(Component.literal("Charge: "+is.getDamageValue()+" kJ"));
+		li.accept(Component.translatable("tooltip.reactorcraft.charge", is.getDamageValue()));
 	}
 
 }

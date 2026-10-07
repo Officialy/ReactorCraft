@@ -11,12 +11,15 @@ package reika.reactorcraft.items;
 
 import reika.reactorcraft.base.ItemReactorMulti;
 
-/** Reactor fuel; the burnup stage is the {@code getDamageValue()} variant (durability + setNoRepair
- *  set on the Properties at registration). */
+/** Reactor fuel with typed burnup storage and legacy damage-hook compatibility. */
 public class ItemReactorFuel extends ItemReactorMulti {
 
 	public ItemReactorFuel(Properties properties, int dataValues) {
 		super(properties, dataValues);
 	}
+    @Override
+    protected net.minecraft.core.component.DataComponentType<Integer> variantComponent() {
+        return reika.reactorcraft.registry.ReactorDataComponents.FUEL_BURNUP.get();
+    }
 
 }

@@ -74,7 +74,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 	}
 
 	public void link(TileEntityCPU te) {
-		if (CPU != null && CPU.getBlockEntity() instanceof TileEntityCPU previous && previous != te)
+		if (CPU != null && CPU.getBlockEntity(level) instanceof TileEntityCPU previous && previous != te)
 			previous.removeTemperatureCheck(this);
 		CPU = new WorldLocation(te);
 		this.setChanged();
@@ -443,8 +443,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		activeTimer = NBT.getIntOr("activetick", 0);
 		hydrogen = NBT.getIntOr("h2", 0);
 
-		if (NBT.contains("cpu"))
-			CPU = WorldLocation.readTag(NBT.getCompoundOrEmpty("cpu"));
+		CPU = NBT.contains("cpu") ? WorldLocation.readTag(NBT.getCompoundOrEmpty("cpu")) : null;
 	}
 
 	@Override
@@ -463,7 +462,7 @@ public abstract class TileEntityNuclearCore extends TileEntityInventoriedReactor
 		if (!level.isClientSide())
 			this.unload();
 		if (CPU != null) {
-			BlockEntity te = CPU.getBlockEntity();
+			BlockEntity te = CPU.getBlockEntity(level);
 			if (te instanceof TileEntityCPU) {
 				((TileEntityCPU)te).removeTemperatureCheck(this);
 			}

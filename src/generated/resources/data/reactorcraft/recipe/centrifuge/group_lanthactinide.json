@@ -3,7 +3,7 @@
   "input": {
     "neoforge:ingredient_type": "neoforge:components",
     "components": {
-      "minecraft:damage": 1002
+      "reactorcraft:waste_identity": "group:lanthactinide"
     },
     "items": "reactorcraft:waste"
   },
@@ -12,7 +12,7 @@
       "chance": 0.6126761,
       "item": {
         "components": {
-          "minecraft:damage": 17
+          "reactorcraft:waste_identity": "isotope:pm147"
         },
         "id": "reactorcraft:waste"
       }
@@ -21,7 +21,7 @@
       "chance": 0.2746479,
       "item": {
         "components": {
-          "minecraft:damage": 31
+          "reactorcraft:waste_identity": "isotope:pm149"
         },
         "id": "reactorcraft:waste"
       }
@@ -30,7 +30,7 @@
       "chance": 0.112676054,
       "item": {
         "components": {
-          "minecraft:damage": 19
+          "reactorcraft:waste_identity": "isotope:sm151"
         },
         "id": "reactorcraft:waste"
       }

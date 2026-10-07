@@ -11,11 +11,9 @@ package reika.reactorcraft.base;
 
 import net.minecraft.world.item.ItemStack;
 
-/** A ReactorCraft item carrying several {@code getDamageValue()} variants (raw materials, fluorite
- *  colours, ingots, crafting items, fuel burnup, magnet charge, …). The 1.7.10 {@code hasSubtypes}/
- *  metadata scheme is gone; the variant count is now supplied at registration (see PORTING.md
- *  item-variant decision). */
-public class ItemReactorMulti extends ReactorItemBase {
+/** Reactor item state stored in typed components. Legacy damage hooks remain available to
+ * reactor algorithms while concrete materials and colors use their registered item identities. */
+public class ItemReactorMulti extends ReactorItemBase implements reika.dragonapi.interfaces.LegacyItemData {
 
 	private final int dataValues;
 
@@ -29,18 +27,30 @@ public class ItemReactorMulti extends ReactorItemBase {
 		return dataValues;
 	}
 
-	/**
-	 * The variant is carried in the stack's {@code DAMAGE} component, but these items register with no
-	 * durability, so the vanilla {@code getMaxDamage} (which reads the {@code MAX_DAMAGE} component)
-	 * returns 0 — and both {@code Item.getDamage}/{@code setDamage} clamp to {@code [0, getMaxDamage]},
-	 * which would pin every variant to 0. Reporting the variant range here lets the clamp store the
-	 * real damage value (fuel burnup, magnet charge, waste isotope, …). Crucially this does NOT make
-	 * the item damageable: {@code ItemStack.isDamageableItem()} checks the {@code MAX_DAMAGE}
-	 * <em>component</em> (still absent), so the item stays stackable with no durability bar.
-	 */
-	@Override
-	public int getMaxDamage(ItemStack stack) {
-		return Math.max(0, dataValues - 1);
-	}
+	protected net.minecraft.core.component.DataComponentType<Integer> variantComponent() {
+        return reika.reactorcraft.registry.ReactorDataComponents.MAGNET_CHARGE.get();
+    }
+
+    @Override
+    public int getDamage(ItemStack stack) {
+        return Math.clamp(stack.getOrDefault(variantComponent(), stack.getOrDefault(net.minecraft.core.component.DataComponents.DAMAGE, 0)), 0, getMaxDamage(stack));
+    }
+
+    @Override
+    public void setDamage(ItemStack stack, int value) {
+        int bounded = Math.clamp(value, 0, getMaxDamage(stack));
+        if (bounded == 0) stack.remove(variantComponent());
+        else stack.set(variantComponent(), bounded);
+        stack.remove(net.minecraft.core.component.DataComponents.DAMAGE);
+    }
+
+    @Override
+    public void migrateLegacyComponents(ItemStack stack) {
+        if (stack.has(net.minecraft.core.component.DataComponents.DAMAGE)) setDamage(stack, getDamage(stack));
+    }
+
+    /** Compatibility range for existing callers; storage uses the domain component, never durability. */
+    @Override
+    public int getMaxDamage(ItemStack stack) { return Math.max(0, dataValues - 1); }
 
 }

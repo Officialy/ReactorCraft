@@ -161,6 +161,17 @@ public class ReactorLang extends LanguageProvider {
 
     @Override
     protected void addTranslations() {
+        add("tooltip.reactorcraft.charge", "Charge: %s kJ");
+        add("tooltip.reactorcraft.water", "Water: %s/%s mB");
+        add("tooltip.reactorcraft.mixed_waste", "Mixed Waste: %s");
+        add("tooltip.reactorcraft.half_life", "Half Life: %s");
+        add("tooltip.reactorcraft.range", "Range: %s m");
+        add("tooltip.reactorcraft.no_cpu", "No linked CPU");
+        add("tooltip.reactorcraft.cpu_location", "Linked to CPU in %s at %s");
+        add("tooltip.reactorcraft.cross_dimension", "Cross-dimension control enabled");
+        add("message.reactorcraft.linked_cpu", "Linked to reactor CPU at %s");
+        add("message.reactorcraft.linked_monitor", "Linked reactor temperature monitor to CPU at %s");
+
         add("advancements.reactorcraft.recusebook.title", "Knowledge is power");
         add("advancements.reactorcraft.recusebook.description", "Realize that building nuclear reactors without understanding them is a bad idea");
         add("advancements.reactorcraft.mineuranium.title", "The Nuclear Age");

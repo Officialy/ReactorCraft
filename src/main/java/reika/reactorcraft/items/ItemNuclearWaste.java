@@ -32,32 +32,43 @@ import reika.reactorcraft.entities.EntityNuclearWaste;
 import reika.reactorcraft.registry.ReactorAchievements;
 
 /**
- * Nuclear waste — a stackable item whose reactor-isotope / element-group identity rides the
- * {@code getDamageValue()} variant (the same damage-value carrier as fuel burnup and magnet charge):
- * <ul>
- *   <li>{@code 0 .. Isotopes.values().length-1} — an individual isotope, by {@code Isotopes.ordinal()}
- *       (what {@code WasteManager.getWaste(Isotopes)} stamps when a reactor produces waste).</li>
- *   <li>{@code 1000 + ElementGroup.ordinal()} — mixed element-group waste, the centrifuge's first
- *       separation stage (what {@code WasteManager.getWaste(ElementGroup)} stamps).</li>
- * </ul>
- * The 1.7.10 {@code getSubItems}/{@code getTextureOffset} sprite-sheet scheme is gone: waste's original
- * {@code hasMetadataSprites()==false} means every variant shares the one {@code item/waste} sprite, and
- * the per-variant identity now shows only in the tooltip. Display name is the single {@code item.reactorcraft.waste}
- * lang key ("Nuclear Waste") for all variants, so no {@code getName} override is needed.
+ * Stackable nuclear waste with a persistent, named isotope or element-group component.
+ * The legacy damage hooks expose isotope ordinals and 1000 + group ordinals to existing
+ * reactor algorithms; writes store stable names instead of enum positions. Old DAMAGE
+ * stacks migrate on load. All identities share the original waste sprite and display name.
  */
 public class ItemNuclearWaste extends ItemReactorMulti {
 
-	// Widest damage value used: mixed-group waste at 1000 + ElementGroup.ordinal() (max 1003 for the
-	// 4th group). Individual isotope ordinals (0..32) sit far below. Passing dataValues = MAX_META+1
-	// makes the inherited ItemReactorMulti.getMaxDamage (dataValues-1) report the full 0..MAX_META
-	// range, so the vanilla get/setDamage clamp preserves the value instead of pinning it to 0 — the
-	// exact fix that made the magnet charge survive. The item stays stackable with no durability bar
-	// (isDamageableItem() checks the absent MAX_DAMAGE component, not this method).
+    // Range of the compatibility numeric view, including mixed element groups.
 	private static final int MAX_META = 1000 + ElementGroup.values().length;
 
 	public ItemNuclearWaste(Properties properties) {
 		super(properties, MAX_META + 1);
 	}
+
+    /** Stable identities preserve saves when isotope enum ordering changes in future versions. */
+    public static String identity(int legacy) {
+        if (legacy >= 1000 && legacy - 1000 < ElementGroup.values().length)
+            return "group:" + ElementGroup.values()[legacy - 1000].name().toLowerCase(java.util.Locale.ROOT);
+        if (legacy >= 0 && legacy < Isotopes.values().length)
+            return "isotope:" + Isotopes.values()[legacy].name().toLowerCase(java.util.Locale.ROOT);
+        throw new IllegalArgumentException("Invalid legacy waste identity: " + legacy);
+    }
+
+    @Override
+    public int getDamage(ItemStack stack) {
+        String identity = stack.get(reika.reactorcraft.registry.ReactorDataComponents.WASTE_IDENTITY.get());
+        if (identity == null) return stack.getOrDefault(net.minecraft.core.component.DataComponents.DAMAGE, 0);
+        for (Isotopes atom : Isotopes.values()) if (identity.equals(identity(atom.ordinal()))) return atom.ordinal();
+        for (ElementGroup group : ElementGroup.values()) if (identity.equals(identity(1000 + group.ordinal()))) return 1000 + group.ordinal();
+        throw new IllegalArgumentException("Unknown waste identity: " + identity);
+    }
+
+    @Override
+    public void setDamage(ItemStack stack, int legacy) {
+        stack.set(reika.reactorcraft.registry.ReactorDataComponents.WASTE_IDENTITY.get(), identity(legacy));
+        stack.remove(net.minecraft.core.component.DataComponents.DAMAGE);
+    }
 
 	@Override
 	public int getEntityLifespan(ItemStack itemStack, Level level) {
@@ -94,12 +105,12 @@ public class ItemNuclearWaste extends ItemReactorMulti {
 		int dmg = is.getDamageValue();
 		if (dmg >= 1000) {
 			ElementGroup g = ElementGroup.values()[dmg-1000];
-			li.accept(Component.literal("Mixed Waste: "+g.displayName));
+			li.accept(Component.translatable("tooltip.reactorcraft.mixed_waste", g.displayName));
 		}
 		else {
 			Isotopes atom = Isotopes.getIsotope(dmg);
 			li.accept(Component.literal(atom.getDisplayName()));
-			li.accept(Component.literal("Half Life: "+atom.getHalfLifeAsDisplay()));
+			li.accept(Component.translatable("tooltip.reactorcraft.half_life", atom.getHalfLifeAsDisplay()));
 		}
 	}
 

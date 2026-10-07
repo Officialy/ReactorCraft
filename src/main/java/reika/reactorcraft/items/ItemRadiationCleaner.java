@@ -114,7 +114,7 @@ public class ItemRadiationCleaner extends ItemReactorTool implements ChargeableT
 
 	@Override
 	public void appendHoverText(ItemStack is, Item.TooltipContext ctx, TooltipDisplay display, Consumer<Component> li, TooltipFlag flag) {
-		li.accept(Component.literal(String.format("Water: %d/%d mB", this.getWater(is), CAPACITY)));
+		li.accept(Component.translatable("tooltip.reactorcraft.water", getWater(is), CAPACITY));
 	}
 
 	private int getWater(ItemStack is) {

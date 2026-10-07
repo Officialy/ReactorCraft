@@ -144,11 +144,11 @@ public final class ReactorRecipeProvider {
             // exact charge). Both feed off the compactor-charged magnet (see magnetCompactor()).
             int maxCharge = ReactorItems.MAGNET.getNumberMetadatas() - 1;
             solenoidPart(ReactorBlocks.CENTRAL_MAGNET.get(), b -> b
-                    .define('M', DataComponentIngredient.of(false, DataComponents.DAMAGE, maxCharge, ReactorItems.MAGNET_ITEM.get()))
+                    .define('M', DataComponentIngredient.of(false, reika.reactorcraft.registry.ReactorDataComponents.MAGNET_CHARGE.get(), maxCharge, ReactorItems.MAGNET_ITEM.get()))
                     .define('S', ReactorItems.crafting(CraftingItems.MAGNETIC))
                     .pattern("SSS").pattern("MMM").pattern("SSS"));
             solenoidPart(ReactorBlocks.AUXILIARY_MAGNET.get(), b -> b
-                    .define('M', DataComponentIngredient.of(false, DataComponents.DAMAGE, maxCharge - 1, ReactorItems.MAGNET_ITEM.get()))
+                    .define('M', DataComponentIngredient.of(false, reika.reactorcraft.registry.ReactorDataComponents.MAGNET_CHARGE.get(), maxCharge - 1, ReactorItems.MAGNET_ITEM.get()))
                     .define('S', ReactorItems.crafting(CraftingItems.MAGNETIC))
                     .pattern("SSS").pattern("MMM").pattern("SSS"));
             solenoidPart(ReactorBlocks.HYSTERESIS_ROD.get(), b -> b
@@ -806,7 +806,7 @@ public final class ReactorRecipeProvider {
                 List<ChancedOutput> isoOuts = new ArrayList<>();
                 for (WasteChance wc : isotopes)
                     isoOuts.add(new ChancedOutput(wasteTemplate(wc.damage()), wc.chance()/100F));
-                Ingredient in = DataComponentIngredient.of(false, DataComponents.DAMAGE, 1000+g.ordinal(), ReactorItems.WASTE_ITEM.get());
+                Ingredient in = DataComponentIngredient.of(false, reika.reactorcraft.registry.ReactorDataComponents.WASTE_IDENTITY.get(), reika.reactorcraft.items.ItemNuclearWaste.identity(1000+g.ordinal()), ReactorItems.WASTE_ITEM.get());
                 accept("centrifuge/group_"+g.name().toLowerCase(), new CentrifugeRecipe(in, isoOuts, Optional.empty()));
             }
         }
@@ -814,7 +814,7 @@ public final class ReactorRecipeProvider {
         // A WASTE_ITEM template carrying its isotope/group identity in the DAMAGE component patch.
         private static ItemStackTemplate wasteTemplate(int damage) {
             DataComponentPatch patch = DataComponentPatch.builder()
-                    .set(DataComponents.DAMAGE, damage)
+                    .set(reika.reactorcraft.registry.ReactorDataComponents.WASTE_IDENTITY.get(), reika.reactorcraft.items.ItemNuclearWaste.identity(damage))
                     .build();
             return new ItemStackTemplate(ReactorItems.WASTE_ITEM.get(), patch);
         }

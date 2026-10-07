@@ -38,10 +38,10 @@ import reika.reactorcraft.tileentities.fission.TileEntityControlRod;
  */
 public class ReactorPacketCore implements PacketHandler {
 
-    protected ReactorPackets pack;
-
     @Override
     public void handleData(PacketObj packet, Level world, Player ep) {
+        ReactorPackets pack = null;
+        if (!world.isClientSide() && packet.getType().isClientboundOnly()) return;
         DataInputStream inputStream = packet.getDataIn();
         int control;
         int len;
@@ -134,7 +134,7 @@ public class ReactorPacketCore implements PacketHandler {
                 case PREFIXED:
                     control = inputStream.readInt();
                     pack = ReactorPackets.getEnum(control);
-                    len = inputStream.readInt();
+                    len = reika.dragonapi.libraries.io.PacketValidation.readIntCount(inputStream);
                     data = new int[len];
                     for (int i = 0; i < len; i++)
                         data[i] = inputStream.readInt();
@@ -163,10 +163,11 @@ public class ReactorPacketCore implements PacketHandler {
                 y = inputStream.readInt();
                 z = inputStream.readInt();
             }
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException | IndexOutOfBoundsException e) {
             e.printStackTrace();
             return;
         }
+        if (pack == null || world.isClientSide()) return;
         try {
             switch (pack) {
                 case CPUTOGGLE:
@@ -176,7 +177,13 @@ public class ReactorPacketCore implements PacketHandler {
                         menu.handleControl(ep, pack, new BlockPos(x, y, z));
                     break;
                 case ORERADIATION:
-                    RadiationEffects.instance.doOreIrradiation(world, x, y, z, ep);
+                    BlockPos orePos = new BlockPos(x, y, z);
+                    if (reika.reactorcraft.registry.ReactorOptions.RADIOORE.getState() && world.hasChunkAt(orePos)
+                            && ep.distanceToSqr(x + .5, y + .5, z + .5) <= 81
+                            && (world.getBlockState(orePos).is(reika.reactorcraft.registry.ReactorBlocks.PITCHBLENDE_ORE.get())
+                                || world.getBlockState(orePos).is(reika.reactorcraft.registry.ReactorBlocks.END_PITCHBLENDE_ORE.get()))
+                            && !RadiationEffects.RadiationIntensity.LOWLEVEL.hasSufficientShielding(ep))
+                        RadiationEffects.instance.doOreIrradiation(world, x, y, z, ep);
                     break;
             }
         } catch (Exception e) {

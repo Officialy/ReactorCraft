@@ -6,7 +6,7 @@
       "chance": 0.2554145,
       "item": {
         "components": {
-          "minecraft:damage": 1000
+          "reactorcraft:waste_identity": "group:alkali"
         },
         "id": "reactorcraft:waste"
       }
@@ -15,7 +15,7 @@
       "chance": 0.27035102,
       "item": {
         "components": {
-          "minecraft:damage": 1001
+          "reactorcraft:waste_identity": "group:transition"
         },
         "id": "reactorcraft:waste"
       }
@@ -24,7 +24,7 @@
       "chance": 0.10604929,
       "item": {
         "components": {
-          "minecraft:damage": 1002
+          "reactorcraft:waste_identity": "group:lanthactinide"
         },
         "id": "reactorcraft:waste"
       }
@@ -33,7 +33,7 @@
       "chance": 0.3681852,
       "item": {
         "components": {
-          "minecraft:damage": 1003
+          "reactorcraft:waste_identity": "group:nonmetal"
         },
         "id": "reactorcraft:waste"
       }

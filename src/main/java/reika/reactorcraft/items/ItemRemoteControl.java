@@ -87,7 +87,7 @@ public class ItemRemoteControl extends ItemReactorTool implements ChargeableTool
         if (target instanceof TileEntityCPU cpu) {
             if (!level.isClientSide()) {
                 setLinkedCPU(context.getItemInHand(), cpu);
-                context.getPlayer().sendSystemMessage(Component.literal("Linked to reactor CPU at " + cpu.getBlockPos().toShortString()));
+                context.getPlayer().sendSystemMessage(Component.translatable("message.reactorcraft.linked_cpu", cpu.getBlockPos().toShortString()));
             }
             return InteractionResult.SUCCESS;
         }
@@ -97,7 +97,7 @@ public class ItemRemoteControl extends ItemReactorTool implements ChargeableTool
                 if (cpu == null)
                     return InteractionResult.PASS;
                 cpu.addTemperatureCheck(core);
-                context.getPlayer().sendSystemMessage(Component.literal("Linked reactor temperature monitor to CPU at " + cpu.getBlockPos().toShortString()));
+                context.getPlayer().sendSystemMessage(Component.translatable("message.reactorcraft.linked_monitor", cpu.getBlockPos().toShortString()));
             }
             return context.getItemInHand().has(ReactorDataComponents.REMOTE_CPU.get()) ? InteractionResult.SUCCESS : InteractionResult.PASS;
         }
@@ -121,10 +121,10 @@ public class ItemRemoteControl extends ItemReactorTool implements ChargeableTool
     @Override
     public void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> lines, TooltipFlag flag) {
         GlobalPos target = stack.get(ReactorDataComponents.REMOTE_CPU.get());
-        lines.accept(Component.literal(target == null ? "No linked CPU" : "Linked to CPU in " + target.dimension().identifier() + " at " + target.pos().toShortString()));
-        lines.accept(Component.literal("Charge: " + stack.getDamageValue() + " kJ"));
-        lines.accept(Component.literal("Range: " + getRange(stack) + " m"));
+        lines.accept(target == null ? Component.translatable("tooltip.reactorcraft.no_cpu") : Component.translatable("tooltip.reactorcraft.cpu_location", target.dimension().identifier().toString(), target.pos().toShortString()));
+        lines.accept(Component.translatable("tooltip.reactorcraft.charge", stack.getDamageValue()));
+        lines.accept(Component.translatable("tooltip.reactorcraft.range", getRange(stack)));
         if (canWorkInterdimensionally(stack))
-            lines.accept(Component.literal("Cross-dimension control enabled"));
+            lines.accept(Component.translatable("tooltip.reactorcraft.cross_dimension"));
     }
 }

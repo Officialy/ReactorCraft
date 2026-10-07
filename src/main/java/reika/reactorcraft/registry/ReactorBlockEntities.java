@@ -72,64 +72,56 @@ public final class ReactorBlockEntities {
 
 	private static final EnumMap<ReactorTiles, DeferredHolder<BlockEntityType<?>, ? extends BlockEntityType<?>>> BY_TILE = new EnumMap<>(ReactorTiles.class);
 
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityFuelRod>> FUEL = register("fuel_rod", TileEntityFuelRod.class, ReactorBlocks.FUEL);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityControlRod>> CONTROL = register("control_rod", TileEntityControlRod.class, ReactorBlocks.CONTROL);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityWaterCell>> COOLANT = register("coolant_cell", TileEntityWaterCell.class, ReactorBlocks.COOLANT);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityCPU>> CPU = register("reactor_cpu", TileEntityCPU.class, ReactorBlocks.CPU);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityTurbineCore>> TURBINECORE = register("turbine_core", TileEntityTurbineCore.class, ReactorBlocks.TURBINECORE);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySteamInjector>> STEAMINJECTOR = register("steam_injector", TileEntitySteamInjector.class, ReactorBlocks.TURBINEMULTI);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityCondenser>> CONDENSER = register("condenser", TileEntityCondenser.class, ReactorBlocks.CONDENSER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySteamLine>> STEAMLINE = register("steam_line", TileEntitySteamLine.class, ReactorBlocks.STEAMLINE);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityHeavyPump>> FLUIDEXTRACTOR = register("heavy_pump", TileEntityHeavyPump.class, ReactorBlocks.FLUIDEXTRACTOR);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityCentrifuge>> CENTRIFUGE = register("isotope_centrifuge", TileEntityCentrifuge.class, ReactorBlocks.CENTRIFUGE);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityUProcessor>> PROCESSOR = register("uranium_processor", TileEntityUProcessor.class, ReactorBlocks.PROCESSOR);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityWasteContainer>> WASTECONTAINER = register("waste_container", TileEntityWasteContainer.class, ReactorBlocks.WASTECONTAINER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityReactorBoiler>> BOILER = register("reactor_boiler", TileEntityReactorBoiler.class, ReactorBlocks.BOILER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySteamGrate>> GRATE = register("steam_grate", TileEntitySteamGrate.class, ReactorBlocks.GRATE);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityReactorPump>> PUMP = register("reactor_pump", TileEntityReactorPump.class, ReactorBlocks.PUMP);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySynthesizer>> SYNTHESIZER = register("synthesizer", TileEntitySynthesizer.class, ReactorBlocks.SYNTHESIZER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityToroidMagnet>> MAGNET = register("toroid_magnet", TileEntityToroidMagnet.class, ReactorBlocks.MAGNET);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityElectrolyzer>> ELECTROLYZER = register("electrolyzer", TileEntityElectrolyzer.class, ReactorBlocks.ELECTROLYZER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityTritizer>> TRITIZER = register("tritizer", TileEntityTritizer.class, ReactorBlocks.TRITIZER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityBreederCore>> BREEDER = register("breeder_core", TileEntityBreederCore.class, ReactorBlocks.BREEDER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySodiumHeater>> SODIUMBOILER = register("sodium_boiler", TileEntitySodiumHeater.class, ReactorBlocks.SODIUMBOILER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityHeatExchanger>> EXCHANGER = register("heat_exchanger", TileEntityHeatExchanger.class, ReactorBlocks.EXCHANGER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityWasteStorage>> STORAGE = register("waste_storage", TileEntityWasteStorage.class, ReactorBlocks.STORAGE);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityFusionInjector>> INJECTOR = register("fusion_injector", TileEntityFusionInjector.class, ReactorBlocks.INJECTOR);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityFusionHeater>> HEATER = register("fusion_heater", TileEntityFusionHeater.class, ReactorBlocks.HEATER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityGasDuct>> GASPIPE = register("gas_duct", TileEntityGasDuct.class, ReactorBlocks.GASPIPE);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityMagneticPipe>> MAGNETPIPE = register("magnetic_pipe", TileEntityMagneticPipe.class, ReactorBlocks.MAGNETPIPE);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityNeutronAbsorber>> ABSORBER = register("neutron_absorber", TileEntityNeutronAbsorber.class, ReactorBlocks.ABSORBER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySolenoidMagnet>> SOLENOID = register("solenoid_magnet", TileEntitySolenoidMagnet.class, ReactorBlocks.SOLENOID);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityGasCollector>> COLLECTOR = register("gas_collector", TileEntityGasCollector.class, ReactorBlocks.COLLECTOR);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityPebbleBed>> PEBBLEBED = register("pebble_bed", TileEntityPebbleBed.class, ReactorBlocks.PEBBLEBED);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityCO2Heater>> CO2HEATER = register("co2_heater", TileEntityCO2Heater.class, ReactorBlocks.CO2HEATER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityReactorFlywheel>> FLYWHEEL = register("turbine_flywheel", TileEntityReactorFlywheel.class, ReactorBlocks.FLYWHEEL);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityNeutronReflector>> REFLECTOR = register("neutron_reflector", TileEntityNeutronReflector.class, ReactorBlocks.REFLECTOR);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityReactorGenerator>> GENERATOR = register("reactor_generator", TileEntityReactorGenerator.class, ReactorBlocks.GENERATOR);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityFusionMarker>> MARKER = register("fusion_marker", TileEntityFusionMarker.class, ReactorBlocks.MARKER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityTurbineMeter>> TURBINEMETER = register("turbine_meter", TileEntityTurbineMeter.class, ReactorBlocks.TURBINEMETER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityHiPTurbine>> BIGTURBINE = register("high_pressure_turbine", TileEntityHiPTurbine.class, ReactorBlocks.BIGTURBINE);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySteamDiffuser>> DIFFUSER = register("steam_diffuser", TileEntitySteamDiffuser.class, ReactorBlocks.DIFFUSER);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityThoriumCore>> THORIUM = register("thorium_core", TileEntityThoriumCore.class, ReactorBlocks.THORIUM);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityWastePipe>> WASTEPIPE = register("waste_pipe", TileEntityWastePipe.class, ReactorBlocks.WASTEPIPE);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityFuelDump>> FUELDUMP = register("fuel_dump", TileEntityFuelDump.class, ReactorBlocks.FUELDUMP);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySolarExchanger>> SOLAR = register("solar_exchanger", TileEntitySolarExchanger.class, ReactorBlocks.SOLAR);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySolarTop>> SOLARTOP = register("solar_top", TileEntitySolarTop.class, ReactorBlocks.SOLARTOP);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityCentrifugalTurbine>> MINITURBINE = register("mini_turbine", TileEntityCentrifugalTurbine.class, ReactorBlocks.MINITURBINE);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityHeatPipe>> HEATPIPE = register("heat_pipe", TileEntityHeatPipe.class, ReactorBlocks.HEATPIPE);
-	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityWasteDecayer>> WASTEDECAYER = register("waste_decayer", TileEntityWasteDecayer.class, ReactorBlocks.WASTEDECAYER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityFuelRod>> FUEL = register("fuel_rod", TileEntityFuelRod::new, ReactorBlocks.FUEL);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityControlRod>> CONTROL = register("control_rod", TileEntityControlRod::new, ReactorBlocks.CONTROL);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityWaterCell>> COOLANT = register("coolant_cell", TileEntityWaterCell::new, ReactorBlocks.COOLANT);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityCPU>> CPU = register("reactor_cpu", TileEntityCPU::new, ReactorBlocks.CPU);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityTurbineCore>> TURBINECORE = register("turbine_core", TileEntityTurbineCore::new, ReactorBlocks.TURBINECORE);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySteamInjector>> STEAMINJECTOR = register("steam_injector", TileEntitySteamInjector::new, ReactorBlocks.TURBINEMULTI);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityCondenser>> CONDENSER = register("condenser", TileEntityCondenser::new, ReactorBlocks.CONDENSER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySteamLine>> STEAMLINE = register("steam_line", TileEntitySteamLine::new, ReactorBlocks.STEAMLINE);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityHeavyPump>> FLUIDEXTRACTOR = register("heavy_pump", TileEntityHeavyPump::new, ReactorBlocks.FLUIDEXTRACTOR);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityCentrifuge>> CENTRIFUGE = register("isotope_centrifuge", TileEntityCentrifuge::new, ReactorBlocks.CENTRIFUGE);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityUProcessor>> PROCESSOR = register("uranium_processor", TileEntityUProcessor::new, ReactorBlocks.PROCESSOR);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityWasteContainer>> WASTECONTAINER = register("waste_container", TileEntityWasteContainer::new, ReactorBlocks.WASTECONTAINER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityReactorBoiler>> BOILER = register("reactor_boiler", TileEntityReactorBoiler::new, ReactorBlocks.BOILER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySteamGrate>> GRATE = register("steam_grate", TileEntitySteamGrate::new, ReactorBlocks.GRATE);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityReactorPump>> PUMP = register("reactor_pump", TileEntityReactorPump::new, ReactorBlocks.PUMP);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySynthesizer>> SYNTHESIZER = register("synthesizer", TileEntitySynthesizer::new, ReactorBlocks.SYNTHESIZER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityToroidMagnet>> MAGNET = register("toroid_magnet", TileEntityToroidMagnet::new, ReactorBlocks.MAGNET);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityElectrolyzer>> ELECTROLYZER = register("electrolyzer", TileEntityElectrolyzer::new, ReactorBlocks.ELECTROLYZER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityTritizer>> TRITIZER = register("tritizer", TileEntityTritizer::new, ReactorBlocks.TRITIZER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityBreederCore>> BREEDER = register("breeder_core", TileEntityBreederCore::new, ReactorBlocks.BREEDER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySodiumHeater>> SODIUMBOILER = register("sodium_boiler", TileEntitySodiumHeater::new, ReactorBlocks.SODIUMBOILER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityHeatExchanger>> EXCHANGER = register("heat_exchanger", TileEntityHeatExchanger::new, ReactorBlocks.EXCHANGER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityWasteStorage>> STORAGE = register("waste_storage", TileEntityWasteStorage::new, ReactorBlocks.STORAGE);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityFusionInjector>> INJECTOR = register("fusion_injector", TileEntityFusionInjector::new, ReactorBlocks.INJECTOR);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityFusionHeater>> HEATER = register("fusion_heater", TileEntityFusionHeater::new, ReactorBlocks.HEATER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityGasDuct>> GASPIPE = register("gas_duct", TileEntityGasDuct::new, ReactorBlocks.GASPIPE);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityMagneticPipe>> MAGNETPIPE = register("magnetic_pipe", TileEntityMagneticPipe::new, ReactorBlocks.MAGNETPIPE);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityNeutronAbsorber>> ABSORBER = register("neutron_absorber", TileEntityNeutronAbsorber::new, ReactorBlocks.ABSORBER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySolenoidMagnet>> SOLENOID = register("solenoid_magnet", TileEntitySolenoidMagnet::new, ReactorBlocks.SOLENOID);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityGasCollector>> COLLECTOR = register("gas_collector", TileEntityGasCollector::new, ReactorBlocks.COLLECTOR);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityPebbleBed>> PEBBLEBED = register("pebble_bed", TileEntityPebbleBed::new, ReactorBlocks.PEBBLEBED);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityCO2Heater>> CO2HEATER = register("co2_heater", TileEntityCO2Heater::new, ReactorBlocks.CO2HEATER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityReactorFlywheel>> FLYWHEEL = register("turbine_flywheel", TileEntityReactorFlywheel::new, ReactorBlocks.FLYWHEEL);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityNeutronReflector>> REFLECTOR = register("neutron_reflector", TileEntityNeutronReflector::new, ReactorBlocks.REFLECTOR);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityReactorGenerator>> GENERATOR = register("reactor_generator", TileEntityReactorGenerator::new, ReactorBlocks.GENERATOR);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityFusionMarker>> MARKER = register("fusion_marker", TileEntityFusionMarker::new, ReactorBlocks.MARKER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityTurbineMeter>> TURBINEMETER = register("turbine_meter", TileEntityTurbineMeter::new, ReactorBlocks.TURBINEMETER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityHiPTurbine>> BIGTURBINE = register("high_pressure_turbine", TileEntityHiPTurbine::new, ReactorBlocks.BIGTURBINE);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySteamDiffuser>> DIFFUSER = register("steam_diffuser", TileEntitySteamDiffuser::new, ReactorBlocks.DIFFUSER);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityThoriumCore>> THORIUM = register("thorium_core", TileEntityThoriumCore::new, ReactorBlocks.THORIUM);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityWastePipe>> WASTEPIPE = register("waste_pipe", TileEntityWastePipe::new, ReactorBlocks.WASTEPIPE);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityFuelDump>> FUELDUMP = register("fuel_dump", TileEntityFuelDump::new, ReactorBlocks.FUELDUMP);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySolarExchanger>> SOLAR = register("solar_exchanger", TileEntitySolarExchanger::new, ReactorBlocks.SOLAR);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntitySolarTop>> SOLARTOP = register("solar_top", TileEntitySolarTop::new, ReactorBlocks.SOLARTOP);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityCentrifugalTurbine>> MINITURBINE = register("mini_turbine", TileEntityCentrifugalTurbine::new, ReactorBlocks.MINITURBINE);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityHeatPipe>> HEATPIPE = register("heat_pipe", TileEntityHeatPipe::new, ReactorBlocks.HEATPIPE);
+	public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TileEntityWasteDecayer>> WASTEDECAYER = register("waste_decayer", TileEntityWasteDecayer::new, ReactorBlocks.WASTEDECAYER);
 
 	private static <T extends BlockEntity> DeferredHolder<BlockEntityType<?>, BlockEntityType<T>> register(
-			String name, Class<T> cls, DeferredHolder<Block, ? extends Block> block) {
-		// cls::new is not expressible off a Class<T>, so construct reflectively via the (BlockPos, BlockState) ctor.
-		BlockEntityType.BlockEntitySupplier<T> factory = (pos, state) -> {
-			try {
-				return cls.getConstructor(BlockPos.class, BlockState.class).newInstance(pos, state);
-			} catch (ReflectiveOperationException e) {
-				throw new RuntimeException("Failed to instantiate " + cls + " for " + name, e);
-			}
-		};
+			String name, BlockEntityType.BlockEntitySupplier<T> factory, DeferredHolder<Block, ? extends Block> block) {
 		return BLOCK_ENTITIES.register(name, () -> new BlockEntityType<>(factory, block.get()));
 	}
 
@@ -194,7 +186,7 @@ public final class ReactorBlockEntities {
 
 	private static <T extends BlockEntity> void registerItemCap(RegisterCapabilitiesEvent event, BlockEntityType<T> type) {
 		event.registerBlockEntity(Capabilities.Item.BLOCK, type,
-				(be, ctx) -> be instanceof HasItemHandler h ? h.getAutomationItemHandler() : null);
+				(be, ctx) -> be instanceof HasItemHandler h ? h.getAutomationItemHandler(ctx) : null);
 		event.registerBlockEntity(Capabilities.Fluid.BLOCK, type,
 				(be, side) -> be instanceof reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler h
 						? h.getFluidHandler(side) : null);

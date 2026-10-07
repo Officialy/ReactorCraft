@@ -1,5 +1,35 @@
 # ReactorCraft → Minecraft 26.3 / NeoForge port
 
+## Current practices and audit fixes — 2026-10-07
+
+The authoritative target is Minecraft **26.3**, NeoForge **26.3.0.51-beta**, Java 25 and Gradle 9.7.1.
+Use the generated/cached 0.51 source jars; `Sources/minecraft` and `Sources/NeoForge` are historical
+26.2 references. Current APIs include reloadable recipe/loot registries, Feature interfaces and SDL input codes.
+The build allowlist selects the active cluster, including WIP dependencies; a red build is expected during a full port.
+Item and fluid automation capabilities are registered in both ReactorCraft and RotaryCraft.
+
+The cross-project audit is tracked in [MODDING-PRACTICES-AUDIT.md](../MODDING-PRACTICES-AUDIT.md).
+The shared protocol now binds payloads to channels, bounds payload/array/compressed-NBT allocation,
+rejects serverbound sync traffic and validates GUI targets. Remote CPU controls keep their menu/layout checks.
+Reactor inventories preserve handler identities during load and apply transactional slot/side/extraction rules.
+Persistence uses public ValueInput/ValueOutput codecs while preserving the flat existing save format.
+Delta sync includes explicit deletion keys, and absent CPU tags clear their links.
+Fuel burnup, magnet charge and named waste identities use typed components; the damage hook remains only
+as a compatibility surface. Legacy item data migrates at inventory/entity load boundaries.
+Gameplay config is FML SYNCED; legacy `.cfg` options import into typed client/synced TOML specs with originals retained.
+Resource duplicates are retired into reference folders and packaging fails on conflicts.
+
+Audit validation: all seven active modules compile; DragonAPI/Rotary/Reactor unit suites pass
+40 tests, and the six dedicated-server audit GameTests pass. Rotary/Reactor server datagen and
+Reactor client datagen regenerated real recipes, typed component ingredients and translations.
+Protocol 2.0.0 requires updated clients and servers. Remote-client visual recipe display and
+live remote config reload were not exercised; see the root audit for the exact validation scope.
+Rotary inventory subclass loaders now inherit shared old-item migration instead of bypassing it.
+
+The dated sections below preserve historical decisions and observations. Any 26.2 API assumptions,
+missing-capability claims, damage-carrier designs, green-only allowlisting, or JEI-unavailability claims
+in those sections are superseded by this status and root AGENTS.md. They are historical evidence, not instructions.
+
 ## NeoForge 26.3.0.45 bump — 2026-10-06
 
 FML 12 removed `ModConfig.Type.COMMON` (now `LOCAL`) and does not migrate the file name, so
@@ -90,7 +120,7 @@ per-file when that file is ported (only 10 files touch it).
 `TileEnum` and `BlockEntityBase` confirmed present. Others marked "locate" need a grep pass
 (may have been renamed during the DragonAPI port) or a small port of the missing base.
 
-## REVISED STRATEGY: no thin slice exists — the TE layer is a monolithic knot
+## Historical cluster investigation (superseded strategy): no thin slice exists — the TE layer is a monolithic knot
 
 Investigated and confirmed: `TileEntityReactorBase` (the fat god-base, 361 lines) does
 `this instanceof TileEntityReactorBoiler/SolenoidMagnet/ReactorGenerator/TurbineCore/SteamLine/ HeatPipe` inside its own heat-conduction/transducer methods, so it cannot compile without those
@@ -2245,6 +2275,53 @@ Client datagen, full RotaryCraft JUnit 22/22, release build and packaged-item re
 verification pass. Full details and limits are in RotaryCraft/SURVIVAL-BETA.md's
 2026-10-07 item renderer entry. Live in-game and shader visual confirmation is outstanding.
 
+
+### RotaryCraft machine sound, wool heat and HUD/tooltips — 2026-10-07
+
+Fix the reported pump distance/re-entry audio, white-wool disappearance at ambient
+heat, DC engine Jade rows and missing machine-item Shift power data on Minecraft
+26.3 / NeoForge 26.3.0.51-beta.
+
+- Replace the pump server five-second sound re-fire with a client tickable loop.
+  Preserve its power/torque/fluid/broken-state gates, original base volume and
+  config modulation; support wool muffling, shutdown/unload, replacement, level
+  changes and sound-manager reload/recovery. Keep spatial linear attenuation.
+- Correct DragonAPI playback: Level.playLocalSound's boolean is distance delay,
+  not attenuation. Construct the sound instance with explicit LINEAR/NONE and no
+  unintended propagation delay. Normalize the negative custom-distance sentinel
+  to vanilla range. RotaryCraft event/broadcast ranges now cover the actual
+  sound asset fade distances (16/24/32/48 blocks; jet startup retains 40).
+- Classify wool, snow and ice by real block identity/tags in environmental heat.
+  White wool's SNOW map colour previously selected snow vaporization even at 29C.
+  Preserve true snow/ice melting and wool ignition at 600C. Use wool tags for
+  muffling so all sixteen colours work and snow does not count as wool.
+- Expose optional thermal state through ThermalTile.hasTemperature(), reusing
+  the engine's existing variant-specific method. DragonAPI owns the sole
+  server-backed engine temperature row; DC and other nonthermal engines have
+  none. Show fuel only on fuel-consuming engines.
+- Register MachineBlockItem to call the existing complete machine tooltip helper,
+  including engine variant data and fuel-engine specialization. Use the 26.3
+  TooltipFlag Shift/all-information hooks, including recipe viewer indexing,
+  rather than a hardcoded left-Shift keyboard query.
+
+Validation: all five new in-world feedback contracts pass (all wool colours at
+29C, real snow/ice melting and hot-wool ignition, wool beside a powered DC engine,
+coloured mufflers, actual registered item tooltips across power machines, pump
+sound operating gates). Full RotaryCraft JUnit passes 27/27, including the actual
+Jade providers and three audio regressions covering every registered sound's
+network range, default-distance sentinel and mono Ogg assets. Both release jars
+assemble; artifact inspection confirms the new/changed classes. Evidence:
+build/rotary-machine-feedback-gametest.log,
+build/rotary-machine-feedback-junit.log and
+build/rotary-machine-feedback-artifacts.json.
+
+Live client listening while walking toward/away from machines, sound reload and
+visual tooltip acceptance remain unverified. No ChromatiCraft implementation or
+port allowlist was changed. Existing renderer/datagen changes were preserved.
+
+Additional baseline validation: both existing pump source-drain GameTests pass
+(2/2, water and lava). Evidence: build/rotary-machine-feedback-pump-parity.log.
+
 ## ComputerCraft (CC: Tweaked) integration — 2026-10-07
 
 CC: Tweaked 1.120.3 (mod id `computercraft`, jar in `TestInstance/run/mods`) is wired `compileOnly` in the root
@@ -2332,3 +2409,83 @@ were made: removed the now-conflicting private `getLiveStack` in `InventoriedPow
 `InventoriedPowerLiquidInOut` (ManagedItemHandler made it public, same body), JEI Magnetizer slots use
 `addIngredients(recipe.input)` (input became an Ingredient), and the Defoliator/Sonic Weapon tests pass a
 `PacketHandlerCore` to the new `DataPacket.decode(buf, handler)`.
+
+
+## 2026-10-07 — DragonAPI port-audit follow-through
+
+Implemented the five work groups recommended in DragonAPI/PORT-AUDIT-REVIEW.md after owner approval.
+The full behavior/evidence/remaining-work table lives there; the original 61-item audit is preserved.
+Input polling now runs on the physical client with explicit key IDs, live action bindings, SDL Alt and
+session cleanup. Real disconnects, loaded artifact versions, robust cache parsing, typed WorldID/NBT,
+Lua argument/return contracts and real command trees replace the selected incomplete implementations.
+Server protection retains the current BreakBlockEvent and now checks mayInteract. Ingredient caches
+are bounded and invalidated at reload/session boundaries; component predicates no longer compare equal
+merely because their default-stack sample is empty. Worldgen profiling releases its Level. Native text
+particles, additional player/glow rendering, popup artwork and current-screen resize are wired on the client.
+
+DragonAPI wire protocol is now **2.1.0**; both peers must update. Biome packets use 512-sample batches to
+stay under the existing 4096-int limit. World identity and version cache files are per-save; ambiguous
+working-directory legacy files remain preserved and are not assigned automatically to an arbitrary save.
+
+Validation: 49 unit tests (DragonAPI 12 + RotaryCraft 32 + ReactorCraft 5), seven dedicated GameTests
+(rotarycraft:dragonapi_audit_*), all active modules compiled through :TestInstance:compileJava, and
+ChromatiCraft client datagen. Logs: dragonapi-audit-tests.log, dragonapi-audit-gametest.log,
+dragonapi-audit-datagen.log. The opt-in TestInstance AuditClientChecks fixture runs in a copied disposable
+save and checks real server key decoding, text particles, custom player-model submission and fresh PNG
+output (dragonapi-audit-client.log). The final run emitted DRAGONAPI_AUDIT_CLIENT_PASS and exited
+successfully in 2m 11s. It is inert during normal play.
+
+Not blanket certification of the original 61 findings: legacy dispatcher/particle engines, event-bus
+profiling instrumentation, other client packet TODOs and unavailable integrations remain explicitly
+listed in the review. Five RotaryCraft item PNGs have invalid original bytes and need verified artwork
+restoration; no replacement artwork was invented. No physical keyboard or human visual pass is claimed.
+
+
+## 2026-10-07 — Extended DragonAPI audit review (sections 2/3)
+
+Reviewed the new base/registry/resource and instantiable findings. Current evidence, proposed-fix
+corrections and the next dependency order are recorded in DragonAPI/PORT-AUDIT-REVIEW.md under
+"Extended review of sections 2 and 3". No gameplay/build/resource implementation changed in this pass.
+Confirmed priority work includes DecimalPosition recursion, block-array/blueprint mutation and iteration,
+WeightedRandom persistence, key/comparator contracts, CoreContainer lookup/reach and RF/FE availability.
+SYNCED is the correct 26.3 config type; several renderer/particle/path claims are already resolved.
+A disposable Java 25 probe of the actual ValueSortedMap reproduced equal-value key loss and the custom
+value comparator receiving keys (dragonapi-audit-review-probe.log). The previous unit/GameTest/client
+results were not rerun and do not cover these newly confirmed defects. Preserve seeded coordinate
+hashes and original reference sources during the next full ports.
+
+
+## 2026-10-08 — Luminous Cliffs, vegetation and Void Monster visual corrections
+
+ChromatiCraft now protects its Luminous Cliffs lake water, four-block beds and one-column banks
+from 26.3 carving-mask application, composing with Blender's existing filter. Noise caves remain
+below the bed and vanilla carvers remain active in dry raised plateaus. Reika's simplex thresholds,
+elliptical undercuts, ocean floor and biome-edge interpolation are retained, with relief above Y62
+stretched to a Y300 terrain ceiling; islands leave room for their six-block contours. Existing chunks
+are not reshaped. Native worldgen parity suite: five passed, including real noise/carver chunks,
+water/bed preservation, dry caves, heights above Y255 and floating-island candidate placement.
+
+Flowing, dark and high water now retain a softer teal/pink tint instead of the old white "clear"
+multiplier. Aura Ivy uses double-sided wall planes and flat selection shapes, with attachment
+inherited down hanging runs and a registered biome grass tint; its native siting/shape test passed.
+GeoStrata icicles now supply bounded packed-ice UVs for every segment, including geometry below
+the block that previously read neighbouring atlas textures. Ivy assets regenerated through datagen.
+
+Void Monster distortion is composed after GuiRenderer.endFrame so it includes HUD and open screens.
+Visibility, shadow-pass rejection and the original fade envelope remain. Server AI is unchanged:
+distance-dependent pursuit, successful-hit 50-tick cooldown, randomly entered 40-tick healing bursts
+at 0.25 health/tick times difficulty, and immunity while healing. Twelve standalone native contracts
+passed, including new healing-window and pursuit checks; existing four JUnit cases passed/up-to-date.
+The first disposable client launch caught and corrected an incorrect GuiRenderer package in the
+mixin descriptor. Final in-client verification is being recorded in the module ledgers.
+
+
+Final client validation: isolated full-family 26.3.0.51 run in a copied disposable save exited
+successfully (`build/cliffs-client-final.log`, CLIFFS_CLIENT_PASS). The inspected
+`build/cliffs-client-run/screenshots/cliffs-visuals.png` shows water at Y100 plus a falling stream,
+packed-ice textures on all icicle segments and flat ivy against its wall.
+`gui-before-warp.png` / `gui-after-warp.png` show an open screen's grid and text plus the tutorial
+overlay bending under the single post-GUI distortion pass. No Iris/Distant Horizons were loaded
+in this fixture; shader-pack compatibility is not claimed by this visual check.
+
+Final packaging: :TestInstance:compileJava and the ChromatiCraft/VoidMonster/GeoStrata jar tasks passed (build/cliffs-final-artifacts.log). The temporary client-fixture class was removed from TestInstance's normal compiled source set; its source and screenshots remain under root build/.

@@ -30,9 +30,9 @@ import reika.dragonapi.libraries.ReikaInventoryHelper;
 
 import java.util.Optional;
 
-public abstract class TileEntityInventoriedReactorBase extends TileEntityReactorBase implements Container, HasItemHandler {
+public abstract class TileEntityInventoriedReactorBase extends TileEntityReactorBase implements net.minecraft.world.WorldlyContainer, HasItemHandler {
 
-	protected ManagedItemHandler itemHandler = new ManagedItemHandler(getContainerSize()) {
+	protected final ManagedItemHandler itemHandler = new ManagedItemHandler(getContainerSize()) {
 		@Override
 		protected void onContentsChanged(int slot) {
 			setChanged();
@@ -62,7 +62,7 @@ public abstract class TileEntityInventoriedReactorBase extends TileEntityReactor
 
 	@Override
 	public final ItemStack getItem(int slot) {
-		return itemHandler.getStackInSlot(slot);
+		return itemHandler.getLiveStack(slot);
 	}
 
 	@Override
@@ -107,30 +107,33 @@ public abstract class TileEntityInventoriedReactorBase extends TileEntityReactor
 
 	public abstract boolean canRemoveItem(int slot, ItemStack is);
 
+    @Override
+    public int[] getSlotsForFace(Direction side) {
+        return java.util.stream.IntStream.range(0, getContainerSize()).toArray();
+    }
+
+    @Override
+    public boolean canPlaceItemThroughFace(int slot, ItemStack stack, Direction side) {
+        return isItemValidForSlot(slot, stack) && (side == null || canItemEnterFromSide(side));
+    }
+
+    @Override
+    public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction side) {
+        return canRemoveItem(slot, stack) && (side == null || canItemExitToSide(side));
+    }
+
 	// 1.21.5: inventory contents bridged via ManagedItemHandler.serialize, like RC's
 	// InventoriedRCBlockEntity. Sync/save of temperature etc. is handled by the superclass.
 	@Override
 	protected void saveAdditional(ValueOutput output) {
 		super.saveAdditional(output);
-		TagValueOutput nested = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, this.level == null ? RegistryAccess.EMPTY : this.level.registryAccess());
-		itemHandler.serialize(nested);
-		output.store("ItemsRaw", CompoundTag.CODEC, nested.buildResult());
+		itemHandler.serialize(output.child("ItemsRaw"));
 	}
 
 	@Override
 	protected void loadAdditional(ValueInput input) {
 		super.loadAdditional(input);
-		itemHandler = new ManagedItemHandler(getContainerSize()) {
-			@Override
-			protected void onContentsChanged(int slot) {
-				setChanged();
-			}
-		};
-		Optional<CompoundTag> raw = input.read("ItemsRaw", CompoundTag.CODEC);
-		if (raw.isPresent()) {
-			ValueInput nested = TagValueInput.create(ProblemReporter.DISCARDING, this.level == null ? RegistryAccess.EMPTY : this.level.registryAccess(), raw.get());
-			itemHandler.deserialize(nested);
-		}
+		itemHandler.deserialize(input.childOrEmpty("ItemsRaw"));
 	}
 
 }

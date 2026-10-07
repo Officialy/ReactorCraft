@@ -4,7 +4,7 @@
     "M": {
       "neoforge:ingredient_type": "neoforge:components",
       "components": {
-        "minecraft:damage": 7
+        "reactorcraft:magnet_charge": 7
       },
       "items": "reactorcraft:magnet"
     },
