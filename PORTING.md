@@ -2197,3 +2197,50 @@ thirteen remaining machines. Logs/evidence: build/piledriver-final.log,
 build/piledriver-final-acceptance.log and build/piledriver-artifact-verification.json.
 Live client visuals and real multiplayer joins remain unverified. No ChromatiCraft source,
 resources or tasks were part of this slice.
+
+### RotaryCraft block debris texture correction — 2026-10-07
+
+Fix the reported shaft-junction/DC-engine debris and the shared machine-model datagen fallback.
+V33a BlockModelledMachine.registerBlockIcons uses RotaryCraft steel for engines, shafts,
+gearboxes, flywheels and other modelled machines; their BER artwork is separate from the
+atlas sprite used by block particles. Replace nonexistent registry-name texture references
+with the original steel/chassis sprites, including static-machine and legacy block aliases.
+Regenerate assets and add missing-block-texture and modelled-machine steel regression checks.
+Minecraft 26.3 client datagen, all 16 current JUnit checks and jar assembly pass. Independent
+parent/texture-reference resolution covers 192 blockstates and 205 models with no missing
+particle sprites, explicitly checking 57 engine/transmission variants for steel. Jar inspection
+confirms the corrected models are packaged. Evidence: build/rotary-particle-validation.log and
+build/rotary-particle-asset-verification.json. Live client visuals remain unverified.
+
+
+### RotaryCraft shaft-junction model alignment — 2026-10-07
+
+Side-conversation rendering fix: restore V33a Techne axis conversion and live ioside yaw,
+select both junction bend geometries, preserve their original UV mirror flags, flat model
+part pivots, shaft animation and gear omission after failure. Share the two models' common
+geometry/rendering implementation and select the bedrock junction artwork in the renderer.
+No power-source traversal or explosion behavior is changed by this rendering slice.
+
+Validation: all three SplitterRenderTest checks pass, covering actual block-entity IO versus
+baked shaft directions in all 16 merge/split orientations, flat part pivots and both variants'
+animation/broken frames. Final renderer/model sources compile directly against the current
+Minecraft/NeoForge 26.3 classpath. A normal test launch encountered concurrent item-renderer
+source/test compile errors; the focused rerun used the already compiled native test classes
+and passed. Logs: build/splitter-render-focused-test.log and build/splitter-isolated-compile.log.
+Live client visual confirmation remains outstanding.
+
+
+## 2026-10-07 — RotaryCraft item renderer parity
+
+User-requested snapshot of all then-current work committed first: parent 5d29645,
+ChromatiCraft 5f358788, ReactorCraft 15862a8, RotaryCraft ccdf41b3 and VoidMonster 6c72720.
+The subsequent RotaryCraft item pass restores original inventory transforms and actual
+model-rendered inventory geometry across 118 special item variants, material/ratio models,
+upgrade artwork, six pipe families and ten handheld tools. Explicit generated pipe poses
+restore an isometric icon and shrink both held-hand scales to 0.25. Bounds measure the same
+vertices submitted through Minecraft 26.3's native feature pipeline. No ReactorCraft
+production code was changed by this item pass. Other agents' concurrent changes preserved.
+
+Client datagen, full RotaryCraft JUnit 22/22, release build and packaged-item resource
+verification pass. Full details and limits are in RotaryCraft/SURVIVAL-BETA.md's
+2026-10-07 item renderer entry. Live in-game and shader visual confirmation is outstanding.
