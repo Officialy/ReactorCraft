@@ -28,7 +28,7 @@ public class LuaReactorCheckPebbles extends LuaMethod {
 		int fuel = 0;
 		int maxfuel = tile.getContainerSize()*ReactorItems.PELLET.getNumberMetadatas();
 		for (int i = 0; i < tile.getContainerSize(); i++) {
-			ItemStack is = tile.getStackInSlot(i);
+			ItemStack is = tile.getItem(i);
 			if (is != null) {
 				if (is.getItem() == ReactorItems.PELLET.getItemInstance()) {
 					fuel += ReactorItems.PELLET.getNumberMetadatas()-1-is.getDamageValue();

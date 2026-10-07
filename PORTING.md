@@ -2244,3 +2244,91 @@ production code was changed by this item pass. Other agents' concurrent changes 
 Client datagen, full RotaryCraft JUnit 22/22, release build and packaged-item resource
 verification pass. Full details and limits are in RotaryCraft/SURVIVAL-BETA.md's
 2026-10-07 item renderer entry. Live in-game and shader visual confirmation is outstanding.
+
+## ComputerCraft (CC: Tweaked) integration — 2026-10-07
+
+CC: Tweaked 1.120.3 (mod id `computercraft`, jar in `TestInstance/run/mods`) is wired `compileOnly` in the root
+`build.gradle` (a `fileTree` on `TestInstance/run/mods/cc-tweaked-*.jar`, same double-load reasoning as AE2).
+`ModList.COMPUTERCRAFT` was still keyed on the 1.7.10 id `"ComputerCraft"` and so was never loaded; it is now
+`"computercraft"`, which also brings the Distribution Clutch's COMPUTER control mode and the RotaryCraft handbook
+ComputerCraft page to life.
+
+**Shape (mirrors AEHooks/AECompat).** 1.7.10 `TileEntityBase` was an `@Injectable` `IPeripheral` and DragonAPIInit
+registered `PeripheralHandlerCC` (an `IPeripheralProvider`). A block entity cannot implement `IPeripheral` any more
+(`BlockEntity.getType()` returns the `BlockEntityType`, CC's returns a String), so:
+- `DragonAPI/.../modinteract/CCHooks` — CC-free, called from the DragonAPI constructor; loads `CCCompat` only when CC is present.
+- `CCCompat` — registers `PeripheralCapability` on every block entity type in a Reika namespace (145 types at present);
+  the provider answers only for `BlockEntityBase` on the server and returns a cached `IDynamicPeripheral` wrapper
+  (cached in `BlockEntityBase.computerPeripheral`, an `Object` field so CC-less installs never resolve the type).
+  `equals` compares the block entity, so repeat lookups do not re-attach computers.
+- Method calls run through `ILuaContext.executeMainThreadTask` (CC calls peripherals from the computer thread and
+  these methods change the world). `LuaMethodException` -> `LuaException` (1.7.10 `invokeCC`); bad-argument casts
+  and other runtime failures also become Lua errors naming the method (1.7.10 let them escape as "Java Exception Thrown").
+- Lua numbers arrive as `Double` (verified in CC's `CobaltLuaMachine.toObject`), so the 1.7.10 `(Double)args[i]` casts stand.
+- Peripheral type = 1.7.10 `getType()` (class name minus "TileEntity"), now `BlockEntityBase.getPeripheralType()`,
+  which cuts a "TileEntity" or "BlockEntity" affix so 1.7.10 script names survive (`BlockEntityShaft` -> `Shaft`).
+  The creative coil is its own class now, so it reports `CreativeCoil` where 1.7.10 said `AdvancedGear`.
+- Per-block-entity method list: `LuaMethod.getMethodsFor` (sorted, so indices are stable). Where two mods register the
+  same name for classes one block entity both extends, the more specific class wins (a name can only be called once).
+- CC's lookup takes the capability first and falls back to its generic `inventory`/`fluid_storage` peripherals only
+  when it is null (checked in `PlatformHelperImpl$PeripheralAccess`), so Reika machines offer Reika's methods
+  (getSlot/getTanks/printInv/...) and not CC's pushItems/pullItems — 1.7.10 parity.
+
+**Method registration.** `LuaMethod.registerMethods` walked the classpath with Guava `ClassPath`, which finds no mod
+classes under FML's module layer outside dev. It now reads NeoForge's mod-file scan data, honours `@ModTileDependent`
+(class presence) and `@ModDependentMethod`, and the registry is a `ConcurrentHashMap` (mods construct in parallel).
+Only ElectriCraft called it before; RotaryCraft, ReactorCraft and ChromatiCraft now do from their constructors.
+Registered at boot: DragonAPI 17, RotaryCraft 34, ReactorCraft 9, ChromatiCraft 4, ElectriCraft 6 (70).
+`getStoredRF` lost its `@ModTileDependent` on the CoFH API: the port reads the always-present NeoForge energy capability.
+
+**Methods ported in this pass.**
+- DragonAPI `getNBTTag` (was fully commented; 1.7.10 used `writeToNBT`, the port had `load`): saves without metadata
+  and maps each tag type; LIST/COMPOUND return the string form as before, LongArrayTag returns its array.
+- RotaryCraft (12 were fully commented): getMobs, getBlockAtPos, shiftPlane, addNote, setTorque, setSpeed, setRatio,
+  getRatio, getEnergy, setAfterburner, getRequirements, setECU — every target machine exists now. Notes:
+  getMobs keeps the 1.7.10 "Entity"-prefixed class names, returns the UUID as a string (the UUID object was
+  unrepresentable), skeleton type 1 = WitherSkeleton, villager profession = registry name, enderman carried block =
+  registry name + state string. getBlockAtPos returns registry name + state string for 1.7.10's id + metadata.
+  setAfterburner read `args[1]` for a one-argument signature; it now takes the last argument.
+  `ReikaEntityHelper.getCreeperFuse/isCreeperCharged/isPigZombieAngry` ported for getMobs.
+- RotaryCraft `toggleMetadata` (missing from the port) plus the Blower's "check metadata" filter it toggles: the port
+  had dropped the filter as "metadata no longer exists", but this port keeps item variants in the damage value, so it
+  compares that again (NBT `metac`, `PacketRegistry.BLOWERMETA`, the GUI's fourth button at texture row 72).
+- ReactorCraft's 9 methods were clean but never allowlisted; now `auxiliary/lua/**` (checkFuel/checkPebbleLevel used
+  `getStackInSlot`, now `getItem`).
+- ChromatiCraft: elementColor, getLumens, isConnected, setEnchantments ported and allowlisted. isConnected and
+  setEnchantments cast Lua numbers to Integer in V33a (always a ClassCastException with CC); they read `Number` now.
+  setEnchantments takes registry names or the 1.7.10 numeric ids (`ReikaEnchantmentHelper.getLegacyEnchantment`,
+  table read from the decompiled 1.7.10 `Enchantment`).
+- RotaryCraft handbook ComputerCraft page: icon restored (circuit board = 1.7.10 `ItemStacks.pcb`), real machine icons,
+  and each machine lists only the methods valid for its block entity class again.
+- ChromatiCraft World Rift: `PeripheralRelay` (DragonAPI, CC-free). A computer beside a rift reaches the peripheral
+  of the tile beyond the far rift's Manipulator-chosen face (V33a forwarded every IPeripheral call there). The rift
+  invalidates its capabilities on link, reset, direction change and when the far neighbour changes; relay chains are
+  depth-capped at 8.
+
+**Still waiting (fully written, not built).** ChromatiCraft LuaAddNote (Crystal Music), LuaCrystalConsole,
+LuaGetTankFraction (Crystal Tank) are ported against those machines' APIs and wait for them to be allowlisted. The
+three Forestry alveary methods stay pristine until a 26.3 Forestry exists. ElectriCraft getFullStoredEnergy/
+getMaxStoredEnergy (EU battery) stay as they are: the battery itself is IC2-only and unported.
+OPENCOMPUTERS-PORT: OpenComputers has no 26.3 build; 1.7.10's `invokeOC`, `PeripheralHandlerOC`, the OC node
+lifecycle in TileEntityBase and the per-mod `getOCNetworkVisibility` overrides wait for one.
+`ReikaRecipeHelper`'s ComputerCraft turtle-recipe replacement reflected on the 1.7.10 `TurtleRecipe.m_recipe`
+field; the class was never resolved in the port (like the AE recipe classes beside it), and CC: Tweaked's turtle
+recipes are data recipes now.
+Pre-existing, noticed here: the Blower's ore-dictionary match (`useOreDict`, also Lua `toggleOreDict`) is still
+commented out in `doStacksMatch`.
+
+**Verification.** `RotaryCCTests` (registered only with CC loaded): `cc_machine_peripheral_methods` reads a live
+shaft's `getPower` through the peripheral, retunes a creative coil with `setSpeed`, checks peripheral equality and that
+a string argument comes back as a Lua error; `cc_ignores_non_reika_blocks`. Run with the CC jar copied into
+`RotaryCraft/run-gametest/mods` (then removed): `gradlew :RotaryCraft:runGameTest -PgameTestSelector=rotarycraft:cc_*`
+— 2/2 pass. A CC-absent family boot (`:TestInstance:runGameTest -PexcludeExternalMods`) is clean and registers all 70
+methods. (`:TestInstance:runGameTest` with the external mods currently fails before loading: `mezz_config_gui` in
+`TestInstance/run/mods` needs `mezz_config`, which is not there.)
+
+To unblock RotaryCraft compilation for the test, three mechanical follow-ups to the uncommitted earlier refactor
+were made: removed the now-conflicting private `getLiveStack` in `InventoriedPoweredLiquidIO`/
+`InventoriedPowerLiquidInOut` (ManagedItemHandler made it public, same body), JEI Magnetizer slots use
+`addIngredients(recipe.input)` (input became an Ingredient), and the Defoliator/Sonic Weapon tests pass a
+`PacketHandlerCore` to the new `DataPacket.decode(buf, handler)`.

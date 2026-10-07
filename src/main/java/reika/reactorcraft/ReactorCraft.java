@@ -87,6 +87,9 @@ public class ReactorCraft {
 
         ReactorMenus.REGISTRY.register(modEventBus);
 
+        // 1.7.10 ReactorCraft.load: the ComputerCraft peripheral methods (DragonAPI CCHooks exposes them to computers).
+        reika.dragonapi.modinteract.lua.LuaMethod.registerMethods("reika.reactorcraft.auxiliary.lua");
+
         // ReactorCraft isn't a DragonAPIMod, so the bridge registers under RotaryCraft's mod object
         // (channel string "ReactorCraftData" keeps it distinct). Same getOwnerMod precedent as the BERs.
         ReikaPacketHelper.registerPacketHandler(

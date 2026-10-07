@@ -32,7 +32,7 @@ public class LuaReactorCheckFuel extends LuaMethod {
 		if (r == ReactorTiles.BREEDER) {
 			maxfuel = 4*ReactorItems.BREEDERFUEL.getNumberMetadatas();
 			for (int i = 0; i < 4; i++) {
-				ItemStack is = tile.getStackInSlot(i);
+				ItemStack is = tile.getItem(i);
 				if (is != null) {
 					if (is.getItem() == ReactorItems.BREEDERFUEL.getItemInstance()) {
 						fuel += ReactorItems.BREEDERFUEL.getNumberMetadatas()-1-is.getDamageValue();
@@ -43,7 +43,7 @@ public class LuaReactorCheckFuel extends LuaMethod {
 		else if (r == ReactorTiles.FUEL) {
 			maxfuel = 4*ReactorItems.FUEL.getNumberMetadatas();
 			for (int i = 0; i < 4; i++) {
-				ItemStack is = tile.getStackInSlot(i);
+				ItemStack is = tile.getItem(i);
 				if (is != null) {
 					if (is.getItem() == ReactorItems.FUEL.getItemInstance()) {
 						fuel += ReactorItems.FUEL.getNumberMetadatas()-1-is.getDamageValue();
