@@ -2161,3 +2161,39 @@ The three new network/spawner checks exposed mock-player/connection fixture assu
 corrected runtime suite and Magic Branch checks remain in progress. No other mod source is edited.
 See ChromatiCraft/PORTING.md for contracts, exact validation logs, optional integration and live shader
 visual gaps. The earlier approval quota limitation no longer applies; Gradle executes successfully.
+
+### Void Monster circular screen warp follow-up — 2026-10-05
+
+Guard VM/Chroma void screen effects against offscreen/nonfinite focus and Iris shadow renders.
+VM now tracks the actual client entity, updates focus/distance through its fade, and resets when
+that entity is removed/replaced or the level changes. Native administrative generic-kill damage
+bypasses the gameplay damage veto, making /kill actually remove normal/ghost monsters.
+Three projection regressions and the 22 existing policy assertions pass; all ten native VM server
+contracts pass. Both changed modules built against the complete 26.3 RotaryCraft validation jar.
+Ordinary workspace compilation remains red at the independent pile-driver forward reference, and
+a later combined run hit the concurrently changing Chroma laser-model ROTATEABLE reference after
+the VM tests passed. No ReactorCraft implementation or dependency allowlist was changed. Live visual
+retest of the reported circle remains required. Details/logs are in VoidMonster/PORTING.md and
+ChromatiCraft/PORTING.md.
+
+
+### RotaryCraft priority continuation - Pile Driver - 2026-10-05
+
+Honor the owner's continuation priority for RotaryCraft and exclusion of ChromatiCraft.
+Fully port the Pile Driver, recovered spawner item and hammer-tip mining-pipe support from
+V33a to Minecraft 26.3. Preserve depth power, strongest opposing input, full hammer travel,
+21-cell impacts, repeated hits, weak lower layers, native loot, shockwaves, entity effects,
+spawner type/custom parameters and exact crafting data. Generate all impact rules and
+340 optional GeoStrata rock profiles; exercise every profile with the actual GeoStrata mod.
+Complete owner protection/revalidation, phase/sync and minimum-height handling. Restore
+pipe geometry, empty data-driven loot and horizontal cleanup without changing Chroma code.
+
+Final validation passes 797/797 full RotaryCraft GameTests, 11/11 JUnit checks and the release
+build. The 77 new base acceptance checks plus 17 GeoStrata tests pass 94/94; server/client
+datagen succeeds. Jar inspection verifies 27 required classes/resources, source recipe,
+models, byte-identical V33a model artwork and no test fixture resource leaks. See
+RotaryCraft/SURVIVAL-BETA.md for complete parity notes, optional integration limits and the
+thirteen remaining machines. Logs/evidence: build/piledriver-final.log,
+build/piledriver-final-acceptance.log and build/piledriver-artifact-verification.json.
+Live client visuals and real multiplayer joins remain unverified. No ChromatiCraft source,
+resources or tasks were part of this slice.
