@@ -2257,7 +2257,7 @@ ComputerCraft page to life.
 registered `PeripheralHandlerCC` (an `IPeripheralProvider`). A block entity cannot implement `IPeripheral` any more
 (`BlockEntity.getType()` returns the `BlockEntityType`, CC's returns a String), so:
 - `DragonAPI/.../modinteract/CCHooks` — CC-free, called from the DragonAPI constructor; loads `CCCompat` only when CC is present.
-- `CCCompat` — registers `PeripheralCapability` on every block entity type in a Reika namespace (145 types at present);
+- `CCCompat` — registers `PeripheralCapability` on every block entity type in a Reika namespace (296 with the family loaded);
   the provider answers only for `BlockEntityBase` on the server and returns a cached `IDynamicPeripheral` wrapper
   (cached in `BlockEntityBase.computerPeripheral`, an `Object` field so CC-less installs never resolve the type).
   `equals` compares the block entity, so repeat lookups do not re-attach computers.
@@ -2323,7 +2323,7 @@ commented out in `doStacksMatch`.
 shaft's `getPower` through the peripheral, retunes a creative coil with `setSpeed`, checks peripheral equality and that
 a string argument comes back as a Lua error; `cc_ignores_non_reika_blocks`. Run with the CC jar copied into
 `RotaryCraft/run-gametest/mods` (then removed): `gradlew :RotaryCraft:runGameTest -PgameTestSelector=rotarycraft:cc_*`
-— 2/2 pass. A CC-absent family boot (`:TestInstance:runGameTest -PexcludeExternalMods`) is clean and registers all 70
+— 2/2 pass, and again with CC in `TestInstance/run-gametest/mods` and the whole family loaded (`:TestInstance:runGameTest -PexcludeExternalMods`). A CC-absent family boot (`:TestInstance:runGameTest -PexcludeExternalMods`) is clean and registers all 70
 methods. (`:TestInstance:runGameTest` with the external mods currently fails before loading: `mezz_config_gui` in
 `TestInstance/run/mods` needs `mezz_config`, which is not there.)
 
