@@ -2489,3 +2489,36 @@ overlay bending under the single post-GUI distortion pass. No Iris/Distant Horiz
 in this fixture; shader-pack compatibility is not claimed by this visual check.
 
 Final packaging: :TestInstance:compileJava and the ChromatiCraft/VoidMonster/GeoStrata jar tasks passed (build/cliffs-final-artifacts.log). The temporary client-fixture class was removed from TestInstance's normal compiled source set; its source and screenshots remain under root build/.
+
+
+## 2026-10-08 — Extended DragonAPI priority repairs and checkpoint
+
+Implemented the five priority groups from DragonAPI/PORT-AUDIT-REVIEW.md: real position/structure
+mutations and complete iteration; weighted persistence and strict component/key/comparator contracts;
+menu relay/index/reach/fallback behavior; native RF/FE plus supported wood/ore catalogues; and owned
+client resources with reload/source metadata, real sound playback and artifact-hash registration.
+Full results and remaining port boundaries are recorded in that review. Seeded Coordinate hashes are
+unchanged, original recipes/artwork/reference implementations are retained, and no active source was
+removed from a build allowlist to obtain passing validation.
+
+26.3-specific corrections: BlockState.CODEC uses id/properties; ore catalogue initialization belongs
+after DefaultDataComponentsBoundEvent because TagsUpdatedEvent precedes bound item defaults; client
+reload listeners use AddClientReloadListenersEvent. Component ordering also supports transient native
+components without a persistent codec. Structured/Filled offsets and mirrors preserve data and placement
+overrides, including layouts without a Level. The grinder locked-seed query uses KeyedItemStack.match.
+
+Validation: 57 unit tests (DragonAPI 20 + RotaryCraft 32 + ReactorCraft 5), all 11 required
+rotarycraft:dragonapi_* dedicated GameTests and active family compilation passed in 46s.
+Log: dragonapi-extended-validation.log. The extended disposable client fixture also passed
+in 1m 57s (dragonapi-extended-client.log, DRAGONAPI_AUDIT_CLIENT_PASS): Minecraft pack reload,
+owned asset bytes/source metadata, Chroma glow woods, server key transitions, text/player render
+submission and fresh biome PNG. Known invalid textures/puzzle timeout/Windows counter errors remain.
+
+Owner requested committing existing changes before further work, then pushing. Seven mod repository
+checkpoint commits and parent 63beb7e preserve all then-current work, including other recent family
+visual/worldgen changes. Publishing the exact eight configured origin branches was explicitly approved.
+
+Remaining: verified 26.3 update feed, absent Hydraulic/Pneumatic integration work, unlanded wood/plank
+recipes and legacy API consumers, dormant payload/particle/tier clusters, and five invalid original
+RotaryCraft textures. The excluded pristine Chroma crafter must migrate the integer helper to
+ItemHashMap.add(map, stack, amount) during its full port; no half-port was applied to that file.
