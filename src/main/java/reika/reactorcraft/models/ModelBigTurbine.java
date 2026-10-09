@@ -20,12 +20,12 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 
 /**
- * 26.2 port of the Techne ModelBigTurbine (high-pressure turbine, {@code bigturbine.png}, 128x128) —
+ * 26.3 port of the Techne ModelBigTurbine (high-pressure turbine, {@code bigturbine.png}, 128x128) —
  * same blade-ring layout as {@link ModelTurbine} but with per-stage blade sizing (the legacy overrides
  * of getBladeLength/getAngularSeparation/getScaleFactor) plus an outer housing ring built from two
  * boxes ({@code housing}/{@code housing2}) repeated around the shaft every {@code getHousingSegments()}
  * degrees. The legacy Shape4/Shape4a/Shape4b parts were commented out upstream (stage 0 only, dead
- * code) and the Shape220b "cover plate" (also stage-0-only, cosmetic) is skipped as a minor deferral.
+ * code); the stage-zero Shape220b cover plate is included in the housing ring.
  */
 public class ModelBigTurbine {
 
@@ -40,6 +40,7 @@ public class ModelBigTurbine {
     private final ModelPart blade;
     private final ModelPart housing;
     private final ModelPart housing2;
+    private final ModelPart coverPlate;
     private final int stage;
 
     public ModelBigTurbine(ModelPart root, int stage) {
@@ -48,6 +49,7 @@ public class ModelBigTurbine {
         this.blade = root.getChild("blade");
         this.housing = root.getChild("housing");
         this.housing2 = root.getChild("housing2");
+        this.coverPlate = root.getChild("cover_plate");
         this.stage = stage;
     }
 
@@ -78,11 +80,22 @@ public class ModelBigTurbine {
                 CubeListBuilder.create().mirror(true).texOffs(58, 11).addBox(-w2, l2, -8F, w2 * 2, 1, d),
                 PartPose.offset(0F, 15F, 0F));
 
+        root.addOrReplaceChild("cover_plate",
+                CubeListBuilder.create().mirror(true).texOffs(39, 10).addBox(-4F, -16F, 0F, 8F, 16F, 1F),
+                PartPose.offsetAndRotation(0F, 34F, 6F, -0.3490659F, 0F, 0F));
         return LayerDefinition.create(mesh, 128, 128);
     }
 
     /** {@code phi} is the current spin angle (deg) of the blade wheel about the shaft (Z) axis. */
     public void renderAll(PoseStack stack, VertexConsumer vc, int light, float phi) {
+        renderAll(stack, vc, light, phi, 0);
+    }
+
+    public void renderAll(PoseStack stack, VertexConsumer vc, int light, float phi, int damage) {
+        stack.pushPose();
+        stack.translate(0, VO, 0);
+        stack.rotate(Axis.ZP.rotationDegrees(phi));
+        stack.translate(0, -VO, 0);
         shaft1.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shaft1a.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
 
@@ -91,7 +104,7 @@ public class ModelBigTurbine {
         // front ring
         stack.pushPose();
         stack.translate(0, 0, DD);
-        renderBlades(stack, vc, light, phi);
+        renderBlades(stack, vc, light, damage);
         stack.popPose();
 
         // back ring (offset the other way, scaled up about the pivot)
@@ -100,18 +113,19 @@ public class ModelBigTurbine {
         stack.translate(0, VO, 0);
         stack.scale(sc, sc, 1F);
         stack.translate(0, -VO, 0);
-        renderBlades(stack, vc, light, phi);
+        renderBlades(stack, vc, light, damage);
         stack.popPose();
 
+        stack.popPose();
         renderHousing(stack, vc, light);
     }
 
-    private void renderBlades(PoseStack stack, VertexConsumer vc, int light, float phi) {
-        int da = angularSep(stage);
-        for (int i = 0; i < 360; i += da) {
+    private void renderBlades(PoseStack stack, VertexConsumer vc, int light, int damage) {
+        long da = (long) angularSep(stage) * (Math.max(0L, damage) + 1);
+        for (long i = 0; i < 360; i += da) {
             stack.pushPose();
             stack.translate(0, VO, 0);
-            stack.rotate(Axis.ZP.rotationDegrees(i + phi));
+            stack.rotate(Axis.ZP.rotationDegrees((float) i));
             stack.translate(0, -VO, 0);
             stack.rotate(Axis.YP.rotationDegrees(-bladeTwist(stage)));
             blade.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
@@ -128,6 +142,13 @@ public class ModelBigTurbine {
             stack.translate(0, -1, 0);
             housing.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
             housing2.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
+            if (stage == 0) {
+                stack.pushPose();
+                stack.translate(0, -0.3, -0.15);
+                stack.scale(1.25F, 1.25F, 1.25F);
+                coverPlate.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
+                stack.popPose();
+            }
             stack.popPose();
         }
     }

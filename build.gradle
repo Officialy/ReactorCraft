@@ -191,6 +191,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/renders/RenderControl.java'
     include 'reika/reactorcraft/models/ModelControl.java'
     include 'reika/reactorcraft/renders/RenderTurbine.java'
+            include 'reika/reactorcraft/renders/TurbineHousingGeometry.java'
     include 'reika/reactorcraft/models/ModelTurbine.java'
     include 'reika/reactorcraft/renders/RenderBigTurbine.java'
     include 'reika/reactorcraft/models/ModelBigTurbine.java'

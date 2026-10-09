@@ -570,6 +570,11 @@ MultiBlockTile, BreakAction, ToggleTile, PowerSourceTracker, HasFluidResourceHan
 		return omega;
 	}
 
+	/** Original per-type wheel animation rate, shared by turbine and flywheel render snapshots. */
+	public final double getRenderAnimationSpeed() {
+		return this.getAnimationSpeed();
+	}
+
 	@Override
 	public final int getTorque() {
 		return this.getGenTorque();

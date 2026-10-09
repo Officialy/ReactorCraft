@@ -20,7 +20,7 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 
 /**
- * 26.2 port of the Techne ModelTurbine — the steam-turbine wheel. PROCEDURAL: one {@code blade} is
+ * 26.3 port of the Techne ModelTurbine — the steam-turbine wheel. PROCEDURAL: one {@code blade} is
  * drawn once per {@code angularSep} degrees around the shaft (Z axis, pivot y=VO), twisted about Y,
  * for two stacked rings (the back ring scaled by {@code scaleFactor}). Blade length/width/separation/
  * twist all depend on the multiblock STAGE — that's what makes a row of turbine cores render as one
@@ -71,6 +71,14 @@ public class ModelTurbine {
 
     /** {@code phi} is the current spin angle (deg) of the blade wheel about the shaft (Z) axis. */
     public void renderAll(PoseStack stack, VertexConsumer vc, int light, float phi) {
+        renderAll(stack, vc, light, phi, 0);
+    }
+
+    public void renderAll(PoseStack stack, VertexConsumer vc, int light, float phi, int damage) {
+        stack.pushPose();
+        stack.translate(0, VO, 0);
+        stack.rotate(Axis.ZP.rotationDegrees(phi));
+        stack.translate(0, -VO, 0);
         shaft1.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
         shaft1a.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
 
@@ -79,7 +87,7 @@ public class ModelTurbine {
         // front ring
         stack.pushPose();
         stack.translate(0, 0, DD);
-        renderBlades(stack, vc, light, phi);
+        renderBlades(stack, vc, light, damage);
         stack.popPose();
 
         // back ring (offset the other way, scaled up about the pivot)
@@ -88,16 +96,17 @@ public class ModelTurbine {
         stack.translate(0, VO, 0);
         stack.scale(sc, sc, 1F);
         stack.translate(0, -VO, 0);
-        renderBlades(stack, vc, light, phi);
+        renderBlades(stack, vc, light, damage);
+        stack.popPose();
         stack.popPose();
     }
 
-    private void renderBlades(PoseStack stack, VertexConsumer vc, int light, float phi) {
-        int da = angularSep(stage);
-        for (int i = 0; i < 360; i += da) {
+    private void renderBlades(PoseStack stack, VertexConsumer vc, int light, int damage) {
+        long da = (long) angularSep(stage) * (Math.max(0L, damage) + 1);
+        for (long i = 0; i < 360; i += da) {
             stack.pushPose();
             stack.translate(0, VO, 0);
-            stack.rotate(Axis.ZP.rotationDegrees(i + phi));
+            stack.rotate(Axis.ZP.rotationDegrees((float) i));
             stack.translate(0, -VO, 0);
             stack.rotate(Axis.YP.rotationDegrees(-bladeTwist(stage)));
             blade.render(stack, vc, light, OverlayTexture.NO_OVERLAY);
