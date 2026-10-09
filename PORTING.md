@@ -2813,3 +2813,28 @@ Normal Play argument hashes remain unchanged. D20 completes the next requested s
 the owner's requested local checkpoint, including required datagen outputs that would otherwise
 be omitted by the generated-resource ignore rule. Unrelated local IDE settings are retained
 outside the checkpoint. Remote-client and actual shader/LOD acceptance remain open.
+
+### DragonAPI recursive breaker and shared sound delivery — D21, 2026-10-09
+
+Reviewed the original de1bcf1f breaker and accepted Excavation Star, Fertility Seed and cliff-stone
+callers against generated 26.3 sources. Confirmed property-collection identity is not water
+identity and Level.playLocalSound remains empty on the server path. Actual captured fluid state
+now selects source/flowing water versus other standalone fluids; waterlogged solids retain their
+block sound. Native broadcasts preserve centres, state-aware sound parameters, the initiating
+player's delivery, range filtering and NeoForge sound hooks. Nonbreaking paths remain silent.
+
+Repair the same sided problem in the shared block/ambient/entity sound overloads, including the
+cliff callback's placement effect and ReactorCraft cooling/extinguish consumers. Client playback
+and delay flags remain local; server calls now use native packets. Default-state fallback retains
+sounds for removed/not-yet-placed blocks. Full contract: DragonAPI/docs/recursive-breaker-port.md.
+
+Nine new native tests cover real nearby/distant connections, source/flowing water/lava, solids,
+waterlogged solids, fourteen helper overloads, silent traversal and hook cancellation/modification.
+All 27 native DragonAPI tests and 85 family unit tests pass in build/recursive-breaker-validation.log
+(1m 7s). All fifteen accepted wand tests and the cliff transparification test pass in
+build/recursive-breaker-wand-callers.log (2m 16s) and build/recursive-breaker-cliff-caller.log (39s).
+The isolated client audit passes in build/recursive-breaker-client.log (1m 42s), including the new
+local/decoded-server sound-engine check and prior water/turbine/gear/railgun/dropper checks. Normal
+Play argument hashes remain unchanged and audit fixtures remain opt-in. This completed batch is
+included in the local checkpoint: 11 tasks done, 151 open. Special-tree depth rules remain D22;
+remote-client and actual shader/LOD acceptance stay separate open tasks.
