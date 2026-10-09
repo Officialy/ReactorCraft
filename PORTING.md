@@ -2889,3 +2889,24 @@ The prior 91 family units / 38 DragonAPI native tests / two ReactorCraft flammab
 remain the server validation for D23. Full rendering contract: ChromatiCraft/docs/artefact-zone-rendering.md.
 The shared sun-helper climate/Cliffs review is recorded as new D63 (13 done, 150 open, 163 total).
 Actual external shader/LOD visual acceptance remains open. The follow-up is locally committed.
+
+
+### TestInstance ingredient crash / runtime isolation — 2026-10-09
+
+The owner's JEI ingredient crash could not load AdjacencyUpgradeItemRenderer$Args at
+15:31:59; the declared nested record was regenerated with the renderer at 15:32:02 during
+the shader build. Source and jar contain it, supporting a live-output rebuild race rather
+than an absent renderer implementation. Both TestInstance client runs now copy all eight
+source mods into a unique verified runtime snapshot before FML discovery, retaining the
+same JVM for IntelliJ Debug and a lease through client exit. Copies live outside build/;
+idle cleanup cannot remove a leased client. Normal Play keeps auditing off and its game
+directory; Audit keeps its disposable world and exits only after its guarded checks.
+
+The native integrated client passes in build/client-snapshot-validation.log (2m 43s),
+including 24 adjacency GUI variants and original geometry, renderer/nested-class origins
+inside the snapshot, the artefact GPU check and previous family client checks. Three
+launcher regressions pass in build/client-snapshot-unit-validation.log, including lazy
+nested-class loading after live output deletion and active snapshot retention. Details:
+TestInstance/docs/client-runtime-isolation.md. No ReactorCraft gameplay is changed.
+Restart/reload normal Play to adopt the launcher; preparing the verified copy adds startup
+time. D24 and D63 remain open; backlog counts stay 13 complete / 150 open / 163 total.
