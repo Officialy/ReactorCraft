@@ -2910,3 +2910,21 @@ nested-class loading after live output deletion and active snapshot retention. D
 TestInstance/docs/client-runtime-isolation.md. No ReactorCraft gameplay is changed.
 Restart/reload normal Play to adopt the launcher; preparing the verified copy adds startup
 time. D24 and D63 remain open; backlog counts stay 13 complete / 150 open / 163 total.
+
+
+### DragonAPI dye cache and ElectriCraft consumer — D24, 2026-10-09
+
+DragonAPI's empty dye cache is replaced with typed DYE/current colour tags, immutable
+item identities, preserved multi-colour membership and original metadata/RGB/name APIs,
+and authoritative tag-event rebuilds with the integrated-client guard. ElectriCraft's
+disabled resistor branch now uses native held-item interaction with original band geometry,
+current arithmetic, server changes, offhand/survival/creative handling and synchronization.
+The same obsolete method's motor upgrades retain their original limits and fallback behavior.
+
+All 92 affected-module units (51 DragonAPI, 33 RotaryCraft, 8 ReactorCraft) and all 19 native
+ElectriCraft tests pass in build/dye-cache-validation.log (40s). Four new units and six native
+fixtures include real tag application/callbacks, registered client event delivery and 56
+resistor orientation/band cases. No ReactorCraft gameplay changes. The full resource-pack
+reload/remote-session and broader electricity network boundaries remain open. Contract:
+DragonAPI/docs/dye-cache-port.md. Normal Play remains audit-off with the stable launcher.
+D24 is locally checkpointed: 14 complete / 149 open / 163 total; D25 MIDI consumers are next.
