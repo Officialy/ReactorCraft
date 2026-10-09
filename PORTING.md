@@ -2928,3 +2928,22 @@ resistor orientation/band cases. No ReactorCraft gameplay changes. The full reso
 reload/remote-session and broader electricity network boundaries remain open. Contract:
 DragonAPI/docs/dye-cache-port.md. Normal Play remains audit-off with the stable launcher.
 D24 is locally checkpointed: 14 complete / 149 open / 163 total; D25 MIDI consumers are next.
+
+
+### MIDI and actual music consumers — D25, 2026-10-09
+
+DragonAPI MIDI import now merges channel events chronologically, integrates tempo changes,
+handles SMPTE divisions and zero-velocity/FIFO releases, preserves original score units,
+program/velocity/percussion contracts and restores functional legacy track/grid queries.
+MusicScore channel-chord NBT, independent copies and edit/range/duration caches work.
+RotaryCraft disk extraction restores notes/rests; import again clears old music. Keyboard
+IDs and all six instrument icons are restored through the native GUI consumer.
+
+Seventeen new unit regressions pass with 109 affected-module units (67 DragonAPI, 34
+RotaryCraft, 8 ReactorCraft; build/midi-validation.log, 1m 4s). The separate native client
+passes all 49 keys, actual GuiMusic callback routing, original texture/highlight extraction
+and existing shader/water/input/resource/model checks (build/midi-client-validation.log,
+3m 24s). Normal Play arguments are unchanged. No ReactorCraft gameplay changes; Chroma
+music subsystems, audible/music-packet/remote acceptance and D63 remain open. Contract:
+DragonAPI/docs/midi-score-port.md. Local checkpoint: 15 complete / 148 open / 163 total;
+D26 TileEntityCache subtype validation is next.
