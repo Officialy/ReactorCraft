@@ -2859,3 +2859,20 @@ and all 33 native DragonAPI tests. All accepted family consumers compile. Normal
 match the previous checkpoint and automated checks remain disabled there. This completed batch
 is included in the local checkpoint: 12 tasks done, 150 open. D23 common-material flammability
 review is next; D36 optional wood associations and remote-client/shader acceptance remain open.
+
+### Shared flammability catalogue and actual world states — D23, 2026-10-09
+
+DragonAPI's common-material catalogue now uses native 26.3 fire data plus generated reloadable
+note-block/jukebox exceptions from its original de1bcf1f catalogue. The shared world helper passes
+the actual state to NeoForge's contextual flammability hook and fallback, so waterlogged wood
+remains wet. Original chest/trapdoor exclusions and the UP-face contract remain intact.
+
+Two native ReactorCraft consumer regressions verify every registered material (only graphite
+is flammable through its own override) and actual EntityPlasma.onEnterBlock ignition of wood,
+wool, note blocks and graphite, with waterlogged slab rejection and original continuation result.
+The world-free catalogue does not invent contextual graphite odds. No plasma/material logic was
+removed. All 91 family units, 38 native DragonAPI tests and these two consumer tests pass in
+build/flammability-validation.log (3m 16s) and build/flammability-reactor-validation.log (38s).
+Datagen and packaged-tag checks pass; normal Play arguments remain unchanged with testing off.
+Full contract: DragonAPI/docs/block-flammability-port.md. This completed batch is included in the
+local checkpoint: 13 tasks done, 149 open. D24 dye identity/reloads is the next backlog task.

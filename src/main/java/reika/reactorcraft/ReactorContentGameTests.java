@@ -50,6 +50,8 @@ public final class ReactorContentGameTests {
 
     static void register(RegisterGameTestsEvent event, Holder<TestEnvironmentDefinition<?>> environment) {
         ReactorAdvancementTests.register(event, environment);
+        ReactorGameTests.register(event, environment, "dragonapi_flammability_graphite_override", 40, ReactorContentGameTests::graphiteFlammability);
+        ReactorGameTests.register(event, environment, "dragonapi_flammability_plasma", 40, ReactorContentGameTests::plasmaFlammability);
         for (var color : FluoriteTypes.colorList)
             ReactorGameTests.register(event, environment, "decorative_fluorite_" + color.getColorName(), 40, h -> fluorite(h, color));
         ReactorGameTests.register(event, environment, "remote_charge_and_range_boundaries", 40, ReactorContentGameTests::charge);
@@ -59,6 +61,37 @@ public final class ReactorContentGameTests {
         ReactorGameTests.register(event, environment, "cpu_menu_controls_only_its_own_rods", 80, ReactorContentGameTests::controls);
         ReactorGameTests.register(event, environment, "remote_monitor_link_and_chunk_reload", 40, ReactorContentGameTests::monitor);
         ReactorGameTests.register(event, environment, "cpu_view_roundtrip_without_local_blocks", 40, ReactorContentGameTests::view);
+    }
+
+    private static void graphiteFlammability(GameTestHelper h) {
+        var level = h.getLevel(); var pos = h.absolutePos(new BlockPos(4, 2, 4));
+        for (var material : reika.reactorcraft.registry.MatBlocks.matList) {
+            var block = ReactorBlocks.matBlock(material);
+            level.setBlock(pos, block.defaultBlockState(), Block.UPDATE_CLIENTS);
+            h.assertTrue(!reika.dragonapi.extras.BlockProperties.isFlammable(block), "contextual overrides are not invented in the world-free catalogue");
+            h.assertTrue(reika.dragonapi.libraries.level.ReikaWorldHelper.flammable(level, pos)
+                    == (material == reika.reactorcraft.registry.MatBlocks.GRAPHITE), "world helper honors graphite's native override only");
+        }
+        h.succeed();
+    }
+
+    private static void plasmaFlammability(GameTestHelper h) {
+        var level = h.getLevel(); var pos = h.absolutePos(new BlockPos(4, 2, 4));
+        var plasma = new reika.reactorcraft.entities.EntityPlasma(level, pos.getX(), pos.getY(), pos.getZ(), null);
+        level.setBlock(pos.below(), Blocks.STONE.defaultBlockState(), Block.UPDATE_CLIENTS);
+        for (var block : new Block[]{Blocks.OAK_PLANKS, Blocks.WOOL.white(), Blocks.NOTE_BLOCK,
+                ReactorBlocks.matBlock(reika.reactorcraft.registry.MatBlocks.GRAPHITE)}) {
+            level.setBlock(pos, block.defaultBlockState(), Block.UPDATE_CLIENTS);
+            level.setBlock(pos.above(), Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+            h.assertTrue(!plasma.onEnterBlock(level, pos), "plasma's original continuation result is retained");
+            h.assertTrue(level.getBlockState(pos.above()).is(Blocks.FIRE), "real plasma entry ignites accepted flammable targets: " + block);
+        }
+        level.setBlock(pos, Blocks.OAK_SLAB.defaultBlockState().setValue(
+                net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED, true), Block.UPDATE_CLIENTS);
+        level.setBlock(pos.above(), Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+        plasma.onEnterBlock(level, pos);
+        h.assertTrue(level.getBlockState(pos.above()).isAir(), "plasma uses the wet world state");
+        h.succeed();
     }
 
     private static CraftingRecipe recipe(GameTestHelper h, String id) {
