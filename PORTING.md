@@ -2838,3 +2838,24 @@ local/decoded-server sound-engine check and prior water/turbine/gear/railgun/dro
 Play argument hashes remain unchanged and audit fixtures remain opt-in. This completed batch is
 included in the local checkpoint: 11 tasks done, 151 open. Special-tree depth rules remain D22;
 remote-client and actual shader/LOD acceptance stay separate open tasks.
+
+### DragonAPI tree-breaking depth policy — D22, 2026-10-09
+
+Restore the original Sequoia 350, Twilight Oak 200, Darkwood 32 and Giant Pink Tree 180
+breadth-first wave limits from de1bcf1f. The disabled missing-ModWoodList premise is false:
+the current catalogue compiles and retains all four identities. Put the original thirty-wave
+default on TreeType and override exactly the four catalogue entries; getTreeBreaker now consumes
+the descriptor policy. Existing providers retain their default and modern providers can describe
+their limits without forged legacy identity. Spatial bounds, state matching, diagonal spread,
+explicit enqueueing and completion behavior remain intact.
+
+Three unit and six native regressions cover every catalogue limit, original bounds, native
+30/32/180/200/350-wave stopping boundaries, axis/leaf states, unrelated species and actual supported
+glow wood with diagonal leaves and boundary rejection. Optional external mods are not impersonated:
+their wave tests delegate the real catalogue policy through vanilla-state descriptors; catalogue
+bounds are verified separately. Full contract: DragonAPI/docs/tree-breaker-port.md. Validation
+passes in build/tree-depth-validation.log (1m 38s): all 88 family unit tests (44 + 33 + 8 + 3)
+and all 33 native DragonAPI tests. All accepted family consumers compile. Normal Play arguments
+match the previous checkpoint and automated checks remain disabled there. This completed batch
+is included in the local checkpoint: 12 tasks done, 150 open. D23 common-material flammability
+review is next; D36 optional wood associations and remote-client/shader acceptance remain open.
