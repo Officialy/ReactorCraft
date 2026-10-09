@@ -2876,3 +2876,16 @@ build/flammability-validation.log (3m 16s) and build/flammability-reactor-valida
 Datagen and packaged-tag checks pass; normal Play arguments remain unchanged with testing off.
 Full contract: DragonAPI/docs/block-flammability-port.md. This completed batch is included in the
 local checkpoint: 13 tasks done, 149 open. D24 dye identity/reloads is the next backlog task.
+
+
+### Unknown Artefact client follow-up — 2026-10-09
+
+After the D23 checkpoint, the owner's artefact-zone visual report led to ChromatiCraft host
+fixes for native sky brightness, source-texture sampling and world/clock signal isolation,
+while retaining the original effect/gameplay as requested. The separate client audit passes
+in build/artefact-zone-client.log (1m 44s), including native GPU readbacks and all previous
+family client checks. Normal Play arguments remain unchanged and fixtures remain opt-in.
+The prior 91 family units / 38 DragonAPI native tests / two ReactorCraft flammability consumers
+remain the server validation for D23. Full rendering contract: ChromatiCraft/docs/artefact-zone-rendering.md.
+The shared sun-helper climate/Cliffs review is recorded as new D63 (13 done, 150 open, 163 total).
+Actual external shader/LOD visual acceptance remains open. The follow-up is locally committed.
