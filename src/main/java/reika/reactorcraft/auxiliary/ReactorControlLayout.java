@@ -28,7 +28,7 @@ public class ReactorControlLayout {
 
 	private WorldLocation controller;
 
-	private final TileEntityCache<TileEntityControlRod> controls = new TileEntityCache();
+	private final TileEntityCache<TileEntityControlRod> controls = new TileEntityCache<>(TileEntityControlRod.class);
 	private int minX = Integer.MAX_VALUE;
 	private int minY = Integer.MAX_VALUE;
 	private int minZ = Integer.MAX_VALUE;

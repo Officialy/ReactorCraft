@@ -48,6 +48,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/auxiliary/ReactorPowerMilestones.java'
     include 'reika/reactorcraft/auxiliary/CanisterContents.java'
     include 'reika/reactorcraft/ReactorGameTests.java'
+    include 'reika/reactorcraft/ReactorCacheGameTests.java'
     include 'reika/reactorcraft/ReactorTypeGameTests.java'
     include 'reika/reactorcraft/ReactorContentGameTests.java'
     include 'reika/reactorcraft/ReactorAdvancementTests.java'

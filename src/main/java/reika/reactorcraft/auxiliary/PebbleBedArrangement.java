@@ -14,7 +14,7 @@ import reika.reactorcraft.tileentities.htgr.TileEntityPebbleBed;
 
 public class PebbleBedArrangement {
 
-	private final TileEntityCache<TileEntityPebbleBed> positions = new TileEntityCache();
+	private final TileEntityCache<TileEntityPebbleBed> positions = new TileEntityCache<>(TileEntityPebbleBed.class);
 
 	public PebbleBedArrangement(TileEntityPebbleBed te) {
 		positions.put(te);
