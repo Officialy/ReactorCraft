@@ -86,6 +86,7 @@ public final class ReactorGameTests {
         register(event, environment, "ammonia_synthesis_ingredients", 40,
                 ReactorGameTests::ammoniaSynthesisIngredients);
         ReactorCacheGameTests.register(event, environment);
+        ReactorMultiblockContractTests.register(event, environment);
         ReactorTypeGameTests.register(event, environment);
         ReactorContentGameTests.register(event, environment);
     }

@@ -27,6 +27,7 @@ import reika.dragonapi.interfaces.blockentity.HasFluidResourceHandler;
 import reika.reactorcraft.registry.ReactorBlockEntities;
 import reika.reactorcraft.registry.ReactorBlocks;
 import reika.reactorcraft.registry.ReactorFluids;
+import reika.reactorcraft.blocks.multi.BlockTurbineMulti;
 import reika.rotarycraft.auxiliary.interfaces.PipeConnector;
 import reika.rotarycraft.base.blockentity.BlockEntityPiping.Flow;
 import reika.rotarycraft.registry.MachineRegistry;
@@ -46,6 +47,14 @@ public class TileEntitySteamInjector extends BlockEntityBase implements PipeConn
 
 	public TileEntitySteamInjector(BlockPos pos, BlockState state) {
 		super(ReactorBlockEntities.STEAMINJECTOR.get(), pos, state);
+	}
+
+	@Override
+	public boolean isValidBlockState(BlockState state) {
+		// The registered type names the whole casing block, but only ELEMENT hosts an injector.
+		// LevelChunk uses this check when a same-block property change replaces that part.
+		return super.isValidBlockState(state) && state.hasProperty(BlockTurbineMulti.PART)
+				&& state.getValue(BlockTurbineMulti.PART) == BlockTurbineMulti.TurbinePart.ELEMENT;
 	}
 
 	@Override
