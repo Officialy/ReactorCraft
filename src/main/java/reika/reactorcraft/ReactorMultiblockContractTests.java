@@ -8,6 +8,10 @@ import net.minecraft.gametest.framework.TestEnvironmentDefinition;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameType;
+import net.neoforged.neoforge.event.EventHooks;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
@@ -26,6 +30,42 @@ final class ReactorMultiblockContractTests {
     static void register(RegisterGameTestsEvent event, Holder<TestEnvironmentDefinition<?>> environment) {
         ReactorGameTests.register(event, environment, "dragonapi_multiblock_native_factory", 40, ReactorMultiblockContractTests::factory);
         ReactorGameTests.register(event, environment, "dragonapi_multiblock_part_transition", 40, ReactorMultiblockContractTests::transition);
+        ReactorGameTests.register(event, environment, "dragonapi_multiblock_formed_mining", 40, ReactorMultiblockContractTests::mining);
+    }
+
+    private static void mining(GameTestHelper h) {
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        player.setOnGround(true);
+        var pos = h.absolutePos(POS);
+        var casings = new java.util.ArrayList<net.minecraft.world.level.block.Block>(java.util.List.of(
+                ReactorBlocks.GENERATORMULTI.get(), ReactorBlocks.FLYWHEELMULTI.get(), ReactorBlocks.TURBINEMULTI.get(),
+                ReactorBlocks.FERROMAGNETIC_BASE.get(), ReactorBlocks.MAGNETIC_LINKAGE.get(),
+                ReactorBlocks.CENTRAL_MAGNET.get(), ReactorBlocks.AUXILIARY_MAGNET.get(),
+                ReactorBlocks.HYSTERESIS_ROD.get(), ReactorBlocks.SOLENOID_HUB.get()));
+        ReactorBlocks.HEATER_CASINGS.values().forEach(holder -> casings.add(holder.get()));
+        ReactorBlocks.INJECTOR_CASINGS.values().forEach(holder -> casings.add(holder.get()));
+        for (var casing : casings) {
+            for (var state : casing.getStateDefinition().getPossibleStates()) {
+                if (state.getValue(BlockMultiBlock.FORMED)) continue;
+                h.assertTrue(state.getDestroySpeed(h.getLevel(), pos) == 2,
+                        "accepted casing retains original positive base hardness: " + state);
+                for (ItemStack tool : java.util.List.of(ItemStack.EMPTY, new ItemStack(Items.IRON_PICKAXE))) {
+                    player.getInventory().setSelectedItem(tool);
+                    h.setBlock(POS, state);
+                    int modifier = EventHooks.doPlayerHarvestCheck(player, state, h.getLevel(), pos) ? 30 : 100;
+                    float expected = player.getDestroySpeed(state, pos) / 2 / modifier;
+                    float unformed = state.getDestroyProgress(player, h.getLevel(), pos);
+                    var formed = state.setValue(BlockMultiBlock.FORMED, true);
+                    h.setBlock(POS, formed);
+                    float assembled = formed.getDestroyProgress(player, h.getLevel(), pos);
+                    h.assertTrue(Float.isFinite(unformed) && unformed > 0
+                            && Math.abs(unformed - expected) < 0.000001F
+                            && Math.abs(assembled * 4 - unformed) < 0.000001F,
+                            "forming must quarter native mining progress with either tool: " + state);
+                }
+            }
+        }
+        h.succeed();
     }
 
     private static void factory(GameTestHelper h) {
