@@ -141,7 +141,7 @@ public class RadiationEffects {
 			return;
 
 		if (ri.isAtLeast(RadiationIntensity.HIGHLEVEL)) {
-			if (state.is(BlockTags.LEAVES) || ModWoodList.isModLeaf(id)) {
+			if (state.is(BlockTags.LEAVES) || ModWoodList.isModLeaf(state)) {
 				world.removeBlock(pos, false);
 			}
 			else if (id instanceof SaplingBlock) {
