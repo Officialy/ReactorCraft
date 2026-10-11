@@ -15,11 +15,14 @@ public final class ReactorDataComponents {
             DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, ReactorCraft.MODID);
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> FUEL_BURNUP =
-            COMPONENTS.registerComponentType("fuel_burnup", b -> b.persistent(com.mojang.serialization.Codec.intRange(0, 99)).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.VAR_INT));
+            COMPONENTS.register("fuel_burnup", () -> reika.dragonapi.instantiable.data.ItemKeyComponents.variant(
+                    DataComponentType.<Integer>builder().persistent(com.mojang.serialization.Codec.intRange(0, 99)).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.VAR_INT).build(), 0));
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> MAGNET_CHARGE =
-            COMPONENTS.registerComponentType("magnet_charge", b -> b.persistent(com.mojang.serialization.Codec.intRange(0, 7)).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.VAR_INT));
+            COMPONENTS.register("magnet_charge", () -> reika.dragonapi.instantiable.data.ItemKeyComponents.variant(
+                    DataComponentType.<Integer>builder().persistent(com.mojang.serialization.Codec.intRange(0, 7)).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.VAR_INT).build(), 0));
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>> WASTE_IDENTITY =
-            COMPONENTS.registerComponentType("waste_identity", b -> b.persistent(com.mojang.serialization.Codec.STRING).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.STRING_UTF8));
+            COMPONENTS.register("waste_identity", () -> reika.dragonapi.instantiable.data.ItemKeyComponents.variant(
+                    DataComponentType.<String>builder().persistent(com.mojang.serialization.Codec.STRING).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.STRING_UTF8).build(), reika.reactorcraft.items.ItemNuclearWaste.identity(0)));
 
     /** Fluid held by an (otherwise identical) canister item. */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<CanisterContents>> CANISTER_FLUID =
