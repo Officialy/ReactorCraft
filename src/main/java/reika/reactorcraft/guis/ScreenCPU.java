@@ -48,9 +48,9 @@ public class ScreenCPU extends ReactorGuiBase<TileEntityCPU, MenuCPU> {
         int j = leftPos;
         int k = topPos;
         addRenderableWidget(Button.builder(Component.literal("Retract All"),
-                b -> sendCPU(ReactorPackets.CPURAISE.ordinal(), menu.getController().pos())).bounds(j + 8, k + 18, 72, 20).build());
+                b -> sendCPU(ReactorPackets.CPURAISE.wireId(), menu.getController().pos())).bounds(j + 8, k + 18, 72, 20).build());
         addRenderableWidget(Button.builder(Component.literal("Insert All"),
-                b -> sendCPU(ReactorPackets.CPULOWER.ordinal(), menu.getController().pos())).bounds(j + 96, k + 18, 72, 20).build());
+                b -> sendCPU(ReactorPackets.CPULOWER.wireId(), menu.getController().pos())).bounds(j + 96, k + 18, 72, 20).build());
         addRenderableWidget(new ImagedGuiButton(2, j + 7, k + 84, 12, 48, 90, 60, BUTTONS, b -> {
             if (menu.minY() < offsetY)
                 offsetY--;
@@ -96,7 +96,7 @@ public class ScreenCPU extends ReactorGuiBase<TileEntityCPU, MenuCPU> {
         int z = Mth.floor((event.y() - oy) / BUTTON_SPACE);
         var rod = menu.getController().pos().offset(x, offsetY, z);
         if (menu.getRods().containsKey(rod)) {
-            sendCPU(ReactorPackets.CPUTOGGLE.ordinal(), rod);
+            sendCPU(ReactorPackets.CPUTOGGLE.wireId(), rod);
             return true;
         }
         return super.mouseClicked(event, doubleClick);

@@ -9,25 +9,27 @@
  ******************************************************************************/
 package reika.reactorcraft.registry;
 
-import reika.reactorcraft.ReactorCraft;
 
-public enum ReactorPackets {
+public enum ReactorPackets implements reika.dragonapi.interfaces.PacketId {
 
-	CPUTOGGLE(),
-	CPURAISE(),
-	CPULOWER(),
-	ORERADIATION(),
+	CPUTOGGLE(0),
+	CPURAISE(1),
+	CPULOWER(2),
+	ORERADIATION(3),
 	;
+
+	private final int wireId;
+	private static final java.util.Map<Integer, ReactorPackets> BY_ID = reika.dragonapi.interfaces.PacketId.index(values());
+	@Override public int wireId() { return wireId; }
 
 	private final int numInts;
 
-	private static final ReactorPackets[] list = values();
 
-	ReactorPackets() {
-		this(0);
-	}
 
-	ReactorPackets(int ints) {
+	ReactorPackets(int id) { this(id, 0); }
+
+	ReactorPackets(int id, int ints) {
+		wireId = id;
 		numInts = ints;
 	}
 
@@ -40,10 +42,7 @@ public enum ReactorPackets {
 	}
 
 	public static ReactorPackets getEnum(int index) {
-		if (index >= 0 && index < list.length)
-			return list[index];
-		ReactorCraft.LOGGER.error("Index "+index+" does not correspond to an existing packet classification!");
-		return null;
+		return reika.dragonapi.interfaces.PacketId.lookup(BY_ID, index);
 	}
 
 }
