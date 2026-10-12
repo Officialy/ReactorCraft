@@ -186,6 +186,7 @@ sourceSets.main.java {
     include 'reika/reactorcraft/models/ModelCondenser.java'
     include 'reika/reactorcraft/renders/RenderMagnet.java'
     include 'reika/reactorcraft/models/ModelMagnet.java'
+    include 'reika/reactorcraft/auxiliary/DonatorToroidRender.java'
     include 'reika/reactorcraft/renders/RenderSolenoid.java'
     include 'reika/reactorcraft/models/ModelSolenoid.java'
     include 'reika/reactorcraft/renders/RenderSteamGrate.java'
