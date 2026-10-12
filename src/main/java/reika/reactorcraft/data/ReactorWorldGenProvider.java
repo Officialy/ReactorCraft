@@ -15,9 +15,9 @@ import reika.reactorcraft.world.ReactorOreFeature;
 import java.util.List;
 
 /**
- * 26.2 worldgen {@link RegistrySetBuilder} for ReactorCraft ores. Emits one configured feature per
- * {@link ReactorOreType} (carrying the vein size / count and the 26.2-remapped Y band — deeper
- * indium/thorium below the old 0 floor, magnetite up the taller mountains) and a matching placed
+ * 26.3 worldgen {@link RegistrySetBuilder} for ReactorCraft ores. Emits one configured feature per
+ * {@link ReactorOreType} (carrying the vein size / count and the 26.3-remapped Y band — deeper
+ * Overworld ores below the old 0 floor, magnetite up the taller mountains) and a matching placed
  * feature with no placement modifiers, because {@link reika.reactorcraft.world.ReactorOreFeature}
  * scatters within the chunk itself (the 1.7.10 {@code BasicReactorOreGenerator} behaviour). Biome
  * targeting (pitchblende oceans/rivers, ammonium nether, endblende end) is applied separately by
@@ -27,10 +27,14 @@ public final class ReactorWorldGenProvider {
 
     private ReactorWorldGenProvider() {}
 
-    /** 26.2-remapped [minY, maxY] per ore (plan Y-range table); falls back to the original band. */
+    /** Modern Overworld depth bands; Nether and End retain their original dimension-specific bands. */
     static int[] yBand(ReactorOreType ore) {
         return switch (ore) {
-            case INDIUM -> new int[]{-32, 16};
+            case PITCHBLENDE -> new int[]{-48, -16};
+            case CADMIUM -> new int[]{-40, 0};
+            case INDIUM -> new int[]{-60, -32};
+            case SILVER -> new int[]{-32, 16};
+            case CALCITE, FLUORITE -> new int[]{0, 56};
             case MAGNETITE -> new int[]{60, 292};
             default -> new int[]{ore.minY, ore.maxY};
         };

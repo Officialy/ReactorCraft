@@ -41,7 +41,7 @@ public record ReactorOreFeature(ReactorOreConfig config) implements Feature {
         boolean placed = false;
         for (int i = 0; i < passes; i++) {
             int x = origin.getX() + random.nextInt(16), z = origin.getZ() + random.nextInt(16);
-            int y = cfg.minY() + random.nextInt(cfg.maxY() - cfg.minY() + 1);
+            int y = reika.dragonapi.libraries.level.WorldgenHeight.randomBetween(world, random, cfg.minY(), cfg.maxY());
             if (cfg.needsLava() && !LegacyOreVeins.adjacentLava(world, new BlockPos(x, y, z))) continue;
             placed |= LegacyOreVeins.place(world, random, state, cfg.size(), cfg.dimType(), x, y, z);
         }

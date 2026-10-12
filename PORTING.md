@@ -1,4 +1,49 @@
+## 2026-10-10 - Bounded terrain-preloader population
+
+DragonAPI now persists finite population scopes shared by ChromatiCraft and GeoStrata. The actual NeoForge 26.3 GenerationTask automatically supplies its square; optional Chunky 1.5.4 hooks observe processed chunks (including skipped FULL chunks) with Chunky's own rounded shape predicate. Completion continues after terrain generation; pause/continue/cancel and interrupted-producer persistence retain queued job cursor/RNG state. /reikapregen provides manual bounded backlog processing and dimension-local status/controls. Supporting chunk tickets cannot admit jobs outside the selected origins.
+
+Both queues now explicitly schedule their entire footprint asynchronously at FULL via the 26.3 addTicketAndLoadWithRadius API, rather than assuming a loading ticket schedules all required FULL tasks. Temporary tickets keep the dimension active, refresh on server ticks and release on loss of admission/shutdown. A shared server hook prevents empty-player pausing while a bounded pass runs. See TestInstance/docs/bounded-pregeneration.md for commands, bounds, restart semantics and the integration API. Tests use disposable levels; the user's Test save has not been populated or edited.
+
+Validation: all 14 overworld GameTests passed with real Chunky NeoForge 1.5.4, all four bounded-population tests passed with Chunky absent, and all 87 DragonAPI unit tests passed. Logs: TestInstance/build/bounded-pregen-validation.log and TestInstance/build/bounded-pregen-no-chunky-validation.log. Fast GameTests service the chunk mailbox and yield to asynchronous workers; production loading stays asynchronous.
+
+## 2026-10-10 — modern worldgen height audit and biome map legends
+
+- Audited active generation in the whole Reika family against the 26.3 Overworld (-64..319). Remapped ReactorCraft deep ore bands, ElectriCraft silver/nickel/platinum and high aluminum, and RotaryCraft optional extra iron; retained ore counts/sizes, biome/dimension restrictions and Nether/End heights.
+- Extended ChromatiCraft tiered ore placement and its deepslate host rule, natural caverns, cave indicators/plants, Rainbow underground lights/sparkle, cliff roots, gravel and springs. Extended GeoStrata stony pockets/vines/vents while retaining already-modern rock layers and RF seeds. Deepslate host selection now uses ElectriCraft/vanilla iron variants.
+- Added shared dimension-bounded height sampling and focused unit/in-world placement checks. BiomeMapCommand now writes names/RGB codes from the modern registry, distinct ocean/mod colours and exact sampled-biome totals, replacing its empty legacy hierarchy legend.
+- Detailed ranges, retained cases, palette diagnosis and validation: `TestInstance/docs/worldgen-height-audit-2026-10-10.md`. Changes affect future generation after restart; the user's saved terrain is not rewritten.
+
+- Validation completed: all 9 affected Overworld GameTests passed in a fresh isolated build; 2 height-boundary and 5 vent-selection unit tests passed.
+
 # ReactorCraft → Minecraft 26.3 / NeoForge port
+
+## TestInstance worldgen census — 2026-10-10
+
+Audited the display-named `worldgen` save read-only across 13,455 FULL Overworld
+chunks. ReactorCraft has 1,923,779 surviving ore blocks across all 14 Overworld
+block IDs, including all eight fluorite colors. ElectriCraft has 1,002,443 ore
+blocks across its five custom types. Nether/End-only ores are outside this save's
+generated terrain. Full block, biome, structure, queue and ore-height exports:
+`../TestInstance/docs/worldgen-audit-2026-10-10.md`.
+
+Fixed ChromatiCraft Snow outpost foundation supports filling authored rooms;
+the isolated natural-dungeon GameTest passes with complete Snow air-cell checks.
+The world itself was not edited. See ChromatiCraft/PORTING.md for the defect,
+source-parity behavior and queued-generation limitations on measured density.
+
+## RotaryCraft liquid pipe breaking — 2026-10-10
+
+Active liquid pipes inherited machine hardness 4 and bypassed `PIPEHARDNESS`.
+`BlockBasicMachine` now applies the synced float setting to mining progress for
+`MachineRegistry.isPipe()` blocks, including hoses, fuel lines, valves, bypasses,
+separation/suction pipes and bedrock pipes. The existing default of 0 breaks pipes
+instantly; nonzero settings are clamped to 0–1 and retain vanilla/NeoForge mining
+speed and harvest checks. Reading the setting during mining also honors config
+load/sync/reload after block registration. Machine hardness, blast resistance,
+loot and fluid behavior are preserved.
+
+Validation: `:RotaryCraft:compileJava --offline` passes against NeoForge
+26.3.0.51-beta; in-game breaking has not been exercised.
 
 ## Current practices and audit fixes — 2026-10-07
 
@@ -2911,6 +2956,22 @@ TestInstance/docs/client-runtime-isolation.md. No ReactorCraft gameplay is chang
 Restart/reload normal Play to adopt the launcher; preparing the verified copy adds startup
 time. D24 and D63 remain open; backlog counts stay 13 complete / 150 open / 163 total.
 
+### ChromatiCraft rare biome regions — 2026-10-09
+
+The owner's Luminous Cliffs frequency and detached Cliffs/Rainbow Forest patch report is repaired
+in ChromatiCraft's active 26.3 slice. Both families have seeded, non-overlapping regions with a
+fully admitted 384-block-wide land core and connected outer land. Existing weight options control
+rarity; terrain, decorations, rivers/shores and underground caves are retained. Global and buffered
+chunk biome resolvers agree, with a world-owned bounded cache and unbounded admission sampler.
+
+Three focused JUnit regressions and the seven-mod natural-world GameTest pass. In the seed-zero
+survey, 441 starting positions have nearest-Cliffs boundary distances of 1,678 / 2,858 / 4,094 blocks
+(p25 / median / p75), matching the owner's approximate 3k target while allowing lucky close finds.
+495 cave and 1,259 ocean/mushroom samples remain intact; old climate mappings cannot leak detached
+fragments outside planned regions. Details: ChromatiCraft/PORTING.md; evidence:
+ChromatiCraft/build/biome-placement-final.log. Play saves and existing generated chunks are retained.
+No ReactorCraft gameplay changes; D63 remains open.
+
 
 ### DragonAPI dye cache and ElectriCraft consumer — D24, 2026-10-09
 
@@ -3067,6 +3128,58 @@ across eight modules (build/inert-identity-final-validation.log). This is constr
 identity coverage; per-entity gameplay, rendering, payloads and full persistence behavior
 retain their own acceptance requirements. The overnight handoff records nine completed
 backlog items and remaining priorities; unrelated worldgen/IDE changes remain uncommitted.
+
+
+## Complete World Rift state contract — D31, 2026-10-10
+
+DragonAPI's exported WorldRift API now requires the complete BlockState available
+from the accepted Chroma rift. Block identity derives from that state; the fake-zero
+metadata method is removed after confirming no project callers use it. Original
+mirrored block/state reads and requested-face tile reads are preserved. Reads resolve
+the far world through the owning level and retain current links, properties, actual
+air states and null for missing dimensions. The unused zero/no-op coordinate metadata
+helpers become real state reads/writes with native results and notification flags.
+
+Two new native fixtures pass for all faces, state changes, relinking/reset, property
+preservation, missing dimensions and real Nether targets, alongside original rift
+transfer and shaft-power tests. The distant-link fixture's far target overlapped the
+next arena; isolated execution passes its unload/link/fluid assertions unchanged.
+All 132 affected units pass (87 DragonAPI, 34 RotaryCraft, 8 ReactorCraft, 3 Chroma),
+with eight accepted-output guards verifying 3,259 classes. Evidence:
+build/rift-state-native-validation.log and build/rift-state-final-validation.log.
+Contract: DragonAPI/docs/world-rift-state-port.md. Normal Play argument hashes match;
+play saves and unrelated worldgen/IDE work are retained. Changes are uncommitted.
+No ReactorCraft gameplay changes or remote/foreign API acceptance are claimed.
+Checklist: 25 complete / 138 open / 163 total. Formed-casing hardness is the next
+specific review lead in the overnight handoff; D16/D17 and D53 remain open.
+
+
+## Distant Horizons / Chunky initial-spawn crash — 2026-10-11
+
+The owner's installed DH 3.3.4 + Chunky NeoForge 1.5.4 client crashes during
+fresh initial-spawn chunk loads, before Chunky's ServerStartingEvent creates
+its provider. DragonAPI now defers only DH's progress-listener setup until
+that actual provider is ready, before DH marks the listener as bound. Native
+chunk/LOD processing, both mods and the original progress callback remain.
+Provider identity changes trigger one rebind; a weak reference avoids retaining
+an old integrated world. Unrelated errors remain visible.
+
+The isolated fresh-world integrated client passes both actual startup and
+installed-mod lifecycle checks (build/dh-chunky-client-final.log), including
+absent/ready/replacement providers, single subscriptions, real progress
+delivery and shutdown. The existing graphical audit also passes; the full
+client run exits successfully in 3m 39s. All 87 DragonAPI units pass. A separate
+optional-mods-absent run passes 46 native DragonAPI tests and three TestInstance
+launcher tests (build/dh-chunky-optional-absence-validation.log, 38s), confirming
+the optional mixin does not require either mod. DH's headless wrapper
+cannot host GameTestServer because it casts to DedicatedServer; that attempt
+is recorded and not counted as a pass. The first fresh-save fixture omitted
+26.3's separate world-generation file and was corrected before the passing
+integrated run. Contract: DragonAPI/docs/dh-chunky-startup-compatibility.md.
+Normal Play saves, installed jars, config and pending worldgen/IDE/D31 work
+are retained; Play argument hashes match, and default audit arguments are
+restored. This repair does not change backlog completion counts or
+claim full external shader/LOD acceptance. Changes remain uncommitted.
 
 
 ## Player transfers and formed-casing mining — D17, 2026-10-11

@@ -1,13 +1,13 @@
-// 26.3	2026-10-03T20:05:00.4102659	Registries for world
+// 26.3	2026-10-10T01:48:11.3603091	Registries for world
 31d21f7d9738702d2bb18dcfa7100ab816e57484 data/reactorcraft/worldgen/feature/ammonium_ore.json
-08a5b211de6f8f4b3ff8c5d07a00e5f9b8dc14dd data/reactorcraft/worldgen/feature/cadmium_ore.json
-d4abd17111d6856bd7c8615b1f55152795c0f668 data/reactorcraft/worldgen/feature/calcite_ore.json
+ef484a15bc166fa939eb85119ea855d48422fdb5 data/reactorcraft/worldgen/feature/cadmium_ore.json
+498f63a2333b5e1838398836a532664a4604355d data/reactorcraft/worldgen/feature/calcite_ore.json
 127f0d1382784343f3f6a27b1cce287753a0a81b data/reactorcraft/worldgen/feature/endblende_ore.json
-92099d5ecc6e0da6c95c743d548d8083ad138f21 data/reactorcraft/worldgen/feature/fluorite_ore.json
-7237cbafa09513fb2c62c9a70d1ebe236d58faae data/reactorcraft/worldgen/feature/indium_ore.json
+1d08efb32a408c0ed563d4d2521d9d42df605223 data/reactorcraft/worldgen/feature/fluorite_ore.json
+f7c4c1a17436777c35088c6a5c4b2a21ca0d1d82 data/reactorcraft/worldgen/feature/indium_ore.json
 4ae685ffb0aa5d8c8eb9f0975e03cee239ea0737 data/reactorcraft/worldgen/feature/magnetite_ore.json
-4ebf21b2f05ec996243ba79c92b2d6c9beb6a4e0 data/reactorcraft/worldgen/feature/pitchblende_ore.json
-773a7077208b7a6a51017dcff9c1041114229b14 data/reactorcraft/worldgen/feature/silver_ore.json
+6de8525186ae83d9cce6ef63c5862d84280afcf7 data/reactorcraft/worldgen/feature/pitchblende_ore.json
+bdfe27bc101515994d1432583d2b95c738011a68 data/reactorcraft/worldgen/feature/silver_ore.json
 e74b49898107dae324734465962bf1a0f95f41de data/reactorcraft/worldgen/feature/thorium_ore.json
 8328bb686912c0ba55d8f60a9fa45f5dc7180ac9 data/reactorcraft/worldgen/placed_feature/ammonium_ore.json
 48706705474ac14fd72665076aabfa4fea98d865 data/reactorcraft/worldgen/placed_feature/cadmium_ore.json

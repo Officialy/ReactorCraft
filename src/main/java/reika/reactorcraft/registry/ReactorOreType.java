@@ -18,11 +18,11 @@ import net.minecraft.world.level.block.Block;
 /**
  * Worldgen + processing data for ReactorCraft ores, transcribed from the 1.7.10 {@code ReactorOres}
  * enum (min/max Y band, vein size, veins-per-chunk, target dimension, mining XP). The legacy enum
- * carried 1.7.10-only generation/oredict logic; here we keep only the data the 26.2 data-driven
+ * carried 1.7.10-only generation/oredict logic; here we keep only the data the 26.3 data-driven
  * pipeline needs — the configured/placed ore features (datagen {@code RegistrySetBuilder}), the
  * smelting recipes, and the block loot tables.
  * <p>
- * Y values are kept at their original absolute heights (still valid bands in the taller 26.2 world).
+ * Original Y values are retained as reference data; ReactorWorldGenProvider remaps Overworld depth bands.
  */
 public enum ReactorOreType {
 
