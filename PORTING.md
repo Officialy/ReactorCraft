@@ -3814,3 +3814,38 @@ accepted primary classes. The separate disposable client passes actual client-ev
 callback measurement and the complete existing audit, then exits cleanly in 3m 38s.
 The owner's Play identity/configuration is preserved. D49 PlayerChunkTracker ownership
 review is next. This continuation is checkpointed locally.
+
+## D49 — PlayerChunkTracker ownership and loading tickets, 2026-10-13
+
+Reviewed the original tracker and actual 26.3 ChunkMap/DistanceManager sources.
+The former view-update gate left player loading participation active. Expiry's
+xo/zo assignments changed interpolation fields rather than chunk-manager markers.
+The two maps, tick flag and queue merge were not consistently synchronized, and
+entries had no logout/respawn/dimension/unload/server-stop cleanup.
+
+Entries now use server + UUID keys with exact player/level bindings; all conditions,
+timers, callbacks and native mutations execute on the owning server thread. Off-thread
+requests queue there and capture their source level. Concurrent reads and snapshot
+iteration allow reentrant registration without stale removals. Terminal lifecycle
+identities are weakly held; late requests and cleanup callbacks cannot resurrect them.
+Same-owner renewals retain the original overwrite/reset behavior.
+
+MixinChunkMap also gates native skipPlayer, and registration runs native move to
+remove only the selected player's loading participation. Forty false/dead ticks
+still expire, a true condition resets grace, and removal notifies once. Expiry/stop
+uses native move + updateChunkTracking to restore tickets/view at the current
+position, including unmoved players. No interpolation marker is rewritten. Callback
+runtime failures are logged and release suspension; restoration runs even if the
+removal callback fails. Leaving-world cleanup does not re-add departing tickets.
+The original PlayerManager bridge is preserved against native ChunkMap.
+
+Contract: DragonAPI/docs/player-chunk-tracker-port.md. Evidence:
+TestInstance/docs/player-chunk-tracker-2026-10-13.md. All 192 family units and 100
+required native DragonAPI fixtures pass; eight guards verify 3,297 primary outputs.
+Four new native fixtures prove membership/view changes, grace/death/reset, reentrant
+callbacks, failure recovery, actual teleport/respawn/logout and worker requests.
+The disposable integrated client also passes native movement/view restoration and
+actual logout/unload/server-stop cleanup, with exactly one notification for each
+retired suspension and zero retained entries. The complete existing audit passes;
+clean exit in 3m 31s. Play retains the owner's identity and disabled audit flag.
+This batch is checkpointed locally. D50 update-feed verification is next.
