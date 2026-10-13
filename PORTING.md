@@ -3786,3 +3786,31 @@ all three original head renders and idempotence, then reaches the real third-per
 render path. The existing full audit/PNG export also passes; clean exit in 3m 40s.
 Default Play and Automated Checks launch files are regenerated separately after
 the opt-in identity test. This continuation is checkpointed locally.
+
+## D48 — EventProfiler actual listener instrumentation, 2026-10-13
+
+Restored automatic per-handler profiling on the real NeoForge game bus using a
+native EventBus subclass constructed with NeoForge's actual builder. Original
+registration, priorities, cancellation, superclass listeners and exception handling
+remain native. Temporary listener wrappers update both listener lists and target
+ownership, including registration changes during a session, and are restored when
+profiling stops. The adapter is isolated against the actual bus-8.0.5 sources.
+
+Nested dispatch frames replace the overwritten single start timer; actual event
+posts replace the incorrect handler-count division. Reports capture call/failure
+counts and immutable sorted measurements. Profiling selects an exact concrete event
+and the initiating thread; other events/threads still dispatch normally. Times are
+inclusive handler times. Common aliases avoid eager client-class loading and reject
+ambiguous nested names. The command accepts $ in nested Java class names, supports
+console use, and preserves previous results after invalid starts. Legacy explicit
+hooks remain balanced and available. No mod lifecycle bus is replaced.
+
+Source contract: DragonAPI/docs/event-profiler-port.md. Native evidence:
+TestInstance/docs/event-profiler-2026-10-13.md. The family passes 192 unit regressions
+and all 96 required native DragonAPI GameTests. The new native fixture measures a
+real chunk mutation, including the existing CrystalNetworker.markChunkCache
+subscriber without adding manual timing calls. Eight output guards verify 3,296
+accepted primary classes. The separate disposable client passes actual client-event
+callback measurement and the complete existing audit, then exits cleanly in 3m 38s.
+The owner's Play identity/configuration is preserved. D49 PlayerChunkTracker ownership
+review is next. This continuation is checkpointed locally.
