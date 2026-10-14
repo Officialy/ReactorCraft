@@ -3930,3 +3930,67 @@ D55 is complete. D56's complete active/optional mixin and distribution matrix
 remains open. Play configuration is preserved; updater stays inactive per owner.
 Evidence: DragonAPI/docs/resource-ownership-d55.md and build/d55-*.log.
 This batch is checkpointed locally.
+
+## D56 — mixin/distribution audit in progress, 2026-10-14
+
+Added an opt-in TestInstance audit that reads each actual config and compiled
+Mixin annotation, forces applicable native target definition, and verifies applied
+mixin origin/interface evidence in exported transformed bytecode. It rejects
+compiled-but-unregistered mixins, duplicate entries and missing evidence. Optional
+absence and other-side entries are explicit results. Four configs contain 45 mixin
+classes and 46 target bindings; their default required injection checks remain.
+
+DragonAPI now declares JAVA_25 compatibility matching Java 25 outputs. The
+population-server mixin was already registered; an extra audit-development entry
+was caught and removed. No new population registration is claimed.
+
+The first real packaged dedicated-server boot exposed a common startup reference
+to client ColoredAltarEffects/Particle. Common altar payload registration/codec
+and server sending now live in ColoredAltarNetwork; client effect handling uses
+native RegisterClientPayloadHandlersEvent inside the existing client-only setup.
+Payload chromaticraft:altar_visual, registrar version 1, CompoundTag fields,
+radius and all particle/shock/bolt/break behavior are preserved. The dedicated
+server now starts with no client particles and verifies all 30 applicable common
+bindings; two optional targets are absent. It exits cleanly. Client, optional-mod
+and native regression matrix work continues; D56 is not complete yet.
+
+## D56 complete — runtime mixin/distribution validation, 2026-10-14
+
+All 45 configured mixin classes (46 target bindings) are verified through actual
+native transformation, required-injection checks and exported merged-origin or
+accessor-interface evidence. The audit rejects missing registration, duplicates,
+missing target evidence and absent targets from installed optional owners.
+Dedicated-server scope excludes the 14 client bindings explicitly.
+
+Five fresh packaged client/real-dedicated-server pairs pass: neither optional mod
+(30 server / 44 client transformed, two absent); Chunky alone (31 / 45, one absent);
+DH alone (31 / 45, one absent); both (32 / 46); and both on the server with installed
+Iris/Sodium/DH/Chunky on the client (32 / 46). All peers exit cleanly. Installed
+optional jars are unchanged. These are private test copies, not published releases.
+
+DragonAPI declares JAVA_25. The already-registered population mixin is preserved.
+The real dedicated boot exposed ChromatiCraft common startup loading client
+ColoredAltarEffects/Particle. Common ColoredAltarNetwork now owns the unchanged
+altar_visual version-1 codec and server sends; native client-only payload-handler
+registration invokes the existing main-thread effects. All fields, recipient radius
+and original shock/bolt/break/fragment behavior remain. The source allowlist adds
+the complete common network class; no behavior/content is excluded or stubbed.
+
+The source-folder base client passes the full existing audit in 4m 22s. The final
+isolated integrated DH/Chunky run passes 46 client and 32 integrated-server bindings,
+actual provider/listener lifecycle, callbacks/rebinding/shutdown and the full
+existing audit; clean exit in 3m 47s. All 196 family units and 100 native DragonAPI
+fixtures pass. Eight guards verify 3,305 accepted primary outputs.
+
+Audit runs have separate directories, test identities and bounded heaps. Loopback
+servers have explicit connection/polling settings. Only native warning-only
+Continue Launch actions are acknowledged; fatal loading screens fail. Existing
+acceptance reports are rejected by paired launch tasks, requiring fresh IDs.
+Earlier fixture/native-window failures are preserved separately, not counted as
+acceptance. Normal Play keeps its identity and disabled audit flag. Default audit
+arguments are restored after optional runs. The updater stays owner-deferred.
+
+Contract, full binding inventory, evidence and rerun commands:
+DragonAPI/docs/mixin-runtime-matrix.md. D56 is complete; D57 live ASM/obfuscation
+helpers and environment detection are next. Public authentication and visual
+shader/LOD acceptance remain separate open tasks. Checkpointed locally.
