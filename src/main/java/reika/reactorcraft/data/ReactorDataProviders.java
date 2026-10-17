@@ -30,11 +30,11 @@ public final class ReactorDataProviders {
         event.createProvider(ReactorBiomeTagsProvider::new);
         event.createProvider(ReactorBlockTagsProvider::new);
         event.createProvider(ReactorItemTagsProvider::new);
-        event.createReloadableRegistryObjects(new RegistrySetBuilder()
+        event.getDefaultPackGenerator().createReloadableRegistryObjects(new RegistrySetBuilder()
                 .add(ReactorRecipeProvider.bootstrap())
                 .add(Registries.LOOT_TABLE, new ReactorLootProvider())
                 .add(Registries.ADVANCEMENT, new ReactorAdvancementProvider()));
-        event.createWorldRegistryObjects(ReactorWorldGenProvider.buildRegistrySet());
+        event.getDefaultPackGenerator().createWorldRegistryObjects(ReactorWorldGenProvider.buildRegistrySet());
         event.createProvider(ReactorBiomeModifierProvider::new);
         event.createProvider(ReactorMachineRecipeProvider::new);
     }
