@@ -59,7 +59,7 @@ final class ReactorAdvancementTests {
     }
 
     private static void login(GameTestHelper h) {
-        var player = h.makeMockServerPlayerInLevel();
+        var player = reika.dragonapi.test.GameTestPlayers.joinedCreative(h);
         h.assertTrue(count(player, ReactorItems.REACTOR_BOOK.get()) == 1, "first login ReactorCraft book");
         h.assertTrue(count(player, reika.electricraft.registry.ElectriItems.BOOK.get()) == 1, "first login ElectriCraft book");
         reika.dragonapi.auxiliary.trackers.PlayerFirstTimeTracker.checkPlayer(player);
@@ -68,7 +68,7 @@ final class ReactorAdvancementTests {
     }
 
     private static void book(GameTestHelper h) {
-        var player = h.makeMockServerPlayerInLevel();
+        var player = reika.dragonapi.test.GameTestPlayers.joinedCreative(h);
         h.assertTrue(!done(player, ReactorAchievements.RECUSEBOOK), "owning a book is not using it");
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ReactorItems.REACTOR_BOOK.get()));
         ReactorItems.REACTOR_BOOK.get().use(h.getLevel(), player, InteractionHand.MAIN_HAND);
@@ -92,14 +92,14 @@ final class ReactorAdvancementTests {
     }
 
     private static void creative(GameTestHelper h) {
-        var player = h.makeMockServerPlayerInLevel();
+        var player = reika.dragonapi.test.GameTestPlayers.joinedCreative(h);
         harvest(h, player, ReactorBlocks.PITCHBLENDE_ORE.get());
         h.assertTrue(!done(player, ReactorAchievements.MINEURANIUM), "creative mining preserves upstream exclusion");
         h.succeed();
     }
 
     private static void action(GameTestHelper h) {
-        var player = h.makeMockServerPlayerInLevel();
+        var player = reika.dragonapi.test.GameTestPlayers.joinedCreative(h);
         h.assertTrue(!done(player, ReactorAchievements.FISSION), "fission starts unearned");
         ReactorAchievements.FISSION.triggerAchievement(player);
         h.assertTrue(done(player, ReactorAchievements.FISSION), "reactor runtime callback awards generated data");
@@ -120,6 +120,7 @@ final class ReactorAdvancementTests {
         };
         var connection = new net.minecraft.network.Connection(net.minecraft.network.protocol.PacketFlow.SERVERBOUND);
         new io.netty.channel.embedded.EmbeddedChannel(connection);
+        net.neoforged.neoforge.network.registration.NetworkRegistry.configureMockConnection(connection);
         h.getLevel().getServer().getPlayerList().placeNewPlayer(connection, player, cookie);
         return player;
     }
@@ -186,7 +187,7 @@ final class ReactorAdvancementTests {
     }
 
     private static void fiftyGw(GameTestHelper h) {
-        var player = h.makeMockServerPlayerInLevel();
+        var player = reika.dragonapi.test.GameTestPlayers.joinedCreative(h);
         var turbine = turbinePlant(h, player, 4, true);
         h.assertTrue(turbine.getCurrentPower() < reika.reactorcraft.auxiliary.ReactorPowerMilestones.FIFTY_GW,
                 "one turbine cannot reach 50 GW; count actual shared-circuit outlets");
@@ -198,7 +199,7 @@ final class ReactorAdvancementTests {
     }
 
     private static void belowFiftyGw(GameTestHelper h) {
-        var player = h.makeMockServerPlayerInLevel();
+        var player = reika.dragonapi.test.GameTestPlayers.joinedCreative(h);
         var turbine = turbinePlant(h, player, 2, true);
         reika.reactorcraft.auxiliary.ReactorPowerMilestones.check(turbine);
         h.assertTrue(!done(player, ReactorAchievements.FIFTYGW), "serial turbine stages cannot be double-counted as independent outputs");
@@ -206,7 +207,7 @@ final class ReactorAdvancementTests {
     }
 
     private static void separatePlants(GameTestHelper h) {
-        var player = h.makeMockServerPlayerInLevel();
+        var player = reika.dragonapi.test.GameTestPlayers.joinedCreative(h);
         var turbine = turbinePlant(h, player, 4, false);
         reika.reactorcraft.auxiliary.ReactorPowerMilestones.check(turbine);
         h.assertTrue(!done(player, ReactorAchievements.FIFTYGW), "unconnected reactors cannot pool their output for this milestone");
