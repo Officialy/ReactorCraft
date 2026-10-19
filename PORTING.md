@@ -5635,3 +5635,63 @@ this milestone only accepts Rift's black-box lighting, not its full glow pass.
 Backlog remains 57 complete / 107 open / 164. Owner IDE, progression-overlay and
 ChromatiCraft PORTING.md changes remain outside this local checkpoint. Contract:
 ChromatiCraft/docs/focus-crystal-lighting.md. No new publication.
+
+
+### 2026-10-19: D06 Rift/Aurora forward world glows and source lightmap context
+
+Ported the accepted Rift and Aurora world glow draws to the existing owned native
+forward screen-color phase, preserving ONE/ONE_MINUS_SRC_COLOR RGB blending after
+translucent terrain/classic and after the OIT composite. The original Rift turns
+GL_LIGHTING off but retains the lightmap for both its face rune and halo. Added
+EntityLighting.screen with eight profile/culling variants and explicit lightmap
+binding; Rift glows use LIGHTMAP_ONLY, complete ENTITY vertices and full-bright
+coordinates. Its old unlit position/UV/color shader silently dropped that sampler.
+Profiles retain depth testing, no depth writes and zero-alpha rejection for the
+Rift's byte-alpha sprites/opaque vertex colors without a new 0.1 alpha cutoff.
+The Rift inherits depth-mask state in the original; no unproven new local depth
+state is inferred here. Existing explicit depth-tested/no-write glow behavior is
+preserved. No new mixin, global state toggle or manual frame queue is introduced.
+
+Rift extraction captures world membership, hue and selected direction. World
+rendering retains five shells through .05 and the six original marker planes/UV
+reversals. Item/GUI rendering stays in the native item collector with three shells
+through .025; detached render states omit the world-only marker even when their
+saved data contains a direction. This preserves the original branch activation.
+
+Aurora keeps its original fully unlit, double-sided 24-block curtain and the
+32-frame/150ms UV sequence, including its wrapping and fade quirks. Its animation
+frame is now captured during extraction and copied into the deferred callback,
+rather than re-reading wall time during replay. Native curve/endpoint/color/pose
+snapshots remain stable across state reuse. Corrected stale current comments that
+still claimed the ribbon was undrawn or described the active renderer as 26.2.
+Common entity persistence and spawn behavior are unchanged.
+
+Native mesh acceptance covers all six marker planes, shared hue, five world and
+three item shells, the detached branch, native phase ownership, eight screen
+profile shader/sampler/blend/depth choices and Aurora's 24-block height. It reuses
+Aurora state, changes its entity data and crosses a 150ms clock boundary before
+replaying an older draw byte-for-byte. The real scene observer delegates both
+production renderers unchanged and verified actual Rift box/rune/halo plus Aurora
+curtain execution through completed classic and improved-transparency frames.
+Client-only cells/entity/camera/options restore afterward. An initial fixture
+attempt hit 26.3's assigned-entity-ID requirement in the renderer's weak map; the
+inert test entity is now assigned an ID before extraction. No production fallback
+or relaxed assertion was added.
+
+Final native acceptance passed in 5m01s: build/d06-rift-aurora-final-client.log.
+The full focus/bevel/reservoir/matrix/water/client/shutdown regressions passed.
+DragonAPI 260 and RotaryCraft 38 unit cases were rerun and pass with zero failures,
+errors or skips; family/client compilation passes. Final logs contain no shader
+compile, missing-OIT, missing-vertex or unassigned-entity-ID errors. Independent
+verification reproduced all twelve water PNG means: maximum channel errors
+.42177 bytes classic and .61505 OIT (rounded upward), opaque occlusion differences
+0 and .428572 summed RGB bytes, within the unchanged bound of three. Evidence,
+logs, PNGs and source hashes are pinned via build/d06-rift-aurora-proof.json.
+Play argument hashes remain unchanged. The previous 1,004-case dedicated result
+is historical coverage of unchanged common logic, not a new dedicated run here.
+
+D06 stays open for the remaining source contexts/native glow review; raw inventory
+remains 93 preserved calls across 61 legacy files. Checklist stays 57 complete /
+107 open / 164. Contract: ChromatiCraft/docs/rift-aurora-rendering.md. Owner IDE,
+progression-overlay and existing ChromatiCraft PORTING.md changes remain outside
+this local checkpoint. No new publication. Owner Iris/LOD acceptance remains N08.
