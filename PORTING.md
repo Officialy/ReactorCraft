@@ -5522,3 +5522,53 @@ dormant face-number method. Wider source inventory is 95 qualified calls in 62
 files; excluded legacy files were preserved. Backlog remains 57 complete / 107
 open / 164. Full contract/evidence: RotaryCraft/docs/reservoir-renderer-port.md and
 DragonAPI/docs/render-context-port.md. No new publication.
+
+
+### 2026-10-19: D06 bevel rendering and lighting-helper retirement
+
+Ported the bevel renderer to captured native state: all 24 mount transforms and
+animation signs, fixed inventory orientation, model visibility, packed light,
+face alpha/mode and immutable IO connections. Deferred callbacks no longer read
+the block entity or world. Restored the six source face colors, expanded bounds,
+original per-face alpha, outline loops/rays and centered full-bright colorblind
+numbers. The original compass call was disabled; its complete geometry remains
+implemented and inactive. Gear groups use balanced pose scopes. IO fill and line
+render types now use native improved-transparency pipeline sets.
+
+The original-source comparison matched all 24 transforms/signs and all 18 model
+boxes, texture-coordinate origins, pivots and local rotations. That investigation
+also corrected the preceding reservoir milestone: legacy mirror=true assignments
+happened after ModelBox construction, and compiled groups explicitly clear the
+flag. The five native reservoir mirror() additions were incorrect and are removed;
+previous notes claiming mirror-flag parity are superseded by this correction.
+
+Removed six obsolete ReikaRenderHelper lighting/geometry no-ops and two unused
+pseudo-state fields. Final compiled constant-pool inventory finds zero references
+across all eight modules. Preserved source inventory has 93 calls in 61 legacy
+files: 92 ChromatiCraft calls and one preserved old VoidMonster-source call. Those
+source contexts still need migration review; D06 remains unchecked. No legacy
+sources were removed or excluded to force compilation. Backlog stays 57 complete /
+107 open / 164.
+
+Verification: DragonAPI 260 unit cases and RotaryCraft 38, zero failures/errors/
+skips; family/TestInstance compilation passes. Native client run completed in
+6m26s (build/d06-bevel-final-client.log): real ENTITY mesh buffers for 24 deferred
+mounts and inventory, state-reuse isolation, source face alpha/palette, centered
+numbers, complete dormant compass and native IO forward/OIT pipelines. An
+audit-only observer delegated production rendering unchanged and verified actual
+angled animated bevel, face markers and both IO connections through completed
+world frames in classic and improved transparency. Corrected reservoir meshes,
+all four lighting profiles and actual water/lava/cover world draws passed again.
+The first attempt timed out in the existing asynchronous file-input resource-pack
+reload before reaching bevel checks; the sequential rerun passed that acceptance
+and the complete suite, including client shutdown/cleanup.
+
+Independently reproduced all twelve current water PNG samples. Maximum channel
+errors are 0.80593 bytes classic and 0.61505 OIT (rounded upward), opaque occlusion
+difference zero in both modes. Evidence and hashes are pinned through
+build/d06-bevel-proof.json. Play argument hashes remain unchanged. The previous
+1,004-case dedicated result covers unchanged common reservoir color/component
+code; no dedicated rerun is claimed for this client-only milestone. Native/owner
+Iris acceptance remains separate. Contracts: RotaryCraft/docs/bevel-renderer-port.md
+and DragonAPI/docs/render-context-port.md. Owner IDE/ChromatiCraft progression
+changes remain outside this local checkpoint; no new publication.
