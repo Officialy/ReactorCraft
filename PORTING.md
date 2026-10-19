@@ -5350,3 +5350,54 @@ D03 remains unchecked for controlled screen/water pixel composition verification
 No pixel-parity claim or backlog-count change: 56 complete / 108 open / 164.
 Implementation/evidence: DragonAPI/docs/particle-custom-engine-port.md and
 build/d03-late-proof.json. This is a local checkpoint; no new publication.
+
+
+### D03 water composition acceptance in progress (2026-10-19)
+
+Added an isolated client framebuffer fixture: temporary bright wall, actual water,
+known-color screen particle behind the water, and an opaque occlusion control.
+It reads back native screenshots and compares the screen equation per RGB channel
+in both transparency modes. Client-only blocks/options/texture/delegate are restored.
+The first runtime is in build/d03-water-client.log; no completion claim yet.
+
+D03 pixel acceptance update: client4 passed every front/behind screen-water RGB
+comparison in both transparency modes, with independently recalculated channel
+errors below one byte value. It failed the strict final occlusion comparison on
+small glowstone texture-edge variation; client5 replaces that control with black
+concrete, retaining the strict threshold. Native client tick freeze now holds
+water animation fixed; private probes are admitted by an explicit native tick.
+The original freeze state is restored. D03 stays open pending final full-client
+acceptance. No production renderer change was needed for these fixture fixes.
+
+D06 review preparation: build/d06-active-render-helper-callers.json inventories
+actual compiled method references. External active lighting-helper callers are
+RenderBevel and RenderReservoir; matrix getters have no compiled callers. The
+pristine/excluded legacy callers still need source-aware migration planning; this
+is an active-consumer inventory, not completion of D06 or the full-source review.
+
+
+### D03 complete: controlled native water pixel acceptance (2026-10-19)
+
+Full isolated client audit passed in 4m21s (build/d03-water-client6.log), including
+both custom-engine/real-phase markers, machine sync, DRAGONAPI_AUDIT_CLIENT_PASS
+and logout/server-stop cleanup. Actual vanilla water measurably changed each mode's
+baseline. A depth-tested screen particle in front of water and a depth-disabled
+one behind it matched the original screen equation in all RGB channels, in BOTH
+classic and improved transparency. Maximum errors: 0.3822 and 0.3714 byte values.
+Opaque black-concrete control patches were identical with/without the particle.
+All twelve saved PNG patch measurements were independently reproduced with Pillow.
+
+The fixture uses native client tick freeze to hold water animation fixed and an
+explicit private-engine tick for each probe. It restores blocks, camera, HUD,
+transparency, freeze state, texture and delegate. Server world data is untouched.
+Normal Play argument hashes match the prior checkpoint. Earlier failed captures
+identified fixture camera/depth/animation/texture-edge assumptions; they did not
+justify changing native water depth or relaxing the comparison thresholds.
+
+D03 is checked: 57 complete / 107 open / 164. Earlier D03-open notes are historical.
+Evidence: DragonAPI/docs/particle-custom-engine-port.md, build/d03-water-proof.json,
+and build/dragonapi-client-audit/particle-composition/. Prior unit/native dedicated
+milestones remain recorded in the same port notes. This batch changes acceptance
+fixtures/docs; the late-phase production rendering fix was checkpointed earlier.
+D06 remains open; its compiled-consumer inventory is preparation, not completion.
+Owner IDE/progression-overlay edits remain separate. No new publication.
