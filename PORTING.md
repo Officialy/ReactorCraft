@@ -5401,3 +5401,52 @@ milestones remain recorded in the same port notes. This batch changes acceptance
 fixtures/docs; the late-phase production rendering fix was checkpointed earlier.
 D06 remains open; its compiled-consumer inventory is preparation, not completion.
 Owner IDE/progression-overlay edits remain separate. No new publication.
+
+
+### D06 matrix context and lighting review in progress (2026-10-19)
+
+Replaced identity-returning matrix getters with explicit RenderMatrixContext
+inputs. The common JOML-only value snapshots view/model, projection and texture;
+its native client bridge uses camera-relative model poses and TextureTransform.
+No parameterless identity fallback or implicit global GPU matrix query remains.
+Full family source has no callers of the removed parameterless matrix methods.
+Verified 260 DragonAPI units, zero failures/errors/skips, and family compilation;
+real render-stage acceptance is running in build/d06-matrix-client2.log.
+
+Lighting remains open. Full uncommented family-source scan found 97 qualified
+legacy helper calls in 63 files. Compiled external references are confined to
+dormant methods in RenderBevel and RenderReservoir; the actual reservoir fluid
+submission still needs an explicit emissive-lighting decision. Original
+disableEntityLighting disables lightmap only, not directional GL lighting;
+caller surroundings must decide the shader profile. Preserved VoidMonster root
+reference and modern implementation share a class name, so compiled class-file
+presence alone cannot classify source acceptance. See DragonAPI/docs/render-context-port.md
+and build/d06-*-callers.json. D06 remains unchecked; no count change.
+
+
+### D06 matrix portion verified; lighting still open (2026-10-19)
+
+RenderMatrixContext replaces the three identity-returning matrix getters with
+explicit owned model-view/projection/texture snapshots. The native world-camera
+bridge composes view * camera-relative model and captures the actual projection
+and TextureTransform. Inputs and returned values are copied. Source/bytecode
+search found no consumers of the removed parameterless getters, including the
+excluded family source. No implicit global GPU matrix query/fallback was added.
+
+Verified 260 DragonAPI units with zero failures/errors/skips (four new matrix
+regressions), family/TestInstance compilation, and the full isolated native client
+in 3m54s (build/d06-matrix-client2.log). The actual AfterOpaqueBlocks stage compared
+capture against Minecraft's CPU-side native model-view stack and verified native
+projection, nonidentity texturing and retained values after input/output reuse.
+MATRIX_CONTEXT_CLIENT_AUDIT_PASS, water composition, full client and shutdown
+checks passed. Play VM/program argument hashes remain unchanged.
+
+D06 remains unchecked for the lighting migration. Full source inventory: 97
+uncommented qualified helper calls in 63 files, mostly excluded legacy source.
+The two external compiled caller classes are RenderBevel and RenderReservoir;
+their references are in dormant methods. The actual reservoir fluid path needs an explicit emissive
+shader/light choice. Original disableEntityLighting disables lightmap only; its
+name does not establish directional-light intent. See
+DragonAPI/docs/render-context-port.md and build/d06-matrix-proof.json. Backlog
+stays 57 complete / 107 open / 164. Owner IDE/progression-overlay changes remain
+outside this local checkpoint; no publication.
