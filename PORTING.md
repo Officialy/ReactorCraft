@@ -5450,3 +5450,75 @@ name does not establish directional-light intent. See
 DragonAPI/docs/render-context-port.md and build/d06-matrix-proof.json. Backlog
 stays 57 complete / 107 open / 164. Owner IDE/progression-overlay changes remain
 outside this local checkpoint; no publication.
+
+
+### D06 reservoir and per-draw lighting port in progress (2026-10-19)
+
+Compared RotaryCraft original 663f63c60 reservoir renderer/tile with the active
+26.3 path. Replaced the partial renderer with extracted native state for connected
+walls, original full-width fluid surface and four same-fluid neighbor corner
+means, native fluid models/biome tints, water model event, glass cover at 0.99,
+and luminous-fluid full-bright lighting. Deferred callbacks no longer read tanks,
+neighbors or the level. The inert legacy render/cover/fluid bodies are replaced
+by these complete submissions, not deleted without behavior replacement.
+
+Added EntityLighting profiles for independent directional/lightmap choices, each
+with culled/double-sided forward and three native OIT pipelines. Reservoir liquid
+uses LIT or FULL_BRIGHT. Legacy renderColor uses native FluidStack CUSTOM_DATA;
+placeable in-world fluid tint retains its original precedence. Native model/tint
+resolution replaces hand-picked renderer maps and fake water/lava fallbacks.
+
+First compile corrected the removed block-model-shaper accessor and explicit
+BlockAndTintGetter boundary. Unit/family compilation passed; real native client
+mesh/registered-model/32-GPU-pipeline acceptance is running in
+build/d06-reservoir-client.log. Added two dedicated color/component regressions;
+the server suite will run after client snapshot preparation completes. D06 stays
+open for complete lighting migration and acceptance. No backlog-count change.
+
+Final D06 reservoir parity review found that the original world model rotates
+while detached/inventory rendering does not. Restored that distinction, the
+authored five mirrored model parts, and the original model-part draw order.
+New native checks use explicit transformed-point coordinates and all 120
+inventory model vertices. Re-running units/full client in
+build/d06-reservoir-orientation-client.log before committing. Earlier 32-pipeline
+scene acceptance and all 1,004 dedicated profile cases passed. Approval review
+previously failed due to its usage quota; the clock passed its stated reset and
+the read-only retry succeeded. No pending review rejection remains.
+
+
+### D06 reservoir native rendering/profile milestone verified (2026-10-19)
+
+Replaced the partial reservoir renderer with native extracted state for connected
+model walls, glass cover at 0.99, registered fluid models/biome tint and water-model
+hook, original four-corner same-fluid height averages and full-block fluid bounds.
+Luminous fluid now selects an explicit fully unlit/lightmap-bypassed profile;
+ordinary fluid retains directional lighting and packed lightmap coordinates.
+FluidStack CUSTOM_DATA renderColor and original world-tint precedence are restored.
+Deferred callbacks use captured data after tanks, world cells and state are reused.
+
+EntityLighting declares four independent directional/lightmap profiles, each with
+culled/double-sided forward and three OIT stages. All 32 GPU pipelines compiled;
+real world frames completed lit water, emissive lava and glass cover in classic
+and improved transparency. Final source review restored original inventory/world
+pose distinction, all five mirrored model parts and part draw order. Golden point
+coordinates and all 120 native inventory vertices passed the client regression.
+
+Final combined units/client: build/d06-reservoir-orientation-client.log, 10m38s,
+with full client/water/cleanup markers and successful exit. Unit counts: DragonAPI
+260, RotaryCraft 38; zero failures/errors/skips. Complete configured external-mod
+rotarycraft:* dedicated profile passed all 1,004 required cases, including two new
+common color/component cases (build/d06-reservoir-dedicated.log). The final model
+parity changes do not change the common code covered by that server result.
+
+All twelve current water PNG measurements were independently reproduced. Evidence,
+logs, copied PNGs and hashes are pinned through build/d06-reservoir-proof.json.
+Play argument hashes remain unchanged. Approval review's earlier quota failure
+was resolved after its stated reset; tests resumed successfully. Owner IDE and
+ChromatiCraft progression-overlay edits remain outside this local checkpoint.
+
+D06 remains unchecked: its generic no-op APIs and remaining callers still require
+migration. The only remaining external compiled helper user is RenderBevel's
+dormant face-number method. Wider source inventory is 95 qualified calls in 62
+files; excluded legacy files were preserved. Backlog remains 57 complete / 107
+open / 164. Full contract/evidence: RotaryCraft/docs/reservoir-renderer-port.md and
+DragonAPI/docs/render-context-port.md. No new publication.
