@@ -5572,3 +5572,66 @@ code; no dedicated rerun is claimed for this client-only milestone. Native/owner
 Iris acceptance remains separate. Contracts: RotaryCraft/docs/bevel-renderer-port.md
 and DragonAPI/docs/render-context-port.md. Owner IDE/ChromatiCraft progression
 changes remain outside this local checkpoint; no new publication.
+
+
+### 2026-10-19: D06 focus-crystal source lighting and native world glows
+
+Audited the original focus-crystal, Rift box and Crystal Glow inventory draw
+contexts. The old Chroma UNLIT_ENTITY_CUTOUT comment inverted the helper contract:
+disableEntityLighting disables the lightmap only. Focus starts with GL_LIGHTING
+explicitly enabled, draws its base with world brightness, then disables only the
+lightmap for the Techne shards. Added eight native EntityLighting.cutout profile/
+culling variants: focus base uses LIT, shards DIRECTIONAL_ONLY, and the Rift black
+box and Crystal Glow inventory card retain LIGHTMAP_ONLY. Removed the ambiguous
+Chroma pipeline/factory after migrating all users. Opaque cutouts keep alpha
+clipping, depth writes and native solid-phase ownership.
+
+Restored the base's original normal magnitudes (top 1, bottom .5, X sides .625,
+Z sides .75), alongside its original vertex shades. A real native ENTITY mesh
+check found another accepted-renderer bug: base vertices omitted UV1/overlay even
+though the format requires it. Added the explicit NO_OVERLAY attribute; the
+regression remains covered by all five native tier meshes. Shader NO_OVERLAY
+does not make a required mesh attribute optional.
+
+Corrected the same late-mirror-assignment mistake in both focus models. All 36
+ordered and 26 messy parts independently match original boxes, UV origins, pivots
+and local rotations; ModelBox construction precedes the legacy mirror=true
+assignments. Native model data is therefore unmirrored.
+
+The focus bobber/edges/flare/beam source draw disables both lighting systems and
+depth writes and uses ADDITIVEDARK (ONE, ONE_MINUS_SRC_COLOR). Added explicit
+untextured color/line pipelines and routed world glows through the existing
+native forward screen-color phase using ScreenParticleRendering.submitGeometry.
+Native CustomFeatureRenderer submits participate in the phase's normal grouping,
+preparation, draining/reset and post-terrain/classic or post-OIT execution. No
+new mixin or manual frame queue was introduced. This preserves the RGB screen
+equation instead of substituting vanilla lightning blending or scalar-alpha OIT.
+The source beam geometry remains; the world scene acceptance covers base, shards,
+bobber, edges and flare, and does not claim a connected-machine beam fixture.
+
+Final native client acceptance passed in 5m (build/d06-focus-final-client.log):
+eight cutout profile/culling shaders, both glow pipelines, all five tier meshes,
+source base normals and Rift black-box mesh. The scene observer delegates the
+production renderer unchanged and verified actual focus base/shards/bobber/edges/
+flare through completed classic and improved-transparency world frames. The
+bevel, reservoir, matrix, full client/shutdown and water regressions passed again.
+The earlier attempt exposed the missing overlay vertex attribute; the fix passed
+the unchanged native assertions. The fixture's initial generic renderer-type
+compile error was also corrected; final family/client compilation passed.
+
+DragonAPI 260 and RotaryCraft 38 unit cases pass with zero failures/errors/skips.
+The prior 1,004-case dedicated result remains historical coverage of unchanged
+common code; no new dedicated run is claimed for this client-only milestone.
+All twelve current water PNG means were independently reproduced. Maximum
+channel errors are .48340 byte values classic and .56687 OIT, rounded upward;
+opaque occlusion differences are 0 and 1.142858 summed RGB bytes, below the strict
+bound of three. Evidence/logs/PNGs/source hashes are pinned through
+build/d06-focus-proof.json. Play argument hashes are unchanged. No shader compile,
+missing-OIT-pipeline or missing-vertex-attribute error appears in the final run.
+
+D06 remains open: 93 preserved legacy calls across 61 files and broader native
+world-glow context review remain. Next are Rift/Aurora forward-world glow paths;
+this milestone only accepts Rift's black-box lighting, not its full glow pass.
+Backlog remains 57 complete / 107 open / 164. Owner IDE, progression-overlay and
+ChromatiCraft PORTING.md changes remain outside this local checkpoint. Contract:
+ChromatiCraft/docs/focus-crystal-lighting.md. No new publication.
