@@ -5325,3 +5325,28 @@ build/n09-proof.json. N09 is checked; checklist now 56 complete / 108 open / 164
 D03 improved-transparency/screen-water composition and N07 real remote sessions
 remain separate outstanding work. Owner IDE/progression-overlay changes stay
 outside this checkpoint.
+
+
+### D03 late screen phase verified (2026-10-19)
+
+Fixed an actual ordering bug: screen-blended custom particles were submitted in
+native solid groups, before water. Screen quads now have separate native storage
+and a dedicated phase grouped/drained/reset by the native feature dispatcher.
+Classic rendering executes it after translucent terrain/particles; improved
+transparency executes it after the OIT composite, loading main color and scene
+depth. Both reuse the stock quad feature renderer, preserve per-channel screen
+blending and never write depth. Scalar-alpha particles retain native OIT stages.
+
+Verified compile, all 256 DragonAPI unit cases (zero failures/errors/skips), and
+final isolated client audit in build/d03-late-client-final.log (3m44s). The client
+checks screen-only extraction/storage/reset, original ownership/controller tests,
+112 GPU pipeline compilations, actual lit-alpha/screen probe extraction, and
+successfully executed populated late phases in BOTH transparency modes. Test
+transparency settings are restored and the private particle delegate removed.
+Play VM/program argument hashes still match the previous checkpoint. Owner IDE
+and progression-overlay edits remain outside this checkpoint.
+
+D03 remains unchecked for controlled screen/water pixel composition verification.
+No pixel-parity claim or backlog-count change: 56 complete / 108 open / 164.
+Implementation/evidence: DragonAPI/docs/particle-custom-engine-port.md and
+build/d03-late-proof.json. This is a local checkpoint; no new publication.
