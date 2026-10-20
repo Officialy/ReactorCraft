@@ -6122,3 +6122,74 @@ Owner IDE/progression/ChromatiCraft PORTING.md edits excluded from this local
 checkpoint. No new publication. Next source-parity cluster is Aura Point,
 Dimension Core and their shared Locus/GlowKnot rendering; original sources and
 initial survey saved under build/d06-next-locus-survey.json.
+
+
+### 2026-10-20 — D06 Locus/Aura/GlowKnot source state and native GUI composition
+
+Compared the complete V33a RenderLocusPoint, RenderAuraPoint, RenderDimensionCore,
+GlowKnot, Spline.render and blend definitions. Restored three distinct source
+paths: SRC_ALPHA/ONE core layers, screen flare/fade, and ordinary-alpha knot
+strokes. Native 26.3 profiles preserve lightmap sampling without directional
+lighting, source explicit core/flare brightness 240, source core sizes/alpha/RGB
+attenuation and UV cells, raw Aura core color versus saturated flare/knot color,
+source camera/polar rotations and position-based roll. Source depth writes stay
+disabled; ordinary cores test depth and ritual cores bypass it. Restored the
+matching Dimension Core post-effect LOS gate outside the ritual.
+
+Knot extraction now captures immutable spline samples. Native expanded lines
+have real normalized segment tangents, source widths 1/5/10 and alpha 255/63/63;
+duplicate closing samples do not create zero-vector normals. Detached knot
+retains its 1.5px/no-depth branch; the submit API retains handbook width/pose
+context for the excluded legacy guide renderer. Fade ownership is consolidated
+with the knot and preserves source polar matrix, UV, alpha160 and RGB attenuation.
+Tracked client knots keep advancing six steps/tick while culled, with weak tile
+keys and level/removal cleanup. World effects use the established native forward
+phase in classic/improved transparency; item draws stay in their native collector.
+
+Dimension Core items retain source Y45/X-30 rotations. Their clock-driven models
+invalidate native GUI atlas caching. A scoped native GUI atlas/oversized blit
+selects additive RGB only for baked Dimension Core models, retaining the original
+additive contribution without a luminance-to-alpha approximation or black atlas
+rectangle. Foreign models retain native alpha composition. Four required client
+Mixins live in a separate mixins.chromaticraft.locus.json so owner progression
+Mixin configuration edits remain untouched. The full detached helper separately
+retains the source offsets; the native item adapter recenters presentation.
+
+Native fixtures exposed an ARGB carry-over: the brightness helper preserves the
+input alpha, so OR-ing draw alpha could force attenuated layers/fade opaque.
+Masked input to RGB before assigning explicit draw alpha. Final fixture coverage
+includes both RGB and ARGB inputs. An incomplete cached Chroma compiler output
+was also caught by the accepted-class verifier, never allowed to launch. Rebuilt
+only generated class output without the build cache; all 1037 accepted Chroma
+classes / 64 TestInstance classes verified. Windows retained a compiler-open
+Minecraft jar during an earlier broad clean, so the successful recovery preserved
+cached jars and cleared only the generated classes directory. Cache-output
+validation remains a build follow-up; no build allowlist was reduced.
+
+Full native acceptance passed in 6m48s: build/d06-locus-final-client.log.
+LOCUS_MESH_CLIENT_AUDIT_PASS covers 1536 independent source core meshes plus
+closed knot/fade positions, tangents, widths, UV/color/alpha/light, source blend
+and ordinary/ritual depth declarations, real items and immutable deferred replay.
+LOCUS_GUI_CLIENT_AUDIT_PASS resolves all 16 real animated models, draws them into
+an owned native GPU atlas, and checks transformed normal/oversized blits plus a
+foreign vanilla control. LOCUS_SCENE_CLIENT_AUDIT_PASS requires actual production
+Aura core/PvP flare/three strokes/fade and Dimension Core callbacks in completed
+classic/improved frames, PvP on/off and injected ritual render-state branches.
+This verifies those render branches, not a complete monument ritual. Fixture
+blocks/camera/options and owned GUI resources restore; preceding suite/shutdown
+checks passed. Seven new GPU pipelines compiled. Only the existing Windows
+Perflib lookup remains an ERROR category; no shader/vertex/OIT failures.
+
+Pinned proof: build/d06-locus-proof.json, including originals, source/asset hashes,
+immutable runtime manifest, logs, and independently reproduced twelve water PNG
+means. Max channel errors .42898 bytes classic / .48420 improved (rounded up),
+zero opaque occlusion difference in both modes. Native Play argument hashes
+unchanged. DragonAPI 260 / RotaryCraft 38 clean unit XML and two older Launch Pad
+server cases remain baseline evidence, not fresh unit/server runs for this batch.
+
+Contract: ChromatiCraft/docs/locus-rendering.md. Compiled retired-helper refs zero;
+excluded inventory remains 93 calls / 61 files. D06 stays open; checklist remains
+57 complete / 107 open / 164. Twelve compiled renderer contexts were inventoried
+for source review in build/d06-active-context-review.json; references alone are
+not proof of a bug. Owner IDE/progression/ChromatiCraft PORTING.md edits excluded
+from this local checkpoint. No new publication.
