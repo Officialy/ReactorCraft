@@ -5798,3 +5798,36 @@ references remain zero; raw excluded inventory stays 93 calls / 61 files.
 D06 remains open; checklist stays 57 complete / 107 open / 164. Contract:
 ChromatiCraft/docs/lumen-wire-rendering.md. Owner IDE/progression/ChromatiCraft
 PORTING edits remain outside this checkpoint. No new publication.
+
+
+### 2026-10-20: D06 Lumen Turret source model and forward sparkles
+
+Restored the original detached turret scale (1.75), Y offset (.1875) and model-only
+inventory activation. World GLOWSECTION/CENTER sparkles retain source tip
+position, sizes, UV ordering and white color, now submitted through the existing
+native forward screen-color phase rather than weighted OIT. The lit body retains
+its cutout profile. Removed incorrect baked mirroring from all seven model parts:
+original flags were assigned after box construction. Independent source comparison
+matched all geometry, texture origins, pivots and rotations.
+
+Native client acceptance passed in 4m16s: build/d06-turret-client.log. Checks cover
+168 body vertices, both complete sparkle quads, exact source positions/sizes,
+detached transform and deferred replay after camera/render-state mutation. Actual
+production body/sparkle world draws completed in classic and improved transparency;
+audit-only fixtures, support, camera and options restored. The complete preceding
+client suite and shutdown cleanup passed. No shader compile/missing attribute/OIT
+errors; Windows Perflib counter lookup remains the sole ERROR log category.
+
+Independently reproduced twelve water PNG measurements: maximum channel errors
+.16807 bytes classic / .18512 improved (rounded upward), zero opaque occlusion
+difference in both. Pinned evidence: build/d06-turret-proof.json. Native Play
+argument hashes unchanged. DragonAPI 260 / RotaryCraft 38 clean unit XML and the
+preceding two Launch Pad server cases are retained baseline coverage, not fresh
+unit/server runs for this renderer-only batch. Compiled retired-helper references
+remain zero; preserved excluded inventory remains 93 calls / 61 files.
+
+D06 remains open, checklist 57 complete / 107 open / 164. Contract:
+ChromatiCraft/docs/lumen-turret-rendering.md. Owner IDE/progression/ChromatiCraft
+PORTING changes excluded from this checkpoint. No new publication. Next source
+context candidate: Lumen Relay (its base callback still reads reused state and
+its glow uses the legacy additive path); requires original-source review first.
