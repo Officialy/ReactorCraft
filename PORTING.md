@@ -6030,3 +6030,49 @@ and existing ChromatiCraft PORTING.md edits remain outside this local checkpoint
 No new publication. Remaining active contexts include Crystal Plant, Adjacency,
 Aura Point and dimension glow renderers using older additive paths; compare each
 against its original lighting, pass and blend contract before migration.
+
+
+### 2026-10-20: D06 Crystal Plant source lightmap, pod and ripe glow
+
+Original CrystalPlantRenderer disables directional lighting and depth writes but
+leaves the lightmap enabled. Restored LIGHTMAP_ONLY profiles for the ordinary-alpha
+pod (with native OIT stages) and ripe screen glow (existing composed-world forward
+phase). Both retain incoming scene packed light, source culling and no depth writes.
+The old unlit sprite paths lost the source lightmap and used the old glow submission.
+
+Preserved all 52 source pod vertices, pointed surfaces, midpoint UVs, .75 saturation,
+1/16 vertical nudge and budding .2 translation/.625 scale. Corrected ripe glow and
+sparkle UV orientation and original Y/Z-flipped frame followed by camera yaw/pitch;
+retained source center, quarter scale, element color and layer order. Growth 2
+emits nothing, 1 emits the budding pod, and 0 emits pod plus both ripe layers.
+Immutable UV records and scalar color/light/ripe captures replace live sprite and
+state reads from deferred callbacks. Original shared bloom texture mapping verified.
+The pod image has alpha 188..220; glow sheets have alpha 255 and retained one-tick
+animation metadata. Native alpha/screen profiles preserve these source distinctions.
+
+Initial full native acceptance passed in 11m03s. Final acceptance with observations
+restricted to the exact fixture position passed in 7m57s:
+build/d06-crystal-plant-final-client.log. All 288 combinations (16 colors x 3 growth
+stages x 2 light values x 3 camera angles) matched source numerical pod goldens,
+ripe matrices, exact UV/color/alpha/packed light, profile bindings and deferred
+replay after caller pose/camera/state reuse. Four completed native world cases
+(budding/ripe in classic/improved) required fixture-specific pod and ripe glow
+callbacks. Production renderer settings/bounds delegate through the observer;
+fixture dirt/plant/camera/options restore. Full preceding client, resource loading
+and shutdown cleanup checks passed. Normal Play remains isolated.
+
+All twelve water PNG means independently reproduced: maximum channel errors
+.10525 bytes classic / .19928 improved (rounded upward), zero opaque occlusion
+difference in both. Only Windows Perflib lookup remains a final ERROR category;
+no shader/vertex/OIT errors. Original sources, logs, numerical goldens, source/asset
+and animation-metadata hashes, and PNGs pinned: build/d06-crystal-plant-proof.json.
+Native Play argument hashes unchanged. DragonAPI 260 / RotaryCraft 38 clean unit
+XML and two older Launch Pad server cases are baseline evidence, not fresh
+unit/server runs for this renderer-only change.
+
+Contract: ChromatiCraft/docs/crystal-plant-rendering.md. Compiled retired-helper
+references remain zero; excluded legacy inventory stays 93 calls / 61 files. D06
+stays open; checklist 57 complete / 107 open / 164. Owner IDE/progression and
+existing ChromatiCraft PORTING.md edits excluded from this local checkpoint.
+No new publication. Remaining active source contexts include Adjacency, Aura Point
+and dimension glow renderers still using older additive submissions.
