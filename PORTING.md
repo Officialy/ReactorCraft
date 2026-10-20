@@ -5831,3 +5831,50 @@ ChromatiCraft/docs/lumen-turret-rendering.md. Owner IDE/progression/ChromatiCraf
 PORTING changes excluded from this checkpoint. No new publication. Next source
 context candidate: Lumen Relay (its base callback still reads reused state and
 its glow uses the legacy additive path); requires original-source review first.
+
+
+### 2026-10-20: D06 Lumen Relay source terrain meshes and shared particle OIT fix
+
+Replaced the simplified relay boxes with the original RelayRenderer geometry:
+48 stone vertices, 20 crystal vertices and 24 connectivity vertices. Restored
+source full-bright terrain lighting, crystal_outline texture, cap alpha 212,
+world-face marker UVs, negative-mount height differences, reflection/swap winding
+and original intermediate/repeated stone surfaces. Connectivity alpha stays 255.
+Original ISBRH pass 1 uses ordinary terrain translucency, not ADDITIVEDARK; native
+crystal/frame draws therefore retain real alpha/OIT ownership. Each callback owns
+immutable scalar vertices/UVs and no reusable render state or live atlas sprite.
+
+The first native world scene exposed a real ambient-particle crash: ChromaParticle
+layers still used old translucent declarations without OIT pipeline sets. Migrated
+all five shared layer declarations to DragonAPI's native custom-particle profiles.
+Original EntityBlurFX/LaserFX/GlobeFX flags were verified: no fog or lighting;
+alpha clip only for additive Blur, disabled for ordinary alpha Blur and animated
+sheets. Exact masks 29/21/13/9 are audited. Screen particles now use the existing
+native forward particle phase with their source RGB blend; ordinary alpha has all
+three OIT stages. Through-wall depth behavior remains explicit. This removes the
+old brightness-to-coverage approximation from these shared Chroma particle draws.
+
+Final acceptance passed in 7m10s: build/d06-relay-acceptance-client.log. All 36
+mount/input pairs match independent original-source goldens, vertex-by-vertex for
+position/UV/white/alpha/packed light, plus deferred replay after state/camera
+mutation. Both actual world modes completed all three production relay meshes;
+forced relay ambient Blur and an ordinary-alpha ChromaParticle exercise native
+screen and OIT declarations, with populated screen phase execution required.
+Full existing client suite and shutdown cleanup passed. Intermediate crash and
+crash-fix runs are retained; final acceptance includes exact source clip flags.
+
+All twelve water PNG measurements independently reproduced; maximum channel
+errors .14806 bytes classic / .20625 improved (rounded upward), zero opaque
+occlusion difference in both. Proof, pinned original source contracts/hashes,
+logs, goldens and PNGs: build/d06-relay-proof.json. Play argument hashes unchanged.
+The sole final ERROR category is Windows Perflib lookup; no missing OIT/vertex or
+shader errors. Prior DragonAPI 260 / RotaryCraft 38 unit XML and Launch Pad's two
+server cases remain clean baseline evidence, not new unit/server runs this batch.
+
+Contract: ChromatiCraft/docs/lumen-relay-rendering.md. Compiled retired-lighting
+helper references remain zero; raw excluded inventory stays 93 calls / 61 files.
+D06 stays open; checklist stays 57 complete / 107 open / 164. Owner IDE/progression
+and existing ChromatiCraft PORTING.md edits remain outside this local checkpoint.
+No new publication. Next source context: Function Relay (source ADDITIVEDARK,
+no depth writes/fog/lightmap/directional lighting; active world draw still uses
+legacy additive custom geometry and needs source transform/phase verification).
