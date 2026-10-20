@@ -6076,3 +6076,49 @@ stays open; checklist 57 complete / 107 open / 164. Owner IDE/progression and
 existing ChromatiCraft PORTING.md edits excluded from this local checkpoint.
 No new publication. Remaining active source contexts include Adjacency, Aura Point
 and dimension glow renderers still using older additive submissions.
+
+
+### 2026-10-20 — D06 Adjacency rings, source animation and inherited depth state
+
+Ported the active Adjacency renderer against V33a, including all sixteen original
+color pairs, source position/millisecond/tier rotations, redstone slowdown and
+three independent color pulses. Three source four-pixel opaque line loops retain
+lightmap sampling through a registered native 26.3 line shader/format, without
+directional lighting or a texture. World rings and the trimmed screen glow use
+the established forward phase; actual item cross/rings retain native item
+ownership and caller light. Animation, UV/color/light and poses are captured for
+deferred replay.
+
+Verified the full original caller before choosing depth state. The official
+Forge 1.7.10 pass-1 hook precedes depthMask(true); JDK static disassembly of the
+installed manifest-matching vanilla client confirms no mask reset in the tile
+loop/dispatcher. World rings/glow therefore test depth without writing it; item
+rings/glow retain writes. Corrected Relay Source crystals to the same inherited
+world no-write profile. This is JDK disassembly evidence, not REA Evidence; REA
+client tooling was unavailable. Contract: ChromatiCraft/docs/adjacency-rendering.md.
+
+The first native attempt stopped on the audit's old 2400-tick global timeout
+before reaching these checks. Replaced that fixed-tick ceiling with a bounded
+15-minute monotonic elapsed deadline for the expanded disposable suite. Normal
+Play remains isolated and its native argument hashes are unchanged.
+
+Full native acceptance passed in 8m40s: build/d06-adjacency-client-rerun.log.
+All 288 independent animation fixtures and native ring/glow mesh checks passed:
+clock/color, radius/planes/rotations, four-pixel width, packed light, trimmed UV,
+world camera/item cross, typed item tier, extraction and deferred replay. Four
+fixture-specific completed running/stopped world cases passed across classic
+and improved transparency. Existing 24 GUI item models, corrected Relay Source,
+all preceding renderer/resource/network checks and shutdown cleanup also passed.
+
+Pinned proof: build/d06-adjacency-proof.json. Twelve water PNG means independently
+reproduced: max channel error .07059 bytes classic / .17808 improved (rounded up);
+opaque occlusion difference .42858 classic / 0 improved, below existing tolerance.
+Retained DragonAPI 260 / RotaryCraft 38 clean unit XML and two Launch Pad server
+cases are baseline evidence, not fresh unit/server runs for this renderer batch.
+Compiled retired-light-helper refs remain zero; excluded inventory 93 calls in
+61 files. D06 remains open; checklist 57 complete / 107 open / 164.
+
+Owner IDE/progression/ChromatiCraft PORTING.md edits excluded from this local
+checkpoint. No new publication. Next source-parity cluster is Aura Point,
+Dimension Core and their shared Locus/GlowKnot rendering; original sources and
+initial survey saved under build/d06-next-locus-survey.json.
