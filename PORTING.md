@@ -5878,3 +5878,52 @@ and existing ChromatiCraft PORTING.md edits remain outside this local checkpoint
 No new publication. Next source context: Function Relay (source ADDITIVEDARK,
 no depth writes/fog/lightmap/directional lighting; active world draw still uses
 legacy additive custom geometry and needs source transform/phase verification).
+
+
+### 2026-10-20: D06 Function Relay source matrices and native screen ownership
+
+Restored RenderFunctionRelay's original world matrix sequence (initial Y/Z flip,
+center, .875 scale, camera yaw then pitch), replacing the inequivalent quaternion
+transform. World CELLFLARE draws now use the existing native forward screen phase
+with raw RGB/color, normal depth test and no depth writes/culling. UV endpoints
+and color are scalar captures; callbacks retain no sprite, live pose, camera,
+clock or reused render state. Existing correct item transform remains center/flip,
+-45 Y/-30 X and 1.125 scale; detached BER now selects that same item path. Actual
+FunctionRelayItemRenderer keeps native item collector ownership. Source four-color
+anchors and 25-tick transitions retain the existing signed-time normalization.
+
+Final acceptance passed in 4m22s: build/d06-function-relay-final-client.log. Native
+meshes match analytic source matrices at six yaw/pitch pairs, exact atlas UV/color
+and opaque alpha, world versus actual special-item/detached ownership, and byte
+replay after caller pose/camera/render-state mutation. Actual production world
+sprite draws completed in classic and improved transparency. Every retained
+CELLFLARE frame has alpha 255; raw source RGB blending needs no brightness-to-
+coverage approximation. The complete previous client suite and shutdown cleanup
+passed, including the resource loading audit.
+
+The first run (build/d06-function-relay-client.log) failed before renderer checks
+in FileInputClientChecks phase 1. Its asynchronous reload timeout counted rendered
+frames (600), making its allowed runtime depend on frame rate/load. Changed to
+per-phase monotonic deadlines: 120 seconds for reload, 30 for capture/decoder
+completion. Every content/thread-ownership/error-path/cleanup assertion remains
+required; no check is skipped. The final full run verified that complete path.
+
+Independently reproduced all twelve water PNG measurements: maximum channel
+errors .16807 bytes classic / .18512 improved (rounded upward), zero opaque
+occlusion difference in both. Final log has only the Windows Perflib ERROR
+category, with no shader/missing attribute/OIT errors. Pinned original source,
+failed/final logs, source/asset hashes and PNGs: build/d06-function-relay-proof.json.
+Native Play argument hashes unchanged. DragonAPI 260 / RotaryCraft 38 clean unit
+XML and the two earlier Launch Pad server cases are retained baseline evidence,
+not fresh unit/server executions for this client-only batch.
+
+Clarification of the previous candidate note: original Function Relay explicitly
+disables directional lighting, lightmap and depth writes; it does not itself
+toggle fog. Inherited fog-context review remains in the broader open D06 scope.
+Contract: ChromatiCraft/docs/function-relay-rendering.md. Retired-helper compiled
+references remain zero; excluded legacy inventory remains 93 calls / 61 files.
+D06 stays open, checklist 57 complete / 107 open / 164. Owner IDE/progression and
+existing ChromatiCraft PORTING.md edits excluded. No new publication. Next source
+context: Personal Charger. Its original pulse uses tile.hashCode() and modulo 360;
+the active port uses position.hashCode() without reduction, and still submits to
+AFTER_TERRAIN instead of the composed-world forward screen phase.
