@@ -5695,3 +5695,67 @@ remains 93 preserved calls across 61 legacy files. Checklist stays 57 complete /
 107 open / 164. Contract: ChromatiCraft/docs/rift-aurora-rendering.md. Owner IDE,
 progression-overlay and existing ChromatiCraft PORTING.md changes remain outside
 this local checkpoint. No new publication. Owner Iris/LOD acceptance remains N08.
+
+
+### 2026-10-20: D06 Fluid Distributor/Launch Pad source rendering and client structure authority
+
+Restored the accepted Fluid Distributor's original lightmap-only RGB screen halo
+and routed world draws through the owned native forward phase. The source base
+renderer disables directional GL lighting but retains full-bright lightmap data.
+All ENTITY attributes are explicit. Detached/item draws retain native item
+collector ownership. SOUTH/WEST/DOWN lattice face ordering/UVs now match the
+original RenderDistributorBase; all six pulse phases retain .0125 amplitude and
+3 degrees/tick. Pulse time is copied before deferred callback creation, removing
+its live read from reusable render state.
+
+Launch Pad fan draws now use fully unlit RGB screen blending through the same
+native phase. Original GL_FRONT_FACE=CW is expressed as native CCW upward
+triangles with culling; the fan no longer becomes double-sided to avoid the
+winding conversion. Kept the 3x3 square boundary, y=1.001, five-degree sweep and
+native repeated-corner triangle quads. The original enhanced draw appends both
+rim sequences in one TRIANGLE_FAN: its first green center remains the anchor for
+the white rim sequence too. The conversion now preserves that per-vertex color
+contract (omitting only the original degenerate bridge triangles). No 1.7.10
+inherited shade-model screenshot equivalence is claimed. World/structure/positive
+charge gating and captured charge/enhancement remain explicit; saved structured
+item states do not draw a world-only fan.
+
+Source review found a separate real client bug: Launch Pad first-tick/adjacent
+validation called NBTStructureLoader, whose 26.3 template API requires ServerLevel.
+checkForStructure now stays server-owned; clients preserve synchronized struct,
+enhanced and charge data. The complete server matching, Ender source-ring check,
+packets and launching logic remain intact. No fake client validity result or
+placeholder template was introduced.
+
+Added two dedicated native tests using the generated source launch-pad template:
+frame validation/invalidation/restoration; complete/partial Ender rings; and
+native save/update-tag loading of structure/enhancement/charge. Both required
+cases passed in 1m05s with selector chromaticraft:launch_pad_*:
+build/d06-launch-pad-dedicated.log. This is the exact verified scope, not a fresh
+full 1,006-case family run. New registration/allowlist entry admits the actual
+complete tests without excluding any real code.
+
+Final client acceptance passed in 3m48s: build/d06-distributor-pad-client.log.
+Native ENTITY mesh goldens cover six lattice faces/UV rectangles/colors, frozen
+pulse capture, item ownership, ten fan charge/enhancement states, top winding,
+source center/rim colors, world/structure gating, synchronized client-state
+retention and deferred replay. Audit-only observers delegate both production
+renderers unchanged and verify actual completed world draws in classic and
+improved transparency; client fixture cells/camera/options restore afterward.
+All prior Rift/Aurora/focus/bevel/reservoir/matrix/particle/water/client/shutdown
+checks passed. Final log has no shader compile, missing-OIT, missing-vertex or
+client server-template-access error.
+
+Independently reproduced all twelve water screenshot means. Maximum channel
+errors .40073 bytes classic and .64610 OIT (rounded upward); opaque occlusion
+differences zero in both modes. Evidence/logs/PNGs/source hashes pinned through
+build/d06-distributor-pad-proof.json. Play argument hashes unchanged. Unchanged
+DragonAPI 260 / RotaryCraft 38 unit result files remain clean; no new unit rerun
+is claimed for this client/ChromatiCraft side-boundary change.
+
+D06 remains open for the other contexts/glow renderers. Legacy raw inventory is
+still 93 calls / 61 files; compiled obsolete-helper references remain zero.
+Backlog stays 57 complete / 107 open / 164. Contract:
+ChromatiCraft/docs/distributor-launch-pad-rendering.md. Owner IDE, progression
+changes and existing ChromatiCraft PORTING.md edits remain outside this local
+checkpoint. No new publication. N08 owner shader/LOD acceptance remains separate.
