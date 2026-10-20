@@ -5759,3 +5759,42 @@ Backlog stays 57 complete / 107 open / 164. Contract:
 ChromatiCraft/docs/distributor-launch-pad-rendering.md. Owner IDE, progression
 changes and existing ChromatiCraft PORTING.md edits remain outside this local
 checkpoint. No new publication. N08 owner shader/LOD acceptance remains separate.
+
+
+### 2026-10-20: D06 Lumen Wire lighting, immutable effect frames and connected bounds
+
+Lumen Wire preserves the original lit body and fully unlit core using separate
+native pipelines, without mutating shared ModelPart visibility. All ten model
+parts match original box dimensions, UV origins, pivots and rotations; late
+legacy mirror assignments correctly leave baked geometry unmirrored. Detached
+rendering restores the original scale/offset and emits no world glints.
+
+FXCollection now captures immutable scalar effect snapshots before deferred
+submission. Source sine/rapid envelopes (including integer division), movement,
+expiry, sprite UVs and colors are preserved. Deferred wire glints copy camera
+orientation and use the existing native forward screen-color phase in both
+transparency modes. The renderer now forwards the source connection-spanning
+bounding box through NeoForge's renderer extension; its default unit cube would
+otherwise cull glints beyond the emitting block.
+
+Final native client acceptance passed in 4m07s:
+build/d06-wire-final-client.log. Checks cover six mounts, 216 body / 24 core
+vertices, snapshot/list ownership, source effect lifetime/motion, deferred replay
+after mutable state/camera/collection changes, detached activation and remote
+endpoint bounds. Audit-only delegates verify actual body/core/glint world frames
+in classic and improved transparency. The full existing client suite passed.
+DragonAPI's 260 unit cases were rerun clean; RotaryCraft's unchanged 38-case XML
+baseline remains clean. The two Launch Pad dedicated cases in the proof are
+historical coverage from the preceding batch, not a fresh server run.
+
+All twelve water PNG measurements were independently reproduced: maximum channel
+errors .73766 bytes classic / 1.07051 improved (rounded upward), opaque occlusion
+differences 0 / .42858. Pinned logs, PNGs and source hashes:
+build/d06-wire-proof.json. Native Play argument hashes remain unchanged. The only
+ERROR in the final log is the Windows Perflib counter lookup; no shader compile,
+missing vertex attribute or missing OIT errors. Compiled obsolete lighting helper
+references remain zero; raw excluded inventory stays 93 calls / 61 files.
+
+D06 remains open; checklist stays 57 complete / 107 open / 164. Contract:
+ChromatiCraft/docs/lumen-wire-rendering.md. Owner IDE/progression/ChromatiCraft
+PORTING edits remain outside this checkpoint. No new publication.
