@@ -5927,3 +5927,55 @@ existing ChromatiCraft PORTING.md edits excluded. No new publication. Next sourc
 context: Personal Charger. Its original pulse uses tile.hashCode() and modulo 360;
 the active port uses position.hashCode() without reduction, and still submits to
 AFTER_TERRAIN instead of the composed-world forward screen phase.
+
+
+### 2026-10-20: D06 Personal Charger source pulse, layers, previews and item light
+
+Restored original tile.hashCode()+clock/5000D phase with Java remainder by 360,
+radian pulse harmonics, negative-camera-yaw/positive-pitch billboarding, source UV
+orientation and uniformly scaled per-layer Z spacing. Last-layer .75 scaling also
+applies to the single inactive icon: its source half-width is .375, not .5. Active
+layers retain tile color then white final flare. World layers use fully unlit RGB
+screen profiles in the existing native composed-world forward phase; scalar UV,
+color and captured poses replace live sprite/pose references.
+
+Restored source synthetic preview activation, counter-rotation and four-second
+element color cycle; real-data previews retain actual tile color. StructureRenderer
+now exposes real/synthetic preview context and restores prior flags and rotations
+after nested extraction, on success or failure. No placeholder branch: both source
+preview modes are exercised, including actual stand-in extraction and a failing
+owned hook. Render-state extraction captures all preview values before replay.
+
+Source item drawing retains lightmap and depth writes while directional lighting
+is disabled. EntityLighting now offers independent screen depth-write variants;
+the existing two-argument screen API keeps its no-write behavior and pipeline IDs.
+All 16 lighting/cull/depth profiles register and GPU-compile. Actual special-item
+rendering forwards packed light, uses the existing 45 Y/-45 X rotation and .875
+ROSES quad, and supplies extents containing all four rotated vertices. Detached BER
+uses the original origin-centered inventory branch. Four retained sprite assets
+are entirely opaque in alpha; source RGB blending needs no coverage approximation.
+
+DragonAPI's 260 unit cases reran clean (:DragonAPI:test executed), together with
+full compile in 1m08s: build/d06-personal-compile-unit.log. Final native client
+acceptance passed in 4m02s: build/d06-personal-client.log. Nine independent pulse
+samples, hash/remainder capture, six active/inactive camera cases, exact matrices,
+UV/color/alpha/light, deferred mutation replay, synthetic/real/nested/exception
+preview contexts, special-item light/depth/bounds and detached geometry passed.
+Four actual world cases (inactive/active in classic/improved transparency) required
+every production layer. Full existing client suite, file-input ownership checks
+and shutdown cleanup passed; fixtures/camera/options restored.
+
+All twelve water PNG measurements independently reproduced: maximum channel errors
+.16807 bytes classic / .18512 improved (rounded upward), zero opaque occlusion
+difference in both. Only Windows Perflib lookup appears as final ERROR; no shader,
+vertex-attribute or missing OIT errors. Original source/logs/PNGs and source/asset
+hashes pinned: build/d06-personal-proof.json. Native Play argument hashes unchanged.
+RotaryCraft's unchanged 38 unit XML and prior two Launch Pad server cases remain
+clean baseline evidence, not fresh RC/server executions this client/library batch.
+
+Contract: ChromatiCraft/docs/personal-charger-rendering.md. Compiled retired-helper
+references remain zero; raw excluded inventory remains 93 calls / 61 files. D06
+stays open; checklist 57 complete / 107 open / 164. Owner IDE/progression and
+ChromatiCraft PORTING.md edits remain outside this local checkpoint. No new
+publication. Next active source context candidate: Relay Source model edges,
+orbiting crystals and enhanced-area glows still use legacy additive submissions.
