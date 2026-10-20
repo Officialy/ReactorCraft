@@ -5979,3 +5979,54 @@ stays open; checklist 57 complete / 107 open / 164. Owner IDE/progression and
 ChromatiCraft PORTING.md edits remain outside this local checkpoint. No new
 publication. Next active source context candidate: Relay Source model edges,
 orbiting crystals and enhanced-area glows still use legacy additive submissions.
+
+
+### 2026-10-20: D06 Relay Source original model, opaque edges and complete glow meshes
+
+All fourteen ModelRelaySource parts match original boxes/UV origins/pivots/rotations;
+removed incorrect baked mirroring because legacy mirror flags were assigned after
+box construction. Native body/edge lists now preserve the explicit source render
+order. Ported relay_source.png is byte-identical to original receiver.png.
+
+Corrected model edge bands: prepareGeoDraw(false) disables texture and lighting,
+so these are untextured, unlit opaque color geometry with depth writes, not a
+textured screen glow. Added the registered native POSITION_COLOR pipeline. Eleven
+body parts remain lit cutout (264 vertices), three edge parts emit 72 color-only
+vertices. Actual special-item edge color uses the source tick-zero palette, while
+world edges retain the tile tick palette. Item draws stay in the item collector.
+
+Crystals now use the original crystal_outline sprite, exact per-face UVs and all
+eight tip triangles from both original fans. Native degenerate quads retain each
+triangle's winding/UV/coverage (48 vertices per crystal); the old port omitted half
+the tips. Preserved source integer spacing 360/count, modulo-360 orbit/spin clocks
+and full-time bobbing. Enhanced caustics retain all nine source quads and exact UVs
+(36 vertices). Both use fully unlit, culled native forward screen drawing; crystals
+retain depth writes, while the enhanced area explicitly disables them. Immutable
+crystal records/lists and scalar UV captures eliminate live sprite/state reads
+from replay. Detached drawing emits only the model, preserving source pass gating.
+
+Compile passed in 24s: build/d06-relay-source-compile.log. Final full native client
+passed in 3m52s: build/d06-relay-source-client.log. Independent source numerical
+goldens cover complete crystal/fan and caustic geometry. Twenty mesh cases (0/1/7/16
+rings at five clocks), all source UV/color/light, body/edge vertex counts and state,
+actual special-item baking/color/ownership, detached gating and deferred replay
+after state reuse passed. Four completed native world cases (normal/enhanced in
+classic/improved) required body, edge, all seven crystal shells and optional
+caustics. Full previous client suite, resource loading and shutdown cleanup passed.
+
+All twelve water screenshot means independently reproduced. Maximum channel error
+7.12766 bytes classic / .20625 improved (rounded upward), within the existing
+9-byte composition tolerance; opaque occlusion difference zero in both. Pinned
+source/texture parity, original source/assets, logs, goldens, PNGs and source hashes:
+build/d06-relay-source-proof.json. Native Play argument hashes unchanged. The only
+final ERROR category is Windows Perflib lookup; no shader/vertex/OIT errors. Prior
+DragonAPI 260 / RotaryCraft 38 clean unit XML and two Launch Pad server cases remain
+baseline evidence; no new unit/server executions claimed for this renderer batch.
+
+Contract: ChromatiCraft/docs/relay-source-rendering.md. Compiled retired-helper
+references remain zero; raw excluded inventory stays 93 calls / 61 files. D06
+remains open; checklist stays 57 complete / 107 open / 164. Owner IDE/progression
+and existing ChromatiCraft PORTING.md edits remain outside this local checkpoint.
+No new publication. Remaining active contexts include Crystal Plant, Adjacency,
+Aura Point and dimension glow renderers using older additive paths; compare each
+against its original lighting, pass and blend contract before migration.
