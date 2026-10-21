@@ -6193,3 +6193,343 @@ excluded inventory remains 93 calls / 61 files. D06 stays open; checklist remain
 for source review in build/d06-active-context-review.json; references alone are
 not proof of a bug. Owner IDE/progression/ChromatiCraft PORTING.md edits excluded
 from this local checkpoint. No new publication.
+
+
+## 2026-10-21 - Burrow lower chest controller locks
+
+The three lower main-room Loot Chests now acquire the persistent structure lock
+when their Burrow controller initializes. Intact controllers also restore that
+lock every second, including already-generated pre-fix Burrows; proximity does
+not release it. Breaking the controller clears the three locks explicitly, since
+two lie outside the old proximity sweep. The sweep also clears chest locks along
+with shielding, matching V33a's metadata-bit removal. Upper chests and the two
+key-door cache chests do not acquire the lower-room lock.
+
+Loot Chest chunk tags and update packets synchronize only the lock state. The
+renderer captures it into render state and uses the native 26.3 combined entity
+glint pipeline while sealed. Unlock updates restore the ordinary chest texture.
+The existing server access and mining gates enforce the lock.
+
+Restored V33a's actual Burrow controller mining checks: the optional loot door
+must be open and the furnace-room entrance shield must be removed. The previous
+port rejected mining forever whenever either annex existed. Extended the native
+structure_burrow_nbt_controller GameTest to exercise locks, denied inventory
+access/mining, persistence, client synchronization, old-Burrow repair, upper-chest
+exclusion, annex gates and playerWillDestroy release.
+
+The native regression also exposed that the old proximity-volume release sweep
+missed two authored Cracked Shielding covers. Burrow destruction now sweeps the
+actual base footprint plus present annexes. The covers remain in place, as in
+V33a, but lose reinforcement and can be mined after controller destruction. The
+test removes one cover early to prove that bypassing it cannot bypass the chest
+lock, then verifies all remaining covers are released before opening access.
+
+Validation: :ChromatiCraft:runGameTest with selector
+chromaticraft:structure_burrow_nbt_controller passed (1/1 required, Gradle
+BUILD SUCCESSFUL in 2m 19s). The regression runs in
+ChromatiCraft/build/burrow-lock-gametest; evidence is
+build/burrow-lock-validation.log. Compilation includes the native combined-glint
+renderer. No live graphical glint inspection was performed. The owner's play
+world was not modified.
+
+### 2026-10-21 — Shared liquid-pipe shell seams
+
+Corrected RotaryCraft `PipeShellRenderer`, also used by ReactorCraft ducts. Compared
+against the original `PipeBodyRenderer.doRenderFace` from RotaryCraft history
+(`82f4ab1c5`): frame borders must open where a perpendicular connection continues
+the glass. The port's independent face-border gates placed steel across connection
+windows and overlapped the glass. Simply restoring paired edge gates would revive
+the truncated-strip corner gaps.
+
+The shared renderer now caches all 64 connection layouts. Each unconnected core
+face is tiled exactly once, retaining a border at closed perpendicular sides and
+extending glass at connected sides. Corners retain any remaining closed border;
+corners between two connections are glass. Arm glass covers only the region outside
+the core, with the corresponding legacy UV subrange, so no coplanar frame/glass
+faces overlap. Original 2px/14px shell planes, 8px central windows, material sprites,
+fluid geometry and connection logic are retained.
+
+Added `PipeShellRenderTest`: compare every exposed pixel in all 64 layouts with an
+independent core-plus-arms volume oracle, and check uninterrupted glass along all
+three straight-run axes. Validation result recorded after the focused Gradle run.
+
+
+## 2026-10-21 - Follow-up: completed large Burrow stayed protected in old client
+
+Read-only inspection of Survival found the completed Burrow controller at
+(1367,71,9257), with furnaceRoom and lootRoom both true. Both furnace entrance
+cells are air; all four keyed barrier cells have open=true. The saved puzzle
+state therefore satisfies the current canBreak predicate. The play log already
+contains client activity at 11:18, before the controller gate fix was compiled
+and tested (final passing regression at 12:11); that session stopped at 12:15.
+This is consistent with the pre-fix loaded class that rejected every Burrow
+with an annex. javap inspection of the current compiled controller confirms
+the door OPEN and furnace entrance checks and successful true return once
+both pass. No additional gate change or save repair is needed; relaunching
+with the updated build is required. No world files were changed.
+
+Validation: `:RotaryCraft:test --tests reika.rotarycraft.renders.PipeShellRenderTest
+:RotaryCraft:jar` passed (2 tests; all 64 layouts, 98,304 sampled face pixels).
+No running-client visual verification was performed.
+
+### 2026-10-21 — Fermenter operation, GUI and automation audit
+
+User reported missing target/water/power GUI elements, no yeast production,
+unfiltered hoppers and failed shift-clicking. Original reference:
+`TileEntityFermenter`, `GuiFermenter`, `ContainerFermenter`, `PlantMaterials` and
+`MulchMaterials` at RotaryCraft `82f4ab1c5`.
+
+Restored the missing facing-based shaft input before power reads. Restored target
+and water rendering and added viewer menu synchronization for temperature,
+progress, water, automation mode, operation duration and full-width shaft values.
+Redstone selects sludge automation; no redstone selects sugar/dirt yeast inputs
+(unless fermenter yeast is disabled in config). As in the source, mode controls
+insertion rather than disabling otherwise valid manually supplied recipes.
+Hopper/capability insertion validates the two input slots and rejects output;
+extraction permits only output. The menu validates input slots and supplies a
+handler-compatible shift-click path, preserving player removal of inputs.
+
+Datagen restores per-plant yields and optional ChromatiCraft dye/rainbow plant
+recipes through optional item tags. Original rainbow-leaf yield is 16 sludge,
+rainbow sapling 8 (the reported recollection of 64 is not in this reference).
+Added native regressions for real steam-engine input, yeast production, mode-aware
+menu transfers and wide synchronization, transactional automation, and plant
+recipe yields including real rainbow items when ChromatiCraft is loaded.
+Validation: full accepted-source compilation passed. `:RotaryCraft:runServerData`
+passed and generated the updated recipes/tags. This required fixing an existing
+`RoCDataProviders` lookup: damage-type tags must use the default pack generator's
+augmented world registry provider, not the unaugmented event provider, to resolve
+`rotarycraft:turret`.
+
+`:TestInstance:runGameTest -PgameTestSelector=rotarycraft:fermenter_*
+-PexcludeExternalMods :RotaryCraft:jar` passed all 6 native tests, including real
+steam-engine input, actual ChromatiCraft rainbow-leaf processing (16 sludge),
+output shift-clicking and transactional hopper restrictions. The final jar includes
+the generated optional recipes and item tags. Pipe geometry unit tests also passed.
+No running-client visual verification was performed.
+
+
+### 2026-10-21 — accepted compiler output and cache integrity
+
+Completed the compiler-cache follow-up from the Locus checkpoint. The main Java
+compiler now validates source declarations, named/anonymous/local nest members,
+class structure and binary names, and exact class hashes before publishing its
+cache manifest. Verification repeats after cache restoration and gates direct
+compiles, project API consumers, jars and both client preparation profiles.
+Source hashes normalize line endings to match Gradle's JavaCompile cache inputs.
+Executing ChromatiCraft full compiles clear only the checked main class output
+directory; cached Minecraft jars and running-client snapshots are preserved.
+No source allowlist was reduced.
+
+All 35 isolated black-box probes passed, including deliberately poisoned cache
+restoration, parallel consumer ordering, missing/corrupted classes, source edits,
+resource-only modules and LF/CRLF cache reuse. Final whole-family preparation
+passed in 32 seconds with all eight Java compilers UP-TO-DATE: 3406 accepted
+sources and 5174 class hashes independently reproduced. Both Play/audit profiles
+prepared successfully and Play argument hashes remained unchanged. Concurrent
+source/output changes were rejected during earlier attempts; the final successful
+run used a fresh daemon. No user game or shared daemon was stopped.
+
+Proof: build/class-output-guard-proof.json; pinned evidence:
+build/class-output-guard-evidence/c1b48bd0-8f0a-4d58-b629-0c788e3a1ce0.
+Contract: gradle/class-output-verification.md. This is build-integrity acceptance,
+not a fresh gameplay, renderer, unit or server run. Concurrent owner gameplay and
+IDE edits remain outside the checkpoint. D06 remains open; checklist remains
+57 complete / 107 open / 164. Local checkpoint only; no new publication.
+
+
+### 2026-10-21 — Farmer source lighting and world screen ownership
+
+Reviewed V33a RenderFarmer plus its inherited pass-selection and sprite registry.
+The old port ignored light coordinates using an unlit sprite pipeline. Farmer now
+uses a lightmap-only RGB-screen draw with source packed brightness 240 (block 15,
+sky 0), preserving pass-0 depth writes. World draws use the composed-scene native
+forward phase; the shared item helper keeps its item collector. Sprites and poses
+are captured before deferred submission. Original geometry, UVs and model remain.
+
+Full isolated client audit passed in 5m10s: build/d06-farmer-client-final.log.
+FARMER_MESH_CLIENT_AUDIT_PASS checks four registered facing transforms plus item
+helper ownership, nine original quads per case, sprite rotations, exact green and
+light, shader/lightmap/blend/depth declarations, native pipeline compilation and
+immutable replay. Existing renderer/scene suites and shutdown checks passed.
+This is not a Farmer framebuffer or harvesting test. No fresh unit/dedicated
+server run claimed. Prior missing-texture and Windows performance diagnostics
+remain in the audit log. The first harness compile exposed a generic cast error;
+it was corrected before this successful run.
+
+Proof: build/d06-farmer-proof.json pins the runtime manifest, source references,
+implementation/check hashes and successful log; checked runtime class hashes
+match current output. Play argument hashes unchanged. Active retired-lighting
+helper references remain zero. Contract: ChromatiCraft/docs/farmer-rendering.md.
+Concurrent owner gameplay/IDE/ledger edits preserved. D06 remains open; checklist
+57 complete / 107 open / 164. Local checkpoint only; no publication.
+
+
+### 2026-10-21 — Memory Crystal source parity and native forward/OIT ownership
+
+Completed dropped Memory Crystal source review against V33a DataCrystalRenderer
+and RenderDataNode. Caps now use real untextured interpolated colors; side strips
+and the final duplicate side remain. All three screen draws use the composed
+scene phase with source depth behavior. Source yaw/pitch billboards and whole-tick
+spin/remainder arithmetic restored. Spin now follows the item owner tag, not the
+entity thrower, covering fresh tagged tower rewards. Poses/variant are captured
+before deferred replay. Eight real extraction cases and 72 independent source
+mesh fixtures cover ownership/landing/thrower combinations, transforms, UV/color,
+blend/depth/pipeline declarations and replay; four real normal/orange world scenes
+complete in classic and improved transparency. Five affected artealloy shader
+fields and the client entity/camera/options are restored by the scene fixture.
+
+A later acceptance attempt exposed an additional 26.3 OIT crash. Current generated
+SubmitNodeCollection source and native collection probes prove AFTER_TERRAIN
+aliases oitTranslucent when improved transparency is enabled. Moved nine existing
+forward world contexts to the independent post-composition native phase: pylon,
+repeater, portal, turbo charger, structure controller, Void Rift, donation pylon,
+Mob Sonar and Luminous Cliffs fog. Draw order, geometry and pipeline/shader choices
+are preserved. The audit explicitly registers the donation pylon on its player,
+so visibility during the improved water probe exposed this unsafe path. Native
+regressions invoke seven actual forwarding helper overloads, donation extraction
+and placed-pylon core/glow submissions with real classic/improved node storage;
+all require empty OIT queues and preserved orders, including -1/0 core/glow.
+No catch-all engine reroute or invented OIT blend approximation was introduced.
+
+Full final isolated client acceptance passed in 5m54s:
+build/d06-data-crystal-forward-final.log. DATA_CRYSTAL_MESH_CLIENT_AUDIT_PASS,
+DATA_CRYSTAL_SCENE_CLIENT_AUDIT_PASS and COMPOSED_SCENE_CLIENT_AUDIT_PASS plus
+existing renderer/scene and shutdown checks passed. Earlier source-fixture angle
+transcription was corrected from the original loop's index-before-increment
+order; the renderer geometry was not altered to fit a bad fixture. Two preceding
+client runs passed crystal checks before the sporadic phase failure was exposed;
+its failed log is retained in the evidence. Prior texture/performance warnings
+remain. No fresh unit/dedicated server or complete alloy recipe/pixel/shader-pack
+acceptance is claimed. Full per-renderer source reviews remain under open D06.
+
+Pinned proof: build/d06-data-crystal-proof.json and
+build/d06-data-crystal-evidence/ea4614d3-b9d0-4133-93bf-5fbc962635d8.
+Independently reproduced eight-module source/class hashes: 3410 accepted sources,
+5182 classes; tested runtime classes match current output and source fingerprints.
+Play argument hashes unchanged; active retired-lighting helper references zero.
+Contracts: ChromatiCraft/docs/data-crystal-rendering.md and
+ChromatiCraft/docs/composed-scene-rendering.md. Concurrent owner edits remain
+outside this checkpoint. A separate Ball Lightning source review patch is saved
+as build/d06-ball-lightning-next.patch for the next D06 batch; its production file
+remains unchanged here. D06 stays open; checklist 57 complete / 107 open / 164.
+Local checkpoints only; no new publication.
+
+
+### 2026-10-21 — Ball Lightning source lightmap, bearing and native phase
+
+Completed the saved Ball Lightning source-context follow-up. Original ROUNDFLARE
+geometry/radii/depth offsets/UVs and three-layer RGB arithmetic are retained.
+The renderer now disables directional lighting independently of retained lightmap
+sampling at packed brightness 240, and uses the native composed-scene RGB screen
+phase instead of the incompatible ordinary translucent/OIT queue. Depth testing
+remains enabled and writes disabled. Original entity-to-camera polar rotations
+replace camera orientation/roll. Current entity position is captured separately
+from native interpolated placement; the original helper and generated 26.3
+EntityRenderer source confirm that distinction. Removed entities stay unrotated;
+coincident camera/entity positions retain a finite unrotated fallback. Deferred
+callbacks own their pose/sprite/color snapshots. Source roundflare alpha is 255
+throughout, verified from the real asset.
+
+Final full isolated client audit passed in 4m56s:
+build/d06-ball-lightning-final.log. BALL_LIGHTNING_MESH_CLIENT_AUDIT_PASS covers
+384 independent source fixtures across all 16 colors, RGB/ARGB inputs, live/removed
+branches and six bearings, including vertical axes and zero distance. It verifies
+real extraction and distinct current/interpolated coordinates, twelve vertices,
+UV/color/light, source blend/depth/lightmap state, native GPU compilation, real
+classic/improved submission queues and immutable replay.
+BALL_LIGHTNING_SCENE_CLIENT_AUDIT_PASS requires production registered entity
+extraction and actual three-layer callbacks in completed classic/improved frames.
+The owned client entity is discarded and camera/options restored; native ambient
+particles retain their production lifetime. Existing suite and shutdown checks
+passed. The preliminary build was canceled by its own tool handle before launch
+to include the current-position capture in the final acceptance run. No user game
+or shared daemon was stopped.
+
+Proof: build/d06-ball-lightning-proof.json. Independent eight-module source/class
+hashes reproduced: 3412 accepted sources / 5186 class hashes. Tested runtime
+classes and final source fingerprints match. Play argument hashes unchanged;
+active retired-lighting helper references zero. Contract:
+ChromatiCraft/docs/ball-lightning-rendering.md. No new framebuffer/shader-pack or
+unit/dedicated-server claim. Concurrent owner gameplay/IDE/ledger edits preserved.
+D06 remains open; checklist 57 complete / 107 open / 164. Local checkpoint only;
+no new publication. Next ordinary world-sprite context: RenderLightShot.
+
+
+### 2026-10-21 — Light Shot source blends, atlas animation and lightmap
+
+Completed RenderLightShot source-context migration. Original white CHROMA spark
+(.25 radius, depth 0, DEFAULT alpha) precedes colored SPINFLARE (.6 radius,
+depth -.05, ADDITIVEDARK screen). Both retain lightmap 240 without directional
+lighting, scene depth testing and disabled writes. Added EntityLighting.alphaSprite
+with source alpha testing disabled; the original spark has alpha bytes below .1
+which cutout materials would discard. All four lighting modes and both culling
+settings are fully implemented/registered. Ordered composed-scene submissions
+keep the two source materials outside OIT. Both animated icons now use the managed
+atlas and resource metadata rather than wall-clock rows in a standalone texture.
+Source color/pulse uses whole ticks and one captured clock sample; current entity
+position is captured independently of interpolated placement for polar billboards.
+Removed/coincident cases remain finite, and callbacks own their data.
+
+Generated 144 deterministic color goldens by compiling original palette,
+ColorBlendList, mix and brightness bodies under JDK 25 (generator/source hashes
+pinned). Final full isolated audit passed in 4m40s: build/d06-light-shot-final.log.
+LIGHT_SHOT_MESH_CLIENT_AUDIT_PASS covers all goldens, 96 independent geometry/color/
+RGB-ARGB/alive/bearing fixtures, real extraction, managed 128/180-frame sprites,
+light/depth/blend/alpha declarations, eight GPU alpha variants, native classic/
+improved ordered queues and immutable replay. LIGHT_SHOT_SCENE_CLIENT_AUDIT_PASS
+requires both production layers of the registered projectile completing actual
+classic/improved frames. Owned client projectile/camera/options restore; normal
+particles retain production lifetimes. Existing suite/shutdown checks passed.
+The first audit caught a detached test entity missing its required 26.3 ID; the
+fixture now assigns one before extraction. Production rendering was unchanged
+for that correction. No framebuffer/cross-entity/shader-pack parity or fresh
+unit/dedicated-server acceptance is claimed.
+
+Proof: build/d06-light-shot-proof.json; evidence: build/d06-light-shot-evidence/82034d39-f3ec-4b4f-a76a-1b1e8ebdd005.
+Independently reproduced 3414 accepted sources / 5190 class hashes across eight
+modules. Tested runtime classes and golden resource match current files. Play
+argument hashes unchanged; active retired-lighting helper references zero.
+Contract: ChromatiCraft/docs/light-shot-rendering.md. Concurrent owner gameplay/
+IDE/ledger edits preserved. D06 remains open; checklist 57 complete / 107 open /
+164. Local checkpoints only; no new publication.
+
+
+### 2026-10-21 — Monster Bait source layers, lifetime color and native phase
+
+Completed Monster Bait source-context review. Nine horizontal rose-flare layers
+retain original radius, Y steps, whole-tick X/Z drift, UVs and normal/targeted
+per-layer colors. Drift now captures whole ticks instead of interpolated age.
+Restored original .35F precision in the untargeted color pulse. Replaced the
+unlit ordinary translucent/OIT draw with lightmap-only RGB screen blending in
+the owned composed-scene phase: packed brightness 240, no directional light,
+no culling or depth writes, retained scene depth testing. Native submission owns
+the pose; colors and ticks are captured before deferred replay. The source icon
+has alpha 255 throughout. Camera-facing code was commented out in V33a and remains
+inactive; the cards stay horizontal. No lifespan/targeting gameplay was changed.
+
+Versioned standalone JDK 25 generator retains original entity/color-helper bodies
+and reproduces all 112 source cases / 1008 expected layers byte for byte. The
+native check verifies the real Zombie tint independently, then uses the registered
+bait factory and real extraction at three partial ticks for 336 mesh cases.
+It checks all 36 vertices, color/UV/light, source material declarations, native
+GPU compilation, classic/improved queue ownership and immutable replay after
+state/entity/camera/pose reuse. Real registered entity callbacks also complete
+full-life/fading-life scenes in both transparency modes. Owned entity/camera/
+options restore; normal particles retain production lifetime.
+
+Full final isolated client audit passed in 5m9s: build/d06-monster-bait-final.log.
+MONSTER_BAIT_MESH_CLIENT_AUDIT_PASS and MONSTER_BAIT_SCENE_CLIENT_AUDIT_PASS plus
+existing suite/shutdown checks passed. The first harness compile used the old
+EntityType.ZOMBIE location; corrected to the current 26.3 EntityTypes registry
+using generated source and existing compiled tests. No production correction
+was required for that fixture issue. No final pixel/shader-pack or fresh targeting
+gameplay/unit/dedicated-server acceptance is claimed.
+
+Proof: build/d06-monster-bait-proof.json; evidence: build/d06-monster-bait-evidence/dc64271d-2151-429f-87ad-b9ab86d2828d.
+Independently reproduced 3416 accepted sources / 5194 class hashes across eight
+modules; final source, runtime classes and golden resource match. Play arguments
+unchanged; active retired-lighting helper references zero. Contract:
+ChromatiCraft/docs/monster-bait-rendering.md. Concurrent owner edits preserved.
+D06 remains open; checklist 57 complete / 107 open / 164. Local checkpoint only;
+no publication. Next source context: RenderVoidMonsterTrap.
