@@ -50,6 +50,7 @@ public final class ReactorContentGameTests {
 
     static void register(RegisterGameTestsEvent event, Holder<TestEnvironmentDefinition<?>> environment) {
         ReactorAdvancementTests.register(event, environment);
+        ReactorGasCollectorTests.register(event, environment);
         ReactorGameTests.register(event, environment, "dragonapi_flammability_graphite_override", 40, ReactorContentGameTests::graphiteFlammability);
         ReactorGameTests.register(event, environment, "dragonapi_flammability_plasma", 40, ReactorContentGameTests::plasmaFlammability);
         for (var color : FluoriteTypes.colorList)

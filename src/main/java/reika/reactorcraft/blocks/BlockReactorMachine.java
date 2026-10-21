@@ -79,6 +79,10 @@ public class BlockReactorMachine extends BlockTEBase implements MachineRegistryB
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
+        // 1.7.10 ItemReactorPlacer: the gas collector took the clicked side as its metadata, so set on
+        // a furnace's top it faces up and reads the furnace below. Everything else faces the player.
+        if (ReactorTiles.getMachineMapping(this) == ReactorTiles.COLLECTOR)
+            return this.defaultBlockState().setValue(FACING, ctx.getClickedFace());
         return this.defaultBlockState().setValue(FACING, ctx.getHorizontalDirection().getOpposite());
     }
 

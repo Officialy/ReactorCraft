@@ -11,17 +11,26 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.AABB;
 
+import reika.dragonapi.libraries.ReikaAABBHelper;
 import reika.reactorcraft.ReactorCraft;
 import reika.reactorcraft.base.ReactorTERenderer;
 import reika.reactorcraft.blocks.BlockReactorMachine;
 import reika.reactorcraft.models.ModelGasCollector;
 import reika.reactorcraft.registry.ReactorModelLayers;
 import reika.reactorcraft.tileentities.TileEntityGasCollector;
+import reika.rotarycraft.renders.RotaryRenderPipelines;
 
 /**
  * The legacy read-direction target overlay (debug AABB highlight on the adjacent furnace/refrigerator,
@@ -75,5 +84,20 @@ public class RenderGasCollector extends ReactorTERenderer<TileEntityGasCollector
 
         model.renderAll(stack, vc, light, te.hasFurnace());
         stack.popPose();
+    }
+
+    /** 1.7.10 renderTarget: a blue box around the block being read, fading out after placement. */
+    @Override
+    public void submit(BlockEntityRenderState state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState camera) {
+        super.submit(state, poseStack, collector, camera);
+        Level level = Minecraft.getInstance().level;
+        if (level == null || !(level.getBlockEntity(state.blockPos) instanceof TileEntityGasCollector te) || te.ticks <= 0)
+            return;
+        BlockPos pos = te.getBlockPos();
+        BlockPos tgt = pos.relative(te.getReadDirection());
+        AABB box = new AABB(tgt).inflate(0.03125);
+        ReikaAABBHelper.renderAABB(poseStack, collector, box, pos.getX(), pos.getY(), pos.getZ(),
+                te.ticks, 0, 127, 255, true,
+                RotaryRenderPipelines.NO_DEPTH_FILLED_BOX_TYPE, RotaryRenderPipelines.NO_DEPTH_LINES_TYPE);
     }
 }

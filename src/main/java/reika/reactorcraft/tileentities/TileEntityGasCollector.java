@@ -54,7 +54,7 @@ public class TileEntityGasCollector extends TileEntityReactorBase implements Pip
 
 	@Override
 	public ResourceHandler<FluidResource> getFluidHandler(Direction side) {
-		return side == null || side == readDir.getOpposite() ? fluidHandler : null;
+		return side == null || side == this.getReadDirection().getOpposite() ? fluidHandler : null;
 	}
 
 	private Direction readDir = Direction.DOWN;
@@ -66,7 +66,7 @@ public class TileEntityGasCollector extends TileEntityReactorBase implements Pip
 		if (ticks > 0)
 			ticks -= 8;
 
-		readDir = this.getBlockState().getValue(BlockReactorMachine.FACING).getOpposite();
+		readDir = this.getReadDirection();
 		BlockPos tgt = pos.relative(readDir);
 		BlockState bs = world.getBlockState(tgt);
 		if (bs.is(Blocks.FURNACE) && bs.getValue(BlockStateProperties.LIT)) {
@@ -87,12 +87,13 @@ public class TileEntityGasCollector extends TileEntityReactorBase implements Pip
 		}
 	}
 
+	/** 1.7.10 dirs[meta].getOpposite(); read from the block state so the client (no ticker) agrees. */
 	public Direction getReadDirection() {
-		return readDir;
+		return this.getBlockState().getValue(BlockReactorMachine.FACING).getOpposite();
 	}
 
 	public boolean hasFurnace() {
-		BlockPos tgt = this.getBlockPos().relative(readDir);
+		BlockPos tgt = this.getBlockPos().relative(this.getReadDirection());
 		BlockState bs = level.getBlockState(tgt);
 		return bs.is(Blocks.FURNACE) || MachineRegistry.getMachine(level, tgt) == MachineRegistry.REFRIGERATOR;
 	}
@@ -119,6 +120,7 @@ public class TileEntityGasCollector extends TileEntityReactorBase implements Pip
 		super.readSyncTag(NBT);
 
 		tank.readFromNBT(NBT);
+		ticks = NBT.getIntOr("tick", ticks);
 	}
 
 	@Override
@@ -126,6 +128,7 @@ public class TileEntityGasCollector extends TileEntityReactorBase implements Pip
 		super.writeSyncTag(NBT);
 
 		tank.writeToNBT(NBT);
+		NBT.putInt("tick", ticks);
 	}
 
 	// 1.21.5: BlockEntity.getRenderBoundingBox was removed; kept as a helper for the renderer's bounds.
@@ -153,7 +156,7 @@ public class TileEntityGasCollector extends TileEntityReactorBase implements Pip
 
 	@Override
 	public Flow getFlowForSide(Direction side) {
-		return side == readDir.getOpposite() ? Flow.OUTPUT : Flow.NONE;
+		return side == this.getReadDirection().getOpposite() ? Flow.OUTPUT : Flow.NONE;
 	}
 
 }
